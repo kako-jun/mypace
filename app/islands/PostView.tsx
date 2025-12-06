@@ -44,24 +44,53 @@ export default function PostView({ eventId }: PostViewProps) {
   }, [eventId])
 
   const loadPost = async () => {
-    setLoading(true)
     setError('')
     try {
       const pubkey = await getCurrentPubkey()
       setMyPubkey(pubkey)
 
-      const eventData = await fetchEventById(eventId)
-      if (!eventData) {
-        setError('Post not found')
-        return
-      }
-      setEvent(eventData)
+      // Try to load from cache first (from timeline navigation)
+      let eventData: Event | null = null
+      const cachedEvent = sessionStorage.getItem(`post_${eventId}`)
+      const cachedProfile = sessionStorage.getItem(`profile_${eventId}_profile`)
 
-      // Load profile
-      const profileEvent = await fetchUserProfile(eventData.pubkey)
-      if (profileEvent) {
-        setProfile(JSON.parse(profileEvent.content))
+      if (cachedEvent) {
+        eventData = JSON.parse(cachedEvent)
+        setEvent(eventData)
+        setLoading(false) // Show content immediately
+        sessionStorage.removeItem(`post_${eventId}`)
+
+        // Load cached profile
+        const profileKey = `profile_${eventData.pubkey}`
+        const cachedProfileData = sessionStorage.getItem(profileKey)
+        if (cachedProfileData) {
+          setProfile(JSON.parse(cachedProfileData))
+          sessionStorage.removeItem(profileKey)
+        } else {
+          // Load profile in background
+          fetchUserProfile(eventData.pubkey).then(profileEvent => {
+            if (profileEvent) setProfile(JSON.parse(profileEvent.content))
+          })
+        }
+      } else {
+        setLoading(true)
+        eventData = await fetchEventById(eventId)
+        if (!eventData) {
+          setError('Post not found')
+          setLoading(false)
+          return
+        }
+        setEvent(eventData)
+        setLoading(false)
+
+        // Load profile
+        const profileEvent = await fetchUserProfile(eventData.pubkey)
+        if (profileEvent) {
+          setProfile(JSON.parse(profileEvent.content))
+        }
       }
+
+      if (!eventData) return
 
       // Load reactions
       const reactionEvents = await fetchReactions([eventId])
