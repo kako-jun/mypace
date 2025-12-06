@@ -20,6 +20,7 @@ export interface ThemeColors {
 }
 
 export const MYPACE_TAG = 'mypace'
+export const APP_TITLE = 'MY★PACE'
 
 // Get stored theme colors from localStorage
 function getStoredThemeColors(): ThemeColors | null {

@@ -2,6 +2,7 @@ import { createRoute } from 'honox/factory'
 import PostView from '../../islands/PostView'
 import Settings from '../../islands/Settings'
 import Logo from '../../islands/Logo'
+import { APP_TITLE } from '../../lib/nostr/events'
 
 export default createRoute((c) => {
   const id = c.req.param('id')
@@ -13,6 +14,6 @@ export default createRoute((c) => {
       </header>
       <PostView eventId={id} />
     </main>,
-    { title: 'MY★PACE' }
+    { title: APP_TITLE }
   )
 })

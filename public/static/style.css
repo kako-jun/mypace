@@ -1414,6 +1414,23 @@ body.long-mode-active .container {
   color: var(--text-secondary);
 }
 
+.npub-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.npub-row code {
+  width: 100%;
+  word-break: break-all;
+}
+
+.npub-row-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
 .secret-row {
   display: flex;
   flex-direction: column;

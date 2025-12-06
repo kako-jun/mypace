@@ -112,6 +112,7 @@ export default function Settings() {
   const [usingNip07, setUsingNip07] = useState(false)
   const [importValue, setImportValue] = useState('')
   const [copied, setCopied] = useState(false)
+  const [npubCopied, setNpubCopied] = useState(false)
   const [error, setError] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [savingName, setSavingName] = useState(false)
@@ -187,6 +188,12 @@ export default function Settings() {
     await navigator.clipboard.writeText(nsec)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleCopyNpub = async () => {
+    await navigator.clipboard.writeText(npub)
+    setNpubCopied(true)
+    setTimeout(() => setNpubCopied(false), 2000)
   }
 
   const handleImport = () => {
@@ -369,7 +376,14 @@ export default function Settings() {
           <p class="info">Using NIP-07 extension</p>
           <div class="key-display">
             <label>Your npub:</label>
-            <code>{npub}</code>
+            <div class="npub-row">
+              <code>{npub}</code>
+              <div class="npub-row-buttons">
+                <Button onClick={handleCopyNpub}>
+                  {npubCopied ? 'Copied!' : 'Copy'}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       ) : (
@@ -378,7 +392,16 @@ export default function Settings() {
             <h3>Your Keys</h3>
             <div class="key-display">
               <label>npub (public):</label>
-              <code>{npub || 'Not generated yet'}</code>
+              <div class="npub-row">
+                <code>{npub || 'Not generated yet'}</code>
+                {npub && (
+                  <div class="npub-row-buttons">
+                    <Button onClick={handleCopyNpub}>
+                      {npubCopied ? 'Copied!' : 'Copy'}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
             {nsec && (
               <div class="key-display">
