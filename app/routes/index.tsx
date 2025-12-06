@@ -2,6 +2,7 @@ import { createRoute } from 'honox/factory'
 import Home from '../islands/Home'
 import Settings from '../islands/Settings'
 import Logo from '../islands/Logo'
+import { APP_TITLE } from '../lib/nostr/events'
 
 export default createRoute((c) => {
   return c.render(
@@ -12,6 +13,6 @@ export default createRoute((c) => {
       </header>
       <Home />
     </main>,
-    { title: 'MYPACE' }
+    { title: APP_TITLE }
   )
 })

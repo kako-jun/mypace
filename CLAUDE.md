@@ -29,27 +29,33 @@ npm run deploy   # デプロイ
 - 返信（NIP-10）- スレッド表示対応
 - リポスト（NIP-18 kind 6）- タイムラインに「○○ reposted」表示
 - NIP-07対応（ブラウザ拡張）
-- 鍵のエクスポート・インポート
+- 鍵のエクスポート・インポート（npub/nsecコピー対応）
 - コンテンツパース（ハッシュタグ、URL、画像）
-- ハッシュタグフィルタリング（日本語対応）
+- ハッシュタグフィルタリング（日本語対応、複数タグAND/OR）
 - ライト/ダークテーマ切り替え
 - ウィンドウカラー（4隅グラデーション背景）カスタマイズ
 - 長文モード（4200文字対応、プレビュー付き）
+- 下書き自動保存（localStorage）
+- 個別投稿ページ（/post/{id}）
+- RESTful URL（/tag/{hashtag}）
 
 ## Key Files
 
 | Path | Description |
 |------|-------------|
 | `app/routes/index.tsx` | トップページ（レイアウト） |
+| `app/routes/post/[id].tsx` | 個別投稿ページ |
+| `app/routes/tag/[tag].tsx` | タグフィルタページ |
 | `app/routes/api/timeline.ts` | タイムラインAPI |
-| `app/islands/Home.tsx` | ホーム画面（状態管理） |
+| `app/islands/Home.tsx` | ホーム画面（状態管理、下書き保存） |
 | `app/islands/PostForm.tsx` | 投稿フォーム（左下固定） |
 | `app/islands/Timeline.tsx` | タイムライン表示 |
+| `app/islands/PostView.tsx` | 個別投稿表示 |
 | `app/islands/Settings.tsx` | 設定パネル |
 | `app/islands/ProfileSetup.tsx` | プロフィール設定 |
 | `app/islands/Logo.tsx` | ロゴ（クリックでリロード） |
 | `app/lib/content-parser.tsx` | コンテンツパーサー |
-| `app/lib/nostr/events.ts` | Nostrイベント生成 |
+| `app/lib/nostr/events.ts` | Nostrイベント生成、定数（APP_TITLE等） |
 | `app/lib/nostr/relay.ts` | リレー通信 |
 | `app/lib/nostr/keys.ts` | 鍵管理 |
 | `app/lib/db/cache.ts` | D1キャッシュ層 |

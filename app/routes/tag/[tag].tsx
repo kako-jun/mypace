@@ -2,6 +2,7 @@ import { createRoute } from 'honox/factory'
 import Home from '../../islands/Home'
 import Settings from '../../islands/Settings'
 import Logo from '../../islands/Logo'
+import { APP_TITLE } from '../../lib/nostr/events'
 
 export default createRoute((c) => {
   const tagParam = c.req.param('tag')
@@ -21,8 +22,8 @@ export default createRoute((c) => {
   }
 
   const title = tags.length === 1
-    ? `#${tags[0]} - MY★PACE`
-    : `${tags.map(t => '#' + t).join(filterMode === 'and' ? ' + ' : ' | ')} - MY★PACE`
+    ? `#${tags[0]} - ${APP_TITLE}`
+    : `${tags.map(t => '#' + t).join(filterMode === 'and' ? ' + ' : ' | ')} - ${APP_TITLE}`
 
   return c.render(
     <main class="container">

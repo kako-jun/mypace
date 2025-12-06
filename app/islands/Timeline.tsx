@@ -80,77 +80,70 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
         notes = await fetchEvents({ kinds: [1] }, 50)
       }
 
-      // Fetch reposts and merge into timeline
-      const repostEvents = await fetchRepostEvents(50)
-      const items: TimelineItem[] = []
-      const allOriginalEvents: Event[] = [...notes]
+      // Show posts immediately (without reposts first for faster initial render)
+      const initialItems: TimelineItem[] = notes.map(note => ({ event: note }))
+      initialItems.sort((a, b) => b.event.created_at - a.event.created_at)
+      setTimelineItems(initialItems)
+      setEvents(notes)
+      setLoading(false) // Show content immediately
 
-      // Add original posts
-      for (const note of notes) {
-        items.push({ event: note })
-      }
+      // Load additional data in parallel (non-blocking)
+      Promise.all([
+        loadProfiles(notes),
+        loadReactions(notes, pubkey),
+        loadRepliesData(notes),
+        loadRepostsData(notes, pubkey),
+      ])
 
-      // Add reposts (parse original event from content)
-      for (const repost of repostEvents) {
-        try {
-          // NIP-18: content should contain the stringified original event
-          if (!repost.content || repost.content.trim() === '') {
-            continue
-          }
-          const originalEvent = JSON.parse(repost.content) as Event
-          // Only include if it's a mypace post
-          const hasMypaceTag = originalEvent.tags?.some(
-            t => t[0] === 't' && t[1] === MYPACE_TAG
-          )
-          if (hasMypaceTag) {
-            // Add repost as a separate timeline item (with repost label)
-            items.push({
-              event: originalEvent,
-              repostedBy: {
-                pubkey: repost.pubkey,
-                timestamp: repost.created_at
-              }
-            })
-            if (!allOriginalEvents.some(e => e.id === originalEvent.id)) {
-              allOriginalEvents.push(originalEvent)
-            }
-          }
-        } catch {
-          // Invalid repost content, skip
-        }
-      }
+      // Fetch reposts in background and merge
+      fetchRepostEvents(50).then(async repostEvents => {
+        const items: TimelineItem[] = [...initialItems]
+        const allOriginalEvents: Event[] = [...notes]
 
-      // Sort by timestamp (use repost timestamp if available)
-      items.sort((a, b) => {
-        const aTime = a.repostedBy?.timestamp || a.event.created_at
-        const bTime = b.repostedBy?.timestamp || b.event.created_at
-        return bTime - aTime
-      })
-
-      setTimelineItems(items)
-      setEvents(allOriginalEvents)
-      loadProfiles(allOriginalEvents)
-      loadReactions(allOriginalEvents, pubkey)
-      loadRepliesData(allOriginalEvents)
-      loadRepostsData(allOriginalEvents, pubkey)
-
-      // Load profiles for reposters
-      const reposterPubkeys = items
-        .filter(item => item.repostedBy)
-        .map(item => item.repostedBy!.pubkey)
-      for (const pk of reposterPubkeys) {
-        if (profiles[pk] === undefined) {
+        for (const repost of repostEvents) {
           try {
-            const profileEvent = await fetchUserProfile(pk)
-            if (profileEvent) {
-              setProfiles(prev => ({ ...prev, [pk]: JSON.parse(profileEvent.content) }))
+            if (!repost.content || repost.content.trim() === '') continue
+            const originalEvent = JSON.parse(repost.content) as Event
+            const hasMypaceTag = originalEvent.tags?.some(
+              t => t[0] === 't' && t[1] === MYPACE_TAG
+            )
+            if (hasMypaceTag) {
+              items.push({
+                event: originalEvent,
+                repostedBy: { pubkey: repost.pubkey, timestamp: repost.created_at }
+              })
+              if (!allOriginalEvents.some(e => e.id === originalEvent.id)) {
+                allOriginalEvents.push(originalEvent)
+              }
             }
           } catch {}
         }
-      }
+
+        items.sort((a, b) => {
+          const aTime = a.repostedBy?.timestamp || a.event.created_at
+          const bTime = b.repostedBy?.timestamp || b.event.created_at
+          return bTime - aTime
+        })
+
+        setTimelineItems(items)
+        setEvents(allOriginalEvents)
+
+        // Load profiles for reposters
+        const reposterPubkeys = [...new Set(
+          items.filter(item => item.repostedBy).map(item => item.repostedBy!.pubkey)
+        )]
+        for (const pk of reposterPubkeys) {
+          if (profiles[pk] === undefined) {
+            fetchUserProfile(pk).then(profileEvent => {
+              if (profileEvent) {
+                setProfiles(prev => ({ ...prev, [pk]: JSON.parse(profileEvent.content) }))
+              }
+            }).catch(() => {})
+          }
+        }
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load timeline')
-    } finally {
       setLoading(false)
     }
   }
