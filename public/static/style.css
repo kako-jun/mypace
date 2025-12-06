@@ -277,6 +277,40 @@ body.long-mode-active .container {
   line-height: 1.8;
 }
 
+/* CodeMirror Long Mode Editor */
+.long-mode-editor-wrapper {
+  position: relative;
+  flex: 1;
+  min-height: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.long-mode-editor-wrapper .long-mode-editor {
+  height: 100%;
+  min-height: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.long-mode-editor-wrapper .cm-editor {
+  height: 100%;
+  border-radius: 8px;
+}
+
+.vim-mode-indicator {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  color: #0f0;
+  font-family: monospace;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
 /* Long mode - flex layout */
 .long-mode-container {
   display: flex;
@@ -2036,6 +2070,31 @@ body.custom-theme .settings-toggle:hover {
   font-size: 0.875rem;
   color: var(--text-color);
   text-align: center;
+}
+
+/* Vim Mode Toggle */
+.vim-mode-toggle {
+  display: flex;
+  justify-content: center;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  cursor: pointer;
+}
+
+.toggle-text {
+  user-select: none;
 }
 
 /* Dark Theme - special overrides not covered by CSS variables */
