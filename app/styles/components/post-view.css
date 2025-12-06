@@ -1,0 +1,81 @@
+/* PostView page styles */
+
+.post-view {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.back-button:hover {
+  color: var(--text-primary);
+}
+
+.post-card-large {
+  padding: 2rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+
+.post-card-large .post-header {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.post-card-large .author-name {
+  font-size: 1.1rem;
+}
+
+.post-card-large .post-content,
+.post-content-full {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.post-card-large .post-footer {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.post-card-large.themed-card .post-footer {
+  border-top-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Replies section */
+.replies-section {
+  margin-top: 2rem;
+}
+
+.replies-heading {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.replies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.replies-list .post-card {
+  cursor: pointer;
+}
+
+.replies-list .post-card:hover {
+  opacity: 0.9;
+}

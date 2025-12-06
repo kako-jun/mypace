@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import honox from 'honox/vite'
 import pages from '@hono/vite-cloudflare-pages'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [
@@ -9,6 +10,7 @@ export default defineConfig({
         input: ['/app/client.ts']
       }
     }),
-    pages()
+    pages(),
+    tailwindcss()
   ]
 })
