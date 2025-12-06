@@ -61,6 +61,8 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
   const [reposts, setReposts] = useState<{ [eventId: string]: RepostData }>({})
   const [repostingId, setRepostingId] = useState<string | null>(null)
   const [editPreview, setEditPreview] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [filterCopied, setFilterCopied] = useState(false)
 
   const loadTimeline = async () => {
     setLoading(true)
@@ -407,10 +409,14 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
         // User cancelled or error - fallback to copy
         if ((e as Error).name !== 'AbortError') {
           await navigator.clipboard.writeText(url)
+          setCopiedId(eventId)
+          setTimeout(() => setCopiedId(null), 2000)
         }
       }
     } else {
       await navigator.clipboard.writeText(url)
+      setCopiedId(eventId)
+      setTimeout(() => setCopiedId(null), 2000)
     }
   }
 
@@ -423,10 +429,14 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
       } catch (e) {
         if ((e as Error).name !== 'AbortError') {
           await navigator.clipboard.writeText(url)
+          setFilterCopied(true)
+          setTimeout(() => setFilterCopied(false), 2000)
         }
       }
     } else {
       await navigator.clipboard.writeText(url)
+      setFilterCopied(true)
+      setTimeout(() => setFilterCopied(false), 2000)
     }
   }
 
@@ -527,7 +537,7 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
             </>
           ))}
           <button class="filter-clear-all" onClick={clearFilter}>Clear all</button>
-          <button class="filter-share" onClick={handleShareFilter} title="Share">↗</button>
+          <button class={`filter-share ${filterCopied ? 'copied' : ''}`} onClick={handleShareFilter} title="Share">{filterCopied ? '✓' : '↗'}</button>
         </div>
       )}
       {filteredItems.map((item) => {
@@ -646,11 +656,11 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
                       🔁{reposts[event.id]?.count ? ` ${reposts[event.id].count}` : ''}
                     </button>
                     <button
-                      class="share-button"
+                      class={`share-button ${copiedId === event.id ? 'copied' : ''}`}
                       onClick={() => handleShare(event.id)}
                       title="Share"
                     >
-                      ↗
+                      {copiedId === event.id ? '✓' : '↗'}
                     </button>
                     {isMyPost && (
                       <>

@@ -38,6 +38,7 @@ export default function PostView({ eventId }: PostViewProps) {
   const [repostingId, setRepostingId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     // Set up hashtag click handler to navigate to tag page
@@ -204,10 +205,14 @@ export default function PostView({ eventId }: PostViewProps) {
       } catch (e) {
         if ((e as Error).name !== 'AbortError') {
           await navigator.clipboard.writeText(url)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2000)
         }
       }
     } else {
       await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     }
   }
 
@@ -330,11 +335,11 @@ export default function PostView({ eventId }: PostViewProps) {
               🔁{reposts.count > 0 && ` ${reposts.count}`}
             </button>
             <button
-              class="share-button"
+              class={`share-button ${copied ? 'copied' : ''}`}
               onClick={handleShare}
               title="Share"
             >
-              ↗
+              {copied ? '✓' : '↗'}
             </button>
             {isMyPost && (
               <>
