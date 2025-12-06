@@ -12,6 +12,7 @@ import {
 } from '../lib/nostr/keys'
 import { getCurrentPubkey, createProfileEvent, type Profile } from '../lib/nostr/events'
 import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
+import { uploadImage } from '../lib/upload'
 import { getLocalProfile } from './ProfileSetup'
 import Button from '../components/Button'
 
@@ -123,6 +124,7 @@ export default function Settings() {
   const [themeColors, setThemeColors] = useState<ThemeColors>(DEFAULT_COLORS)
   const [showNsec, setShowNsec] = useState(false)
   const [appTheme, setAppTheme] = useState<'light' | 'dark'>('light')
+  const [avatarDragging, setAvatarDragging] = useState(false)
 
   // Disable body scroll when settings panel is open
   useEffect(() => {
@@ -269,40 +271,17 @@ export default function Settings() {
     const file = input.files?.[0]
     if (!file) return
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setNameError('Please select an image file')
-      return
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setNameError('Image must be less than 5MB')
-      return
-    }
-
     setUploading(true)
     setNameError('')
 
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
+    const result = await uploadImage(file)
+    
+    if (result.success && result.url) {
+      const newPictureUrl = result.url
+      setPictureUrl(newPictureUrl)
 
-      const response = await fetch('https://nostr.build/api/v2/upload/files', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!response.ok) {
-        throw new Error('Upload failed')
-      }
-
-      const data = await response.json()
-      if (data.status === 'success' && data.data?.[0]?.url) {
-        const newPictureUrl = data.data[0].url
-        setPictureUrl(newPictureUrl)
-
-        // Save profile immediately
+      // Save profile immediately
+      try {
         const localProfile = getLocalProfile()
         const profile: Profile = {
           ...localProfile,
@@ -314,16 +293,16 @@ export default function Settings() {
         await publishEvent(event)
         localStorage.setItem('mypace_profile', JSON.stringify(profile))
         window.dispatchEvent(new CustomEvent('profileupdated'))
-      } else {
-        throw new Error('Invalid response from server')
+      } catch (e) {
+        setNameError(e instanceof Error ? e.message : 'Failed to save profile')
       }
-    } catch (e) {
-      setNameError(e instanceof Error ? e.message : 'Failed to upload')
-    } finally {
-      setUploading(false)
-      // Reset input so same file can be selected again
-      input.value = ''
+    } else {
+      setNameError(result.error || 'Failed to upload')
     }
+    
+    setUploading(false)
+    // Reset input so same file can be selected again
+    input.value = ''
   }
 
   const handleRemoveAvatar = async () => {
@@ -345,6 +324,64 @@ export default function Settings() {
     } catch (e) {
       setNameError(e instanceof Error ? e.message : 'Failed to remove avatar')
     }
+  }
+
+  const handleAvatarDragOver = (e: DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setAvatarDragging(true)
+  }
+
+  const handleAvatarDragLeave = (e: DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setAvatarDragging(false)
+  }
+
+  const handleAvatarDrop = async (e: DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setAvatarDragging(false)
+
+    const files = e.dataTransfer?.files
+    if (!files || files.length === 0) return
+
+    const file = files[0]
+    if (!file.type.startsWith('image/')) {
+      setNameError('Please drop an image file')
+      return
+    }
+
+    setUploading(true)
+    setNameError('')
+
+    const result = await uploadImage(file)
+    
+    if (result.success && result.url) {
+      const newPictureUrl = result.url
+      setPictureUrl(newPictureUrl)
+
+      // Save profile immediately
+      try {
+        const localProfile = getLocalProfile()
+        const profile: Profile = {
+          ...localProfile,
+          name: displayName.trim() || localProfile?.name || '',
+          display_name: displayName.trim() || localProfile?.display_name || '',
+          picture: newPictureUrl,
+        }
+        const event = await createProfileEvent(profile)
+        await publishEvent(event)
+        localStorage.setItem('mypace_profile', JSON.stringify(profile))
+        window.dispatchEvent(new CustomEvent('profileupdated'))
+      } catch (e) {
+        setNameError(e instanceof Error ? e.message : 'Failed to save profile')
+      }
+    } else {
+      setNameError(result.error || 'Failed to upload')
+    }
+    
+    setUploading(false)
   }
 
   const handleColorChange = (corner: keyof ThemeColors, color: string) => {
@@ -388,8 +425,13 @@ export default function Settings() {
             )}
           </div>
           <div class="avatar-upload-buttons">
-            <label class="upload-button">
-              {uploading ? 'Uploading...' : 'Upload'}
+            <label
+              class={`avatar-drop-area ${avatarDragging ? 'dragging' : ''}`}
+              onDragOver={handleAvatarDragOver}
+              onDragLeave={handleAvatarDragLeave}
+              onDrop={handleAvatarDrop}
+            >
+              {uploading ? '...' : avatarDragging ? 'Drop' : '📷'}
               <input
                 type="file"
                 accept="image/*"
