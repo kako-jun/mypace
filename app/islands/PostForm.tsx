@@ -3,7 +3,9 @@ import { createTextNote, createDeleteEvent, createReplyEvent, getLocalThemeColor
 import { publishEvent } from '../lib/nostr/relay'
 import { renderContent } from '../lib/content-parser'
 import { uploadImage } from '../lib/upload'
+import { getStoredVimMode, getStoredAppTheme } from './Settings'
 import ProfileSetup, { hasLocalProfile } from './ProfileSetup'
+import LongModeEditor from './LongModeEditor'
 import type { Event } from 'nostr-tools'
 
 interface PostFormProps {
@@ -29,6 +31,8 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
   const [themeColors, setThemeColors] = useState<ThemeColors | null>(null)
   const [uploading, setUploading] = useState(false)
   const [dragging, setDragging] = useState(false)
+  const [vimMode, setVimMode] = useState(false)
+  const [darkTheme, setDarkTheme] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -36,10 +40,27 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
     setHasProfile(hasLocalProfile())
     setCheckingProfile(false)
     setThemeColors(getLocalThemeColors())
+    setVimMode(getStoredVimMode())
+    setDarkTheme(getStoredAppTheme() === 'dark')
 
     const handleProfileUpdate = () => setHasProfile(hasLocalProfile())
     window.addEventListener('profileupdated', handleProfileUpdate)
-    return () => window.removeEventListener('profileupdated', handleProfileUpdate)
+
+    // Listen for settings changes to update vim mode and theme
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'mypace_vim_mode') {
+        setVimMode(e.newValue === 'true')
+      }
+      if (e.key === 'mypace_app_theme') {
+        setDarkTheme(e.newValue === 'dark')
+      }
+    }
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('profileupdated', handleProfileUpdate)
+      window.removeEventListener('storage', handleStorageChange)
+    }
   }, [])
 
   const handleSubmit = async (e: globalThis.Event) => {
@@ -226,15 +247,25 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
       >
         {longMode ? 'Short mode' : 'Long mode'}
       </button>
-      <textarea
-        ref={textareaRef}
-        class="post-input"
-        placeholder={longMode ? "マイペースに書こう\n\n長文モードでじっくり書けます" : "マイペースに書こう"}
-        value={content}
-        onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
-        rows={longMode ? 15 : 3}
-        maxLength={4200}
-      />
+      {longMode ? (
+        <LongModeEditor
+          value={content}
+          onChange={onContentChange}
+          placeholder="マイペースに書こう&#10;&#10;長文モードでじっくり書けます"
+          vimMode={vimMode}
+          darkTheme={darkTheme}
+        />
+      ) : (
+        <textarea
+          ref={textareaRef}
+          class="post-input"
+          placeholder="マイペースに書こう"
+          value={content}
+          onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
+          rows={3}
+          maxLength={4200}
+        />
+      )}
       <input
         ref={fileInputRef}
         type="file"

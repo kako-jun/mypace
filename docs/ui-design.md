@@ -91,6 +91,10 @@ PACE
 - Previewボタンでプレビューのオン/オフを切り替え可能
 - タイムラインは非表示になり、画面全幅を使用
 - 「Short mode」で通常モードに戻る（プレビューも自動オフ）
+- CodeMirror 6ベースのエディタ
+  - Markdownシンタックスハイライト
+  - 書きやすい配色（ライト: 温かみのあるオフホワイト、ダーク: ソフトダーク）
+  - Vimモード対応（Settingsで有効化）
 
 ## Feedback Messages
 
@@ -162,6 +166,8 @@ PACE
   - アバターは📷ボタンでアップロード（ドラッグ&ドロップ対応）
   - 変更は即時保存
 - App Theme: ライト/ダークテーマ切り替え
+- Editor: 長文モードエディタ設定
+  - Vimモードのオン/オフ（localStorageに保存）
 - Window Color: 4隅カラーカスタマイズ（即時保存）
 - Your Keys: npub/nsec表示、コピー機能
   - nsecはデフォルト非表示（Show/Hideで切り替え）

@@ -52,6 +52,17 @@ export function getStoredThemeColors(): ThemeColors {
   return DEFAULT_COLORS
 }
 
+export function getStoredVimMode(): boolean {
+  if (typeof window === 'undefined') return false
+  return localStorage.getItem('mypace_vim_mode') === 'true'
+}
+
+export function getStoredAppTheme(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'light'
+  const stored = localStorage.getItem('mypace_app_theme') as 'light' | 'dark' | null
+  return stored || 'light'
+}
+
 // Calculate relative luminance of a hex color
 function getLuminance(hex: string): number {
   const r = parseInt(hex.slice(1, 3), 16) / 255
@@ -124,6 +135,7 @@ export default function Settings() {
   const [themeColors, setThemeColors] = useState<ThemeColors>(DEFAULT_COLORS)
   const [showNsec, setShowNsec] = useState(false)
   const [appTheme, setAppTheme] = useState<'light' | 'dark'>('light')
+  const [vimMode, setVimMode] = useState(false)
   const [avatarDragging, setAvatarDragging] = useState(false)
 
   // Disable body scroll when settings panel is open
@@ -149,6 +161,12 @@ export default function Settings() {
     if (storedAppTheme) {
       setAppTheme(storedAppTheme)
       document.documentElement.setAttribute('data-theme', storedAppTheme)
+    }
+
+    // Load vim mode setting
+    const storedVimMode = localStorage.getItem('mypace_vim_mode')
+    if (storedVimMode === 'true') {
+      setVimMode(true)
     }
   }, [])
 
@@ -398,6 +416,11 @@ export default function Settings() {
     document.documentElement.setAttribute('data-theme', theme)
   }
 
+  const handleVimModeChange = (enabled: boolean) => {
+    setVimMode(enabled)
+    localStorage.setItem('mypace_vim_mode', enabled.toString())
+  }
+
   if (!open) {
     return (
       <button class="settings-toggle" onClick={() => setOpen(true)}>
@@ -478,6 +501,21 @@ export default function Settings() {
               Dark
             </Button>
           )}
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Editor</h3>
+        <p class="hint">Long mode editor settings</p>
+        <div class="vim-mode-toggle">
+          <label class="toggle-label">
+            <input
+              type="checkbox"
+              checked={vimMode}
+              onChange={(e) => handleVimModeChange((e.target as HTMLInputElement).checked)}
+            />
+            <span class="toggle-text">Vim mode</span>
+          </label>
         </div>
       </div>
 
