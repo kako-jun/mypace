@@ -153,6 +153,11 @@ export default function PostView({ eventId }: PostViewProps) {
     return exportNpub(pubkey).slice(0, 12) + '...'
   }
 
+  const getAvatarUrl = (pubkey: string, profileData?: Profile | null): string | null => {
+    const p = profileData || profile
+    return p?.picture || null
+  }
+
   const handleLike = async () => {
     if (!event || likingId || !myPubkey || reactions.myReaction) return
     if (event.pubkey === myPubkey) return // Can't like own post
@@ -266,8 +271,15 @@ export default function PostView({ eventId }: PostViewProps) {
         style={themeProps.style}
       >
         <header class="post-header">
-          <span class="author-name">{getDisplayName(event.pubkey)}</span>
-          <time class="timestamp">{formatTimestamp(event.created_at)}</time>
+          {getAvatarUrl(event.pubkey) ? (
+            <img src={getAvatarUrl(event.pubkey)!} alt="" class="post-avatar" />
+          ) : (
+            <div class="post-avatar-placeholder" />
+          )}
+          <div class="post-author-info">
+            <span class="author-name">{getDisplayName(event.pubkey)}</span>
+            <time class="timestamp">{formatTimestamp(event.created_at)}</time>
+          </div>
         </header>
 
         <div class="post-content post-content-full">
@@ -337,8 +349,15 @@ export default function PostView({ eventId }: PostViewProps) {
                   onClick={() => window.location.href = `/post/${reply.id}`}
                 >
                   <header class="post-header">
-                    <span class="author-name">{getDisplayName(reply.pubkey, replyProfiles[reply.pubkey])}</span>
-                    <time class="timestamp">{formatTimestamp(reply.created_at)}</time>
+                    {getAvatarUrl(reply.pubkey, replyProfiles[reply.pubkey]) ? (
+                      <img src={getAvatarUrl(reply.pubkey, replyProfiles[reply.pubkey])!} alt="" class="post-avatar" />
+                    ) : (
+                      <div class="post-avatar-placeholder" />
+                    )}
+                    <div class="post-author-info">
+                      <span class="author-name">{getDisplayName(reply.pubkey, replyProfiles[reply.pubkey])}</span>
+                      <time class="timestamp">{formatTimestamp(reply.created_at)}</time>
+                    </div>
                   </header>
                   <div class="post-content">{renderContent(reply.content)}</div>
                 </article>

@@ -530,10 +530,33 @@ body.long-mode-active .container {
 
 .post-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.5rem;
   font-size: 0.8rem;
+}
+
+.post-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.post-avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface-secondary, #eee);
+  flex-shrink: 0;
+}
+
+.post-author-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
 }
 
 .author-name {
@@ -543,6 +566,7 @@ body.long-mode-active .container {
 
 .timestamp {
   color: #bbb;
+  font-size: 0.75rem;
 }
 
 .post-content {
@@ -1031,9 +1055,31 @@ body.long-mode-active .container {
 
 .reply-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 0.4rem;
   margin-bottom: 0.25rem;
+}
+
+.reply-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.reply-avatar-placeholder {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface-secondary, #ddd);
+  flex-shrink: 0;
+}
+
+.reply-author-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .reply-header .author-name {
@@ -1185,14 +1231,65 @@ body.long-mode-active .container {
   margin-bottom: 0.75rem;
 }
 
-.profile-form,
 .input-row {
   display: flex;
   gap: 0.5rem;
   align-items: center;
 }
 
-.profile-form input,
+.profile-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.profile-avatar-preview {
+  flex-shrink: 0;
+}
+
+.avatar-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--surface-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.avatar-upload-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.upload-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background: var(--button-bg, #333);
+  color: var(--button-text, #fff);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.upload-button:hover {
+  background: var(--button-bg-hover, #444);
+}
+
 .input-row input {
   flex: 1;
   height: 36px;

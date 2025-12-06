@@ -115,6 +115,8 @@ export default function Settings() {
   const [npubCopied, setNpubCopied] = useState(false)
   const [error, setError] = useState('')
   const [displayName, setDisplayName] = useState('')
+  const [pictureUrl, setPictureUrl] = useState('')
+  const [uploading, setUploading] = useState(false)
   const [savingName, setSavingName] = useState(false)
   const [nameError, setNameError] = useState('')
   const [nameSaved, setNameSaved] = useState(false)
@@ -150,10 +152,11 @@ export default function Settings() {
 
   useEffect(() => {
     const init = async () => {
-      // Load profile name
+      // Load profile name and picture
       const localProfile = getLocalProfile()
       if (localProfile?.name || localProfile?.display_name) {
         setDisplayName(localProfile.name || localProfile.display_name || '')
+        setPictureUrl(localProfile.picture || '')
       } else {
         // Try fetching from relay
         try {
@@ -162,6 +165,7 @@ export default function Settings() {
           if (profileEvent) {
             const profile = JSON.parse(profileEvent.content) as Profile
             setDisplayName(profile.name || profile.display_name || '')
+            setPictureUrl(profile.picture || '')
           }
         } catch {}
       }
@@ -243,6 +247,8 @@ export default function Settings() {
         ...localProfile,
         name: displayName.trim(),
         display_name: displayName.trim(),
+        // Keep existing picture
+        picture: pictureUrl.trim() || localProfile?.picture || undefined,
       }
       const event = await createProfileEvent(profile)
       await publishEvent(event)
@@ -255,6 +261,89 @@ export default function Settings() {
       setNameError(e instanceof Error ? e.message : 'Failed to save')
     } finally {
       setSavingName(false)
+    }
+  }
+
+  const handleAvatarUpload = async (e: globalThis.Event) => {
+    const input = e.target as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setNameError('Please select an image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setNameError('Image must be less than 5MB')
+      return
+    }
+
+    setUploading(true)
+    setNameError('')
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('https://nostr.build/api/v2/upload/files', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Upload failed')
+      }
+
+      const data = await response.json()
+      if (data.status === 'success' && data.data?.[0]?.url) {
+        const newPictureUrl = data.data[0].url
+        setPictureUrl(newPictureUrl)
+
+        // Save profile immediately
+        const localProfile = getLocalProfile()
+        const profile: Profile = {
+          ...localProfile,
+          name: displayName.trim() || localProfile?.name || '',
+          display_name: displayName.trim() || localProfile?.display_name || '',
+          picture: newPictureUrl,
+        }
+        const event = await createProfileEvent(profile)
+        await publishEvent(event)
+        localStorage.setItem('mypace_profile', JSON.stringify(profile))
+        window.dispatchEvent(new CustomEvent('profileupdated'))
+      } else {
+        throw new Error('Invalid response from server')
+      }
+    } catch (e) {
+      setNameError(e instanceof Error ? e.message : 'Failed to upload')
+    } finally {
+      setUploading(false)
+      // Reset input so same file can be selected again
+      input.value = ''
+    }
+  }
+
+  const handleRemoveAvatar = async () => {
+    setPictureUrl('')
+
+    // Save profile immediately
+    const localProfile = getLocalProfile()
+    const profile: Profile = {
+      ...localProfile,
+      name: displayName.trim() || localProfile?.name || '',
+      display_name: displayName.trim() || localProfile?.display_name || '',
+      picture: undefined,
+    }
+    try {
+      const event = await createProfileEvent(profile)
+      await publishEvent(event)
+      localStorage.setItem('mypace_profile', JSON.stringify(profile))
+      window.dispatchEvent(new CustomEvent('profileupdated'))
+    } catch (e) {
+      setNameError(e instanceof Error ? e.message : 'Failed to remove avatar')
     }
   }
 
@@ -290,7 +379,31 @@ export default function Settings() {
 
       <div class="settings-section">
         <h3>Profile</h3>
-        <div class="profile-form">
+        <div class="profile-avatar-section">
+          <div class="profile-avatar-preview">
+            {pictureUrl ? (
+              <img src={pictureUrl} alt="Avatar" class="avatar-preview" />
+            ) : (
+              <div class="avatar-placeholder">No image</div>
+            )}
+          </div>
+          <div class="avatar-upload-buttons">
+            <label class="upload-button">
+              {uploading ? 'Uploading...' : 'Upload'}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                disabled={uploading}
+                style={{ display: 'none' }}
+              />
+            </label>
+            {pictureUrl && (
+              <Button onClick={handleRemoveAvatar}>Remove</Button>
+            )}
+          </div>
+        </div>
+        <div class="input-row">
           <input
             type="text"
             placeholder="Your name"
@@ -299,7 +412,7 @@ export default function Settings() {
             maxLength={50}
           />
           <Button onClick={handleSaveName} disabled={savingName || !displayName.trim()}>
-            {savingName ? 'Saving...' : 'Update'}
+            {savingName ? 'Saving...' : 'Save'}
           </Button>
         </div>
         {nameError && <p class="error">{nameError}</p>}
