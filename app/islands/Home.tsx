@@ -5,10 +5,11 @@ import { renderContent } from '../lib/content-parser'
 import type { Event } from 'nostr-tools'
 
 interface HomeProps {
-  initialFilterTag?: string
+  initialFilterTags?: string[]
+  initialFilterMode?: 'and' | 'or'
 }
 
-export default function Home({ initialFilterTag }: HomeProps) {
+export default function Home({ initialFilterTags, initialFilterMode }: HomeProps) {
   const [longMode, setLongMode] = useState(false)
   const [content, setContent] = useState('')
   const [showPreview, setShowPreview] = useState(false)
@@ -103,7 +104,7 @@ export default function Home({ initialFilterTag }: HomeProps) {
         onReplyCancel={handleReplyCancel}
         onReplyComplete={handleReplyComplete}
       />
-      <Timeline onEditStart={handleEditStart} onReplyStart={handleReplyStart} initialFilterTag={initialFilterTag} />
+      <Timeline onEditStart={handleEditStart} onReplyStart={handleReplyStart} initialFilterTags={initialFilterTags} initialFilterMode={initialFilterMode} />
     </>
   )
 }

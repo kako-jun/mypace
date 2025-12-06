@@ -249,9 +249,28 @@ linear-gradient(135deg, color1 0%, color4 100%)
 ## Hashtag Filtering
 
 - ハッシュタグクリックでフィルタリングモード
-- タイムライン上部にフィルターバー表示 (`#tag ×`)
-- `×` ボタンまたはロゴクリックで解除
+- 複数タグのAND/OR絞り込みに対応
+- タイムライン上部にフィルターバー表示
+- 各タグは個別に削除可能（`×`ボタン）
+- AND/ORボタンでモードを切り替え
+- 「Clear all」で全フィルター解除
+- ロゴクリックでもホームに戻る
 - mypaceタグ付き投稿の中からさらに絞り込み
+
+### 複数タグフィルタURL
+
+| URL | 意味 |
+|-----|------|
+| `/tag/javascript` | javascriptタグのみ |
+| `/tag/javascript+react` | javascript AND react |
+| `/tag/javascript,react` | javascript OR react |
+
+### 操作
+
+1. ハッシュタグをクリック → フィルター追加（既存フィルターがあれば追加）
+2. AND/ORボタンをクリック → モード切り替え（URL更新）
+3. タグの×ボタン → そのタグのみ解除
+4. 「Clear all」 → 全解除してホームに戻る
 
 ## Markdown & Code Highlighting
 

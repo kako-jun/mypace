@@ -36,10 +36,11 @@ interface TimelineItem {
 interface TimelineProps {
   onEditStart?: (event: Event) => void
   onReplyStart?: (event: Event) => void
-  initialFilterTag?: string
+  initialFilterTags?: string[]
+  initialFilterMode?: 'and' | 'or'
 }
 
-export default function Timeline({ onEditStart, onReplyStart, initialFilterTag }: TimelineProps) {
+export default function Timeline({ onEditStart, onReplyStart, initialFilterTags, initialFilterMode }: TimelineProps) {
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [profiles, setProfiles] = useState<ProfileCache>({})
@@ -53,7 +54,8 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTag }
   const [savedId, setSavedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
-  const [filterTag, setFilterTag] = useState<string | null>(initialFilterTag || null)
+  const [filterTags, setFilterTags] = useState<string[]>(initialFilterTags || [])
+  const [filterMode, setFilterMode] = useState<'and' | 'or'>(initialFilterMode || 'and')
   const [likingId, setLikingId] = useState<string | null>(null)
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set())
   const [reposts, setReposts] = useState<{ [eventId: string]: RepostData }>({})
@@ -405,9 +407,17 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTag }
     }
     window.addEventListener('newpost', handleNewPost)
 
-    // Set up hashtag click handler - navigate to tag URL
+    // Set up hashtag click handler - add to filter or navigate
     setHashtagClickHandler((tag) => {
-      window.location.href = `/tag/${encodeURIComponent(tag)}`
+      if (filterTags.length === 0) {
+        // No existing filter, navigate to tag URL
+        window.location.href = `/tag/${encodeURIComponent(tag)}`
+      } else if (!filterTags.includes(tag)) {
+        // Add to existing filter
+        const newTags = [...filterTags, tag]
+        const separator = filterMode === 'and' ? '+' : ','
+        window.location.href = `/tag/${newTags.map(t => encodeURIComponent(t)).join(separator)}`
+      }
     })
 
     return () => {
@@ -428,13 +438,21 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTag }
     )
   }
 
-  // Filter timeline items by hashtag (check content for #tag)
-  const filteredItems = filterTag
+  // Helper to check if content contains a tag
+  const contentHasTag = (content: string, tag: string): boolean => {
+    const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const tagRegex = new RegExp(`#${escapedTag}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`, 'i')
+    return tagRegex.test(content)
+  }
+
+  // Filter timeline items by hashtags (AND/OR)
+  const filteredItems = filterTags.length > 0
     ? timelineItems.filter((item) => {
-        // Use word boundary that works with Japanese characters
-        const escapedTag = filterTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        const tagRegex = new RegExp(`#${escapedTag}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`, 'i')
-        return tagRegex.test(item.event.content)
+        if (filterMode === 'and') {
+          return filterTags.every(tag => contentHasTag(item.event.content, tag))
+        } else {
+          return filterTags.some(tag => contentHasTag(item.event.content, tag))
+        }
       })
     : timelineItems
 
@@ -442,12 +460,40 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTag }
     window.location.href = '/'
   }
 
+  const removeTag = (tagToRemove: string) => {
+    const newTags = filterTags.filter(t => t !== tagToRemove)
+    if (newTags.length === 0) {
+      window.location.href = '/'
+    } else {
+      const separator = filterMode === 'and' ? '+' : ','
+      window.location.href = `/tag/${newTags.map(t => encodeURIComponent(t)).join(separator)}`
+    }
+  }
+
+  const toggleFilterMode = () => {
+    const newMode = filterMode === 'and' ? 'or' : 'and'
+    const separator = newMode === 'and' ? '+' : ','
+    window.location.href = `/tag/${filterTags.map(t => encodeURIComponent(t)).join(separator)}`
+  }
+
   return (
     <div class="timeline">
-      {filterTag && (
+      {filterTags.length > 0 && (
         <div class="filter-bar">
-          <span class="filter-label">#{filterTag}</span>
-          <button class="filter-clear" onClick={clearFilter}>×</button>
+          {filterTags.map((tag, index) => (
+            <>
+              {index > 0 && (
+                <button class="filter-mode-toggle" onClick={toggleFilterMode}>
+                  {filterMode === 'and' ? 'AND' : 'OR'}
+                </button>
+              )}
+              <span class="filter-tag">
+                #{tag}
+                <button class="filter-tag-remove" onClick={() => removeTag(tag)}>×</button>
+              </span>
+            </>
+          ))}
+          <button class="filter-clear-all" onClick={clearFilter}>Clear all</button>
         </div>
       )}
       {filteredItems.map((item) => {
@@ -465,6 +511,11 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTag }
           const target = e.target as HTMLElement
           if (target.closest('button') || target.closest('a') || target.closest('.post-footer') || target.closest('.thread-section')) {
             return
+          }
+          // Cache event data for faster loading
+          sessionStorage.setItem(`post_${event.id}`, JSON.stringify(event))
+          if (profiles[event.pubkey]) {
+            sessionStorage.setItem(`profile_${event.pubkey}`, JSON.stringify(profiles[event.pubkey]))
           }
           window.location.href = `/post/${event.id}`
         }
@@ -611,7 +662,7 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTag }
       })}
       {filteredItems.length === 0 && (
         <p class="empty">
-          {filterTag ? `No posts with #${filterTag}` : 'No posts yet'}
+          {filterTags.length > 0 ? `No posts matching filter` : 'No posts yet'}
         </p>
       )}
     </div>
