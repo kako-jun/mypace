@@ -1,15 +1,27 @@
-import { useState } from 'hono/jsx'
+import { useState, useEffect } from 'hono/jsx'
 import { createTextNote } from '../lib/nostr/events'
 import { publishEvent } from '../lib/nostr/relay'
+import ProfileSetup, { hasLocalProfile } from './ProfileSetup'
 
 export default function PostForm() {
   const [content, setContent] = useState('')
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState('')
+  const [hasProfile, setHasProfile] = useState(false)
+  const [checkingProfile, setCheckingProfile] = useState(true)
+
+  useEffect(() => {
+    setHasProfile(hasLocalProfile())
+    setCheckingProfile(false)
+
+    const handleProfileUpdate = () => setHasProfile(hasLocalProfile())
+    window.addEventListener('profileupdated', handleProfileUpdate)
+    return () => window.removeEventListener('profileupdated', handleProfileUpdate)
+  }, [])
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault()
-    if (!content.trim() || posting) return
+    if (!content.trim() || posting || !hasProfile) return
 
     setPosting(true)
     setError('')
@@ -24,6 +36,23 @@ export default function PostForm() {
     } finally {
       setPosting(false)
     }
+  }
+
+  const handleProfileSet = () => {
+    setHasProfile(true)
+    window.dispatchEvent(new CustomEvent('profileupdated'))
+  }
+
+  if (checkingProfile) {
+    return <div class="post-form loading">Loading...</div>
+  }
+
+  if (!hasProfile) {
+    return (
+      <div class="post-form">
+        <ProfileSetup onProfileSet={handleProfileSet} />
+      </div>
+    )
   }
 
   return (

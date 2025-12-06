@@ -1,6 +1,7 @@
 import { createRoute } from 'honox/factory'
 import { SimplePool } from 'nostr-tools'
 import { getCachedEvents, cacheEvents } from '../../lib/db/cache'
+import { MYPACE_TAG } from '../../lib/nostr/events'
 
 const RELAYS = [
   'wss://nos.lol',
@@ -24,11 +25,12 @@ export default createRoute(async (c) => {
     }
   }
 
-  // Fetch from relays
+  // Fetch from relays (only mypace-tagged posts)
   const pool = new SimplePool()
   try {
     const events = await pool.querySync(RELAYS, {
       kinds: [1],
+      '#t': [MYPACE_TAG],
       limit,
     })
 

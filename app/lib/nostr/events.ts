@@ -5,12 +5,58 @@ import {
   getPublicKeyFromSecret,
 } from './keys'
 
+export interface Profile {
+  name?: string
+  display_name?: string
+  picture?: string
+  about?: string
+}
+
+export const MYPACE_TAG = 'mypace'
+
 export async function createTextNote(content: string): Promise<Event> {
   const template: EventTemplate = {
     kind: 1,
     created_at: Math.floor(Date.now() / 1000),
-    tags: [],
+    tags: [
+      ['t', MYPACE_TAG],
+      ['client', 'mypace'],
+    ],
     content,
+  }
+
+  if (hasNip07() && window.nostr) {
+    const signed = await window.nostr.signEvent(template)
+    return signed as Event
+  }
+
+  const sk = getOrCreateSecretKey()
+  return finalizeEvent(template, sk)
+}
+
+export async function createProfileEvent(profile: Profile): Promise<Event> {
+  const template: EventTemplate = {
+    kind: 0,
+    created_at: Math.floor(Date.now() / 1000),
+    tags: [],
+    content: JSON.stringify(profile),
+  }
+
+  if (hasNip07() && window.nostr) {
+    const signed = await window.nostr.signEvent(template)
+    return signed as Event
+  }
+
+  const sk = getOrCreateSecretKey()
+  return finalizeEvent(template, sk)
+}
+
+export async function createDeleteEvent(eventIds: string[]): Promise<Event> {
+  const template: EventTemplate = {
+    kind: 5,
+    created_at: Math.floor(Date.now() / 1000),
+    tags: eventIds.map(id => ['e', id]),
+    content: '',
   }
 
   if (hasNip07() && window.nostr) {

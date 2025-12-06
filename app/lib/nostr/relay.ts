@@ -1,4 +1,5 @@
 import { SimplePool, type Filter, type Event } from 'nostr-tools'
+import { MYPACE_TAG } from './events'
 
 export const RELAYS = [
   'wss://nos.lol',
@@ -22,7 +23,13 @@ export async function publishEvent(event: Event): Promise<void> {
 
 export async function fetchEvents(filter: Filter, limit = 50): Promise<Event[]> {
   const p = getPool()
-  const events = await p.querySync(RELAYS, { ...filter, limit })
+  // Filter by #mypace tag to only show mypace posts
+  const mypaceFilter: Filter = {
+    ...filter,
+    '#t': [MYPACE_TAG],
+    limit,
+  }
+  const events = await p.querySync(RELAYS, mypaceFilter)
   return events.sort((a, b) => b.created_at - a.created_at)
 }
 
