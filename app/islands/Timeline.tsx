@@ -259,6 +259,11 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
     return exportNpub(pubkey).slice(0, 12) + '...'
   }
 
+  const getAvatarUrl = (pubkey: string): string | null => {
+    const profile = profiles[pubkey]
+    return profile?.picture || null
+  }
+
   const handleEdit = (event: Event) => {
     if (onEditStart) {
       // Use new editing flow via PostForm
@@ -528,8 +533,15 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
               </div>
             )}
             <header class="post-header">
-              <span class="author-name">{getDisplayName(event.pubkey)}</span>
-              <time class="timestamp">{formatTimestamp(event.created_at)}</time>
+              {getAvatarUrl(event.pubkey) ? (
+                <img src={getAvatarUrl(event.pubkey)!} alt="" class="post-avatar" />
+              ) : (
+                <div class="post-avatar-placeholder" />
+              )}
+              <div class="post-author-info">
+                <span class="author-name">{getDisplayName(event.pubkey)}</span>
+                <time class="timestamp">{formatTimestamp(event.created_at)}</time>
+              </div>
             </header>
 
             {isEditing ? (
@@ -639,8 +651,15 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
                               style={replyThemeProps.style}
                             >
                               <header class="reply-header">
-                                <span class="author-name">{getDisplayName(reply.pubkey)}</span>
-                                <time class="timestamp">{formatTimestamp(reply.created_at)}</time>
+                                {getAvatarUrl(reply.pubkey) ? (
+                                  <img src={getAvatarUrl(reply.pubkey)!} alt="" class="reply-avatar" />
+                                ) : (
+                                  <div class="reply-avatar-placeholder" />
+                                )}
+                                <div class="reply-author-info">
+                                  <span class="author-name">{getDisplayName(reply.pubkey)}</span>
+                                  <time class="timestamp">{formatTimestamp(reply.created_at)}</time>
+                                </div>
                               </header>
                               <div class="reply-content">{renderContent(reply.content)}</div>
                             </div>
