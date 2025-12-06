@@ -6,8 +6,7 @@ export default function Logo() {
 
   return (
     <a href="/" class="logo" onClick={handleClick}>
-      <span class="logo-my">MY</span>
-      <span class="logo-pace">PACE</span>
+      <img src="/static/logo.webp" alt="MYPACE" class="logo-img" />
     </a>
   )
 }

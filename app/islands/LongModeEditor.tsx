@@ -1,10 +1,4 @@
 import { useEffect, useRef, useState } from 'hono/jsx'
-import { EditorView, keymap, placeholder as cmPlaceholder } from '@codemirror/view'
-import { EditorState } from '@codemirror/state'
-import { markdown } from '@codemirror/lang-markdown'
-import { languages } from '@codemirror/language-data'
-import { vim } from '@replit/codemirror-vim'
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 
 interface LongModeEditorProps {
   value: string
@@ -14,86 +8,6 @@ interface LongModeEditorProps {
   darkTheme?: boolean
 }
 
-// Custom theme for a comfortable writing experience
-const createTheme = (isDark: boolean) => EditorView.theme({
-  '&': {
-    height: '100%',
-    fontSize: '1rem',
-    fontFamily: "'M PLUS Rounded 1c', sans-serif",
-  },
-  '.cm-content': {
-    padding: '1rem',
-    minHeight: '200px',
-    caretColor: isDark ? '#fff' : '#333',
-  },
-  '.cm-focused': {
-    outline: 'none',
-  },
-  '.cm-scroller': {
-    overflow: 'auto',
-    fontFamily: "'M PLUS Rounded 1c', sans-serif",
-    lineHeight: '1.8',
-  },
-  '.cm-line': {
-    padding: '0 0.5rem',
-  },
-  '.cm-cursor': {
-    borderLeftColor: isDark ? '#fff' : '#333',
-    borderLeftWidth: '2px',
-  },
-  '.cm-placeholder': {
-    color: isDark ? '#666' : '#aaa',
-    fontStyle: 'italic',
-  },
-  // Markdown styling
-  '.cm-header-1': {
-    fontSize: '1.5em',
-    fontWeight: 'bold',
-  },
-  '.cm-header-2': {
-    fontSize: '1.3em',
-    fontWeight: 'bold',
-  },
-  '.cm-header-3': {
-    fontSize: '1.1em',
-    fontWeight: 'bold',
-  },
-  '.cm-strong': {
-    fontWeight: 'bold',
-  },
-  '.cm-emphasis': {
-    fontStyle: 'italic',
-  },
-  '.cm-link': {
-    color: isDark ? '#6bafff' : '#3498db',
-    textDecoration: 'underline',
-  },
-  '.cm-url': {
-    color: isDark ? '#888' : '#888',
-  },
-}, { dark: isDark })
-
-// Soft color themes for comfortable writing
-const lightThemeColors = EditorView.theme({
-  '&': {
-    backgroundColor: '#faf8f5', // Warm off-white
-    color: '#333',
-  },
-  '.cm-gutters': {
-    display: 'none',
-  },
-})
-
-const darkThemeColors = EditorView.theme({
-  '&': {
-    backgroundColor: '#1e1e1e', // Soft dark
-    color: '#d4d4d4',
-  },
-  '.cm-gutters': {
-    display: 'none',
-  },
-})
-
 export default function LongModeEditor({
   value,
   onChange,
@@ -102,70 +16,129 @@ export default function LongModeEditor({
   darkTheme = false,
 }: LongModeEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
-  const viewRef = useRef<EditorView | null>(null)
+  const viewRef = useRef<any>(null)
+  const onChangeRef = useRef(onChange)
   const [isVimActive, setIsVimActive] = useState(vimMode)
+  const [loading, setLoading] = useState(true)
+
+  onChangeRef.current = onChange
 
   useEffect(() => {
     if (!editorRef.current) return
 
-    const extensions = [
-      history(),
-      keymap.of([...defaultKeymap, ...historyKeymap]),
-      markdown({ codeLanguages: languages }),
-      createTheme(darkTheme),
-      darkTheme ? darkThemeColors : lightThemeColors,
-      cmPlaceholder(placeholder),
-      EditorView.lineWrapping,
-      EditorView.updateListener.of((update) => {
-        if (update.docChanged) {
-          onChange(update.state.doc.toString())
-        }
-      }),
-    ]
+    let destroyed = false
 
-    // Add vim mode if enabled
-    if (vimMode) {
-      extensions.unshift(vim())
+    const initEditor = async () => {
+      const [
+        { EditorView, keymap, placeholder: cmPlaceholder },
+        { EditorState },
+        { markdown },
+        { languages },
+        { defaultKeymap, history, historyKeymap },
+      ] = await Promise.all([
+        import('@codemirror/view'),
+        import('@codemirror/state'),
+        import('@codemirror/lang-markdown'),
+        import('@codemirror/language-data'),
+        import('@codemirror/commands'),
+      ])
+
+      if (destroyed || !editorRef.current) return
+
+      const theme = EditorView.theme({
+        '&': {
+          height: '100%',
+          fontSize: '1rem',
+          fontFamily: "'M PLUS Rounded 1c', sans-serif",
+          backgroundColor: darkTheme ? '#1e1e1e' : '#faf8f5',
+          color: darkTheme ? '#d4d4d4' : '#333',
+        },
+        '.cm-content': {
+          padding: '1rem',
+          minHeight: '200px',
+          caretColor: darkTheme ? '#fff' : '#333',
+        },
+        '.cm-focused': { outline: 'none' },
+        '.cm-scroller': {
+          overflow: 'auto',
+          fontFamily: "'M PLUS Rounded 1c', sans-serif",
+          lineHeight: '1.8',
+        },
+        '.cm-gutters': { display: 'none' },
+        '.cm-placeholder': {
+          color: darkTheme ? '#666' : '#aaa',
+          fontStyle: 'italic',
+        },
+      }, { dark: darkTheme })
+
+      const extensions = [
+        history(),
+        keymap.of([...defaultKeymap, ...historyKeymap]),
+        markdown({ codeLanguages: languages }),
+        theme,
+        cmPlaceholder(placeholder),
+        EditorView.lineWrapping,
+        EditorView.updateListener.of((update: any) => {
+          if (update.docChanged) {
+            onChangeRef.current(update.state.doc.toString())
+          }
+        }),
+      ]
+
+      if (vimMode) {
+        try {
+          const { vim } = await import('@replit/codemirror-vim')
+          if (!destroyed) {
+            extensions.unshift(vim())
+          }
+        } catch (e) {
+          console.warn('Vim mode not available')
+        }
+      }
+
+      if (destroyed || !editorRef.current) return
+
+      const state = EditorState.create({
+        doc: value,
+        extensions,
+      })
+
+      const view = new EditorView({
+        state,
+        parent: editorRef.current,
+      })
+
+      viewRef.current = view
+      setIsVimActive(vimMode)
+      setLoading(false)
     }
 
-    const state = EditorState.create({
-      doc: value,
-      extensions,
-    })
-
-    const view = new EditorView({
-      state,
-      parent: editorRef.current,
-    })
-
-    viewRef.current = view
-    setIsVimActive(vimMode)
+    initEditor()
 
     return () => {
-      view.destroy()
+      destroyed = true
+      if (viewRef.current) {
+        viewRef.current.destroy()
+        viewRef.current = null
+      }
     }
-  }, [vimMode, darkTheme]) // Recreate editor when vim mode or theme changes
+  }, [vimMode, darkTheme, placeholder])
 
-  // Sync external value changes
+  // Clear editor when value becomes empty (after posting)
   useEffect(() => {
     const view = viewRef.current
-    if (view && value !== view.state.doc.toString()) {
+    if (view && value === '' && view.state.doc.toString() !== '') {
       view.dispatch({
-        changes: {
-          from: 0,
-          to: view.state.doc.length,
-          insert: value,
-        },
+        changes: { from: 0, to: view.state.doc.length, insert: '' },
       })
     }
   }, [value])
 
   return (
     <div class="long-mode-editor-wrapper">
-      <div ref={editorRef} class="long-mode-editor" />
-      {isVimActive && (
-        <div class="vim-mode-indicator">VIM</div>
-      )}
+      {loading && <div class="editor-loading">Loading editor...</div>}
+      <div ref={editorRef} class="long-mode-editor" style={{ display: loading ? 'none' : 'block' }} />
+      {isVimActive && !loading && <div class="vim-mode-indicator">VIM</div>}
     </div>
   )
 }

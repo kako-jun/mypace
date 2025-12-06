@@ -163,7 +163,6 @@ export default function Settings() {
       document.documentElement.setAttribute('data-theme', storedAppTheme)
     }
 
-    // Load vim mode setting
     const storedVimMode = localStorage.getItem('mypace_vim_mode')
     if (storedVimMode === 'true') {
       setVimMode(true)
@@ -505,21 +504,6 @@ export default function Settings() {
       </div>
 
       <div class="settings-section">
-        <h3>Editor</h3>
-        <p class="hint">Long mode editor settings</p>
-        <div class="vim-mode-toggle">
-          <label class="toggle-label">
-            <input
-              type="checkbox"
-              checked={vimMode}
-              onChange={(e) => handleVimModeChange((e.target as HTMLInputElement).checked)}
-            />
-            <span class="toggle-text">Vim mode</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="settings-section">
         <h3>Window Color</h3>
         <p class="hint">Customize background with 4-corner gradient</p>
 
@@ -562,6 +546,21 @@ export default function Settings() {
           </div>
         </div>
 
+      </div>
+
+      <div class="settings-section">
+        <h3>Editor</h3>
+        <p class="hint">Long mode editor settings</p>
+        <div class="vim-mode-toggle">
+          <label class="toggle-label">
+            <input
+              type="checkbox"
+              checked={vimMode}
+              onChange={(e) => handleVimModeChange((e.target as HTMLInputElement).checked)}
+            />
+            <span class="toggle-text">Vim mode</span>
+          </label>
+        </div>
       </div>
 
       {usingNip07 ? (
