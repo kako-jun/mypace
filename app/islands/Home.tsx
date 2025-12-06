@@ -130,7 +130,9 @@ export default function Home({ initialFilterTags, initialFilterMode }: HomeProps
         onReplyCancel={handleReplyCancel}
         onReplyComplete={handleReplyComplete}
       />
-      <Timeline onEditStart={handleEditStart} onReplyStart={handleReplyStart} initialFilterTags={initialFilterTags} initialFilterMode={initialFilterMode} />
+      <div class="container">
+        <Timeline onEditStart={handleEditStart} onReplyStart={handleReplyStart} initialFilterTags={initialFilterTags} initialFilterMode={initialFilterMode} />
+      </div>
     </>
   )
 }

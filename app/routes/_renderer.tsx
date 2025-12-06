@@ -16,7 +16,7 @@ export default jsxRenderer(({ children, title }) => {
         <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet" />
         <link rel="icon" type="image/webp" href="/favicon.webp" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.webp" />
-        <link rel="stylesheet" href="/static/style.css" />
+        <link rel="stylesheet" href="/app/styles/tailwind.css" />
         <Script src="/app/client.ts" async />
       </head>
       <body>

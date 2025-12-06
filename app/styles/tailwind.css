@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* Base styles */
+@import "./base.css";
+
+/* Component styles */
+@import "./components/post-form.css";
+@import "./components/timeline.css";
+@import "./components/settings.css";
+@import "./components/long-mode-editor.css";
+@import "./components/profile-setup.css";
+@import "./components/post-view.css";

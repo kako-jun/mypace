@@ -1,0 +1,57 @@
+/* LongModeEditor (CodeMirror) styles */
+
+/* CodeMirror Long Mode Editor */
+.long-mode-editor-wrapper {
+  position: relative;
+  flex: 1;
+  min-height: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.long-mode-editor-wrapper .long-mode-editor {
+  height: 100%;
+  min-height: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.long-mode-editor-wrapper .cm-editor {
+  height: 100%;
+  border-radius: 8px;
+}
+
+.long-mode-editor {
+  min-height: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.long-mode-editor .cm-editor {
+  height: 100%;
+}
+
+.long-mode-editor .cm-scroller {
+  font-family: 'M PLUS Rounded 1c', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.vim-mode-indicator {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  color: #0f0;
+  font-family: monospace;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.editor-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: var(--text-muted);
+}
