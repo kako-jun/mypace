@@ -407,7 +407,13 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
     }
     window.addEventListener('newpost', handleNewPost)
 
-    // Set up hashtag click handler - add to filter or navigate
+    return () => {
+      window.removeEventListener('newpost', handleNewPost)
+    }
+  }, [])
+
+  // Set up hashtag click handler - needs to update when filterTags/filterMode change
+  useEffect(() => {
     setHashtagClickHandler((tag) => {
       if (filterTags.length === 0) {
         // No existing filter, navigate to tag URL
@@ -419,11 +425,7 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
         window.location.href = `/tag/${newTags.map(t => encodeURIComponent(t)).join(separator)}`
       }
     })
-
-    return () => {
-      window.removeEventListener('newpost', handleNewPost)
-    }
-  }, [])
+  }, [filterTags, filterMode])
 
   if (loading && events.length === 0) {
     return <div class="loading">Loading...</div>

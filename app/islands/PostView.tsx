@@ -2,7 +2,7 @@ import { useState, useEffect } from 'hono/jsx'
 import { fetchEventById, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts, publishEvent } from '../lib/nostr/relay'
 import { formatTimestamp, getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent, getEventThemeColors, getThemeCardProps, type Profile } from '../lib/nostr/events'
 import { exportNpub } from '../lib/nostr/keys'
-import { renderContent } from '../lib/content-parser'
+import { renderContent, setHashtagClickHandler } from '../lib/content-parser'
 import type { Event } from 'nostr-tools'
 
 interface PostViewProps {
@@ -40,6 +40,11 @@ export default function PostView({ eventId }: PostViewProps) {
   const [deletedId, setDeletedId] = useState<string | null>(null)
 
   useEffect(() => {
+    // Set up hashtag click handler to navigate to tag page
+    setHashtagClickHandler((tag) => {
+      window.location.href = `/tag/${encodeURIComponent(tag)}`
+    })
+
     loadPost()
   }, [eventId])
 
