@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'hono/jsx'
 import { fetchEvents, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts, fetchRepostEvents, publishEvent } from '../lib/nostr/relay'
-import { formatTimestamp, getCurrentPubkey, createTextNote, createDeleteEvent, createReactionEvent, createReplyEvent, createRepostEvent, getEventThemeColors, getThemeCardProps, MYPACE_TAG, type Profile } from '../lib/nostr/events'
+import { formatTimestamp, getCurrentPubkey, createTextNote, createDeleteEvent, createReactionEvent, createRepostEvent, getEventThemeColors, getThemeCardProps, MYPACE_TAG, type Profile } from '../lib/nostr/events'
 import { exportNpub } from '../lib/nostr/keys'
 import { renderContent, setHashtagClickHandler } from '../lib/content-parser'
 import type { Event } from 'nostr-tools'
@@ -35,9 +35,10 @@ interface TimelineItem {
 
 interface TimelineProps {
   onEditStart?: (event: Event) => void
+  onReplyStart?: (event: Event) => void
 }
 
-export default function Timeline({ onEditStart }: TimelineProps) {
+export default function Timeline({ onEditStart, onReplyStart }: TimelineProps) {
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [profiles, setProfiles] = useState<ProfileCache>({})
@@ -53,9 +54,6 @@ export default function Timeline({ onEditStart }: TimelineProps) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [filterTag, setFilterTag] = useState<string | null>(null)
   const [likingId, setLikingId] = useState<string | null>(null)
-  const [replyingTo, setReplyingTo] = useState<Event | null>(null)
-  const [replyContent, setReplyContent] = useState('')
-  const [postingReply, setPostingReply] = useState(false)
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set())
   const [reposts, setReposts] = useState<{ [eventId: string]: RepostData }>({})
   const [repostingId, setRepostingId] = useState<string | null>(null)
@@ -126,15 +124,7 @@ export default function Timeline({ onEditStart }: TimelineProps) {
         return bTime - aTime
       })
 
-      // Dedupe by event id (keep first occurrence)
-      const seen = new Set<string>()
-      const dedupedItems = items.filter(item => {
-        if (seen.has(item.event.id)) return false
-        seen.add(item.event.id)
-        return true
-      })
-
-      setTimelineItems(dedupedItems)
+      setTimelineItems(items)
       setEvents(allOriginalEvents)
       loadProfiles(allOriginalEvents)
       loadReactions(allOriginalEvents, pubkey)
@@ -142,7 +132,7 @@ export default function Timeline({ onEditStart }: TimelineProps) {
       loadRepostsData(allOriginalEvents, pubkey)
 
       // Load profiles for reposters
-      const reposterPubkeys = dedupedItems
+      const reposterPubkeys = items
         .filter(item => item.repostedBy)
         .map(item => item.repostedBy!.pubkey)
       for (const pk of reposterPubkeys) {
@@ -364,32 +354,8 @@ export default function Timeline({ onEditStart }: TimelineProps) {
   }
 
   const handleReplyClick = (event: Event) => {
-    setReplyingTo(event)
-    setReplyContent('')
-  }
-
-  const handleReplyCancel = () => {
-    setReplyingTo(null)
-    setReplyContent('')
-  }
-
-  const handleReplySubmit = async (rootEvent: Event) => {
-    if (!replyContent.trim() || postingReply || !replyingTo) return
-
-    setPostingReply(true)
-    try {
-      const replyEvent = await createReplyEvent(replyContent.trim(), replyingTo, rootEvent)
-      await publishEvent(replyEvent)
-
-      setReplyingTo(null)
-      setReplyContent('')
-
-      // Reload timeline after a short delay
-      setTimeout(loadTimeline, 1000)
-    } catch (err) {
-      console.error('Failed to reply:', err)
-    } finally {
-      setPostingReply(false)
+    if (onReplyStart) {
+      onReplyStart(event)
     }
   }
 
@@ -566,32 +532,21 @@ export default function Timeline({ onEditStart }: TimelineProps) {
                       🔁{reposts[event.id]?.count ? ` ${reposts[event.id].count}` : ''}
                     </button>
                     {isMyPost && (
-                      <button class="edit-button" onClick={() => handleEdit(event)}>Edit</button>
+                      <>
+                        {isConfirmingDelete ? (
+                          <div class="delete-confirm">
+                            <span class="delete-confirm-text">Delete?</span>
+                            <button class="delete-confirm-yes" onClick={() => handleDeleteConfirm(event)}>Yes</button>
+                            <button class="delete-confirm-no" onClick={handleDeleteCancel}>No</button>
+                          </div>
+                        ) : (
+                          <>
+                            <button class="edit-button" onClick={() => handleEdit(event)}>Edit</button>
+                            <button class="delete-button" onClick={() => handleDeleteClick(event.id)}>Delete</button>
+                          </>
+                        )}
+                      </>
                     )}
-                  </div>
-                )}
-
-                {/* Reply form */}
-                {replyingTo?.id === event.id && (
-                  <div class="reply-form">
-                    <textarea
-                      class="reply-input"
-                      placeholder="返信を書く..."
-                      value={replyContent}
-                      onInput={(e) => setReplyContent((e.target as HTMLTextAreaElement).value)}
-                      rows={2}
-                      maxLength={4200}
-                    />
-                    <div class="reply-actions">
-                      <button class="reply-cancel" onClick={handleReplyCancel}>Cancel</button>
-                      <button
-                        class="reply-submit"
-                        onClick={() => handleReplySubmit(event)}
-                        disabled={postingReply || !replyContent.trim()}
-                      >
-                        {postingReply ? 'Posting...' : 'Reply'}
-                      </button>
-                    </div>
                   </div>
                 )}
 
