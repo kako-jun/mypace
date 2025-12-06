@@ -4,13 +4,20 @@ import { publishEvent } from '../lib/nostr/relay'
 import { renderContent } from '../lib/content-parser'
 import ProfileSetup, { hasLocalProfile } from './ProfileSetup'
 
-export default function PostForm() {
-  const [content, setContent] = useState('')
+interface PostFormProps {
+  longMode: boolean
+  onLongModeChange: (mode: boolean) => void
+  content: string
+  onContentChange: (content: string) => void
+  showPreview: boolean
+  onShowPreviewChange: (show: boolean) => void
+}
+
+export default function PostForm({ longMode, onLongModeChange, content, onContentChange, showPreview, onShowPreviewChange }: PostFormProps) {
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState('')
   const [hasProfile, setHasProfile] = useState(false)
   const [checkingProfile, setCheckingProfile] = useState(true)
-  const [showPreview, setShowPreview] = useState(false)
   const [themeColors, setThemeColors] = useState<ThemeColors | null>(null)
 
   useEffect(() => {
@@ -33,7 +40,7 @@ export default function PostForm() {
     try {
       const event = await createTextNote(content.trim())
       await publishEvent(event)
-      setContent('')
+      onContentChange('')
       window.dispatchEvent(new CustomEvent('newpost'))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to post')
@@ -60,16 +67,23 @@ export default function PostForm() {
   }
 
   return (
-    <form class="post-form" onSubmit={handleSubmit}>
+    <form class={`post-form ${longMode ? 'long-mode' : ''}`} onSubmit={handleSubmit}>
+      <button
+        type="button"
+        class={`mode-toggle-corner ${longMode ? 'active' : ''}`}
+        onClick={() => onLongModeChange(!longMode)}
+      >
+        {longMode ? 'Short mode' : 'Long mode'}
+      </button>
       <textarea
         class="post-input"
-        placeholder="マイペースに書こう"
+        placeholder={longMode ? "マイペースに書こう\n\n長文モードでじっくり書けます" : "マイペースに書こう"}
         value={content}
-        onInput={(e) => setContent((e.target as HTMLTextAreaElement).value)}
-        rows={3}
+        onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
+        rows={longMode ? 15 : 3}
         maxLength={4200}
       />
-      {showPreview && content.trim() && (() => {
+      {!longMode && showPreview && content.trim() && (() => {
         const themeProps = getThemeCardProps(themeColors)
         return (
           <div class={`post-preview ${themeProps.className}`} style={themeProps.style}>
@@ -85,7 +99,7 @@ export default function PostForm() {
           <button
             type="button"
             class={`preview-toggle ${showPreview ? 'active' : ''}`}
-            onClick={() => setShowPreview(!showPreview)}
+            onClick={() => onShowPreviewChange(!showPreview)}
           >
             {showPreview ? 'Hide' : 'Preview'}
           </button>

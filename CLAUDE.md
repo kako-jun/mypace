@@ -31,14 +31,16 @@ npm run deploy   # デプロイ
 - ハッシュタグフィルタリング（日本語対応）
 - ライト/ダークテーマ切り替え
 - ウィンドウカラー（4隅グラデーション背景）カスタマイズ
+- 長文モード（4200文字対応、プレビューは背景に表示）
 
 ## Key Files
 
 | Path | Description |
 |------|-------------|
-| `app/routes/index.tsx` | トップページ |
+| `app/routes/index.tsx` | トップページ（レイアウト） |
 | `app/routes/api/timeline.ts` | タイムラインAPI |
-| `app/islands/PostForm.tsx` | 投稿フォーム |
+| `app/islands/Home.tsx` | ホーム画面（状態管理） |
+| `app/islands/PostForm.tsx` | 投稿フォーム（左下固定） |
 | `app/islands/Timeline.tsx` | タイムライン表示 |
 | `app/islands/Settings.tsx` | 設定パネル |
 | `app/islands/ProfileSetup.tsx` | プロフィール設定 |
