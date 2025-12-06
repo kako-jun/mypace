@@ -83,6 +83,12 @@ export function applyThemeColors(colors: ThemeColors) {
   // Set html background for overscroll (blend of diagonal corners)
   document.documentElement.style.background = `linear-gradient(135deg, ${colors.topLeft} 0%, ${colors.bottomRight} 100%)`
 
+  // Update theme-color meta tag for browser chrome
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]')
+  if (themeColorMeta) {
+    themeColorMeta.setAttribute('content', colors.topLeft)
+  }
+
   // Set logo color based on top-left corner brightness
   const logoColor = isDarkColor(colors.topLeft) ? '#ffffff' : '#222222'
   document.documentElement.style.setProperty('--logo-color', logoColor)
@@ -104,6 +110,12 @@ export function clearThemeColors() {
   document.documentElement.style.removeProperty('--settings-color')
   document.documentElement.style.removeProperty('--settings-hover-color')
   document.documentElement.style.background = '#f8f8f8'
+
+  // Reset theme-color meta tag
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]')
+  if (themeColorMeta) {
+    themeColorMeta.setAttribute('content', '#f8f8f8')
+  }
 }
 
 export default function Settings() {
@@ -121,6 +133,19 @@ export default function Settings() {
   const [themeColors, setThemeColors] = useState<ThemeColors>(DEFAULT_COLORS)
   const [themeEnabled, setThemeEnabled] = useState(false)
   const [showNsec, setShowNsec] = useState(false)
+  const [appTheme, setAppTheme] = useState<'light' | 'dark'>('light')
+
+  // Disable body scroll when settings panel is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [open])
 
   // Load theme on mount (not just when settings panel opens)
   useEffect(() => {
@@ -130,6 +155,13 @@ export default function Settings() {
     setThemeEnabled(isEnabled)
     if (isEnabled) {
       applyThemeColors(storedColors)
+    }
+
+    // Load app theme (light/dark)
+    const storedAppTheme = localStorage.getItem('mypace_app_theme') as 'light' | 'dark' | null
+    if (storedAppTheme) {
+      setAppTheme(storedAppTheme)
+      document.documentElement.setAttribute('data-theme', storedAppTheme)
     }
   }, [])
 
@@ -240,8 +272,10 @@ export default function Settings() {
   const handleColorChange = (corner: keyof ThemeColors, color: string) => {
     const newColors = { ...themeColors, [corner]: color }
     setThemeColors(newColors)
+    // Apply and save immediately
     if (themeEnabled) {
       applyThemeColors(newColors)
+      localStorage.setItem('mypace_theme_colors', JSON.stringify(newColors))
     }
   }
 
@@ -251,24 +285,16 @@ export default function Settings() {
     localStorage.setItem('mypace_theme_enabled', String(newEnabled))
     if (newEnabled) {
       applyThemeColors(themeColors)
+      localStorage.setItem('mypace_theme_colors', JSON.stringify(themeColors))
     } else {
       clearThemeColors()
     }
   }
 
-  const handleSaveTheme = () => {
-    localStorage.setItem('mypace_theme_colors', JSON.stringify(themeColors))
-    localStorage.setItem('mypace_theme_enabled', 'true')
-    setThemeEnabled(true)
-    applyThemeColors(themeColors)
-  }
-
-  const handleResetTheme = () => {
-    setThemeColors(DEFAULT_COLORS)
-    localStorage.removeItem('mypace_theme_colors')
-    localStorage.setItem('mypace_theme_enabled', 'false')
-    setThemeEnabled(false)
-    clearThemeColors()
+  const handleAppThemeChange = (theme: 'light' | 'dark') => {
+    setAppTheme(theme)
+    localStorage.setItem('mypace_app_theme', theme)
+    document.documentElement.setAttribute('data-theme', theme)
   }
 
   if (!open) {
@@ -280,11 +306,12 @@ export default function Settings() {
   }
 
   return (
-    <div class="settings-panel">
-      <div class="settings-header">
-        <h2>Settings</h2>
-        <button class="close-button" onClick={() => setOpen(false)}>x</button>
-      </div>
+    <>
+      <div class="settings-backdrop" onClick={() => setOpen(false)} />
+      <div class="settings-panel" onClick={(e) => e.stopPropagation()}>
+        <div class="settings-header">
+          <h2>Settings</h2>
+        </div>
 
       <div class="settings-section">
         <h3>Profile</h3>
@@ -302,6 +329,24 @@ export default function Settings() {
         </div>
         {nameError && <p class="error">{nameError}</p>}
         {nameSaved && <p class="success">Updated!</p>}
+      </div>
+
+      <div class="settings-section">
+        <h3>App Theme</h3>
+        <div class="theme-switcher">
+          <Button
+            onClick={() => handleAppThemeChange('light')}
+            variant={appTheme === 'light' ? 'primary' : 'secondary'}
+          >
+            Light
+          </Button>
+          <Button
+            onClick={() => handleAppThemeChange('dark')}
+            variant={appTheme === 'dark' ? 'primary' : 'secondary'}
+          >
+            Dark
+          </Button>
+        </div>
       </div>
 
       <div class="settings-section">
@@ -358,8 +403,6 @@ export default function Settings() {
             />
             Enable
           </label>
-          <Button onClick={handleSaveTheme}>Apply</Button>
-          <Button onClick={handleResetTheme} variant="secondary">Reset</Button>
         </div>
       </div>
 
@@ -422,6 +465,13 @@ export default function Settings() {
           </div>
         </>
       )}
-    </div>
+
+      <div class="settings-footer">
+        <a href="https://github.com/kako-jun/mypace" target="_blank" rel="noopener noreferrer">
+          GitHub
+        </a>
+      </div>
+      </div>
+    </>
   )
 }
