@@ -36,9 +36,10 @@ interface TimelineItem {
 interface TimelineProps {
   onEditStart?: (event: Event) => void
   onReplyStart?: (event: Event) => void
+  initialFilterTag?: string
 }
 
-export default function Timeline({ onEditStart, onReplyStart }: TimelineProps) {
+export default function Timeline({ onEditStart, onReplyStart, initialFilterTag }: TimelineProps) {
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [profiles, setProfiles] = useState<ProfileCache>({})
@@ -52,7 +53,7 @@ export default function Timeline({ onEditStart, onReplyStart }: TimelineProps) {
   const [savedId, setSavedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
-  const [filterTag, setFilterTag] = useState<string | null>(null)
+  const [filterTag, setFilterTag] = useState<string | null>(initialFilterTag || null)
   const [likingId, setLikingId] = useState<string | null>(null)
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set())
   const [reposts, setReposts] = useState<{ [eventId: string]: RepostData }>({})
@@ -404,9 +405,9 @@ export default function Timeline({ onEditStart, onReplyStart }: TimelineProps) {
     }
     window.addEventListener('newpost', handleNewPost)
 
-    // Set up hashtag click handler
+    // Set up hashtag click handler - navigate to tag URL
     setHashtagClickHandler((tag) => {
-      setFilterTag(tag)
+      window.location.href = `/tag/${encodeURIComponent(tag)}`
     })
 
     return () => {
@@ -437,7 +438,9 @@ export default function Timeline({ onEditStart, onReplyStart }: TimelineProps) {
       })
     : timelineItems
 
-  const clearFilter = () => setFilterTag(null)
+  const clearFilter = () => {
+    window.location.href = '/'
+  }
 
   return (
     <div class="timeline">
@@ -457,11 +460,21 @@ export default function Timeline({ onEditStart, onReplyStart }: TimelineProps) {
         const themeColors = getEventThemeColors(event)
         const themeProps = getThemeCardProps(themeColors)
 
+        const handleCardClick = (e: MouseEvent) => {
+          // Don't navigate if clicking on buttons or links
+          const target = e.target as HTMLElement
+          if (target.closest('button') || target.closest('a') || target.closest('.post-footer') || target.closest('.thread-section')) {
+            return
+          }
+          window.location.href = `/post/${event.id}`
+        }
+
         return (
           <article
             key={item.repostedBy ? `repost-${event.id}-${item.repostedBy.pubkey}` : event.id}
-            class={`post-card ${isMyPost ? 'my-post' : ''} ${themeProps.className}`}
+            class={`post-card clickable ${isMyPost ? 'my-post' : ''} ${themeProps.className}`}
             style={themeProps.style}
+            onClick={handleCardClick}
           >
             {item.repostedBy && (
               <div class="repost-label">
@@ -500,7 +513,16 @@ export default function Timeline({ onEditStart, onReplyStart }: TimelineProps) {
               </div>
             ) : (
               <>
-                <div class="post-content">{renderContent(event.content)}</div>
+                <div class="post-content">
+                  {event.content.length > 420 || event.content.split('\n').length > 42 ? (
+                    <>
+                      {renderContent(event.content.slice(0, 420) + '...')}
+                      <span class="read-more-text">続きを読む</span>
+                    </>
+                  ) : (
+                    renderContent(event.content)
+                  )}
+                </div>
                 {justSaved && <p class="success">Saved!</p>}
                 {justDeleted && <p class="success">Deleted!</p>}
                 {!justSaved && !justDeleted && (

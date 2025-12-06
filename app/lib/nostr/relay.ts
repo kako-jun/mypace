@@ -53,6 +53,16 @@ export async function fetchUserProfile(pubkey: string): Promise<Event | null> {
   return events[0] || null
 }
 
+// Fetch a single event by ID
+export async function fetchEventById(eventId: string): Promise<Event | null> {
+  const p = getPool()
+  const events = await p.querySync(RELAYS, {
+    ids: [eventId],
+    limit: 1,
+  })
+  return events[0] || null
+}
+
 // Fetch reactions (kind 7) for given event IDs
 export async function fetchReactions(eventIds: string[]): Promise<Event[]> {
   if (eventIds.length === 0) return []
