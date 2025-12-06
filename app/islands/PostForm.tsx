@@ -210,7 +210,7 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
 
   return (
     <form
-      class={`post-form ${longMode ? 'long-mode' : ''} ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''}`}
+      class={`post-form ${longMode ? 'long-mode' : ''} ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
       onSubmit={handleSubmit}
     >
       {editingEvent && (

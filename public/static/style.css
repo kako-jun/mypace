@@ -227,7 +227,14 @@ body.long-mode-active .container {
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   z-index: 100;
-  transition: background 0.2s ease, box-shadow 0.3s ease, width 0.3s ease;
+  transition: background 0.2s ease, box-shadow 0.3s ease, width 0.3s ease, opacity 0.5s ease;
+  opacity: 0.9;
+}
+
+.post-form:hover,
+.post-form:focus-within,
+.post-form.active {
+  opacity: 1;
 }
 
 .post-form:focus-within {
@@ -911,6 +918,11 @@ body.long-mode-active .container {
   color: #3498db;
 }
 
+.filter-share.copied {
+  border-color: #2ecc71;
+  color: #2ecc71;
+}
+
 .filter-clear {
   background: none;
   border: none;
@@ -1035,6 +1047,10 @@ body.long-mode-active .container {
 .share-button:hover {
   color: #3498db;
   transform: scale(1.1);
+}
+
+.share-button.copied {
+  color: #2ecc71;
 }
 
 .repost-button:disabled {
