@@ -1,0 +1,18 @@
+import { createRoute } from 'honox/factory'
+import Home from '../../islands/Home'
+import Settings from '../../islands/Settings'
+import Logo from '../../islands/Logo'
+
+export default createRoute((c) => {
+  const tag = c.req.param('tag')
+  return c.render(
+    <main class="container">
+      <header class="header">
+        <Logo />
+        <Settings />
+      </header>
+      <Home initialFilterTag={tag} />
+    </main>,
+    { title: `#${tag} - MY★PACE` }
+  )
+})

@@ -4,7 +4,11 @@ import Timeline from './Timeline'
 import { renderContent } from '../lib/content-parser'
 import type { Event } from 'nostr-tools'
 
-export default function Home() {
+interface HomeProps {
+  initialFilterTag?: string
+}
+
+export default function Home({ initialFilterTag }: HomeProps) {
   const [longMode, setLongMode] = useState(false)
   const [content, setContent] = useState('')
   const [showPreview, setShowPreview] = useState(false)
@@ -99,7 +103,7 @@ export default function Home() {
         onReplyCancel={handleReplyCancel}
         onReplyComplete={handleReplyComplete}
       />
-      <Timeline onEditStart={handleEditStart} onReplyStart={handleReplyStart} />
+      <Timeline onEditStart={handleEditStart} onReplyStart={handleReplyStart} initialFilterTag={initialFilterTag} />
     </>
   )
 }
