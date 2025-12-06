@@ -7,7 +7,10 @@ export default createRoute((c) => {
   return c.render(
     <main class="container">
       <header class="header">
-        <h1>mypace</h1>
+        <div class="logo">
+          <span class="logo-my">MY</span>
+          <span class="logo-pace">PACE</span>
+        </div>
         <Settings />
       </header>
       <PostForm />
