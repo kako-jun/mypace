@@ -90,8 +90,11 @@ export function applyThemeColors(colors: ThemeColors) {
   }
 
   // Set logo color based on top-left corner brightness
-  const logoColor = isDarkColor(colors.topLeft) ? '#ffffff' : '#222222'
+  const isTopLeftDark = isDarkColor(colors.topLeft)
+  const logoColor = isTopLeftDark ? '#ffffff' : '#222222'
+  const logoShadow = isTopLeftDark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.8)'
   document.documentElement.style.setProperty('--logo-color', logoColor)
+  document.documentElement.style.setProperty('--logo-shadow', logoShadow)
 
   // Set settings button color based on top-right corner brightness
   const settingsColor = isDarkColor(colors.topRight) ? '#cccccc' : '#888888'
@@ -100,22 +103,6 @@ export function applyThemeColors(colors: ThemeColors) {
   document.documentElement.style.setProperty('--settings-hover-color', settingsHoverColor)
 
   document.body.classList.add('custom-theme')
-}
-
-export function clearThemeColors() {
-  if (typeof document === 'undefined') return
-  document.body.classList.remove('custom-theme')
-  document.documentElement.style.removeProperty('--theme-gradient')
-  document.documentElement.style.removeProperty('--logo-color')
-  document.documentElement.style.removeProperty('--settings-color')
-  document.documentElement.style.removeProperty('--settings-hover-color')
-  document.documentElement.style.background = '#f8f8f8'
-
-  // Reset theme-color meta tag
-  const themeColorMeta = document.querySelector('meta[name="theme-color"]')
-  if (themeColorMeta) {
-    themeColorMeta.setAttribute('content', '#f8f8f8')
-  }
 }
 
 export default function Settings() {
@@ -131,7 +118,6 @@ export default function Settings() {
   const [nameError, setNameError] = useState('')
   const [nameSaved, setNameSaved] = useState(false)
   const [themeColors, setThemeColors] = useState<ThemeColors>(DEFAULT_COLORS)
-  const [themeEnabled, setThemeEnabled] = useState(false)
   const [showNsec, setShowNsec] = useState(false)
   const [appTheme, setAppTheme] = useState<'light' | 'dark'>('light')
 
@@ -150,12 +136,8 @@ export default function Settings() {
   // Load theme on mount (not just when settings panel opens)
   useEffect(() => {
     const storedColors = getStoredThemeColors()
-    const isEnabled = localStorage.getItem('mypace_theme_enabled') === 'true'
     setThemeColors(storedColors)
-    setThemeEnabled(isEnabled)
-    if (isEnabled) {
-      applyThemeColors(storedColors)
-    }
+    applyThemeColors(storedColors)
 
     // Load app theme (light/dark)
     const storedAppTheme = localStorage.getItem('mypace_app_theme') as 'light' | 'dark' | null
@@ -273,22 +255,8 @@ export default function Settings() {
     const newColors = { ...themeColors, [corner]: color }
     setThemeColors(newColors)
     // Apply and save immediately
-    if (themeEnabled) {
-      applyThemeColors(newColors)
-      localStorage.setItem('mypace_theme_colors', JSON.stringify(newColors))
-    }
-  }
-
-  const handleThemeToggle = () => {
-    const newEnabled = !themeEnabled
-    setThemeEnabled(newEnabled)
-    localStorage.setItem('mypace_theme_enabled', String(newEnabled))
-    if (newEnabled) {
-      applyThemeColors(themeColors)
-      localStorage.setItem('mypace_theme_colors', JSON.stringify(themeColors))
-    } else {
-      clearThemeColors()
-    }
+    applyThemeColors(newColors)
+    localStorage.setItem('mypace_theme_colors', JSON.stringify(newColors))
   }
 
   const handleAppThemeChange = (theme: 'light' | 'dark') => {
@@ -334,18 +302,20 @@ export default function Settings() {
       <div class="settings-section">
         <h3>App Theme</h3>
         <div class="theme-switcher">
-          <Button
-            onClick={() => handleAppThemeChange('light')}
-            variant={appTheme === 'light' ? 'primary' : 'secondary'}
-          >
-            Light
-          </Button>
-          <Button
-            onClick={() => handleAppThemeChange('dark')}
-            variant={appTheme === 'dark' ? 'primary' : 'secondary'}
-          >
-            Dark
-          </Button>
+          {appTheme === 'light' ? (
+            <span class="theme-current">Light</span>
+          ) : (
+            <Button onClick={() => handleAppThemeChange('light')}>
+              Light
+            </Button>
+          )}
+          {appTheme === 'dark' ? (
+            <span class="theme-current">Dark</span>
+          ) : (
+            <Button onClick={() => handleAppThemeChange('dark')}>
+              Dark
+            </Button>
+          )}
         </div>
       </div>
 
@@ -354,13 +324,11 @@ export default function Settings() {
         <p class="hint">Customize background with 4-corner gradient</p>
 
         <div class="theme-preview" style={{
-          background: themeEnabled
-            ? `radial-gradient(ellipse at top left, ${themeColors.topLeft}dd 0%, transparent 50%),
+          background: `radial-gradient(ellipse at top left, ${themeColors.topLeft}dd 0%, transparent 50%),
                radial-gradient(ellipse at top right, ${themeColors.topRight}dd 0%, transparent 50%),
                radial-gradient(ellipse at bottom left, ${themeColors.bottomLeft}dd 0%, transparent 50%),
                radial-gradient(ellipse at bottom right, ${themeColors.bottomRight}dd 0%, transparent 50%),
                linear-gradient(135deg, ${themeColors.topLeft} 0%, ${themeColors.bottomRight} 100%)`
-            : '#f8f8f8'
         }}>
           <div class="color-picker-grid">
             <div class="color-picker-corner top-left">
@@ -394,16 +362,6 @@ export default function Settings() {
           </div>
         </div>
 
-        <div class="theme-actions">
-          <label class="theme-toggle-label">
-            <input
-              type="checkbox"
-              checked={themeEnabled}
-              onChange={handleThemeToggle}
-            />
-            Enable
-          </label>
-        </div>
       </div>
 
       {usingNip07 ? (

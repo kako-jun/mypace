@@ -1,3 +1,71 @@
+/* ===========================================
+   Theme Variables
+   =========================================== */
+:root {
+  /* Surface colors */
+  --surface-primary: #fff;           /* Cards, panels, forms */
+  --surface-secondary: #f5f5f5;      /* Input backgrounds */
+  --surface-tertiary: #f0f0f0;       /* Input focus, hover states */
+
+  /* Text colors */
+  --text-primary: #333;              /* Main text */
+  --text-secondary: #666;            /* Secondary text, labels */
+  --text-muted: #888;                /* Hints, placeholders */
+  --text-placeholder: #aaa;          /* Input placeholders */
+
+  /* Border colors */
+  --border-light: #f0f0f0;           /* Section dividers */
+  --border-medium: #e0e0e0;          /* Input borders */
+
+  /* Button colors */
+  --btn-primary-bg: #333;
+  --btn-primary-text: #fff;
+  --btn-primary-hover: #555;
+  --btn-secondary-bg: #fff;
+  --btn-secondary-border: #333;
+  --btn-secondary-text: #333;
+  --btn-secondary-hover-bg: #f5f5f5;
+
+  /* Code block */
+  --code-bg: #f0f0f0;
+  --code-text: #c7254e;
+}
+
+[data-theme="dark"] {
+  /* Surface colors */
+  --surface-primary: #1e1e1e;
+  --surface-secondary: #2a2a2a;
+  --surface-tertiary: #333;
+
+  /* Text colors */
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-muted: #888;
+  --text-placeholder: #666;
+
+  /* Border colors */
+  --border-light: #333;
+  --border-medium: #444;
+
+  /* Button colors */
+  --btn-primary-bg: #fff;
+  --btn-primary-text: #333;
+  --btn-primary-hover: #e0e0e0;
+  --btn-secondary-bg: transparent;
+  --btn-secondary-border: #666;
+  --btn-secondary-text: #ccc;
+  --btn-secondary-hover-bg: #333;
+
+  /* Code block */
+  --code-bg: #333;
+  --code-text: #e0e0e0;
+
+  color-scheme: dark;
+}
+
+/* ===========================================
+   Base Styles
+   =========================================== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -14,7 +82,7 @@ html {
 
 body {
   font-family: 'M PLUS Rounded 1c', -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #333;
+  color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
 }
@@ -74,17 +142,22 @@ body {
 }
 
 .btn-primary {
-  background: #333;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--btn-primary-hover);
 }
 
 .btn-secondary {
-  background: #fff;
-  border: 2px solid #333;
-  color: #333;
+  background: var(--btn-secondary-bg);
+  border: 2px solid var(--btn-secondary-border);
+  color: var(--btn-secondary-text);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #f0f0f0;
+  background: var(--btn-secondary-hover-bg);
 }
 
 .btn-danger {
@@ -140,7 +213,7 @@ body {
 
 /* Post Form - borderless */
 .post-form {
-  background: #fff;
+  background: var(--surface-primary);
   padding: 1.25rem;
   margin-bottom: 2rem;
   border-radius: 12px;
@@ -148,7 +221,7 @@ body {
 }
 
 .post-form:focus-within {
-  background: #fff;
+  background: var(--surface-primary);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
@@ -160,11 +233,11 @@ body {
   font-family: inherit;
   outline: none;
   background: transparent;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .post-input::placeholder {
-  color: #aaa;
+  color: var(--text-placeholder);
 }
 
 .post-actions {
@@ -190,7 +263,7 @@ body {
 .preview-toggle {
   background: none;
   border: none;
-  color: #888;
+  color: var(--text-muted);
   font-size: 0.8rem;
   cursor: pointer;
   padding: 0.25rem 0.5rem;
@@ -199,13 +272,13 @@ body {
 }
 
 .preview-toggle:hover {
-  color: #555;
-  background: #f0f0f0;
+  color: var(--text-secondary);
+  background: var(--surface-tertiary);
 }
 
 .preview-toggle.active {
-  color: #333;
-  background: #e8e8e8;
+  color: var(--text-primary);
+  background: var(--surface-tertiary);
 }
 
 .char-count {
@@ -658,7 +731,7 @@ body {
 }
 
 .profile-notice {
-  color: #888;
+  color: var(--text-muted);
   font-size: 0.9rem;
   margin-bottom: 0.75rem;
 }
@@ -676,7 +749,8 @@ body {
   height: 36px;
   margin: 0;
   border: none;
-  background: #f5f5f5;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
   border-radius: 8px;
   padding: 0 0.75rem;
   font-size: 0.85rem;
@@ -686,7 +760,12 @@ body {
 
 .profile-form input:focus,
 .input-row input:focus {
-  background: #f0f0f0;
+  background: var(--surface-tertiary);
+}
+
+.profile-form input::placeholder,
+.input-row input::placeholder {
+  color: var(--text-placeholder);
 }
 
 /* Loading & Empty */
@@ -694,7 +773,7 @@ body {
 .empty {
   text-align: center;
   padding: 3rem;
-  color: #bbb;
+  color: var(--text-placeholder);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -790,7 +869,8 @@ body {
   max-width: 440px;
   height: 100vh;
   overflow-y: auto;
-  background: #fff;
+  background: var(--surface-primary);
+  color: var(--text-primary);
   padding: 1.25rem;
   text-align: left;
   z-index: 1000;
@@ -826,7 +906,7 @@ body {
 .settings-header h2 {
   font-size: 0.95rem;
   font-weight: 500;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .close-button {
@@ -848,7 +928,7 @@ body {
 .settings-section {
   margin-bottom: 1.25rem;
   padding-bottom: 1.25rem;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .settings-section:last-child {
@@ -860,7 +940,7 @@ body {
 .settings-section h3 {
   font-size: 0.8rem;
   font-weight: 500;
-  color: #888;
+  color: var(--text-muted);
   margin-bottom: 0.5rem;
 }
 
@@ -871,18 +951,18 @@ body {
 .key-display label {
   display: block;
   font-size: 0.7rem;
-  color: #aaa;
+  color: var(--text-placeholder);
   margin-bottom: 0.25rem;
 }
 
 .key-display code {
   display: block;
-  background: #f5f5f5;
+  background: var(--surface-secondary);
   padding: 0.6rem;
   border-radius: 8px;
   font-size: 0.7rem;
   word-break: break-all;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .secret-row {
@@ -905,7 +985,7 @@ body {
 
 .hint {
   font-size: 0.7rem;
-  color: #aaa;
+  color: var(--text-placeholder);
   margin-bottom: 0.5rem;
 }
 
@@ -913,7 +993,8 @@ body {
   width: 100%;
   padding: 0.6rem;
   border: none;
-  background: #f5f5f5;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
   border-radius: 8px;
   font-size: 0.85rem;
   margin-bottom: 0.5rem;
@@ -922,11 +1003,11 @@ body {
 }
 
 .settings-section > input:focus {
-  background: #f0f0f0;
+  background: var(--surface-tertiary);
 }
 
 .settings-section input::placeholder {
-  color: #aaa;
+  color: var(--text-placeholder);
 }
 
 .settings-section.danger {
@@ -983,7 +1064,7 @@ body.custom-theme .filter-bar {
 body.custom-theme .logo-my,
 body.custom-theme .logo-pace {
   color: var(--logo-color, #222);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 3px var(--logo-shadow, rgba(0, 0, 0, 0.4));
 }
 
 body.custom-theme .settings-toggle {
@@ -996,11 +1077,12 @@ body.custom-theme .settings-toggle:hover {
 
 /* Theme preview in settings */
 .theme-preview {
-  width: 100%;
+  width: 80%;
+  max-width: 200px;
   height: 120px;
   border-radius: 8px;
   position: relative;
-  margin-bottom: 0.75rem;
+  margin: 0 auto 0.75rem;
   transition: background 0.3s ease;
 }
 
@@ -1187,78 +1269,22 @@ body.custom-theme .settings-toggle:hover {
   display: flex;
   gap: 0.5rem;
   justify-content: center;
+  align-items: center;
 }
 
-/* Dark Theme - Only affects Settings panel and buttons */
-[data-theme="dark"] {
-  color-scheme: dark;
+.theme-switcher .btn {
+  width: 5rem;
 }
 
-/* Settings panel background: white -> black */
-[data-theme="dark"] .settings-panel {
-  background: #1a1a1a;
-  color: #e0e0e0;
+.theme-current {
+  width: 5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: var(--text-color);
+  text-align: center;
 }
 
-[data-theme="dark"] .settings-panel h2,
-[data-theme="dark"] .settings-panel h3 {
-  color: #fff;
-}
-
-/* Input fields in settings */
-[data-theme="dark"] .settings-panel input[type="text"],
-[data-theme="dark"] .settings-panel input[type="password"] {
-  background: #333;
-  border-color: #444;
-  color: #e0e0e0;
-}
-
-[data-theme="dark"] .settings-panel input::placeholder {
-  color: #666;
-}
-
-[data-theme="dark"] .settings-panel code {
-  background: #333;
-  color: #e0e0e0;
-}
-
-[data-theme="dark"] .settings-section {
-  border-color: #333;
-}
-
-[data-theme="dark"] .hint {
-  color: #888;
-}
-
-[data-theme="dark"] .key-display label {
-  color: #aaa;
-}
-
-/* Buttons: black -> white */
-[data-theme="dark"] .settings-panel .btn-primary {
-  background: #fff;
-  color: #333;
-}
-
-[data-theme="dark"] .settings-panel .btn-primary:hover:not(:disabled) {
-  background: #e0e0e0;
-}
-
-[data-theme="dark"] .settings-panel .btn-secondary {
-  background: transparent;
-  border-color: #888;
-  color: #ccc;
-}
-
-[data-theme="dark"] .settings-panel .btn-secondary:hover:not(:disabled) {
-  background: #333;
-}
-
-[data-theme="dark"] .settings-panel .btn-danger {
-  background: #c44;
-  color: #fff;
-}
-
+/* Dark Theme - special overrides not covered by CSS variables */
 [data-theme="dark"] .settings-backdrop {
   background: rgba(0, 0, 0, 0.6);
 }
@@ -1267,96 +1293,17 @@ body.custom-theme .settings-toggle:hover {
 .settings-footer {
   margin-top: 2rem;
   padding-top: 1rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-light);
   text-align: center;
 }
 
 .settings-footer a {
-  color: #888;
+  color: var(--text-muted);
   text-decoration: none;
   font-size: 0.85rem;
 }
 
 .settings-footer a:hover {
-  color: #555;
+  color: var(--text-secondary);
   text-decoration: underline;
-}
-
-[data-theme="dark"] .settings-footer {
-  border-color: #333;
-}
-
-[data-theme="dark"] .settings-footer a {
-  color: #888;
-}
-
-[data-theme="dark"] .settings-footer a:hover {
-  color: #ccc;
-}
-
-/* Dark Theme - Home screen elements */
-/* Post form */
-[data-theme="dark"] .post-form {
-  background: #1a1a1a;
-}
-
-[data-theme="dark"] .post-form:focus-within {
-  background: #222;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-[data-theme="dark"] .post-input {
-  color: #e0e0e0;
-}
-
-[data-theme="dark"] .post-input::placeholder {
-  color: #666;
-}
-
-[data-theme="dark"] .preview-toggle {
-  color: #888;
-}
-
-[data-theme="dark"] .preview-toggle:hover {
-  color: #ccc;
-  background: #333;
-}
-
-/* Profile setup form on home */
-[data-theme="dark"] .profile-notice {
-  color: #888;
-}
-
-[data-theme="dark"] .profile-form input,
-[data-theme="dark"] .input-row input {
-  background: #333;
-  color: #e0e0e0;
-}
-
-[data-theme="dark"] .profile-form input:focus,
-[data-theme="dark"] .input-row input:focus {
-  background: #3a3a3a;
-}
-
-[data-theme="dark"] .profile-form input::placeholder,
-[data-theme="dark"] .input-row input::placeholder {
-  color: #666;
-}
-
-/* Buttons outside settings panel */
-[data-theme="dark"] .post-form .btn-primary,
-[data-theme="dark"] .profile-setup .btn-primary {
-  background: #fff;
-  color: #333;
-}
-
-[data-theme="dark"] .post-form .btn-primary:hover:not(:disabled),
-[data-theme="dark"] .profile-setup .btn-primary:hover:not(:disabled) {
-  background: #e0e0e0;
-}
-
-/* Loading and empty states */
-[data-theme="dark"] .loading,
-[data-theme="dark"] .empty {
-  color: #666;
 }
