@@ -221,6 +221,77 @@ body {
   color: #444;
 }
 
+/* Content links */
+.content-link {
+  color: #4a9;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.content-link:hover {
+  text-decoration: underline;
+}
+
+/* Content hashtags */
+.content-hashtag {
+  background: none;
+  border: none;
+  color: #69a;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.content-hashtag:hover {
+  text-decoration: underline;
+}
+
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f0f0f0;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.filter-label {
+  color: #69a;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.filter-clear {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+
+.filter-clear:hover {
+  color: #666;
+}
+
+/* Content images */
+.content-image-wrapper {
+  display: block;
+  margin: 0.75rem 0;
+}
+
+.content-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
 /* Edit button - subtle */
 .edit-button {
   background: none;

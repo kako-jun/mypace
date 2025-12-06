@@ -2,6 +2,7 @@ import { useState, useEffect } from 'hono/jsx'
 import { fetchEvents, fetchUserProfile, publishEvent } from '../lib/nostr/relay'
 import { formatTimestamp, getCurrentPubkey, createTextNote, createDeleteEvent, type Profile } from '../lib/nostr/events'
 import { exportNpub } from '../lib/nostr/keys'
+import { renderContent, setHashtagClickHandler } from '../lib/content-parser'
 import type { Event } from 'nostr-tools'
 
 interface ProfileCache {
@@ -19,6 +20,7 @@ export default function Timeline() {
   const [savedId, setSavedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [filterTag, setFilterTag] = useState<string | null>(null)
 
   const loadTimeline = async () => {
     setLoading(true)
@@ -140,7 +142,15 @@ export default function Timeline() {
       setTimeout(loadTimeline, 1000)
     }
     window.addEventListener('newpost', handleNewPost)
-    return () => window.removeEventListener('newpost', handleNewPost)
+
+    // Set up hashtag click handler
+    setHashtagClickHandler((tag) => {
+      setFilterTag(tag)
+    })
+
+    return () => {
+      window.removeEventListener('newpost', handleNewPost)
+    }
   }, [])
 
   if (loading && events.length === 0) {
@@ -156,9 +166,27 @@ export default function Timeline() {
     )
   }
 
+  // Filter events by hashtag (check content for #tag)
+  const filteredEvents = filterTag
+    ? events.filter((e) => {
+        // Use word boundary that works with Japanese characters
+        const escapedTag = filterTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const tagRegex = new RegExp(`#${escapedTag}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`, 'i')
+        return tagRegex.test(e.content)
+      })
+    : events
+
+  const clearFilter = () => setFilterTag(null)
+
   return (
     <div class="timeline">
-      {events.map((event) => {
+      {filterTag && (
+        <div class="filter-bar">
+          <span class="filter-label">#{filterTag}</span>
+          <button class="filter-clear" onClick={clearFilter}>×</button>
+        </div>
+      )}
+      {filteredEvents.map((event) => {
         const isMyPost = myPubkey === event.pubkey
         const isEditing = editingId === event.id
         const justSaved = savedId === event.id
@@ -199,7 +227,7 @@ export default function Timeline() {
               </div>
             ) : (
               <>
-                <p class="post-content">{event.content}</p>
+                <div class="post-content">{renderContent(event.content)}</div>
                 {justSaved && <p class="success">Saved!</p>}
                 {justDeleted && <p class="success">Deleted!</p>}
                 {isMyPost && !justSaved && !justDeleted && (
@@ -210,7 +238,11 @@ export default function Timeline() {
           </article>
         )
       })}
-      {events.length === 0 && <p class="empty">No posts yet</p>}
+      {filteredEvents.length === 0 && (
+        <p class="empty">
+          {filterTag ? `No posts with #${filterTag}` : 'No posts yet'}
+        </p>
+      )}
     </div>
   )
 }

@@ -27,6 +27,8 @@ npm run deploy   # デプロイ
 - 投稿の編集・削除
 - NIP-07対応（ブラウザ拡張）
 - 鍵のエクスポート・インポート
+- コンテンツパース（ハッシュタグ、URL、画像）
+- ハッシュタグフィルタリング（日本語対応）
 
 ## Key Files
 
@@ -38,6 +40,8 @@ npm run deploy   # デプロイ
 | `app/islands/Timeline.tsx` | タイムライン表示 |
 | `app/islands/Settings.tsx` | 設定パネル |
 | `app/islands/ProfileSetup.tsx` | プロフィール設定 |
+| `app/islands/Logo.tsx` | ロゴ（クリックでリロード） |
+| `app/lib/content-parser.tsx` | コンテンツパーサー |
 | `app/lib/nostr/events.ts` | Nostrイベント生成 |
 | `app/lib/nostr/relay.ts` | リレー通信 |
 | `app/lib/nostr/keys.ts` | 鍵管理 |
