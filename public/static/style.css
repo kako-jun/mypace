@@ -171,6 +171,11 @@ body {
   padding: 6rem 1rem 2rem;
 }
 
+body.long-mode-active .container {
+  max-width: none;
+  padding: 6rem 2rem 2rem;
+}
+
 .header {
   position: fixed;
   top: 0;
@@ -242,14 +247,65 @@ body {
   line-height: 1.8;
 }
 
-/* Long mode preview (transparent, uses page background) */
+/* Long mode - flex layout */
+.long-mode-container {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  height: calc(100vh - 9rem);
+}
+
+.long-mode-editor {
+  flex: 1;
+}
+
+.long-mode-editor .post-form {
+  position: static;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.long-mode-editor .post-form .post-input {
+  flex: 1;
+  min-height: 300px;
+}
+
+.long-mode-editor .mode-toggle-corner {
+  position: fixed;
+  top: auto;
+  bottom: 1rem;
+  right: auto;
+  left: 1rem;
+  z-index: 101;
+}
+
 .long-mode-preview {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 2rem;
-  padding-bottom: 150px;
+  flex: 1;
+  padding: 1.5rem;
   line-height: 1.9;
   font-size: 1.05rem;
+  overflow-y: auto;
+}
+
+.preview-placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Long mode - narrow screens: vertical layout */
+@media (max-width: 960px) {
+  .long-mode-container {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .long-mode-editor,
+  .long-mode-preview {
+    min-height: 45vh;
+  }
 }
 
 .post-input {
