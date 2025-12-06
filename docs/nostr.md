@@ -25,18 +25,59 @@ hasNip07()              // Check extension
 
 ## Events
 
+### kind:0 (Profile/Metadata)
+```typescript
+{
+  kind: 0,
+  created_at: timestamp,
+  tags: [],
+  content: JSON.stringify({ name, display_name, picture, about }),
+  pubkey: "...",
+  id: "...",
+  sig: "..."
+}
+```
+- プロフィール情報（名前など）を保存
+- localStorage優先で読み込み、リレーはフォールバック
+
 ### kind:1 (Text Note)
 ```typescript
 {
   kind: 1,
   created_at: timestamp,
-  tags: [],
+  tags: [
+    ['t', 'mypace'],       // ハッシュタグ (フィルタリング用)
+    ['client', 'mypace']   // クライアント識別
+  ],
   content: "Hello world",
   pubkey: "...",
   id: "...",
   sig: "..."
 }
 ```
+- `#mypace` タグで mypace からの投稿のみを表示
+- 一般の Nostr 投稿は除外される
+
+### kind:5 (Delete Request)
+```typescript
+{
+  kind: 5,
+  created_at: timestamp,
+  tags: [['e', 'event_id_to_delete']],
+  content: '',
+  pubkey: "...",
+  id: "...",
+  sig: "..."
+}
+```
+- 投稿の削除をリクエスト
+- 編集時は delete + 新規投稿の2ステップ
+
+## Profile Management
+
+- ローカルストレージ (`mypace_profile`) を最優先で読み込み
+- 設定画面から名前を変更可能
+- 変更はリレーに送信 + ローカル保存
 
 ## Relays
 
@@ -48,6 +89,12 @@ const RELAYS = [
   'wss://relay.nostr.band',
 ]
 ```
+
+## Filtering
+
+タイムライン取得時に `#t: ['mypace']` フィルターを適用:
+- `fetchEvents()` - クライアント直接取得
+- `/api/timeline` - サーバーAPI経由
 
 ## Security
 

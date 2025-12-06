@@ -20,14 +20,35 @@ npm run deploy   # デプロイ
 
 詳細は [docs/](./docs/) を参照。
 
+## Features
+
+- 投稿・閲覧（mypaceタグ付き投稿のみ表示）
+- プロフィール設定（名前必須）
+- 投稿の編集・削除
+- NIP-07対応（ブラウザ拡張）
+- 鍵のエクスポート・インポート
+
 ## Key Files
 
 | Path | Description |
 |------|-------------|
 | `app/routes/index.tsx` | トップページ |
 | `app/routes/api/timeline.ts` | タイムラインAPI |
-| `app/islands/` | クライアントコンポーネント |
-| `app/lib/nostr/` | Nostr関連ユーティリティ |
+| `app/islands/PostForm.tsx` | 投稿フォーム |
+| `app/islands/Timeline.tsx` | タイムライン表示 |
+| `app/islands/Settings.tsx` | 設定パネル |
+| `app/islands/ProfileSetup.tsx` | プロフィール設定 |
+| `app/lib/nostr/events.ts` | Nostrイベント生成 |
+| `app/lib/nostr/relay.ts` | リレー通信 |
+| `app/lib/nostr/keys.ts` | 鍵管理 |
 | `app/lib/db/cache.ts` | D1キャッシュ層 |
 | `wrangler.toml` | Cloudflare設定 |
 | `schema.sql` | D1スキーマ |
+
+## Nostr Events
+
+| kind | 用途 |
+|------|------|
+| 0 | プロフィール（name, display_name） |
+| 1 | 投稿（#mypaceタグ付き） |
+| 5 | 削除リクエスト |

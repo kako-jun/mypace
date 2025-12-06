@@ -16,6 +16,9 @@ export default function Timeline() {
   const [error, setError] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState('')
+  const [savedId, setSavedId] = useState<string | null>(null)
+  const [deletedId, setDeletedId] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const loadTimeline = async () => {
     setLoading(true)
@@ -95,11 +98,38 @@ export default function Timeline() {
 
       setEditingId(null)
       setEditContent('')
+      setSavedId(originalEvent.id)
+      setTimeout(() => setSavedId(null), 2000)
 
       // Reload timeline
       setTimeout(loadTimeline, 1000)
     } catch (err) {
       console.error('Failed to edit:', err)
+    }
+  }
+
+  const handleDeleteClick = (eventId: string) => {
+    setConfirmDeleteId(eventId)
+  }
+
+  const handleDeleteCancel = () => {
+    setConfirmDeleteId(null)
+  }
+
+  const handleDeleteConfirm = async (event: Event) => {
+    try {
+      const deleteEvent = await createDeleteEvent([event.id])
+      await publishEvent(deleteEvent)
+
+      setConfirmDeleteId(null)
+      setEditingId(null)
+      setDeletedId(event.id)
+      setTimeout(() => {
+        setDeletedId(null)
+        loadTimeline()
+      }, 1500)
+    } catch (err) {
+      console.error('Failed to delete:', err)
     }
   }
 
@@ -131,6 +161,9 @@ export default function Timeline() {
       {events.map((event) => {
         const isMyPost = myPubkey === event.pubkey
         const isEditing = editingId === event.id
+        const justSaved = savedId === event.id
+        const justDeleted = deletedId === event.id
+        const isConfirmingDelete = confirmDeleteId === event.id
 
         return (
           <article key={event.id} class={`post-card ${isMyPost ? 'my-post' : ''}`}>
@@ -149,14 +182,27 @@ export default function Timeline() {
                   maxLength={280}
                 />
                 <div class="edit-actions">
-                  <button class="cancel-button" onClick={handleCancelEdit}>Cancel</button>
-                  <button class="save-button" onClick={() => handleSaveEdit(event)}>Save</button>
+                  {isConfirmingDelete ? (
+                    <div class="delete-confirm">
+                      <span class="delete-confirm-text">Delete?</span>
+                      <button class="delete-confirm-yes" onClick={() => handleDeleteConfirm(event)}>Yes</button>
+                      <button class="delete-confirm-no" onClick={handleDeleteCancel}>No</button>
+                    </div>
+                  ) : (
+                    <button class="delete-button" onClick={() => handleDeleteClick(event.id)}>Delete</button>
+                  )}
+                  <div class="edit-actions-right">
+                    <button class="cancel-button" onClick={handleCancelEdit}>Cancel</button>
+                    <button class="save-button" onClick={() => handleSaveEdit(event)}>Save</button>
+                  </div>
                 </div>
               </div>
             ) : (
               <>
                 <p class="post-content">{event.content}</p>
-                {isMyPost && (
+                {justSaved && <p class="success">Saved!</p>}
+                {justDeleted && <p class="success">Deleted!</p>}
+                {isMyPost && !justSaved && !justDeleted && (
                   <button class="edit-button" onClick={() => handleEdit(event)}>Edit</button>
                 )}
               </>

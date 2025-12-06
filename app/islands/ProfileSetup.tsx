@@ -15,6 +15,16 @@ export default function ProfileSetup({ onProfileSet }: Props) {
 
   useEffect(() => {
     const loadProfile = async () => {
+      // Check local storage first (more recent than relay cache)
+      const localProfile = getLocalProfile()
+      if (localProfile) {
+        setCurrentProfile(localProfile)
+        setName(localProfile.name || localProfile.display_name || '')
+        setLoading(false)
+        return
+      }
+
+      // Fallback to relay
       try {
         const pubkey = await getCurrentPubkey()
         const profileEvent = await fetchUserProfile(pubkey)
@@ -22,6 +32,8 @@ export default function ProfileSetup({ onProfileSet }: Props) {
           const profile = JSON.parse(profileEvent.content) as Profile
           setCurrentProfile(profile)
           setName(profile.name || profile.display_name || '')
+          // Store locally for next time
+          localStorage.setItem('mypace_profile', JSON.stringify(profile))
         }
       } catch (e) {
         console.error('Failed to load profile:', e)

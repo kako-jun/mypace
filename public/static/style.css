@@ -237,6 +237,58 @@ body {
   color: #666;
 }
 
+.delete-button {
+  background: none;
+  border: none;
+  color: #c99;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  transition: color 0.2s ease;
+}
+
+.delete-button:hover {
+  color: #c44;
+}
+
+.delete-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.delete-confirm-text {
+  font-size: 0.75rem;
+  color: #c44;
+}
+
+.delete-confirm-yes,
+.delete-confirm-no {
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.delete-confirm-yes {
+  color: #c44;
+}
+
+.delete-confirm-yes:hover {
+  background: #fef5f5;
+}
+
+.delete-confirm-no {
+  color: #888;
+}
+
+.delete-confirm-no:hover {
+  background: #f5f5f5;
+}
+
 /* Edit form */
 .edit-form {
   margin-top: 0.5rem;
@@ -256,9 +308,14 @@ body {
 
 .edit-actions {
   display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 0.5rem;
+}
+
+.edit-actions-right {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .cancel-button,

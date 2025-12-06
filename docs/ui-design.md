@@ -68,3 +68,27 @@ PACE
 - フォーカス時にフォームが浮き上がる (box-shadow)
 - ボタンは押すと縮む (`scale(0.98)`)
 - 設定パネルはスライドで開く
+- ロゴクリックでトップへ遷移（選択不可）
+
+## Feedback Messages
+
+操作成功時はインラインで緑色メッセージを2秒間表示:
+- プロフィール更新: `Updated!`
+- 投稿編集保存: `Saved!`
+- 投稿削除: `Deleted!`
+
+## Post Actions
+
+自分の投稿のみ「Edit」ボタン表示:
+- Edit押下で編集モードへ
+- 編集モード: textarea + Delete / Cancel / Save
+- Delete押下で確認UI表示（ブラウザアラート不使用）
+  - `Delete? Yes No` のインライン確認
+- 編集は delete + 新規投稿の2ステップ（Nostr仕様）
+
+## Settings Panel
+
+- Profile: 名前変更
+- Your Keys: npub/nsec表示、コピー機能
+- Import Key: nsecインポート
+- Danger Zone: キー削除
