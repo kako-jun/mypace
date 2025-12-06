@@ -33,6 +33,16 @@ export async function fetchEvents(filter: Filter, limit = 50): Promise<Event[]> 
   return events.sort((a, b) => b.created_at - a.created_at)
 }
 
+// Fetch reposts (kind 6) that repost mypace posts
+export async function fetchRepostEvents(limit = 50): Promise<Event[]> {
+  const p = getPool()
+  const events = await p.querySync(RELAYS, {
+    kinds: [6],
+    limit,
+  })
+  return events.sort((a, b) => b.created_at - a.created_at)
+}
+
 export async function fetchUserProfile(pubkey: string): Promise<Event | null> {
   const p = getPool()
   const events = await p.querySync(RELAYS, {
@@ -41,6 +51,40 @@ export async function fetchUserProfile(pubkey: string): Promise<Event | null> {
     limit: 1,
   })
   return events[0] || null
+}
+
+// Fetch reactions (kind 7) for given event IDs
+export async function fetchReactions(eventIds: string[]): Promise<Event[]> {
+  if (eventIds.length === 0) return []
+  const p = getPool()
+  const events = await p.querySync(RELAYS, {
+    kinds: [7],
+    '#e': eventIds,
+  })
+  return events
+}
+
+// Fetch replies (kind 1 with e tag) for given event IDs
+export async function fetchReplies(eventIds: string[]): Promise<Event[]> {
+  if (eventIds.length === 0) return []
+  const p = getPool()
+  const events = await p.querySync(RELAYS, {
+    kinds: [1],
+    '#e': eventIds,
+    '#t': [MYPACE_TAG],
+  })
+  return events.sort((a, b) => a.created_at - b.created_at) // Oldest first for threads
+}
+
+// Fetch reposts (kind 6) for given event IDs
+export async function fetchReposts(eventIds: string[]): Promise<Event[]> {
+  if (eventIds.length === 0) return []
+  const p = getPool()
+  const events = await p.querySync(RELAYS, {
+    kinds: [6],
+    '#e': eventIds,
+  })
+  return events
 }
 
 export function closePool(): void {
