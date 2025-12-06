@@ -397,6 +397,39 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
     }
   }
 
+  const handleShare = async (eventId: string) => {
+    const url = `${window.location.origin}/post/${eventId}`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ url })
+      } catch (e) {
+        // User cancelled or error - fallback to copy
+        if ((e as Error).name !== 'AbortError') {
+          await navigator.clipboard.writeText(url)
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(url)
+    }
+  }
+
+  const handleShareFilter = async () => {
+    const url = window.location.href
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ url })
+      } catch (e) {
+        if ((e as Error).name !== 'AbortError') {
+          await navigator.clipboard.writeText(url)
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(url)
+    }
+  }
+
   useEffect(() => {
     loadTimeline()
 
@@ -494,6 +527,7 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
             </>
           ))}
           <button class="filter-clear-all" onClick={clearFilter}>Clear all</button>
+          <button class="filter-share" onClick={handleShareFilter} title="Share">↗</button>
         </div>
       )}
       {filteredItems.map((item) => {
@@ -610,6 +644,13 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
                       disabled={repostingId === event.id || reposts[event.id]?.myRepost}
                     >
                       🔁{reposts[event.id]?.count ? ` ${reposts[event.id].count}` : ''}
+                    </button>
+                    <button
+                      class="share-button"
+                      onClick={() => handleShare(event.id)}
+                      title="Share"
+                    >
+                      ↗
                     </button>
                     {isMyPost && (
                       <>

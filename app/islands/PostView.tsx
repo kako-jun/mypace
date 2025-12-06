@@ -195,6 +195,22 @@ export default function PostView({ eventId }: PostViewProps) {
     }
   }
 
+  const handleShare = async () => {
+    const url = window.location.href
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ url })
+      } catch (e) {
+        if ((e as Error).name !== 'AbortError') {
+          await navigator.clipboard.writeText(url)
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(url)
+    }
+  }
+
   const handleDeleteClick = () => {
     if (event) setConfirmDeleteId(event.id)
   }
@@ -312,6 +328,13 @@ export default function PostView({ eventId }: PostViewProps) {
               disabled={repostingId !== null || reposts.myRepost}
             >
               🔁{reposts.count > 0 && ` ${reposts.count}`}
+            </button>
+            <button
+              class="share-button"
+              onClick={handleShare}
+              title="Share"
+            >
+              ↗
             </button>
             {isMyPost && (
               <>
