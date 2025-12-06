@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'hono/jsx'
+import { useState, useEffect, useRef } from 'hono/jsx'
 import { createTextNote, createDeleteEvent, createReplyEvent, getLocalThemeColors, getThemeCardProps, type ThemeColors } from '../lib/nostr/events'
 import { publishEvent } from '../lib/nostr/relay'
 import { renderContent } from '../lib/content-parser'
+import { uploadImage } from '../lib/upload'
 import ProfileSetup, { hasLocalProfile } from './ProfileSetup'
 import type { Event } from 'nostr-tools'
 
@@ -26,6 +27,10 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
   const [hasProfile, setHasProfile] = useState(false)
   const [checkingProfile, setCheckingProfile] = useState(true)
   const [themeColors, setThemeColors] = useState<ThemeColors | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [dragging, setDragging] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setHasProfile(hasLocalProfile())
@@ -95,6 +100,100 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
     window.dispatchEvent(new CustomEvent('profileupdated'))
   }
 
+  const handleUploadImage = async (file: File): Promise<string | null> => {
+    setUploading(true)
+    setError('')
+
+    const result = await uploadImage(file)
+    setUploading(false)
+
+    if (result.success && result.url) {
+      return result.url
+    } else {
+      setError(result.error || 'Failed to upload')
+      return null
+    }
+  }
+
+  const insertImageUrl = (url: string) => {
+    const textarea = textareaRef.current
+    if (textarea) {
+      const start = textarea.selectionStart || content.length
+      const end = textarea.selectionEnd || content.length
+      const before = content.slice(0, start)
+      const after = content.slice(end)
+      const newContent = before + (before && !before.endsWith('\n') ? '\n' : '') + url + (after && !after.startsWith('\n') ? '\n' : '') + after
+      onContentChange(newContent)
+    } else {
+      onContentChange(content + (content ? '\n' : '') + url)
+    }
+  }
+
+  const handleImageUpload = async (e: globalThis.Event) => {
+    const input = e.target as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file) return
+
+    const url = await handleUploadImage(file)
+    if (url) {
+      insertImageUrl(url)
+    }
+    input.value = ''
+  }
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragging(true)
+  }
+
+  const handleDragLeave = (e: DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragging(false)
+  }
+
+  const handleDrop = async (e: DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragging(false)
+
+    const files = e.dataTransfer?.files
+    if (!files || files.length === 0) return
+
+    const file = files[0]
+    if (!file.type.startsWith('image/')) {
+      setError('Please drop an image file')
+      return
+    }
+
+    const url = await handleUploadImage(file)
+    if (url) {
+      insertImageUrl(url)
+    }
+  }
+
+  const handleImageButtonClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  // Extract image URLs from content
+  const getImageUrls = (): string[] => {
+    const imageRegex = /https?:\/\/[^\s<>"]+\.(jpg|jpeg|png|gif|webp|svg)(\?[^\s<>"]*)?/gi
+    const matches = content.match(imageRegex)
+    return matches || []
+  }
+
+  const removeImageUrl = (urlToRemove: string) => {
+    // Remove the URL and any surrounding newlines
+    const escapedUrl = urlToRemove.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(`\\n?${escapedUrl}\\n?`, 'g')
+    const newContent = content.replace(regex, '\n').replace(/^\n+|\n+$/g, '').replace(/\n{3,}/g, '\n\n')
+    onContentChange(newContent)
+  }
+
+  const imageUrls = getImageUrls()
+
   if (checkingProfile) {
     return <div class="post-form loading">Loading...</div>
   }
@@ -110,7 +209,10 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
   const isSpecialMode = editingEvent || replyingTo
 
   return (
-    <form class={`post-form ${longMode ? 'long-mode' : ''} ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''}`} onSubmit={handleSubmit}>
+    <form
+      class={`post-form ${longMode ? 'long-mode' : ''} ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''}`}
+      onSubmit={handleSubmit}
+    >
       {editingEvent && (
         <div class="editing-label">Editing post...</div>
       )}
@@ -125,6 +227,7 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
         {longMode ? 'Short mode' : 'Long mode'}
       </button>
       <textarea
+        ref={textareaRef}
         class="post-input"
         placeholder={longMode ? "マイペースに書こう\n\n長文モードでじっくり書けます" : "マイペースに書こう"}
         value={content}
@@ -132,6 +235,30 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
         rows={longMode ? 15 : 3}
         maxLength={4200}
       />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        style={{ display: 'none' }}
+      />
+      {imageUrls.length > 0 && (
+        <div class="attached-images">
+          {imageUrls.map((url) => (
+            <div key={url} class="attached-image">
+              <img src={url} alt="" />
+              <button
+                type="button"
+                class="remove-image-button"
+                onClick={() => removeImageUrl(url)}
+                title="Remove image"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       {!longMode && showPreview && content.trim() && (() => {
         const themeProps = getThemeCardProps(themeColors)
         return (
@@ -145,6 +272,15 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
       })()}
       <div class="post-actions">
         <div class="post-actions-left">
+          <div
+            class={`image-drop-area ${dragging ? 'dragging' : ''}`}
+            onClick={handleImageButtonClick}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {uploading ? '...' : dragging ? 'Drop' : '📷'}
+          </div>
           <button
             type="button"
             class={`preview-toggle ${showPreview ? 'active' : ''}`}

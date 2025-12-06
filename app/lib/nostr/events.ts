@@ -183,6 +183,28 @@ export async function createDeleteEvent(eventIds: string[]): Promise<Event> {
   return finalizeEvent(template, sk)
 }
 
+
+// NIP-98 HTTP Auth event for file uploads
+export async function createNip98AuthEvent(url: string, method: string): Promise<Event> {
+  const template: EventTemplate = {
+    kind: 27235,
+    created_at: Math.floor(Date.now() / 1000),
+    tags: [
+      ['u', url],
+      ['method', method],
+    ],
+    content: '',
+  }
+
+  if (hasNip07() && window.nostr) {
+    const signed = await window.nostr.signEvent(template)
+    return signed as Event
+  }
+
+  const sk = getOrCreateSecretKey()
+  return finalizeEvent(template, sk)
+}
+
 // NIP-25: Create reaction event (like)
 export async function createReactionEvent(targetEvent: Event, content: string = '+'): Promise<Event> {
   const template: EventTemplate = {

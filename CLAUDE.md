@@ -23,8 +23,9 @@ npm run deploy   # デプロイ
 ## Features
 
 - 投稿・閲覧（mypaceタグ付き投稿のみ表示）
-- プロフィール設定（名前必須）
+- プロフィール設定（名前必須、アバター画像）
 - 投稿の編集・削除（編集は投稿フォームで行い、返信タグを保持）
+- 画像アップロード（nostr.build、NIP-98認証）
 - いいね（NIP-25 kind 7）- 自己いいね禁止
 - 返信（NIP-10）- スレッド表示対応
 - リポスト（NIP-18 kind 6）- タイムラインに「○○ reposted」表示
@@ -58,6 +59,7 @@ npm run deploy   # デプロイ
 | `app/lib/nostr/events.ts` | Nostrイベント生成、定数（APP_TITLE等） |
 | `app/lib/nostr/relay.ts` | リレー通信 |
 | `app/lib/nostr/keys.ts` | 鍵管理 |
+| `app/lib/upload.ts` | 画像アップロード（NIP-98認証） |
 | `app/lib/db/cache.ts` | D1キャッシュ層 |
 | `wrangler.toml` | Cloudflare設定 |
 | `schema.sql` | D1スキーマ |
@@ -66,8 +68,9 @@ npm run deploy   # デプロイ
 
 | kind | 用途 |
 |------|------|
-| 0 | プロフィール（name, display_name） |
+| 0 | プロフィール（name, display_name, picture） |
 | 1 | 投稿（#mypaceタグ付き） |
 | 5 | 削除リクエスト |
 | 6 | リポスト（NIP-18） |
 | 7 | リアクション/いいね（NIP-25） |
+| 27235 | HTTP認証（NIP-98、画像アップロード用） |
