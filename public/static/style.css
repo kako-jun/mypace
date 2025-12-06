@@ -58,9 +58,14 @@ body {
 
 /* Logo - 2行の極太ゴシック、左詰め */
 .logo {
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
   line-height: 0.9;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  width: fit-content;
 }
 
 .logo-my,
@@ -567,4 +572,10 @@ body {
 .info {
   font-size: 0.8rem;
   color: #6a6;
+}
+
+.success {
+  font-size: 0.8rem;
+  color: #6a6;
+  margin-top: 0.5rem;
 }

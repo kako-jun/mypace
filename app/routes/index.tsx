@@ -7,15 +7,15 @@ export default createRoute((c) => {
   return c.render(
     <main class="container">
       <header class="header">
-        <div class="logo">
+        <a href="/" class="logo">
           <span class="logo-my">MY</span>
           <span class="logo-pace">PACE</span>
-        </div>
+        </a>
         <Settings />
       </header>
       <PostForm />
       <Timeline />
     </main>,
-    { title: 'mypace - Nostr microblog' }
+    { title: 'MYPACE' }
   )
 })

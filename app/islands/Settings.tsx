@@ -10,6 +10,9 @@ import {
   hasNip07,
   getNip07PublicKey,
 } from '../lib/nostr/keys'
+import { getCurrentPubkey, createProfileEvent, type Profile } from '../lib/nostr/events'
+import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
+import { getLocalProfile } from './ProfileSetup'
 
 export default function Settings() {
   const [open, setOpen] = useState(false)
@@ -19,9 +22,29 @@ export default function Settings() {
   const [importValue, setImportValue] = useState('')
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [savingName, setSavingName] = useState(false)
+  const [nameError, setNameError] = useState('')
+  const [nameSaved, setNameSaved] = useState(false)
 
   useEffect(() => {
     const init = async () => {
+      // Load profile name
+      const localProfile = getLocalProfile()
+      if (localProfile?.name || localProfile?.display_name) {
+        setDisplayName(localProfile.name || localProfile.display_name || '')
+      } else {
+        // Try fetching from relay
+        try {
+          const pubkey = await getCurrentPubkey()
+          const profileEvent = await fetchUserProfile(pubkey)
+          if (profileEvent) {
+            const profile = JSON.parse(profileEvent.content) as Profile
+            setDisplayName(profile.name || profile.display_name || '')
+          }
+        } catch {}
+      }
+
       if (hasNip07()) {
         const pubkey = await getNip07PublicKey()
         if (pubkey) {
@@ -63,9 +86,40 @@ export default function Settings() {
   const handleClear = () => {
     if (confirm('Are you sure? This will delete your key from this browser.')) {
       clearSecretKey()
+      localStorage.removeItem('mypace_profile')
       setNsec('')
       setNpub('')
       window.location.reload()
+    }
+  }
+
+  const handleSaveName = async () => {
+    if (!displayName.trim()) {
+      setNameError('Name is required')
+      return
+    }
+
+    setSavingName(true)
+    setNameError('')
+
+    try {
+      const localProfile = getLocalProfile()
+      const profile: Profile = {
+        ...localProfile,
+        name: displayName.trim(),
+        display_name: displayName.trim(),
+      }
+      const event = await createProfileEvent(profile)
+      await publishEvent(event)
+
+      localStorage.setItem('mypace_profile', JSON.stringify(profile))
+      window.dispatchEvent(new CustomEvent('profileupdated'))
+      setNameSaved(true)
+      setTimeout(() => setNameSaved(false), 2000)
+    } catch (e) {
+      setNameError(e instanceof Error ? e.message : 'Failed to save')
+    } finally {
+      setSavingName(false)
     }
   }
 
@@ -82,6 +136,24 @@ export default function Settings() {
       <div class="settings-header">
         <h2>Settings</h2>
         <button class="close-button" onClick={() => setOpen(false)}>x</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>Profile</h3>
+        <div class="profile-form">
+          <input
+            type="text"
+            placeholder="Your name"
+            value={displayName}
+            onInput={(e) => setDisplayName((e.target as HTMLInputElement).value)}
+            maxLength={50}
+          />
+          <button onClick={handleSaveName} disabled={savingName || !displayName.trim()}>
+            {savingName ? 'Saving...' : 'Update'}
+          </button>
+        </div>
+        {nameError && <p class="error">{nameError}</p>}
+        {nameSaved && <p class="success">Updated!</p>}
       </div>
 
       {usingNip07 ? (
