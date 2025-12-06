@@ -106,3 +106,36 @@ PACE
 - タイムライン上部にフィルターバー表示 (`#tag ×`)
 - `×` ボタンまたはロゴクリックで解除
 - mypaceタグ付き投稿の中からさらに絞り込み
+
+## Markdown & Code Highlighting
+
+プログラマー向け機能として、投稿内容はMarkdownとしてパースされる:
+
+### 対応Markdown記法
+- **見出し**: `# H1`, `## H2`, `### H3`
+- **太字/斜体**: `**bold**`, `*italic*`
+- **リスト**: `- item` / `1. item`
+- **引用**: `> quote`
+- **リンク**: `[text](url)`
+- **インラインコード**: `` `code` ``
+- **コードブロック**: ` ```lang ... ``` `
+
+### シンタックスハイライト (Prism.js)
+コードブロックは言語指定でシンタックスハイライト:
+
+対応言語:
+- JavaScript / TypeScript / JSX / TSX
+- Python / Rust / Go
+- CSS / JSON / YAML
+- Bash / SQL / Markdown
+
+### コードブロックスタイル
+- VS Code風ダークテーマ
+- 背景: `#1e1e1e`
+- フォント: `JetBrains Mono`, `Fira Code` 等のコード用フォント
+- 横スクロール対応
+
+### インラインコードスタイル
+- 背景: `#f0f0f0`
+- テキスト: `#c7254e` (ピンク系)
+- 角丸: `3px`
