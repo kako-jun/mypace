@@ -240,9 +240,20 @@ body.long-mode-active .container {
   border: 2px solid #3498db;
 }
 
+.post-form.replying {
+  border: 2px solid #27ae60;
+}
+
 .editing-label {
   font-size: 0.75rem;
   color: #3498db;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.replying-label {
+  font-size: 0.75rem;
+  color: #27ae60;
   margin-bottom: 0.5rem;
   font-weight: 500;
 }
@@ -1000,6 +1011,7 @@ body.long-mode-active .container {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin-left: auto;
 }
 
 .delete-confirm-text {

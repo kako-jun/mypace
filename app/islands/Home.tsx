@@ -9,6 +9,7 @@ export default function Home() {
   const [content, setContent] = useState('')
   const [showPreview, setShowPreview] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
+  const [replyingTo, setReplyingTo] = useState<Event | null>(null)
 
   const handleLongModeChange = (mode: boolean) => {
     setLongMode(mode)
@@ -22,6 +23,7 @@ export default function Home() {
 
   const handleEditStart = (event: Event) => {
     setEditingEvent(event)
+    setReplyingTo(null)
     setContent(event.content)
   }
 
@@ -32,6 +34,22 @@ export default function Home() {
 
   const handleEditComplete = () => {
     setEditingEvent(null)
+    setContent('')
+  }
+
+  const handleReplyStart = (event: Event) => {
+    setReplyingTo(event)
+    setEditingEvent(null)
+    setContent('')
+  }
+
+  const handleReplyCancel = () => {
+    setReplyingTo(null)
+    setContent('')
+  }
+
+  const handleReplyComplete = () => {
+    setReplyingTo(null)
     setContent('')
   }
 
@@ -49,6 +67,9 @@ export default function Home() {
             editingEvent={editingEvent}
             onEditCancel={handleEditCancel}
             onEditComplete={handleEditComplete}
+            replyingTo={replyingTo}
+            onReplyCancel={handleReplyCancel}
+            onReplyComplete={handleReplyComplete}
           />
         </div>
         {showPreview && (
@@ -74,8 +95,11 @@ export default function Home() {
         editingEvent={editingEvent}
         onEditCancel={handleEditCancel}
         onEditComplete={handleEditComplete}
+        replyingTo={replyingTo}
+        onReplyCancel={handleReplyCancel}
+        onReplyComplete={handleReplyComplete}
       />
-      <Timeline onEditStart={handleEditStart} />
+      <Timeline onEditStart={handleEditStart} onReplyStart={handleReplyStart} />
     </>
   )
 }
