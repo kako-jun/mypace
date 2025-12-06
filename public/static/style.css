@@ -203,17 +203,9 @@ body.long-mode-active .container {
   pointer-events: auto;
 }
 
-.logo-my,
-.logo-pace {
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-weight: 900;
-  font-size: 2.5rem;
-  color: #222;
-  letter-spacing: -0.02em;
-}
-
-.logo-pace {
-  color: #444;
+.logo-img {
+  height: 64px;
+  width: auto;
 }
 
 /* Post Form - borderless */
