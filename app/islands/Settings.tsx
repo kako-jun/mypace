@@ -4,17 +4,19 @@ import {
   getPublicKeyFromSecret,
   exportNsec,
   exportNpub,
-  importNsec,
-  saveSecretKey,
-  clearSecretKey,
   hasNip07,
   getNip07PublicKey,
 } from '../lib/nostr/keys'
-import { getCurrentPubkey, createProfileEvent, type Profile } from '../lib/nostr/events'
-import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
-import { uploadImage } from '../lib/upload'
+import { getCurrentPubkey, type Profile } from '../lib/nostr/events'
+import { fetchUserProfile } from '../lib/nostr/relay'
 import { getLocalProfile } from './ProfileSetup'
-import Button from '../components/Button'
+import {
+  ProfileSection,
+  ThemeSection,
+  EditorSection,
+  KeysSection,
+  ShareSection
+} from '../components/settings'
 
 // Default colors (matches disabled background #f8f8f8)
 const DEFAULT_COLORS = {
@@ -22,14 +24,6 @@ const DEFAULT_COLORS = {
   topRight: '#f8f8f8',
   bottomLeft: '#f8f8f8',
   bottomRight: '#f8f8f8',
-}
-
-// Preset: FF7-inspired blue theme
-const FF7_COLORS = {
-  topLeft: '#0a1628',
-  topRight: '#1a3a5c',
-  bottomLeft: '#1a3a5c',
-  bottomRight: '#0a1628',
 }
 
 export interface ThemeColors {
@@ -122,21 +116,11 @@ export default function Settings() {
   const [nsec, setNsec] = useState('')
   const [npub, setNpub] = useState('')
   const [usingNip07, setUsingNip07] = useState(false)
-  const [importValue, setImportValue] = useState('')
-  const [copied, setCopied] = useState(false)
-  const [npubCopied, setNpubCopied] = useState(false)
-  const [error, setError] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [pictureUrl, setPictureUrl] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [savingName, setSavingName] = useState(false)
-  const [nameError, setNameError] = useState('')
-  const [nameSaved, setNameSaved] = useState(false)
   const [themeColors, setThemeColors] = useState<ThemeColors>(DEFAULT_COLORS)
-  const [showNsec, setShowNsec] = useState(false)
   const [appTheme, setAppTheme] = useState<'light' | 'dark'>('light')
   const [vimMode, setVimMode] = useState(false)
-  const [avatarDragging, setAvatarDragging] = useState(false)
 
   // Disable body scroll when settings panel is open
   useEffect(() => {
@@ -207,200 +191,6 @@ export default function Settings() {
     if (open) init()
   }, [open])
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(nsec)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleCopyNpub = async () => {
-    await navigator.clipboard.writeText(npub)
-    setNpubCopied(true)
-    setTimeout(() => setNpubCopied(false), 2000)
-  }
-
-  const handleImport = () => {
-    setError('')
-    try {
-      const sk = importNsec(importValue.trim())
-      saveSecretKey(sk)
-
-      // Clear all settings for new identity
-      localStorage.removeItem('mypace_profile')
-      localStorage.removeItem('mypace_theme_colors')
-      localStorage.removeItem('mypace_theme_enabled')
-
-      setNsec(exportNsec(sk))
-      setNpub(exportNpub(getPublicKeyFromSecret(sk)))
-      setImportValue('')
-
-      // Reload to start fresh with new identity
-      window.location.reload()
-    } catch {
-      setError('Invalid nsec format')
-    }
-  }
-
-  const handleClear = () => {
-    if (confirm('Are you sure? This will delete your key from this browser.')) {
-      clearSecretKey()
-      localStorage.removeItem('mypace_profile')
-      setNsec('')
-      setNpub('')
-      window.location.reload()
-    }
-  }
-
-  const handleSaveName = async () => {
-    if (!displayName.trim()) {
-      setNameError('Name is required')
-      return
-    }
-
-    setSavingName(true)
-    setNameError('')
-
-    try {
-      const localProfile = getLocalProfile()
-      const profile: Profile = {
-        ...localProfile,
-        name: displayName.trim(),
-        display_name: displayName.trim(),
-        // Keep existing picture
-        picture: pictureUrl.trim() || localProfile?.picture || undefined,
-      }
-      const event = await createProfileEvent(profile)
-      await publishEvent(event)
-
-      localStorage.setItem('mypace_profile', JSON.stringify(profile))
-      window.dispatchEvent(new CustomEvent('profileupdated'))
-      setNameSaved(true)
-      setTimeout(() => setNameSaved(false), 2000)
-    } catch (e) {
-      setNameError(e instanceof Error ? e.message : 'Failed to save')
-    } finally {
-      setSavingName(false)
-    }
-  }
-
-  const handleAvatarUpload = async (e: globalThis.Event) => {
-    const input = e.target as HTMLInputElement
-    const file = input.files?.[0]
-    if (!file) return
-
-    setUploading(true)
-    setNameError('')
-
-    const result = await uploadImage(file)
-    
-    if (result.success && result.url) {
-      const newPictureUrl = result.url
-      setPictureUrl(newPictureUrl)
-
-      // Save profile immediately
-      try {
-        const localProfile = getLocalProfile()
-        const profile: Profile = {
-          ...localProfile,
-          name: displayName.trim() || localProfile?.name || '',
-          display_name: displayName.trim() || localProfile?.display_name || '',
-          picture: newPictureUrl,
-        }
-        const event = await createProfileEvent(profile)
-        await publishEvent(event)
-        localStorage.setItem('mypace_profile', JSON.stringify(profile))
-        window.dispatchEvent(new CustomEvent('profileupdated'))
-      } catch (e) {
-        setNameError(e instanceof Error ? e.message : 'Failed to save profile')
-      }
-    } else {
-      setNameError(result.error || 'Failed to upload')
-    }
-    
-    setUploading(false)
-    // Reset input so same file can be selected again
-    input.value = ''
-  }
-
-  const handleRemoveAvatar = async () => {
-    setPictureUrl('')
-
-    // Save profile immediately
-    const localProfile = getLocalProfile()
-    const profile: Profile = {
-      ...localProfile,
-      name: displayName.trim() || localProfile?.name || '',
-      display_name: displayName.trim() || localProfile?.display_name || '',
-      picture: undefined,
-    }
-    try {
-      const event = await createProfileEvent(profile)
-      await publishEvent(event)
-      localStorage.setItem('mypace_profile', JSON.stringify(profile))
-      window.dispatchEvent(new CustomEvent('profileupdated'))
-    } catch (e) {
-      setNameError(e instanceof Error ? e.message : 'Failed to remove avatar')
-    }
-  }
-
-  const handleAvatarDragOver = (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setAvatarDragging(true)
-  }
-
-  const handleAvatarDragLeave = (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setAvatarDragging(false)
-  }
-
-  const handleAvatarDrop = async (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setAvatarDragging(false)
-
-    const files = e.dataTransfer?.files
-    if (!files || files.length === 0) return
-
-    const file = files[0]
-    if (!file.type.startsWith('image/')) {
-      setNameError('Please drop an image file')
-      return
-    }
-
-    setUploading(true)
-    setNameError('')
-
-    const result = await uploadImage(file)
-    
-    if (result.success && result.url) {
-      const newPictureUrl = result.url
-      setPictureUrl(newPictureUrl)
-
-      // Save profile immediately
-      try {
-        const localProfile = getLocalProfile()
-        const profile: Profile = {
-          ...localProfile,
-          name: displayName.trim() || localProfile?.name || '',
-          display_name: displayName.trim() || localProfile?.display_name || '',
-          picture: newPictureUrl,
-        }
-        const event = await createProfileEvent(profile)
-        await publishEvent(event)
-        localStorage.setItem('mypace_profile', JSON.stringify(profile))
-        window.dispatchEvent(new CustomEvent('profileupdated'))
-      } catch (e) {
-        setNameError(e instanceof Error ? e.message : 'Failed to save profile')
-      }
-    } else {
-      setNameError(result.error || 'Failed to upload')
-    }
-    
-    setUploading(false)
-  }
-
   const handleColorChange = (corner: keyof ThemeColors, color: string) => {
     const newColors = { ...themeColors, [corner]: color }
     setThemeColors(newColors)
@@ -436,222 +226,32 @@ export default function Settings() {
           <h2>Settings</h2>
         </div>
 
-      <div class="settings-section">
-        <h3>Profile</h3>
-        <div class="profile-avatar-section">
-          <div class="profile-avatar-preview">
-            {pictureUrl ? (
-              <img src={pictureUrl} alt="Avatar" class="avatar-preview" />
-            ) : (
-              <div class="avatar-placeholder">No image</div>
-            )}
-          </div>
-          <div class="avatar-upload-buttons">
-            <label
-              class={`avatar-drop-area ${avatarDragging ? 'dragging' : ''}`}
-              onDragOver={handleAvatarDragOver}
-              onDragLeave={handleAvatarDragLeave}
-              onDrop={handleAvatarDrop}
-            >
-              {uploading ? '...' : avatarDragging ? 'Drop' : '📷'}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarUpload}
-                disabled={uploading}
-                style={{ display: 'none' }}
-              />
-            </label>
-            {pictureUrl && (
-              <Button onClick={handleRemoveAvatar}>Remove</Button>
-            )}
-          </div>
-        </div>
-        <div class="input-row">
-          <input
-            type="text"
-            placeholder="Your name"
-            value={displayName}
-            onInput={(e) => setDisplayName((e.target as HTMLInputElement).value)}
-            maxLength={50}
-          />
-          <Button onClick={handleSaveName} disabled={savingName || !displayName.trim()}>
-            {savingName ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-        {nameError && <p class="error">{nameError}</p>}
-        {nameSaved && <p class="success">Updated!</p>}
-      </div>
+        <ProfileSection
+          displayName={displayName}
+          pictureUrl={pictureUrl}
+          onDisplayNameChange={setDisplayName}
+          onPictureUrlChange={setPictureUrl}
+        />
 
-      <div class="settings-section">
-        <h3>App Theme</h3>
-        <div class="theme-switcher">
-          {appTheme === 'light' ? (
-            <span class="theme-current">Light</span>
-          ) : (
-            <Button onClick={() => handleAppThemeChange('light')}>
-              Light
-            </Button>
-          )}
-          {appTheme === 'dark' ? (
-            <span class="theme-current">Dark</span>
-          ) : (
-            <Button onClick={() => handleAppThemeChange('dark')}>
-              Dark
-            </Button>
-          )}
-        </div>
-      </div>
+        <ThemeSection
+          appTheme={appTheme}
+          themeColors={themeColors}
+          onAppThemeChange={handleAppThemeChange}
+          onColorChange={handleColorChange}
+        />
 
-      <div class="settings-section">
-        <h3>Window Color</h3>
-        <p class="hint">Customize background with 4-corner gradient</p>
+        <EditorSection
+          vimMode={vimMode}
+          onVimModeChange={handleVimModeChange}
+        />
 
-        <div class="theme-preview" style={{
-          background: `radial-gradient(ellipse at top left, ${themeColors.topLeft}dd 0%, transparent 50%),
-               radial-gradient(ellipse at top right, ${themeColors.topRight}dd 0%, transparent 50%),
-               radial-gradient(ellipse at bottom left, ${themeColors.bottomLeft}dd 0%, transparent 50%),
-               radial-gradient(ellipse at bottom right, ${themeColors.bottomRight}dd 0%, transparent 50%),
-               linear-gradient(135deg, ${themeColors.topLeft} 0%, ${themeColors.bottomRight} 100%)`
-        }}>
-          <div class="color-picker-grid">
-            <div class="color-picker-corner top-left">
-              <input
-                type="color"
-                value={themeColors.topLeft}
-                onInput={(e) => handleColorChange('topLeft', (e.target as HTMLInputElement).value)}
-              />
-            </div>
-            <div class="color-picker-corner top-right">
-              <input
-                type="color"
-                value={themeColors.topRight}
-                onInput={(e) => handleColorChange('topRight', (e.target as HTMLInputElement).value)}
-              />
-            </div>
-            <div class="color-picker-corner bottom-left">
-              <input
-                type="color"
-                value={themeColors.bottomLeft}
-                onInput={(e) => handleColorChange('bottomLeft', (e.target as HTMLInputElement).value)}
-              />
-            </div>
-            <div class="color-picker-corner bottom-right">
-              <input
-                type="color"
-                value={themeColors.bottomRight}
-                onInput={(e) => handleColorChange('bottomRight', (e.target as HTMLInputElement).value)}
-              />
-            </div>
-          </div>
-        </div>
+        <KeysSection
+          nsec={nsec}
+          npub={npub}
+          usingNip07={usingNip07}
+        />
 
-      </div>
-
-      <div class="settings-section">
-        <h3>Editor</h3>
-        <p class="hint">Long mode editor settings</p>
-        <div class="vim-mode-toggle">
-          <label class="toggle-label">
-            <input
-              type="checkbox"
-              checked={vimMode}
-              onChange={(e) => handleVimModeChange((e.target as HTMLInputElement).checked)}
-            />
-            <span class="toggle-text">Vim mode</span>
-          </label>
-        </div>
-      </div>
-
-      {usingNip07 ? (
-        <div class="settings-section">
-          <p class="info">Using NIP-07 extension</p>
-          <div class="key-display">
-            <label>Your npub:</label>
-            <div class="npub-row">
-              <code>{npub}</code>
-              <div class="npub-row-buttons">
-                <Button onClick={handleCopyNpub}>
-                  {npubCopied ? 'Copied!' : 'Copy'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div class="settings-section">
-            <h3>Your Keys</h3>
-            <div class="key-display">
-              <label>npub (public):</label>
-              <div class="npub-row">
-                <code>{npub || 'Not generated yet'}</code>
-                {npub && (
-                  <div class="npub-row-buttons">
-                    <Button onClick={handleCopyNpub}>
-                      {npubCopied ? 'Copied!' : 'Copy'}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-            {nsec && (
-              <div class="key-display">
-                <label>nsec (secret - keep safe!):</label>
-                <div class="secret-row">
-                  <code class="secret">{showNsec ? nsec : '••••••••••••••••••••••••••••••••'}</code>
-                  <div class="secret-row-buttons">
-                    <Button onClick={() => setShowNsec(!showNsec)}>
-                      {showNsec ? 'Hide' : 'Show'}
-                    </Button>
-                    <Button onClick={handleCopy}>
-                      {copied ? 'Copied!' : 'Copy'}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div class="settings-section">
-            <h3>Import Key</h3>
-            <p class="hint">Paste your nsec to use an existing identity</p>
-            <div class="input-row">
-              <input
-                type="password"
-                placeholder="nsec1..."
-                value={importValue}
-                onInput={(e) => setImportValue((e.target as HTMLInputElement).value)}
-              />
-              <Button onClick={handleImport} disabled={!importValue.trim()}>
-                Import
-              </Button>
-            </div>
-            {error && <p class="error">{error}</p>}
-          </div>
-
-          <div class="settings-section danger">
-            <h3>Danger Zone</h3>
-            <Button onClick={handleClear} variant="danger">
-              Clear key from browser
-            </Button>
-          </div>
-        </>
-      )}
-
-      <div class="settings-section">
-        <h3>Share App</h3>
-        <div class="share-app-qr">
-          <div class="qr-placeholder">QR</div>
-        </div>
-        <p class="hint">Scan to open this app</p>
-      </div>
-
-      <div class="settings-footer">
-        <a href="https://github.com/kako-jun/mypace" target="_blank" rel="noopener noreferrer">
-          GitHub
-        </a>
-      </div>
+        <ShareSection />
       </div>
     </>
   )

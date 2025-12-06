@@ -19,7 +19,8 @@
     "honox": "^0.1.0",
     "marked": "^17.0.1",
     "nostr-tools": "^2.10.0",
-    "prismjs": "^1.30.0"
+    "prismjs": "^1.30.0",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
