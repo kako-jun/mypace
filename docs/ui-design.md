@@ -70,6 +70,13 @@ PACE
 - 設定パネルはスライドで開く
 - ロゴクリックでトップへ遷移（選択不可）
 
+## Post Form
+
+- プレースホルダー: 「マイペースに書こう」
+- 文字数制限: 4200文字
+- Previewボタン: Markdown/画像URL/リンクの表示確認
+- プレビューには自分のテーマカラーが適用される
+
 ## Feedback Messages
 
 操作成功時はインラインで緑色メッセージを2秒間表示:
@@ -89,9 +96,56 @@ PACE
 ## Settings Panel
 
 - Profile: 名前変更
+- Window Color: 4隅カラーカスタマイズ
 - Your Keys: npub/nsec表示、コピー機能
 - Import Key: nsecインポート
 - Danger Zone: キー削除
+
+## Window Color (パーソナルカラー)
+
+PS1 FF7のウィンドウカラーカスタマイズにインスパイアされた機能。
+
+### 概要
+- 4隅の色を指定し、中央でなめらかにブレンドするグラデーション背景
+- **ページ全体の背景** と **自分の投稿カードの背景** の両方に適用
+- 他のユーザーからも、その人の投稿カードとして色が見える
+
+### UI
+- プレビューエリア内に4つの円形カラーピッカーを配置
+- Enable チェックボックスで有効/無効を切り替え
+- Apply ボタンで保存、Reset ボタンでデフォルトに戻す
+
+### グラデーション生成
+```css
+radial-gradient(ellipse at top left, color1 0%, transparent 50%),
+radial-gradient(ellipse at top right, color2 0%, transparent 50%),
+radial-gradient(ellipse at bottom left, color3 0%, transparent 50%),
+radial-gradient(ellipse at bottom right, color4 0%, transparent 50%),
+linear-gradient(135deg, color1 0%, color4 100%)
+```
+
+### 自動テキスト色調整
+- 左上の色の明度を計算（WCAG準拠の相対輝度）
+- 暗い背景（輝度 < 0.4）→ 白文字
+- 明るい背景 → 黒文字
+- ロゴ、Settingsボタン、投稿カードのテキストに適用
+
+### Nostrタグ
+投稿時にテーマカラーをイベントタグとして埋め込み:
+```
+['mypace_theme', '#0a1628', '#1a3a5c', '#1a3a5c', '#0a1628']
+```
+- 本文のハッシュタグとは別（tags配列のメタデータ）
+- 他のNostrクライアントでは無視される
+- mypaceでのみグラデーションカードとして表示
+
+### デフォルト色 (FF7風ブルー)
+| 位置 | 色 |
+|------|-----|
+| 左上 | `#0a1628` |
+| 右上 | `#1a3a5c` |
+| 左下 | `#1a3a5c` |
+| 右下 | `#0a1628` |
 
 ## Content Rendering
 

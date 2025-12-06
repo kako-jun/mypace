@@ -14,6 +14,85 @@ import { getCurrentPubkey, createProfileEvent, type Profile } from '../lib/nostr
 import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
 import { getLocalProfile } from './ProfileSetup'
 
+// Default colors (FF7-inspired blue theme)
+const DEFAULT_COLORS = {
+  topLeft: '#0a1628',
+  topRight: '#1a3a5c',
+  bottomLeft: '#1a3a5c',
+  bottomRight: '#0a1628',
+}
+
+export interface ThemeColors {
+  topLeft: string
+  topRight: string
+  bottomLeft: string
+  bottomRight: string
+}
+
+export function getStoredThemeColors(): ThemeColors {
+  if (typeof window === 'undefined') return DEFAULT_COLORS
+  const stored = localStorage.getItem('mypace_theme_colors')
+  if (stored) {
+    try {
+      return JSON.parse(stored)
+    } catch {
+      return DEFAULT_COLORS
+    }
+  }
+  return DEFAULT_COLORS
+}
+
+// Calculate relative luminance of a hex color
+function getLuminance(hex: string): number {
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+
+  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)
+}
+
+// Determine if color is dark (needs light text)
+function isDarkColor(hex: string): boolean {
+  return getLuminance(hex) < 0.4
+}
+
+export function applyThemeColors(colors: ThemeColors) {
+  if (typeof document === 'undefined') return
+
+  // Create radial gradients from each corner
+  const gradient = `
+    radial-gradient(ellipse at top left, ${colors.topLeft}dd 0%, transparent 50%),
+    radial-gradient(ellipse at top right, ${colors.topRight}dd 0%, transparent 50%),
+    radial-gradient(ellipse at bottom left, ${colors.bottomLeft}dd 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, ${colors.bottomRight}dd 0%, transparent 50%),
+    linear-gradient(135deg, ${colors.topLeft} 0%, ${colors.bottomRight} 100%)
+  `
+  document.documentElement.style.setProperty('--theme-gradient', gradient)
+
+  // Set logo color based on top-left corner brightness
+  const logoColor = isDarkColor(colors.topLeft) ? '#ffffff' : '#222222'
+  document.documentElement.style.setProperty('--logo-color', logoColor)
+
+  // Set settings button color based on top-right corner brightness
+  const settingsColor = isDarkColor(colors.topRight) ? '#cccccc' : '#888888'
+  const settingsHoverColor = isDarkColor(colors.topRight) ? '#ffffff' : '#444444'
+  document.documentElement.style.setProperty('--settings-color', settingsColor)
+  document.documentElement.style.setProperty('--settings-hover-color', settingsHoverColor)
+
+  document.body.classList.add('custom-theme')
+}
+
+export function clearThemeColors() {
+  if (typeof document === 'undefined') return
+  document.body.classList.remove('custom-theme')
+  document.documentElement.style.removeProperty('--theme-gradient')
+  document.documentElement.style.removeProperty('--logo-color')
+  document.documentElement.style.removeProperty('--settings-color')
+  document.documentElement.style.removeProperty('--settings-hover-color')
+}
+
 export default function Settings() {
   const [open, setOpen] = useState(false)
   const [nsec, setNsec] = useState('')
@@ -26,6 +105,19 @@ export default function Settings() {
   const [savingName, setSavingName] = useState(false)
   const [nameError, setNameError] = useState('')
   const [nameSaved, setNameSaved] = useState(false)
+  const [themeColors, setThemeColors] = useState<ThemeColors>(DEFAULT_COLORS)
+  const [themeEnabled, setThemeEnabled] = useState(false)
+
+  // Load theme on mount (not just when settings panel opens)
+  useEffect(() => {
+    const storedColors = getStoredThemeColors()
+    const isEnabled = localStorage.getItem('mypace_theme_enabled') === 'true'
+    setThemeColors(storedColors)
+    setThemeEnabled(isEnabled)
+    if (isEnabled) {
+      applyThemeColors(storedColors)
+    }
+  }, [])
 
   useEffect(() => {
     const init = async () => {
@@ -123,6 +215,40 @@ export default function Settings() {
     }
   }
 
+  const handleColorChange = (corner: keyof ThemeColors, color: string) => {
+    const newColors = { ...themeColors, [corner]: color }
+    setThemeColors(newColors)
+    if (themeEnabled) {
+      applyThemeColors(newColors)
+    }
+  }
+
+  const handleThemeToggle = () => {
+    const newEnabled = !themeEnabled
+    setThemeEnabled(newEnabled)
+    localStorage.setItem('mypace_theme_enabled', String(newEnabled))
+    if (newEnabled) {
+      applyThemeColors(themeColors)
+    } else {
+      clearThemeColors()
+    }
+  }
+
+  const handleSaveTheme = () => {
+    localStorage.setItem('mypace_theme_colors', JSON.stringify(themeColors))
+    localStorage.setItem('mypace_theme_enabled', 'true')
+    setThemeEnabled(true)
+    applyThemeColors(themeColors)
+  }
+
+  const handleResetTheme = () => {
+    setThemeColors(DEFAULT_COLORS)
+    localStorage.removeItem('mypace_theme_colors')
+    localStorage.setItem('mypace_theme_enabled', 'false')
+    setThemeEnabled(false)
+    clearThemeColors()
+  }
+
   if (!open) {
     return (
       <button class="settings-toggle" onClick={() => setOpen(true)}>
@@ -154,6 +280,65 @@ export default function Settings() {
         </div>
         {nameError && <p class="error">{nameError}</p>}
         {nameSaved && <p class="success">Updated!</p>}
+      </div>
+
+      <div class="settings-section">
+        <h3>Window Color</h3>
+        <p class="hint">Customize background with 4-corner gradient</p>
+
+        <div class="theme-preview" style={{
+          background: themeEnabled
+            ? `radial-gradient(ellipse at top left, ${themeColors.topLeft}dd 0%, transparent 50%),
+               radial-gradient(ellipse at top right, ${themeColors.topRight}dd 0%, transparent 50%),
+               radial-gradient(ellipse at bottom left, ${themeColors.bottomLeft}dd 0%, transparent 50%),
+               radial-gradient(ellipse at bottom right, ${themeColors.bottomRight}dd 0%, transparent 50%),
+               linear-gradient(135deg, ${themeColors.topLeft} 0%, ${themeColors.bottomRight} 100%)`
+            : '#f8f8f8'
+        }}>
+          <div class="color-picker-grid">
+            <div class="color-picker-corner top-left">
+              <input
+                type="color"
+                value={themeColors.topLeft}
+                onInput={(e) => handleColorChange('topLeft', (e.target as HTMLInputElement).value)}
+              />
+            </div>
+            <div class="color-picker-corner top-right">
+              <input
+                type="color"
+                value={themeColors.topRight}
+                onInput={(e) => handleColorChange('topRight', (e.target as HTMLInputElement).value)}
+              />
+            </div>
+            <div class="color-picker-corner bottom-left">
+              <input
+                type="color"
+                value={themeColors.bottomLeft}
+                onInput={(e) => handleColorChange('bottomLeft', (e.target as HTMLInputElement).value)}
+              />
+            </div>
+            <div class="color-picker-corner bottom-right">
+              <input
+                type="color"
+                value={themeColors.bottomRight}
+                onInput={(e) => handleColorChange('bottomRight', (e.target as HTMLInputElement).value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="theme-actions">
+          <label class="theme-toggle-label">
+            <input
+              type="checkbox"
+              checked={themeEnabled}
+              onChange={handleThemeToggle}
+            />
+            Enable
+          </label>
+          <button onClick={handleSaveTheme}>Apply</button>
+          <button onClick={handleResetTheme} class="reset-button">Reset</button>
+        </div>
       </div>
 
       {usingNip07 ? (

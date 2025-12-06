@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'hono/jsx'
-import { createTextNote } from '../lib/nostr/events'
+import { createTextNote, getLocalThemeColors, getThemeCardProps, type ThemeColors } from '../lib/nostr/events'
 import { publishEvent } from '../lib/nostr/relay'
+import { renderContent } from '../lib/content-parser'
 import ProfileSetup, { hasLocalProfile } from './ProfileSetup'
 
 export default function PostForm() {
@@ -9,10 +10,13 @@ export default function PostForm() {
   const [error, setError] = useState('')
   const [hasProfile, setHasProfile] = useState(false)
   const [checkingProfile, setCheckingProfile] = useState(true)
+  const [showPreview, setShowPreview] = useState(false)
+  const [themeColors, setThemeColors] = useState<ThemeColors | null>(null)
 
   useEffect(() => {
     setHasProfile(hasLocalProfile())
     setCheckingProfile(false)
+    setThemeColors(getLocalThemeColors())
 
     const handleProfileUpdate = () => setHasProfile(hasLocalProfile())
     window.addEventListener('profileupdated', handleProfileUpdate)
@@ -59,14 +63,34 @@ export default function PostForm() {
     <form class="post-form" onSubmit={handleSubmit}>
       <textarea
         class="post-input"
-        placeholder="What's on your mind?"
+        placeholder="マイペースに書こう"
         value={content}
         onInput={(e) => setContent((e.target as HTMLTextAreaElement).value)}
         rows={3}
-        maxLength={280}
+        maxLength={4200}
       />
+      {showPreview && content.trim() && (() => {
+        const themeProps = getThemeCardProps(themeColors)
+        return (
+          <div class={`post-preview ${themeProps.className}`} style={themeProps.style}>
+            <div class="preview-label">Preview</div>
+            <div class="preview-content">
+              {renderContent(content)}
+            </div>
+          </div>
+        )
+      })()}
       <div class="post-actions">
-        <span class="char-count">{content.length}/280</span>
+        <div class="post-actions-left">
+          <button
+            type="button"
+            class={`preview-toggle ${showPreview ? 'active' : ''}`}
+            onClick={() => setShowPreview(!showPreview)}
+          >
+            {showPreview ? 'Hide' : 'Preview'}
+          </button>
+          <span class="char-count">{content.length}/4200</span>
+        </div>
         <button type="submit" class="post-button" disabled={posting || !content.trim()}>
           {posting ? 'Posting...' : 'Post'}
         </button>

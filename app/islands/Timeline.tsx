@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'hono/jsx'
 import { fetchEvents, fetchUserProfile, publishEvent } from '../lib/nostr/relay'
-import { formatTimestamp, getCurrentPubkey, createTextNote, createDeleteEvent, type Profile } from '../lib/nostr/events'
+import { formatTimestamp, getCurrentPubkey, createTextNote, createDeleteEvent, getEventThemeColors, getThemeCardProps, type Profile } from '../lib/nostr/events'
 import { exportNpub } from '../lib/nostr/keys'
 import { renderContent, setHashtagClickHandler } from '../lib/content-parser'
 import type { Event } from 'nostr-tools'
@@ -192,9 +192,15 @@ export default function Timeline() {
         const justSaved = savedId === event.id
         const justDeleted = deletedId === event.id
         const isConfirmingDelete = confirmDeleteId === event.id
+        const themeColors = getEventThemeColors(event)
+        const themeProps = getThemeCardProps(themeColors)
 
         return (
-          <article key={event.id} class={`post-card ${isMyPost ? 'my-post' : ''}`}>
+          <article
+            key={event.id}
+            class={`post-card ${isMyPost ? 'my-post' : ''} ${themeProps.className}`}
+            style={themeProps.style}
+          >
             <header class="post-header">
               <span class="author-name">{getDisplayName(event.pubkey)}</span>
               <time class="timestamp">{formatTimestamp(event.created_at)}</time>

@@ -12,16 +12,46 @@ export interface Profile {
   about?: string
 }
 
+export interface ThemeColors {
+  topLeft: string
+  topRight: string
+  bottomLeft: string
+  bottomRight: string
+}
+
 export const MYPACE_TAG = 'mypace'
 
+// Get stored theme colors from localStorage
+function getStoredThemeColors(): ThemeColors | null {
+  if (typeof localStorage === 'undefined') return null
+  const stored = localStorage.getItem('mypace_theme_colors')
+  const enabled = localStorage.getItem('mypace_theme_enabled')
+  if (stored && enabled === 'true') {
+    try {
+      return JSON.parse(stored)
+    } catch {
+      return null
+    }
+  }
+  return null
+}
+
 export async function createTextNote(content: string): Promise<Event> {
+  const tags: string[][] = [
+    ['t', MYPACE_TAG],
+    ['client', 'mypace'],
+  ]
+
+  // Add theme colors if enabled
+  const themeColors = getStoredThemeColors()
+  if (themeColors) {
+    tags.push(['mypace_theme', themeColors.topLeft, themeColors.topRight, themeColors.bottomLeft, themeColors.bottomRight])
+  }
+
   const template: EventTemplate = {
     kind: 1,
     created_at: Math.floor(Date.now() / 1000),
-    tags: [
-      ['t', MYPACE_TAG],
-      ['client', 'mypace'],
-    ],
+    tags,
     content,
   }
 
@@ -32,6 +62,81 @@ export async function createTextNote(content: string): Promise<Event> {
 
   const sk = getOrCreateSecretKey()
   return finalizeEvent(template, sk)
+}
+
+// Extract theme colors from event tags
+export function getEventThemeColors(event: Event): ThemeColors | null {
+  const themeTag = event.tags.find(tag => tag[0] === 'mypace_theme')
+  if (themeTag && themeTag.length >= 5) {
+    return {
+      topLeft: themeTag[1],
+      topRight: themeTag[2],
+      bottomLeft: themeTag[3],
+      bottomRight: themeTag[4],
+    }
+  }
+  return null
+}
+
+// Calculate relative luminance of a hex color
+function getLuminance(hex: string): number {
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)
+}
+
+// Determine if color is dark
+export function isDarkColor(hex: string): boolean {
+  return getLuminance(hex) < 0.4
+}
+
+// Get theme card props (style and classes)
+export function getThemeCardProps(colors: ThemeColors | null): {
+  style: Record<string, string>
+  className: string
+} {
+  if (!colors) {
+    return { style: {}, className: '' }
+  }
+
+  const darkCount =
+    (isDarkColor(colors.topLeft) ? 1 : 0) +
+    (isDarkColor(colors.topRight) ? 1 : 0) +
+    (isDarkColor(colors.bottomLeft) ? 1 : 0) +
+    (isDarkColor(colors.bottomRight) ? 1 : 0)
+
+  const avgDark = darkCount >= 2
+  const textClass = avgDark ? 'light-text' : 'dark-text'
+
+  return {
+    style: {
+      background: `
+        radial-gradient(ellipse at top left, ${colors.topLeft}cc 0%, transparent 50%),
+        radial-gradient(ellipse at top right, ${colors.topRight}cc 0%, transparent 50%),
+        radial-gradient(ellipse at bottom left, ${colors.bottomLeft}cc 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, ${colors.bottomRight}cc 0%, transparent 50%),
+        linear-gradient(135deg, ${colors.topLeft} 0%, ${colors.bottomRight} 100%)
+      `.trim()
+    },
+    className: `themed-card ${textClass}`
+  }
+}
+
+// Get stored theme colors from localStorage (exported for reuse)
+export function getLocalThemeColors(): ThemeColors | null {
+  if (typeof localStorage === 'undefined') return null
+  const stored = localStorage.getItem('mypace_theme_colors')
+  const enabled = localStorage.getItem('mypace_theme_enabled')
+  if (stored && enabled === 'true') {
+    try {
+      return JSON.parse(stored)
+    } catch {
+      return null
+    }
+  }
+  return null
 }
 
 export async function createProfileEvent(profile: Profile): Promise<Event> {
