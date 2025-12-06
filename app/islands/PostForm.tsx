@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'hono/jsx'
-import { createTextNote, getLocalThemeColors, getThemeCardProps, type ThemeColors } from '../lib/nostr/events'
+import { createTextNote, createDeleteEvent, getLocalThemeColors, getThemeCardProps, type ThemeColors } from '../lib/nostr/events'
 import { publishEvent } from '../lib/nostr/relay'
 import { renderContent } from '../lib/content-parser'
 import ProfileSetup, { hasLocalProfile } from './ProfileSetup'
+import type { Event } from 'nostr-tools'
 
 interface PostFormProps {
   longMode: boolean
@@ -11,9 +12,12 @@ interface PostFormProps {
   onContentChange: (content: string) => void
   showPreview: boolean
   onShowPreviewChange: (show: boolean) => void
+  editingEvent?: Event | null
+  onEditCancel?: () => void
+  onEditComplete?: () => void
 }
 
-export default function PostForm({ longMode, onLongModeChange, content, onContentChange, showPreview, onShowPreviewChange }: PostFormProps) {
+export default function PostForm({ longMode, onLongModeChange, content, onContentChange, showPreview, onShowPreviewChange, editingEvent, onEditCancel, onEditComplete }: PostFormProps) {
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState('')
   const [hasProfile, setHasProfile] = useState(false)
@@ -30,7 +34,7 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
     return () => window.removeEventListener('profileupdated', handleProfileUpdate)
   }, [])
 
-  const handleSubmit = async (e: Event) => {
+  const handleSubmit = async (e: globalThis.Event) => {
     e.preventDefault()
     if (!content.trim() || posting || !hasProfile) return
 
@@ -38,14 +42,33 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
     setError('')
 
     try {
-      const event = await createTextNote(content.trim())
+      // If editing, delete original first
+      if (editingEvent) {
+        const deleteEvent = await createDeleteEvent([editingEvent.id])
+        await publishEvent(deleteEvent)
+      }
+
+      // Preserve reply tags when editing
+      const preserveTags = editingEvent ? editingEvent.tags : undefined
+      const event = await createTextNote(content.trim(), preserveTags)
       await publishEvent(event)
       onContentChange('')
+
+      if (editingEvent && onEditComplete) {
+        onEditComplete()
+      }
+
       window.dispatchEvent(new CustomEvent('newpost'))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to post')
     } finally {
       setPosting(false)
+    }
+  }
+
+  const handleCancel = () => {
+    if (onEditCancel) {
+      onEditCancel()
     }
   }
 
@@ -67,7 +90,10 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
   }
 
   return (
-    <form class={`post-form ${longMode ? 'long-mode' : ''}`} onSubmit={handleSubmit}>
+    <form class={`post-form ${longMode ? 'long-mode' : ''} ${editingEvent ? 'editing' : ''}`} onSubmit={handleSubmit}>
+      {editingEvent && (
+        <div class="editing-label">Editing post...</div>
+      )}
       <button
         type="button"
         class={`mode-toggle-corner ${longMode ? 'active' : ''}`}
@@ -105,9 +131,16 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
           </button>
           <span class="char-count">{content.length}/4200</span>
         </div>
-        <button type="submit" class="post-button" disabled={posting || !content.trim()}>
-          {posting ? 'Posting...' : 'Post'}
-        </button>
+        <div class="post-actions-right">
+          {editingEvent && (
+            <button type="button" class="cancel-button" onClick={handleCancel}>
+              Cancel
+            </button>
+          )}
+          <button type="submit" class="post-button" disabled={posting || !content.trim()}>
+            {posting ? (editingEvent ? 'Saving...' : 'Posting...') : (editingEvent ? 'Save' : 'Post')}
+          </button>
+        </div>
       </div>
       {error && <p class="error">{error}</p>}
     </form>

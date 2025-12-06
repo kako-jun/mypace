@@ -73,6 +73,57 @@ hasNip07()              // Check extension
 - 投稿の削除をリクエスト
 - 編集時は delete + 新規投稿の2ステップ
 
+### kind:6 (Repost / NIP-18)
+```typescript
+{
+  kind: 6,
+  created_at: timestamp,
+  tags: [
+    ['e', 'original_event_id', ''],
+    ['p', 'original_author_pubkey']
+  ],
+  content: JSON.stringify(originalEvent),
+  pubkey: "...",
+  id: "...",
+  sig: "..."
+}
+```
+- 他ユーザーまたは自分の投稿をリポスト
+- タイムラインでは「🔁 ○○ reposted」ラベル付きで表示
+
+### kind:7 (Reaction / NIP-25)
+```typescript
+{
+  kind: 7,
+  created_at: timestamp,
+  tags: [
+    ['e', 'target_event_id'],
+    ['p', 'target_author_pubkey']
+  ],
+  content: '+',
+  pubkey: "...",
+  id: "...",
+  sig: "..."
+}
+```
+- 投稿へのいいね（★）
+- content `+` は一般的ないいねを表す
+- 自分の投稿へのいいねは禁止（UI側で制御）
+
+### Reply Tags (NIP-10)
+返信時はkind:1イベントに追加タグを付与:
+```typescript
+tags: [
+  ['t', 'mypace'],
+  ['client', 'mypace'],
+  ['e', 'root_event_id', '', 'root'],   // スレッドルート
+  ['e', 'reply_to_id', '', 'reply'],    // 直接の返信先
+  ['p', 'root_author_pubkey'],
+  ['p', 'reply_author_pubkey']
+]
+```
+- 編集時もe/pタグを保持してスレッド関係を維持
+
 ## Profile Management
 
 - ローカルストレージ (`mypace_profile`) を最優先で読み込み

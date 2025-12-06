@@ -36,7 +36,7 @@ function getStoredThemeColors(): ThemeColors | null {
   return null
 }
 
-export async function createTextNote(content: string): Promise<Event> {
+export async function createTextNote(content: string, preserveTags?: string[][]): Promise<Event> {
   const tags: string[][] = [
     ['t', MYPACE_TAG],
     ['client', 'mypace'],
@@ -46,6 +46,15 @@ export async function createTextNote(content: string): Promise<Event> {
   const themeColors = getStoredThemeColors()
   if (themeColors) {
     tags.push(['mypace_theme', themeColors.topLeft, themeColors.topRight, themeColors.bottomLeft, themeColors.bottomRight])
+  }
+
+  // Preserve e and p tags from original event (for replies)
+  if (preserveTags) {
+    for (const tag of preserveTags) {
+      if (tag[0] === 'e' || tag[0] === 'p') {
+        tags.push(tag)
+      }
+    }
   }
 
   const template: EventTemplate = {
@@ -162,6 +171,92 @@ export async function createDeleteEvent(eventIds: string[]): Promise<Event> {
     created_at: Math.floor(Date.now() / 1000),
     tags: eventIds.map(id => ['e', id]),
     content: '',
+  }
+
+  if (hasNip07() && window.nostr) {
+    const signed = await window.nostr.signEvent(template)
+    return signed as Event
+  }
+
+  const sk = getOrCreateSecretKey()
+  return finalizeEvent(template, sk)
+}
+
+// NIP-25: Create reaction event (like)
+export async function createReactionEvent(targetEvent: Event, content: string = '+'): Promise<Event> {
+  const template: EventTemplate = {
+    kind: 7,
+    created_at: Math.floor(Date.now() / 1000),
+    tags: [
+      ['e', targetEvent.id],
+      ['p', targetEvent.pubkey],
+    ],
+    content,
+  }
+
+  if (hasNip07() && window.nostr) {
+    const signed = await window.nostr.signEvent(template)
+    return signed as Event
+  }
+
+  const sk = getOrCreateSecretKey()
+  return finalizeEvent(template, sk)
+}
+
+// NIP-18: Create repost event
+export async function createRepostEvent(targetEvent: Event): Promise<Event> {
+  const template: EventTemplate = {
+    kind: 6,
+    created_at: Math.floor(Date.now() / 1000),
+    tags: [
+      ['e', targetEvent.id, ''],
+      ['p', targetEvent.pubkey],
+    ],
+    content: JSON.stringify(targetEvent),
+  }
+
+  if (hasNip07() && window.nostr) {
+    const signed = await window.nostr.signEvent(template)
+    return signed as Event
+  }
+
+  const sk = getOrCreateSecretKey()
+  return finalizeEvent(template, sk)
+}
+
+// NIP-10: Create reply event
+export async function createReplyEvent(content: string, replyTo: Event, rootEvent?: Event): Promise<Event> {
+  const tags: string[][] = [
+    ['t', MYPACE_TAG],
+    ['client', 'mypace'],
+  ]
+
+  // Add theme colors if enabled
+  const themeColors = getStoredThemeColors()
+  if (themeColors) {
+    tags.push(['mypace_theme', themeColors.topLeft, themeColors.topRight, themeColors.bottomLeft, themeColors.bottomRight])
+  }
+
+  // NIP-10: Add root and reply markers
+  if (rootEvent && rootEvent.id !== replyTo.id) {
+    // Replying to a reply in a thread
+    tags.push(['e', rootEvent.id, '', 'root'])
+    tags.push(['e', replyTo.id, '', 'reply'])
+    tags.push(['p', rootEvent.pubkey])
+    if (replyTo.pubkey !== rootEvent.pubkey) {
+      tags.push(['p', replyTo.pubkey])
+    }
+  } else {
+    // Replying directly to a root post
+    tags.push(['e', replyTo.id, '', 'root'])
+    tags.push(['p', replyTo.pubkey])
+  }
+
+  const template: EventTemplate = {
+    kind: 1,
+    created_at: Math.floor(Date.now() / 1000),
+    tags,
+    content,
   }
 
   if (hasNip07() && window.nostr) {
