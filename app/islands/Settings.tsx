@@ -13,9 +13,18 @@ import {
 import { getCurrentPubkey, createProfileEvent, type Profile } from '../lib/nostr/events'
 import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
 import { getLocalProfile } from './ProfileSetup'
+import Button from '../components/Button'
 
-// Default colors (FF7-inspired blue theme)
+// Default colors (matches disabled background #f8f8f8)
 const DEFAULT_COLORS = {
+  topLeft: '#f8f8f8',
+  topRight: '#f8f8f8',
+  bottomLeft: '#f8f8f8',
+  bottomRight: '#f8f8f8',
+}
+
+// Preset: FF7-inspired blue theme
+const FF7_COLORS = {
   topLeft: '#0a1628',
   topRight: '#1a3a5c',
   bottomLeft: '#1a3a5c',
@@ -71,6 +80,9 @@ export function applyThemeColors(colors: ThemeColors) {
   `
   document.documentElement.style.setProperty('--theme-gradient', gradient)
 
+  // Set html background for overscroll (blend of diagonal corners)
+  document.documentElement.style.background = `linear-gradient(135deg, ${colors.topLeft} 0%, ${colors.bottomRight} 100%)`
+
   // Set logo color based on top-left corner brightness
   const logoColor = isDarkColor(colors.topLeft) ? '#ffffff' : '#222222'
   document.documentElement.style.setProperty('--logo-color', logoColor)
@@ -91,6 +103,7 @@ export function clearThemeColors() {
   document.documentElement.style.removeProperty('--logo-color')
   document.documentElement.style.removeProperty('--settings-color')
   document.documentElement.style.removeProperty('--settings-hover-color')
+  document.documentElement.style.background = '#f8f8f8'
 }
 
 export default function Settings() {
@@ -107,6 +120,7 @@ export default function Settings() {
   const [nameSaved, setNameSaved] = useState(false)
   const [themeColors, setThemeColors] = useState<ThemeColors>(DEFAULT_COLORS)
   const [themeEnabled, setThemeEnabled] = useState(false)
+  const [showNsec, setShowNsec] = useState(false)
 
   // Load theme on mount (not just when settings panel opens)
   useEffect(() => {
@@ -166,10 +180,18 @@ export default function Settings() {
     try {
       const sk = importNsec(importValue.trim())
       saveSecretKey(sk)
+
+      // Clear all settings for new identity
+      localStorage.removeItem('mypace_profile')
+      localStorage.removeItem('mypace_theme_colors')
+      localStorage.removeItem('mypace_theme_enabled')
+
       setNsec(exportNsec(sk))
       setNpub(exportNpub(getPublicKeyFromSecret(sk)))
       setImportValue('')
-      alert('Key imported successfully!')
+
+      // Reload to start fresh with new identity
+      window.location.reload()
     } catch {
       setError('Invalid nsec format')
     }
@@ -274,9 +296,9 @@ export default function Settings() {
             onInput={(e) => setDisplayName((e.target as HTMLInputElement).value)}
             maxLength={50}
           />
-          <button onClick={handleSaveName} disabled={savingName || !displayName.trim()}>
+          <Button onClick={handleSaveName} disabled={savingName || !displayName.trim()}>
             {savingName ? 'Saving...' : 'Update'}
-          </button>
+          </Button>
         </div>
         {nameError && <p class="error">{nameError}</p>}
         {nameSaved && <p class="success">Updated!</p>}
@@ -336,8 +358,8 @@ export default function Settings() {
             />
             Enable
           </label>
-          <button onClick={handleSaveTheme}>Apply</button>
-          <button onClick={handleResetTheme} class="reset-button">Reset</button>
+          <Button onClick={handleSaveTheme}>Apply</Button>
+          <Button onClick={handleResetTheme} variant="secondary">Reset</Button>
         </div>
       </div>
 
@@ -361,10 +383,15 @@ export default function Settings() {
               <div class="key-display">
                 <label>nsec (secret - keep safe!):</label>
                 <div class="secret-row">
-                  <code class="secret">{nsec.slice(0, 20)}...</code>
-                  <button onClick={handleCopy}>
-                    {copied ? 'Copied!' : 'Copy'}
-                  </button>
+                  <code class="secret">{showNsec ? nsec : '••••••••••••••••••••••••••••••••'}</code>
+                  <div class="secret-row-buttons">
+                    <Button onClick={() => setShowNsec(!showNsec)}>
+                      {showNsec ? 'Hide' : 'Show'}
+                    </Button>
+                    <Button onClick={handleCopy}>
+                      {copied ? 'Copied!' : 'Copy'}
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -373,23 +400,25 @@ export default function Settings() {
           <div class="settings-section">
             <h3>Import Key</h3>
             <p class="hint">Paste your nsec to use an existing identity</p>
-            <input
-              type="password"
-              placeholder="nsec1..."
-              value={importValue}
-              onInput={(e) => setImportValue((e.target as HTMLInputElement).value)}
-            />
-            <button onClick={handleImport} disabled={!importValue.trim()}>
-              Import
-            </button>
+            <div class="input-row">
+              <input
+                type="password"
+                placeholder="nsec1..."
+                value={importValue}
+                onInput={(e) => setImportValue((e.target as HTMLInputElement).value)}
+              />
+              <Button onClick={handleImport} disabled={!importValue.trim()}>
+                Import
+              </Button>
+            </div>
             {error && <p class="error">{error}</p>}
           </div>
 
           <div class="settings-section danger">
             <h3>Danger Zone</h3>
-            <button class="danger-button" onClick={handleClear}>
+            <Button onClick={handleClear} variant="danger">
               Clear key from browser
-            </button>
+            </Button>
           </div>
         </>
       )}

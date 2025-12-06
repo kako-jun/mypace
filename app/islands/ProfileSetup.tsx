@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'hono/jsx'
 import { getCurrentPubkey, createProfileEvent, type Profile } from '../lib/nostr/events'
 import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
+import Button from '../components/Button'
 
 interface Props {
   onProfileSet?: () => void
@@ -93,9 +94,9 @@ export default function ProfileSetup({ onProfileSet }: Props) {
           onInput={(e) => setName((e.target as HTMLInputElement).value)}
           maxLength={50}
         />
-        <button onClick={handleSave} disabled={saving || !name.trim()}>
+        <Button onClick={handleSave} disabled={saving || !name.trim()}>
           {saving ? 'Saving...' : hasName ? 'Update' : 'Set Name'}
-        </button>
+        </Button>
       </div>
       {error && <p class="error">{error}</p>}
     </div>

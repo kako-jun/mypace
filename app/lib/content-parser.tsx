@@ -30,6 +30,7 @@ export function clearHashtagClickHandler() {
 
 // Configure marked with Prism highlighting
 const marked = new Marked({
+  breaks: true, // Convert single line breaks to <br>
   renderer: {
     code(token) {
       const lang = token.lang || ''
