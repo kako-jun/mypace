@@ -526,6 +526,13 @@ body.custom-theme .container {
   background: transparent;
 }
 
+@media (min-width: 1200px) {
+  .container {
+    max-width: none;
+    margin: 0 0 0 auto;
+  }
+}
+
 body.custom-theme .post-card {
   background: rgba(255, 255, 255, 0.95);
 }
