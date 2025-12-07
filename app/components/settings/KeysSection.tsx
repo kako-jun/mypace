@@ -7,7 +7,7 @@ import {
   clearSecretKey,
   getPublicKeyFromSecret,
 } from '../../lib/nostr/keys'
-import Button from '../Button'
+import { Button } from '../ui'
 
 interface KeysSectionProps {
   nsec: string
