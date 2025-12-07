@@ -2,6 +2,7 @@ import { useState, useEffect } from 'hono/jsx'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { FilterBar, TimelinePostCard } from '../components/timeline'
 import { useTimeline, useShare } from '../hooks'
+import { shareOrCopy } from '../lib/utils'
 import type { Event } from 'nostr-tools'
 
 interface TimelineProps {
@@ -50,16 +51,8 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
 
   const handleShare = async (eventId: string) => {
     const url = `${window.location.origin}/post/${eventId}`
-    if (navigator.share) {
-      try { await navigator.share({ url }) } catch (e) {
-        if ((e as Error).name !== 'AbortError') {
-          await navigator.clipboard.writeText(url)
-          setCopiedId(eventId)
-          setTimeout(() => setCopiedId(null), 2000)
-        }
-      }
-    } else {
-      await navigator.clipboard.writeText(url)
+    const result = await shareOrCopy(url)
+    if (result.copied) {
       setCopiedId(eventId)
       setTimeout(() => setCopiedId(null), 2000)
     }
