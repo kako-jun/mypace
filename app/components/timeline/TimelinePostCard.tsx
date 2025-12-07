@@ -1,4 +1,5 @@
 import { useState } from 'hono/jsx'
+import { Repeat2 } from 'lucide-react'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import { renderContent } from '../../lib/content-parser'
 import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies } from '../post'
@@ -80,7 +81,11 @@ export default function TimelinePostCard({
       style={themeProps.style}
       onClick={handleCardClick}
     >
-      {repostedBy && <div class="repost-label">🔁 {getDisplayName(repostedBy.pubkey)} reposted</div>}
+      {repostedBy && (
+        <div class="repost-label">
+          <Repeat2 size={14} /> {getDisplayName(repostedBy.pubkey)} reposted
+        </div>
+      )}
 
       <PostHeader
         pubkey={event.pubkey}

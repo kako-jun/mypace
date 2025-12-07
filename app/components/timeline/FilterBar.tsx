@@ -1,3 +1,4 @@
+import { Check, Share2 } from 'lucide-react'
 import type { FilterMode } from '../../types'
 
 interface FilterBarProps {
@@ -51,7 +52,7 @@ export default function FilterBar({
         title="Share"
         aria-label={filterCopied ? 'Link copied' : 'Share filter'}
       >
-        {filterCopied ? '✓' : '↗'}
+        {filterCopied ? <Check size={14} /> : <Share2 size={14} />}
       </button>
     </div>
   )
