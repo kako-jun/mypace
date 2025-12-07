@@ -28,11 +28,11 @@ export default function ProfileSection({
 
   // Common function to save profile with avatar
   const saveProfileWithAvatar = async (avatarUrl: string | undefined) => {
-    const localProfile = getLocalProfile()
+    const localProfile = getLocalProfile() ?? {}
     const profile: Profile = {
       ...localProfile,
-      name: displayName.trim() || localProfile?.name || '',
-      display_name: displayName.trim() || localProfile?.display_name || '',
+      name: displayName.trim() || localProfile.name || '',
+      display_name: displayName.trim() || localProfile.display_name || '',
       picture: avatarUrl,
     }
     const event = await createProfileEvent(profile)

@@ -8,8 +8,17 @@ interface ImageDropZoneProps {
 
 export default function ImageDropZone({ onImageUploaded, onError }: ImageDropZoneProps) {
   const [dragging, setDragging] = useState(false)
-  const { uploading, error, uploadFile, clearError } = useImageUpload()
+  const { uploading, uploadFile } = useImageUpload()
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const processUpload = async (file: File) => {
+    const result = await uploadFile(file)
+    if (result.url) {
+      onImageUploaded(result.url)
+    } else if (result.error && onError) {
+      onError(result.error)
+    }
+  }
 
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault()
@@ -30,27 +39,14 @@ export default function ImageDropZone({ onImageUploaded, onError }: ImageDropZon
 
     const files = e.dataTransfer?.files
     if (!files || files.length === 0) return
-
-    const file = files[0]
-    const url = await uploadFile(file)
-    if (url) {
-      onImageUploaded(url)
-    } else if (error && onError) {
-      onError(error)
-    }
+    await processUpload(files[0])
   }
 
   const handleFileChange = async (e: globalThis.Event) => {
     const input = e.target as HTMLInputElement
     const file = input.files?.[0]
     if (!file) return
-
-    const url = await uploadFile(file)
-    if (url) {
-      onImageUploaded(url)
-    } else if (error && onError) {
-      onError(error)
-    }
+    await processUpload(file)
     input.value = ''
   }
 
