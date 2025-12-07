@@ -35,142 +35,94 @@
 --font-mono: 'SF Mono', 'Menlo', 'Consolas', 'DejaVu Sans Mono', 'Noto Sans Mono CJK JP', 'Source Han Code JP', 'BIZ UDGothic', 'Osaka-Mono', ui-monospace, monospace;
 }
 
-/* Outlined text style (Roblox-like) */
+/* Outlined text base style */
 .text-outlined {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 900;
   letter-spacing: 0.05em;
   color: #fff;
-  -webkit-text-stroke: 1px #333;
+  -webkit-text-stroke: 1px #555;
   text-shadow:
-    1px 1px 0 #333,
-    -1px 1px 0 #333,
-    1px -1px 0 #333,
-    -1px -1px 0 #333;
+    1px 1px 0 #555,
+    -1px 1px 0 #555,
+    1px -1px 0 #555,
+    -1px -1px 0 #555;
 }
 
 .text-outlined:hover {
   transform: scale(1.05);
-  text-shadow:
-    1px 1px 0 #111,
-    -1px 1px 0 #111,
-    1px -1px 0 #111,
-    -1px -1px 0 #111;
 }
 
 [data-theme="dark"] .text-outlined {
-  -webkit-text-stroke: 1px #000;
+  -webkit-text-stroke: 1px #222;
   text-shadow:
-    1px 1px 0 #000,
-    -1px 1px 0 #000,
-    1px -1px 0 #000,
-    -1px -1px 0 #000;
-}
-
-/* Outlined text base (stroke and shadow only, no color) */
-.text-outlined-base {
-  font-weight: 900;
-  letter-spacing: 0.03em;
-  -webkit-text-stroke: 0.5px #333;
-  text-shadow:
-    0.5px 0.5px 0 #333,
-    -0.5px 0.5px 0 #333,
-    0.5px -0.5px 0 #333,
-    -0.5px -0.5px 0 #333,
-    0 0 2px rgba(0, 0, 0, 0.2);
-}
-
-[data-theme="dark"] .text-outlined-base {
-  -webkit-text-stroke: 0.5px #000;
-  text-shadow:
-    0.5px 0.5px 0 #000,
-    -0.5px 0.5px 0 #000,
-    0.5px -0.5px 0 #000,
-    -0.5px -0.5px 0 #000,
-    0 0 2px rgba(0, 0, 0, 0.3);
+    1px 1px 0 #222,
+    -1px 1px 0 #222,
+    1px -1px 0 #222,
+    -1px -1px 0 #222;
 }
 
 /* Outlined text - primary (light blue for Edit) */
-.text-outlined-sm {
-  font-size: 1.2rem;
-  font-weight: 900;
-  letter-spacing: 0.03em;
+.text-outlined-primary {
   color: #8df;
-  -webkit-text-stroke: 0.5px #046;
+  -webkit-text-stroke: 1px #046;
   text-shadow:
-    0.5px 0.5px 0 #046,
-    -0.5px 0.5px 0 #046,
-    0.5px -0.5px 0 #046,
-    -0.5px -0.5px 0 #046,
-    0 0 2px rgba(0, 0, 0, 0.2);
+    1px 1px 0 #046,
+    -1px 1px 0 #046,
+    1px -1px 0 #046,
+    -1px -1px 0 #046;
 }
 
-.text-outlined-sm:hover {
-  transform: scale(1.05);
-}
-
-[data-theme="dark"] .text-outlined-sm {
-  -webkit-text-stroke: 0.5px #024;
+[data-theme="dark"] .text-outlined-primary {
+  -webkit-text-stroke: 1px #024;
   text-shadow:
-    0.5px 0.5px 0 #024,
-    -0.5px 0.5px 0 #024,
-    0.5px -0.5px 0 #024,
-    -0.5px -0.5px 0 #024,
-    0 0 2px rgba(0, 0, 0, 0.3);
+    1px 1px 0 #024,
+    -1px 1px 0 #024,
+    1px -1px 0 #024,
+    -1px -1px 0 #024;
 }
 
 /* Outlined text - warning (orange for Delete) */
-.text-outlined-danger {
-  font-size: 1.2rem;
-  font-weight: 900;
-  letter-spacing: 0.03em;
+.text-outlined-warning {
   color: #fa0;
-  -webkit-text-stroke: 0.5px #640;
+  -webkit-text-stroke: 1px #640;
   text-shadow:
-    0.5px 0.5px 0 #640,
-    -0.5px 0.5px 0 #640,
-    0.5px -0.5px 0 #640,
-    -0.5px -0.5px 0 #640,
-    0 0 2px rgba(0, 0, 0, 0.2);
+    1px 1px 0 #640,
+    -1px 1px 0 #640,
+    1px -1px 0 #640,
+    -1px -1px 0 #640;
 }
 
-.text-outlined-danger:hover {
-  transform: scale(1.05);
-}
-
-[data-theme="dark"] .text-outlined-danger {
-  -webkit-text-stroke: 0.5px #420;
+[data-theme="dark"] .text-outlined-warning {
+  -webkit-text-stroke: 1px #420;
   text-shadow:
-    0.5px 0.5px 0 #420,
-    -0.5px 0.5px 0 #420,
-    0.5px -0.5px 0 #420,
-    -0.5px -0.5px 0 #420,
-    0 0 2px rgba(0, 0, 0, 0.3);
+    1px 1px 0 #420,
+    -1px 1px 0 #420,
+    1px -1px 0 #420,
+    -1px -1px 0 #420;
 }
 
-/* Author name */
+/* Author name - uses text-outlined base */
 .author-name {
   font-size: 1.2rem;
   font-weight: 900;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
   color: #fff;
-  -webkit-text-stroke: 0.5px #333;
+  -webkit-text-stroke: 1px #555;
   text-shadow:
-    0.5px 0.5px 0 #333,
-    -0.5px 0.5px 0 #333,
-    0.5px -0.5px 0 #333,
-    -0.5px -0.5px 0 #333,
-    0 0 2px rgba(0, 0, 0, 0.2);
+    1px 1px 0 #555,
+    -1px 1px 0 #555,
+    1px -1px 0 #555,
+    -1px -1px 0 #555;
 }
 
 [data-theme="dark"] .author-name {
-  -webkit-text-stroke: 0.5px #000;
+  -webkit-text-stroke: 1px #222;
   text-shadow:
-    0.5px 0.5px 0 #000,
-    -0.5px 0.5px 0 #000,
-    0.5px -0.5px 0 #000,
-    -0.5px -0.5px 0 #000,
-    0 0 2px rgba(0, 0, 0, 0.3);
+    1px 1px 0 #222,
+    -1px 1px 0 #222,
+    1px -1px 0 #222,
+    -1px -1px 0 #222;
 }
 
 .dark,
