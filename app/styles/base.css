@@ -29,6 +29,148 @@
 /* Code block */
 --code-bg: #f0f0f0;
 --code-text: #c7254e;
+
+/* Fonts */
+--font-sans: 'M PLUS Rounded 1c', -apple-system, BlinkMacSystemFont, sans-serif;
+--font-mono: 'SF Mono', 'Menlo', 'Consolas', 'DejaVu Sans Mono', 'Noto Sans Mono CJK JP', 'Source Han Code JP', 'BIZ UDGothic', 'Osaka-Mono', ui-monospace, monospace;
+}
+
+/* Outlined text style (Roblox-like) */
+.text-outlined {
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: #fff;
+  -webkit-text-stroke: 1px #333;
+  text-shadow:
+    1px 1px 0 #333,
+    -1px 1px 0 #333,
+    1px -1px 0 #333,
+    -1px -1px 0 #333;
+}
+
+.text-outlined:hover {
+  transform: scale(1.05);
+  text-shadow:
+    1px 1px 0 #111,
+    -1px 1px 0 #111,
+    1px -1px 0 #111,
+    -1px -1px 0 #111;
+}
+
+[data-theme="dark"] .text-outlined {
+  -webkit-text-stroke: 1px #000;
+  text-shadow:
+    1px 1px 0 #000,
+    -1px 1px 0 #000,
+    1px -1px 0 #000,
+    -1px -1px 0 #000;
+}
+
+/* Outlined text base (stroke and shadow only, no color) */
+.text-outlined-base {
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  -webkit-text-stroke: 0.5px #333;
+  text-shadow:
+    0.5px 0.5px 0 #333,
+    -0.5px 0.5px 0 #333,
+    0.5px -0.5px 0 #333,
+    -0.5px -0.5px 0 #333,
+    0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .text-outlined-base {
+  -webkit-text-stroke: 0.5px #000;
+  text-shadow:
+    0.5px 0.5px 0 #000,
+    -0.5px 0.5px 0 #000,
+    0.5px -0.5px 0 #000,
+    -0.5px -0.5px 0 #000,
+    0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Outlined text - primary (light blue for Edit) */
+.text-outlined-sm {
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  color: #8df;
+  -webkit-text-stroke: 0.5px #046;
+  text-shadow:
+    0.5px 0.5px 0 #046,
+    -0.5px 0.5px 0 #046,
+    0.5px -0.5px 0 #046,
+    -0.5px -0.5px 0 #046,
+    0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.text-outlined-sm:hover {
+  transform: scale(1.05);
+}
+
+[data-theme="dark"] .text-outlined-sm {
+  -webkit-text-stroke: 0.5px #024;
+  text-shadow:
+    0.5px 0.5px 0 #024,
+    -0.5px 0.5px 0 #024,
+    0.5px -0.5px 0 #024,
+    -0.5px -0.5px 0 #024,
+    0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Outlined text - warning (orange for Delete) */
+.text-outlined-danger {
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  color: #fa0;
+  -webkit-text-stroke: 0.5px #640;
+  text-shadow:
+    0.5px 0.5px 0 #640,
+    -0.5px 0.5px 0 #640,
+    0.5px -0.5px 0 #640,
+    -0.5px -0.5px 0 #640,
+    0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.text-outlined-danger:hover {
+  transform: scale(1.05);
+}
+
+[data-theme="dark"] .text-outlined-danger {
+  -webkit-text-stroke: 0.5px #420;
+  text-shadow:
+    0.5px 0.5px 0 #420,
+    -0.5px 0.5px 0 #420,
+    0.5px -0.5px 0 #420,
+    -0.5px -0.5px 0 #420,
+    0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Author name */
+.author-name {
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  color: #fff;
+  -webkit-text-stroke: 0.5px #333;
+  text-shadow:
+    0.5px 0.5px 0 #333,
+    -0.5px 0.5px 0 #333,
+    0.5px -0.5px 0 #333,
+    -0.5px -0.5px 0 #333,
+    0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .author-name {
+  -webkit-text-stroke: 0.5px #000;
+  text-shadow:
+    0.5px 0.5px 0 #000,
+    -0.5px 0.5px 0 #000,
+    0.5px -0.5px 0 #000,
+    -0.5px -0.5px 0 #000,
+    0 0 2px rgba(0, 0, 0, 0.3);
 }
 
 .dark,
@@ -86,7 +228,7 @@ scroll-behavior: smooth;
 }
 
 body {
-font-family: 'M PLUS Rounded 1c', -apple-system, BlinkMacSystemFont, sans-serif;
+font-family: var(--font-sans);
 color: var(--text-primary);
 line-height: 1.6;
 min-height: 100vh;
@@ -392,7 +534,7 @@ body.long-mode-active .container {
   background: var(--code-bg);
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
-  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+  font-family: var(--font-mono);
   font-size: 0.85em;
   color: var(--code-text);
 }
@@ -405,7 +547,7 @@ body.long-mode-active .container {
   border-radius: 8px;
   overflow-x: auto;
   margin: 0.75rem 0;
-  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   line-height: 1.5;
 }
@@ -598,8 +740,7 @@ body.custom-theme .settings-toggle:hover {
 }
 
 .post-card.themed-card .author-name {
-  color: inherit;
-  text-shadow: inherit;
+  /* Keep outlined text style */
 }
 
 .post-card.themed-card .timestamp {
@@ -660,15 +801,7 @@ body.custom-theme .settings-toggle:hover {
   opacity: 0.7;
 }
 
-.post-card.themed-card .edit-button {
-  color: inherit;
-  opacity: 0.6;
-  text-shadow: inherit;
-}
-
-.post-card.themed-card .edit-button:hover {
-  opacity: 1;
-}
+/* .edit-button and .delete-button use text-outlined classes */
 
 .post-card.themed-card .read-more-text {
   color: inherit;

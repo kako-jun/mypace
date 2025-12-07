@@ -9,23 +9,9 @@
   background: transparent;
   border: none;
   padding: 0.25rem 0.5rem;
-  font-size: 0.9rem;
   cursor: pointer;
-  color: #aaa;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
   pointer-events: auto;
-}
-
-.settings-toggle:hover {
-  color: #666;
-}
-
-[data-theme="dark"] .settings-toggle {
-  color: #888;
-}
-
-[data-theme="dark"] .settings-toggle:hover {
-  color: #ccc;
 }
 
 .settings-backdrop {

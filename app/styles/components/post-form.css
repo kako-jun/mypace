@@ -127,7 +127,7 @@
   border: none;
   resize: none;
   font-size: 1rem;
-  font-family: inherit;
+  font-family: var(--font-mono);
   outline: none;
   background: transparent;
   color: var(--text-primary);
