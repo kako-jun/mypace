@@ -32,7 +32,7 @@ export default function FilterBar({
           )}
           <span class="filter-tag">
             #{tag}
-            <button class="filter-tag-remove" onClick={() => onRemoveTag(tag)}>×</button>
+            <button class="filter-tag-remove" onClick={() => onRemoveTag(tag)} aria-label={`Remove tag ${tag}`}>×</button>
           </span>
         </>
       ))}
@@ -41,6 +41,7 @@ export default function FilterBar({
         class={`filter-share ${filterCopied ? 'copied' : ''}`}
         onClick={onShare}
         title="Share"
+        aria-label={filterCopied ? 'Link copied' : 'Share filter'}
       >
         {filterCopied ? '✓' : '↗'}
       </button>

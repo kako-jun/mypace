@@ -3,8 +3,8 @@ import { createTextNote, createDeleteEvent, createReplyEvent, getStoredThemeColo
 import type { ThemeColors } from '../types'
 import { publishEvent } from '../lib/nostr/relay'
 import ProfileSetup from './ProfileSetup'
-import { hasLocalProfile } from '../lib/utils'
-import { CUSTOM_EVENTS } from '../lib/constants'
+import { hasLocalProfile, getImageUrls, removeImageUrl } from '../lib/utils'
+import { CUSTOM_EVENTS, LIMITS } from '../lib/constants'
 import { ImageDropZone, AttachedImages, PostPreview } from '../components/post'
 import type { Event } from 'nostr-tools'
 
@@ -21,19 +21,6 @@ interface PostFormProps {
   replyingTo?: Event | null
   onReplyCancel?: () => void
   onReplyComplete?: () => void
-}
-
-// Extract image URLs from content
-function getImageUrls(content: string): string[] {
-  const imageRegex = /https?:\/\/[^\s<>"]+\.(jpg|jpeg|png|gif|webp|svg)(\?[^\s<>"]*)?/gi
-  return content.match(imageRegex) || []
-}
-
-// Remove image URL from content
-function removeImageUrl(content: string, urlToRemove: string): string {
-  const escapedUrl = urlToRemove.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const regex = new RegExp(`\\n?${escapedUrl}\\n?`, 'g')
-  return content.replace(regex, '\n').replace(/^\n+|\n+$/g, '').replace(/\n{3,}/g, '\n\n')
 }
 
 export default function PostForm({
@@ -171,7 +158,7 @@ export default function PostForm({
         value={content}
         onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
         rows={longMode ? 15 : 3}
-        maxLength={4200}
+        maxLength={LIMITS.MAX_POST_LENGTH}
       />
 
       <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
@@ -193,7 +180,7 @@ export default function PostForm({
           >
             {showPreview ? 'Hide' : 'Preview'}
           </button>
-          <span class="char-count">{content.length}/4200</span>
+          <span class="char-count">{content.length}/{LIMITS.MAX_POST_LENGTH}</span>
         </div>
         <div class="post-actions-right">
           {isSpecialMode && (

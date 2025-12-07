@@ -1,4 +1,3 @@
-export { default as PostCard } from './PostCard'
 export { default as PostActions } from './PostActions'
 export { default as PostHeader } from './PostHeader'
 export { default as ThreadReplies } from './ThreadReplies'

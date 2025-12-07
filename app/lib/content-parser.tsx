@@ -63,13 +63,11 @@ function escapeHtml(text: string): string {
 // Hashtag regex (supports ASCII and Japanese characters)
 const HASHTAG_REGEX = /#([a-zA-Z0-9_\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+)/g
 
-// Image URL extensions
-const IMAGE_EXTENSIONS = /\.(jpg|jpeg|png|gif|webp|svg)(\?[^\s]*)?$/i
-
 // Process hashtags in HTML (after markdown parsing)
 function processHashtags(html: string): string {
   return html.replace(HASHTAG_REGEX, (match, tag) => {
-    return `<button class="content-hashtag" data-tag="${tag}">${match}</button>`
+    const escapedTag = escapeHtml(tag)
+    return `<button class="content-hashtag" data-tag="${escapedTag}">${escapeHtml(match)}</button>`
   })
 }
 
