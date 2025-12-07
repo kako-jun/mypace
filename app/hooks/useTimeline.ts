@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'hono/jsx'
 import { fetchEvents, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts, fetchRepostEvents, publishEvent } from '../lib/nostr/relay'
-import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent, MYPACE_TAG } from '../lib/nostr/events'
+import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent } from '../lib/nostr/events'
+import { getETagValue, filterRepliesByRoot, hasMypaceTag } from '../lib/nostr/tags'
 import { getDisplayNameFromCache, getAvatarUrlFromCache } from '../lib/utils'
-import { isValidReaction } from '../lib/constants'
+import { isValidReaction, TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
 import type { Event } from 'nostr-tools'
 import type { ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../types'
 
@@ -62,8 +63,7 @@ export function useTimeline(): UseTimelineResult {
       const reactionMap: { [eventId: string]: ReactionData } = {}
       for (const eventId of eventIds) {
         const eventReactions = reactionEvents.filter(r => {
-          const eTag = r.tags.find(t => t[0] === 'e')
-          return eTag && eTag[1] === eventId && isValidReaction(r.content)
+          return getETagValue(r.tags) === eventId && isValidReaction(r.content)
         })
         reactionMap[eventId] = {
           count: eventReactions.length,
@@ -80,10 +80,7 @@ export function useTimeline(): UseTimelineResult {
       const replyEvents = await fetchReplies(eventIds)
       const replyMap: { [eventId: string]: ReplyData } = {}
       for (const eventId of eventIds) {
-        const eventReplies = replyEvents.filter(r => {
-          const rootTag = r.tags.find(t => t[0] === 'e' && t[3] === 'root')
-          return rootTag && rootTag[1] === eventId
-        })
+        const eventReplies = filterRepliesByRoot(replyEvents, eventId)
         replyMap[eventId] = { count: eventReplies.length, replies: eventReplies }
       }
       setReplies(replyMap)
@@ -105,10 +102,7 @@ export function useTimeline(): UseTimelineResult {
       const repostEvents = await fetchReposts(eventIds)
       const repostMap: { [eventId: string]: RepostData } = {}
       for (const eventId of eventIds) {
-        const eventReposts = repostEvents.filter(r => {
-          const eTag = r.tags.find(t => t[0] === 'e')
-          return eTag && eTag[1] === eventId
-        })
+        const eventReposts = repostEvents.filter(r => getETagValue(r.tags) === eventId)
         repostMap[eventId] = {
           count: eventReposts.length,
           myRepost: eventReposts.some(r => r.pubkey === myPubkey)
@@ -155,7 +149,7 @@ export function useTimeline(): UseTimelineResult {
           try {
             if (!repost.content || repost.content.trim() === '') continue
             const originalEvent = JSON.parse(repost.content) as Event
-            if (originalEvent.tags?.some(t => t[0] === 't' && t[1] === MYPACE_TAG)) {
+            if (hasMypaceTag(originalEvent)) {
               items.push({
                 event: originalEvent,
                 repostedBy: { pubkey: repost.pubkey, timestamp: repost.created_at }
@@ -216,7 +210,7 @@ export function useTimeline(): UseTimelineResult {
   const handleDelete = async (event: Event) => {
     try {
       await publishEvent(await createDeleteEvent([event.id]))
-      setTimeout(loadTimeline, 1500)
+      setTimeout(loadTimeline, TIMEOUTS.POST_ACTION_RELOAD)
     } catch {}
   }
 
@@ -225,9 +219,9 @@ export function useTimeline(): UseTimelineResult {
 
   useEffect(() => {
     loadTimeline()
-    const handleNewPost = () => setTimeout(loadTimeline, 1000)
-    window.addEventListener('newpost', handleNewPost)
-    return () => window.removeEventListener('newpost', handleNewPost)
+    const handleNewPost = () => setTimeout(loadTimeline, TIMEOUTS.NEW_POST_RELOAD)
+    window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
+    return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
   }, [])
 
   return {

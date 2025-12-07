@@ -2,7 +2,7 @@ import { useState, useEffect } from 'hono/jsx'
 import { getCurrentPubkey, createProfileEvent, type Profile } from '../lib/nostr/events'
 import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
 import { Button, Input } from '../components/ui'
-import { getLocalProfile, setLocalProfile, hasLocalProfile } from '../lib/utils'
+import { getLocalProfile, setLocalProfile, hasLocalProfile, getErrorMessage } from '../lib/utils'
 
 interface Props {
   onProfileSet?: () => void
@@ -70,7 +70,7 @@ export default function ProfileSetup({ onProfileSet }: Props) {
 
       onProfileSet?.()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save profile')
+      setError(getErrorMessage(e, 'Failed to save profile'))
     } finally {
       setSaving(false)
     }

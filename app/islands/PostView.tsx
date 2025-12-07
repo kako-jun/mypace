@@ -3,6 +3,7 @@ import { fetchEventById, fetchUserProfile, fetchReactions, fetchReplies, fetchRe
 import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent, getEventThemeColors, getThemeCardProps } from '../lib/nostr/events'
 import { getDisplayName, getAvatarUrl, getCachedPost, getCachedProfile } from '../lib/utils'
 import { isValidReaction, TIMEOUTS } from '../lib/constants'
+import { getETagValue, filterRepliesByRoot } from '../lib/nostr/tags'
 import { renderContent, setHashtagClickHandler } from '../lib/content-parser'
 import { PostHeader, ReplyCard } from '../components/post'
 import { useShare } from '../hooks'
@@ -84,18 +85,14 @@ export default function PostView({ eventId }: PostViewProps) {
       ])
 
       const eventReactions = reactionEvents.filter(r => {
-        const eTag = r.tags.find(t => t[0] === 'e')
-        return eTag && eTag[1] === eventId && isValidReaction(r.content)
+        return getETagValue(r.tags) === eventId && isValidReaction(r.content)
       })
       setReactions({
         count: eventReactions.length,
         myReaction: eventReactions.some(r => r.pubkey === pubkey)
       })
 
-      const eventReplies = replyEvents.filter(r => {
-        const rootTag = r.tags.find(t => t[0] === 'e' && t[3] === 'root')
-        return rootTag && rootTag[1] === eventId
-      })
+      const eventReplies = filterRepliesByRoot(replyEvents, eventId)
       setReplies({ count: eventReplies.length, replies: eventReplies })
 
       setReposts({
@@ -159,7 +156,7 @@ export default function PostView({ eventId }: PostViewProps) {
       await publishEvent(await createDeleteEvent([event.id]))
       setConfirmDeleteId(null)
       setDeletedId(event.id)
-      setTimeout(() => { window.location.href = '/' }, 1500)
+      setTimeout(() => { window.location.href = '/' }, TIMEOUTS.POST_ACTION_RELOAD)
     } catch {}
   }
 
