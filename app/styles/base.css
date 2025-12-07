@@ -248,6 +248,12 @@ body.long-mode-active .container {
 .logo-img {
   height: 64px;
   width: auto;
+  filter: var(--logo-filter, none);
+  transition: filter 0.2s ease;
+}
+
+.logo:hover .logo-img {
+  filter: var(--logo-hover-filter, none);
 }
 
 /* Loading & Empty */
@@ -521,12 +527,11 @@ body.custom-theme .container {
 }
 
 body.custom-theme .post-card {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 body.custom-theme[data-theme="dark"] .post-card {
-  background: rgba(30, 30, 30, 0.92);
+  background: rgba(30, 30, 30, 0.95);
 }
 
 body.custom-theme .settings-panel {

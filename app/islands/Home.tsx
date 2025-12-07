@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'hono/jsx'
 import PostForm from './PostForm'
 import Timeline from './Timeline'
 import { renderContent } from '../lib/content-parser'
-import { getString, setString, removeItem } from '../lib/utils'
+import { getString, setString, removeItem, getUIThemeColors, applyThemeColors } from '../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS, TIMEOUTS } from '../lib/constants'
 import type { Event } from 'nostr-tools'
 import type { FilterMode } from '../types'
@@ -46,6 +46,11 @@ export default function Home({ initialFilterTags, initialFilterMode }: HomeProps
     const handleNewPost = () => removeItem(STORAGE_KEYS.DRAFT)
     window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
     return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
+  }, [])
+
+  // Apply theme colors on initial load
+  useEffect(() => {
+    applyThemeColors(getUIThemeColors())
   }, [])
 
   const handleLongModeChange = (mode: boolean) => {

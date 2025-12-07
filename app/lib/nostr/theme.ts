@@ -57,13 +57,16 @@ export function getThemeCardProps(colors: ThemeColors | null): {
   const avgDark = darkCount >= 2
   const textClass = avgDark ? 'light-text' : 'dark-text'
 
+  // 4.75rem is the blur edge padding
+  const edge = '4.75rem'
+
   return {
     style: {
       background: `
-        radial-gradient(ellipse at top left, ${colors.topLeft}cc 0%, transparent 50%),
-        radial-gradient(ellipse at top right, ${colors.topRight}cc 0%, transparent 50%),
-        radial-gradient(ellipse at bottom left, ${colors.bottomLeft}cc 0%, transparent 50%),
-        radial-gradient(ellipse at bottom right, ${colors.bottomRight}cc 0%, transparent 50%),
+        radial-gradient(ellipse at ${edge} ${edge}, ${colors.topLeft}cc 0%, transparent 50%),
+        radial-gradient(ellipse at calc(100% - ${edge}) ${edge}, ${colors.topRight}cc 0%, transparent 50%),
+        radial-gradient(ellipse at ${edge} calc(100% - ${edge}), ${colors.bottomLeft}cc 0%, transparent 50%),
+        radial-gradient(ellipse at calc(100% - ${edge}) calc(100% - ${edge}), ${colors.bottomRight}cc 0%, transparent 50%),
         linear-gradient(135deg, ${colors.topLeft} 0%, ${colors.bottomRight} 100%)
       `.trim(),
     },
