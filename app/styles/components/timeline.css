@@ -9,23 +9,34 @@
   margin-top: -3rem;
 }
 
+/* 2-column layout for wide screens */
+@media (min-width: 1200px) {
+  .timeline {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row-reverse;
+    gap: 0;
+  }
+
+  .timeline .post-card {
+    width: 560px;
+    flex-shrink: 0;
+  }
+
+  /* Even items (2nd, 4th, 6th...) - left column, offset down */
+  .timeline .post-card:nth-child(even) {
+    margin-top: 5rem;
+  }
+}
+
 /* Post Card - liquid style, large padding with blurred edges */
 .post-card {
-  padding: 1.25rem;
-  border-radius: 32px;
-  animation: card-appear 0.3s ease backwards;
-  view-transition-name: post-card;
-  background: #fff;
-}
-
-[data-theme="dark"] .post-card {
-  background: var(--surface-primary);
-}
-
-body.custom-theme .post-card {
   padding: 9rem;
   margin: -7.5rem;
   position: relative;
+  animation: card-appear 0.3s ease backwards;
+  view-transition-name: post-card;
+  background: #fff;
   mask-image:
     linear-gradient(to right, transparent, #000 7.5rem, #000 calc(100% - 7.5rem), transparent),
     linear-gradient(to bottom, transparent, #000 7.5rem, #000 calc(100% - 7.5rem), transparent);
@@ -34,6 +45,10 @@ body.custom-theme .post-card {
     linear-gradient(to bottom, transparent, #000 7.5rem, #000 calc(100% - 7.5rem), transparent);
   mask-composite: intersect;
   -webkit-mask-composite: source-in;
+}
+
+[data-theme="dark"] .post-card {
+  background: var(--surface-primary);
 }
 
 /* Staggered animation */
