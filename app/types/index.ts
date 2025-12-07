@@ -19,28 +19,16 @@ export interface ReactionData {
   myReaction: boolean
 }
 
-export interface ReactionCache {
-  [eventId: string]: ReactionData
-}
-
 // Reply types
 export interface ReplyData {
   count: number
   replies: Event[]
 }
 
-export interface ReplyCache {
-  [eventId: string]: ReplyData
-}
-
 // Repost types
 export interface RepostData {
   count: number
   myRepost: boolean
-}
-
-export interface RepostCache {
-  [eventId: string]: RepostData
 }
 
 // Timeline types
@@ -50,15 +38,6 @@ export interface TimelineItem {
     pubkey: string
     timestamp: number
   }
-}
-
-export interface TimelineData {
-  items: TimelineItem[]
-  events: Event[]
-  profiles: ProfileCache
-  reactions: { [eventId: string]: ReactionData }
-  replies: { [eventId: string]: ReplyData }
-  reposts: { [eventId: string]: RepostData }
 }
 
 // Theme types

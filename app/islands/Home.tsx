@@ -5,10 +5,11 @@ import { renderContent } from '../lib/content-parser'
 import { getString, setString, removeItem } from '../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS, TIMEOUTS } from '../lib/constants'
 import type { Event } from 'nostr-tools'
+import type { FilterMode } from '../types'
 
 interface HomeProps {
   initialFilterTags?: string[]
-  initialFilterMode?: 'and' | 'or'
+  initialFilterMode?: FilterMode
 }
 
 export default function Home({ initialFilterTags, initialFilterMode }: HomeProps) {

@@ -5,8 +5,8 @@ import { getDisplayName, getAvatarUrl, getCachedPost, getCachedProfile, navigate
 import { isValidReaction, TIMEOUTS } from '../lib/constants'
 import { getETagValue, filterRepliesByRoot } from '../lib/nostr/tags'
 import { renderContent, setHashtagClickHandler } from '../lib/content-parser'
-import { PostHeader, ReplyCard } from '../components/post'
-import { useShare } from '../hooks'
+import { PostHeader, ReplyCard, PostActions, EditDeleteButtons } from '../components/post'
+import { useShare, useDeleteConfirm } from '../hooks'
 import type { Event } from 'nostr-tools'
 import type { Profile } from '../types'
 
@@ -26,9 +26,9 @@ export default function PostView({ eventId }: PostViewProps) {
   const [replyProfiles, setReplyProfiles] = useState<{ [pubkey: string]: Profile | null }>({})
   const [likingId, setLikingId] = useState<string | null>(null)
   const [repostingId, setRepostingId] = useState<string | null>(null)
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const { copied, share } = useShare()
+  const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
 
   useEffect(() => {
     setHashtagClickHandler((tag) => navigateToTag(tag))
@@ -145,14 +145,12 @@ export default function PostView({ eventId }: PostViewProps) {
   }
 
   const handleShare = () => share(window.location.href)
-  const handleDeleteClick = () => event && setConfirmDeleteId(event.id)
-  const handleDeleteCancel = () => setConfirmDeleteId(null)
 
   const handleDeleteConfirm = async () => {
     if (!event) return
     try {
       await publishEvent(await createDeleteEvent([event.id]))
-      setConfirmDeleteId(null)
+      hideConfirm()
       setDeletedId(event.id)
       setTimeout(() => navigateToHome(), TIMEOUTS.POST_ACTION_RELOAD)
     } catch {}
@@ -195,45 +193,28 @@ export default function PostView({ eventId }: PostViewProps) {
 
         {deletedId !== event.id && (
           <div class="post-footer">
-            {!isMyPost && (
-              <button
-                class={`like-button ${reactions.myReaction ? 'liked' : ''}`}
-                onClick={handleLike}
-                disabled={likingId !== null || reactions.myReaction}
-              >
-                {reactions.myReaction ? '★' : '☆'}
-                {reactions.count > 0 && ` ${reactions.count}`}
-              </button>
-            )}
-            {isMyPost && reactions.count > 0 && (
-              <span class="like-count">★ {reactions.count}</span>
-            )}
-            <button class="reply-button" onClick={() => navigateToReply(eventId)}>
-              💬{replies.count > 0 && ` ${replies.count}`}
-            </button>
-            <button
-              class={`repost-button ${reposts.myRepost ? 'reposted' : ''}`}
-              onClick={handleRepost}
-              disabled={repostingId !== null || reposts.myRepost}
-            >
-              🔁{reposts.count > 0 && ` ${reposts.count}`}
-            </button>
-            <button class={`share-button ${copied ? 'copied' : ''}`} onClick={handleShare} title="Share">
-              {copied ? '✓' : '↗'}
-            </button>
+            <PostActions
+              isMyPost={isMyPost}
+              reactions={reactions}
+              replies={replies}
+              reposts={reposts}
+              likingId={likingId}
+              repostingId={repostingId}
+              eventId={event.id}
+              copied={copied}
+              onLike={handleLike}
+              onReply={() => navigateToReply(eventId)}
+              onRepost={handleRepost}
+              onShare={handleShare}
+            />
             {isMyPost && (
-              confirmDeleteId === event.id ? (
-                <div class="delete-confirm">
-                  <span class="delete-confirm-text">Delete?</span>
-                  <button class="delete-confirm-yes" onClick={handleDeleteConfirm}>Yes</button>
-                  <button class="delete-confirm-no" onClick={handleDeleteCancel}>No</button>
-                </div>
-              ) : (
-                <>
-                  <button class="edit-button" onClick={() => navigateToEdit(eventId)}>Edit</button>
-                  <button class="delete-button" onClick={handleDeleteClick}>Delete</button>
-                </>
-              )
+              <EditDeleteButtons
+                isConfirming={isConfirming(event.id)}
+                onEdit={() => navigateToEdit(eventId)}
+                onDelete={() => showConfirm(event.id)}
+                onDeleteConfirm={handleDeleteConfirm}
+                onDeleteCancel={hideConfirm}
+              />
             )}
           </div>
         )}

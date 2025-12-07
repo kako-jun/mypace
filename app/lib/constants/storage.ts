@@ -8,6 +8,3 @@ export const STORAGE_KEYS = {
   VIM_MODE: 'mypace_vim_mode',
   DRAFT: 'mypace_draft',
 } as const
-
-// Nostr event tag name
-export const THEME_TAG = 'mypace_theme'

@@ -1,7 +1,8 @@
 import type { ThemeColors } from '../../types'
 import type { Event } from 'nostr-tools'
 import { getItem, getBoolean } from '../utils/storage'
-import { STORAGE_KEYS, THEME_TAG } from '../constants'
+import { STORAGE_KEYS } from '../constants'
+import { THEME_TAG } from './constants'
 
 // Get stored theme colors from localStorage
 export function getStoredThemeColors(): ThemeColors | null {
