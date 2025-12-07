@@ -3,6 +3,7 @@ import { uploadImage } from '../../lib/upload'
 import { createProfileEvent, type Profile } from '../../lib/nostr/events'
 import { publishEvent } from '../../lib/nostr/relay'
 import { getLocalProfile, setLocalProfile } from '../../lib/utils'
+import { CUSTOM_EVENTS, TIMEOUTS } from '../../lib/constants'
 import { Button, Input } from '../ui'
 
 interface ProfileSectionProps {
@@ -45,9 +46,9 @@ export default function ProfileSection({
       await publishEvent(event)
 
       setLocalProfile(profile)
-      window.dispatchEvent(new CustomEvent('profileupdated'))
+      window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
       setNameSaved(true)
-      setTimeout(() => setNameSaved(false), 2000)
+      setTimeout(() => setNameSaved(false), TIMEOUTS.COPY_FEEDBACK)
     } catch (e) {
       setNameError(e instanceof Error ? e.message : 'Failed to save')
     } finally {
@@ -79,7 +80,7 @@ export default function ProfileSection({
         const event = await createProfileEvent(profile)
         await publishEvent(event)
         setLocalProfile(profile)
-        window.dispatchEvent(new CustomEvent('profileupdated'))
+        window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
       } catch (e) {
         setNameError(e instanceof Error ? e.message : 'Failed to save profile')
       }
@@ -105,7 +106,7 @@ export default function ProfileSection({
       const event = await createProfileEvent(profile)
       await publishEvent(event)
       setLocalProfile(profile)
-      window.dispatchEvent(new CustomEvent('profileupdated'))
+      window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
     } catch (e) {
       setNameError(e instanceof Error ? e.message : 'Failed to remove avatar')
     }
@@ -156,7 +157,7 @@ export default function ProfileSection({
         const event = await createProfileEvent(profile)
         await publishEvent(event)
         setLocalProfile(profile)
-        window.dispatchEvent(new CustomEvent('profileupdated'))
+        window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
       } catch (e) {
         setNameError(e instanceof Error ? e.message : 'Failed to save profile')
       }

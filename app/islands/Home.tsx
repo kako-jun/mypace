@@ -3,7 +3,7 @@ import PostForm from './PostForm'
 import Timeline from './Timeline'
 import { renderContent } from '../lib/content-parser'
 import { getString, setString, removeItem } from '../lib/utils'
-import { STORAGE_KEYS } from '../lib/constants'
+import { STORAGE_KEYS, CUSTOM_EVENTS } from '../lib/constants'
 import type { Event } from 'nostr-tools'
 
 interface HomeProps {
@@ -31,8 +31,8 @@ export default function Home({ initialFilterTags, initialFilterMode }: HomeProps
   // Clear draft when a new post is successfully published
   useEffect(() => {
     const handleNewPost = () => removeItem(STORAGE_KEYS.DRAFT)
-    window.addEventListener('newpost', handleNewPost)
-    return () => window.removeEventListener('newpost', handleNewPost)
+    window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
+    return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
   }, [])
 
   const handleLongModeChange = (mode: boolean) => {

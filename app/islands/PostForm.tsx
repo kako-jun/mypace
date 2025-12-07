@@ -4,6 +4,7 @@ import type { ThemeColors } from '../types'
 import { publishEvent } from '../lib/nostr/relay'
 import ProfileSetup from './ProfileSetup'
 import { hasLocalProfile } from '../lib/utils'
+import { CUSTOM_EVENTS } from '../lib/constants'
 import { ImageDropZone, AttachedImages, PostPreview } from '../components/post'
 import type { Event } from 'nostr-tools'
 
@@ -93,7 +94,7 @@ export default function PostForm({
         onContentChange('')
       }
 
-      window.dispatchEvent(new CustomEvent('newpost'))
+      window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NEW_POST))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to post')
     } finally {
@@ -111,7 +112,7 @@ export default function PostForm({
 
   const handleProfileSet = () => {
     setHasProfile(true)
-    window.dispatchEvent(new CustomEvent('profileupdated'))
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
   }
 
   const insertImageUrl = (url: string) => {

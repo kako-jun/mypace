@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'hono/jsx'
 import { fetchEvents, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts, fetchRepostEvents, publishEvent } from '../lib/nostr/relay'
 import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent, MYPACE_TAG } from '../lib/nostr/events'
 import { getDisplayNameFromCache, getAvatarUrlFromCache } from '../lib/utils'
+import { isValidReaction } from '../lib/constants'
 import type { Event } from 'nostr-tools'
 import type { ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../types'
 
@@ -62,7 +63,7 @@ export function useTimeline(): UseTimelineResult {
       for (const eventId of eventIds) {
         const eventReactions = reactionEvents.filter(r => {
           const eTag = r.tags.find(t => t[0] === 'e')
-          return eTag && eTag[1] === eventId && (r.content === '+' || r.content === '')
+          return eTag && eTag[1] === eventId && isValidReaction(r.content)
         })
         reactionMap[eventId] = {
           count: eventReactions.length,

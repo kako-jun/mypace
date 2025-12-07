@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Event } from 'nostr-tools'
 import { fetchEvents, fetchReactions, fetchReplies, fetchReposts, fetchRepostEvents, publishEvent } from '../lib/nostr/relay'
 import { getCurrentPubkey, createDeleteEvent, createTextNote, createReactionEvent, createRepostEvent, MYPACE_TAG } from '../lib/nostr/events'
+import { isValidReaction, TIMEOUTS } from '../lib/constants'
 import type { TimelineItem, ReactionCache, ReplyCache, RepostCache, FilterMode } from '../types'
 
 interface TimelineState {
@@ -95,7 +96,7 @@ export const useTimelineStore = create<TimelineState>((set, get) => ({
         for (const eventId of eventIds) {
           const eventReactions = reactionEvents.filter(r => {
             const eTag = r.tags.find(t => t[0] === 'e')
-            return eTag && eTag[1] === eventId && (r.content === '+' || r.content === '')
+            return eTag && eTag[1] === eventId && isValidReaction(r.content)
           })
           reactionMap[eventId] = {
             count: eventReactions.length,

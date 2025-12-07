@@ -9,7 +9,7 @@ import {
 } from '../../lib/nostr/keys'
 import { Button, Input } from '../ui'
 import { copyToClipboard, removeItem, removeLocalProfile } from '../../lib/utils'
-import { STORAGE_KEYS } from '../../lib/constants'
+import { STORAGE_KEYS, TIMEOUTS } from '../../lib/constants'
 
 interface KeysSectionProps {
   nsec: string
@@ -31,14 +31,14 @@ export default function KeysSection({
   const handleCopy = async () => {
     if (await copyToClipboard(nsec)) {
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setTimeout(() => setCopied(false), TIMEOUTS.COPY_FEEDBACK)
     }
   }
 
   const handleCopyNpub = async () => {
     if (await copyToClipboard(npub)) {
       setNpubCopied(true)
-      setTimeout(() => setNpubCopied(false), 2000)
+      setTimeout(() => setNpubCopied(false), TIMEOUTS.COPY_FEEDBACK)
     }
   }
 

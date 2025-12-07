@@ -1,4 +1,5 @@
 import { useState } from 'hono/jsx'
+import { TIMEOUTS } from '../lib/constants'
 
 export function useShare() {
   const [copied, setCopied] = useState(false)
@@ -18,7 +19,7 @@ export function useShare() {
 
     await navigator.clipboard.writeText(url)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setTimeout(() => setCopied(false), TIMEOUTS.COPY_FEEDBACK)
     return true
   }
 
