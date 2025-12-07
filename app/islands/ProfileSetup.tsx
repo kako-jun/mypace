@@ -102,6 +102,3 @@ export default function ProfileSetup({ onProfileSet }: Props) {
     </div>
   )
 }
-
-// Re-export for backwards compatibility
-export { getLocalProfile, hasLocalProfile } from '../lib/utils'

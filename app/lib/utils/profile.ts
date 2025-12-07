@@ -1,21 +1,44 @@
-import type { Profile } from '../nostr/events'
+import type { Profile, ProfileCache } from '../../types'
 import { getItem, setItem, removeItem } from './storage'
-
-const PROFILE_KEY = 'mypace_profile'
+import { exportNpub } from '../nostr/keys'
+import { STORAGE_KEYS } from '../constants'
 
 export function getLocalProfile(): Profile | null {
-  return getItem<Profile | null>(PROFILE_KEY, null)
+  return getItem<Profile | null>(STORAGE_KEYS.PROFILE, null)
 }
 
 export function setLocalProfile(profile: Profile): void {
-  setItem(PROFILE_KEY, profile)
+  setItem(STORAGE_KEYS.PROFILE, profile)
 }
 
 export function removeLocalProfile(): void {
-  removeItem(PROFILE_KEY)
+  removeItem(STORAGE_KEYS.PROFILE)
 }
 
 export function hasLocalProfile(): boolean {
   const profile = getLocalProfile()
   return !!(profile?.name || profile?.display_name)
+}
+
+// Get display name from profile or fallback to short npub
+export function getDisplayName(profile: Profile | null | undefined, pubkey: string): string {
+  if (profile?.display_name) return profile.display_name
+  if (profile?.name) return profile.name
+  const npub = exportNpub(pubkey)
+  return `${npub.slice(0, 8)}...${npub.slice(-4)}`
+}
+
+// Get avatar URL from profile
+export function getAvatarUrl(profile: Profile | null | undefined): string | null {
+  return profile?.picture || null
+}
+
+// Helper to get display name from cache
+export function getDisplayNameFromCache(pubkey: string, profiles: ProfileCache): string {
+  return getDisplayName(profiles[pubkey], pubkey)
+}
+
+// Helper to get avatar URL from cache
+export function getAvatarUrlFromCache(pubkey: string, profiles: ProfileCache): string | null {
+  return getAvatarUrl(profiles[pubkey])
 }

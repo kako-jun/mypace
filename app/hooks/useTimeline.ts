@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'hono/jsx'
 import { fetchEvents, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts, fetchRepostEvents, publishEvent } from '../lib/nostr/relay'
 import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent, MYPACE_TAG } from '../lib/nostr/events'
-import { exportNpub } from '../lib/nostr/keys'
+import { getDisplayNameFromCache, getAvatarUrlFromCache } from '../lib/utils'
 import type { Event } from 'nostr-tools'
-import type { ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../types/timeline'
+import type { ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../types'
 
 interface UseTimelineResult {
   items: TimelineItem[]
@@ -219,12 +219,8 @@ export function useTimeline(): UseTimelineResult {
     } catch {}
   }
 
-  const getDisplayName = (pubkey: string): string => {
-    const profile = profiles[pubkey]
-    return profile?.display_name || profile?.name || exportNpub(pubkey).slice(0, 12) + '...'
-  }
-
-  const getAvatarUrl = (pubkey: string): string | null => profiles[pubkey]?.picture || null
+  const getDisplayName = (pubkey: string): string => getDisplayNameFromCache(pubkey, profiles)
+  const getAvatarUrl = (pubkey: string): string | null => getAvatarUrlFromCache(pubkey, profiles)
 
   useEffect(() => {
     loadTimeline()

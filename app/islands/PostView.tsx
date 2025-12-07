@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'hono/jsx'
 import { fetchEventById, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts, publishEvent } from '../lib/nostr/relay'
-import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent, getEventThemeColors, getThemeCardProps, type Profile } from '../lib/nostr/events'
-import { exportNpub } from '../lib/nostr/keys'
+import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent, getEventThemeColors, getThemeCardProps } from '../lib/nostr/events'
+import { getDisplayName, getAvatarUrl, getCachedPost, getCachedProfile } from '../lib/utils'
 import { renderContent, setHashtagClickHandler } from '../lib/content-parser'
 import { PostHeader, ReplyCard } from '../components/post'
 import { useShare } from '../hooks'
 import type { Event } from 'nostr-tools'
+import type { Profile } from '../types'
 
 interface PostViewProps {
   eventId: string
@@ -41,22 +42,17 @@ export default function PostView({ eventId }: PostViewProps) {
       setMyPubkey(pubkey)
 
       // Try cache first
-      let eventData: Event | null = null
-      const cachedEvent = sessionStorage.getItem(`post_${eventId}`)
+      let eventData: Event | null = getCachedPost(eventId)
 
-      if (cachedEvent) {
-        eventData = JSON.parse(cachedEvent)
+      if (eventData) {
         setEvent(eventData)
         setLoading(false)
-        sessionStorage.removeItem(`post_${eventId}`)
 
-        const profileKey = `profile_${eventData!.pubkey}`
-        const cachedProfileData = sessionStorage.getItem(profileKey)
+        const cachedProfileData = getCachedProfile(eventData.pubkey)
         if (cachedProfileData) {
-          setProfile(JSON.parse(cachedProfileData))
-          sessionStorage.removeItem(profileKey)
+          setProfile(cachedProfileData)
         } else {
-          fetchUserProfile(eventData!.pubkey).then(profileEvent => {
+          fetchUserProfile(eventData.pubkey).then(profileEvent => {
             if (profileEvent) setProfile(JSON.parse(profileEvent.content))
           })
         }
@@ -122,15 +118,12 @@ export default function PostView({ eventId }: PostViewProps) {
     }
   }
 
-  const getDisplayName = (pubkey: string, profileData?: Profile | null): string => {
-    const p = profileData || profile
-    if (p?.display_name) return p.display_name
-    if (p?.name) return p.name
-    return exportNpub(pubkey).slice(0, 12) + '...'
+  const getProfileDisplayName = (pubkey: string, profileData?: Profile | null): string => {
+    return getDisplayName(profileData || profile, pubkey)
   }
 
-  const getAvatarUrl = (pubkey: string, profileData?: Profile | null): string | null => {
-    return (profileData || profile)?.picture || null
+  const getProfileAvatarUrl = (profileData?: Profile | null): string | null => {
+    return getAvatarUrl(profileData || profile)
   }
 
   const handleLike = async () => {
@@ -194,8 +187,8 @@ export default function PostView({ eventId }: PostViewProps) {
         <PostHeader
           pubkey={event.pubkey}
           createdAt={event.created_at}
-          displayName={getDisplayName(event.pubkey)}
-          avatarUrl={getAvatarUrl(event.pubkey)}
+          displayName={getProfileDisplayName(event.pubkey)}
+          avatarUrl={getProfileAvatarUrl()}
         />
 
         <div class="post-content post-content-full">
@@ -258,8 +251,8 @@ export default function PostView({ eventId }: PostViewProps) {
               <ReplyCard
                 key={reply.id}
                 reply={reply}
-                displayName={getDisplayName(reply.pubkey, replyProfiles[reply.pubkey])}
-                avatarUrl={getAvatarUrl(reply.pubkey, replyProfiles[reply.pubkey])}
+                displayName={getProfileDisplayName(reply.pubkey, replyProfiles[reply.pubkey])}
+                avatarUrl={getProfileAvatarUrl(replyProfiles[reply.pubkey])}
                 onClick={() => { window.location.href = `/post/${reply.id}` }}
               />
             ))}

@@ -10,6 +10,7 @@ import {
 import { getCurrentPubkey, type Profile } from '../lib/nostr/events'
 import { fetchUserProfile } from '../lib/nostr/relay'
 import { getLocalProfile, setItem, setString, setBoolean } from '../lib/utils'
+import { STORAGE_KEYS } from '../lib/constants'
 import {
   ProfileSection,
   ThemeSection,
@@ -25,10 +26,6 @@ import {
   DEFAULT_COLORS,
 } from '../stores/settingsStore'
 import type { ThemeColors } from '../types'
-
-// Re-export for backwards compatibility
-export { getStoredThemeColors, getStoredVimMode, getStoredAppTheme, applyThemeColors }
-export type { ThemeColors }
 
 export default function Settings() {
   const [open, setOpen] = useState(false)
@@ -110,18 +107,18 @@ export default function Settings() {
     setThemeColors(newColors)
     // Apply and save immediately
     applyThemeColors(newColors)
-    setItem('mypace_theme_colors', newColors)
+    setItem(STORAGE_KEYS.THEME_COLORS, newColors)
   }
 
   const handleAppThemeChange = (theme: 'light' | 'dark') => {
     setAppTheme(theme)
-    setString('mypace_app_theme', theme)
+    setString(STORAGE_KEYS.APP_THEME, theme)
     document.documentElement.setAttribute('data-theme', theme)
   }
 
   const handleVimModeChange = (enabled: boolean) => {
     setVimMode(enabled)
-    setBoolean('mypace_vim_mode', enabled)
+    setBoolean(STORAGE_KEYS.VIM_MODE, enabled)
   }
 
   if (!open) {

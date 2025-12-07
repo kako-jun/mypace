@@ -2,13 +2,12 @@ import { finalizeEvent, type EventTemplate, type Event } from 'nostr-tools'
 import { hasNip07, getOrCreateSecretKey, getPublicKeyFromSecret } from './keys'
 import { MYPACE_TAG } from './constants'
 import { getStoredThemeColors } from './theme'
-import type { Profile } from './types'
+import { THEME_TAG } from '../constants'
+import type { Profile, ThemeColors } from '../../types'
 
-// Re-export for backwards compatibility
 export { MYPACE_TAG, APP_TITLE } from './constants'
-export type { Profile, ThemeColors } from './types'
+export type { Profile, ThemeColors }
 export { getEventThemeColors, getThemeCardProps, isDarkColor, getStoredThemeColors } from './theme'
-export { getStoredThemeColors as getLocalThemeColors } from './theme'
 export { formatTimestamp } from './format'
 
 export async function createTextNote(content: string, preserveTags?: string[][]): Promise<Event> {
@@ -19,7 +18,7 @@ export async function createTextNote(content: string, preserveTags?: string[][])
 
   const themeColors = getStoredThemeColors()
   if (themeColors) {
-    tags.push(['mypace_theme', themeColors.topLeft, themeColors.topRight, themeColors.bottomLeft, themeColors.bottomRight])
+    tags.push([THEME_TAG, themeColors.topLeft, themeColors.topRight, themeColors.bottomLeft, themeColors.bottomRight])
   }
 
   if (preserveTags) {
@@ -136,7 +135,7 @@ export async function createReplyEvent(content: string, replyTo: Event, rootEven
 
   const themeColors = getStoredThemeColors()
   if (themeColors) {
-    tags.push(['mypace_theme', themeColors.topLeft, themeColors.topRight, themeColors.bottomLeft, themeColors.bottomRight])
+    tags.push([THEME_TAG, themeColors.topLeft, themeColors.topRight, themeColors.bottomLeft, themeColors.bottomRight])
   }
 
   if (rootEvent && rootEvent.id !== replyTo.id) {

@@ -1,11 +1,7 @@
-import { useState, useEffect } from 'hono/jsx'
+import { useState } from 'hono/jsx'
 import { fetchUserProfile } from '../lib/nostr/relay'
-import { exportNpub } from '../lib/nostr/keys'
-import type { Profile } from '../types'
-
-interface ProfileCache {
-  [pubkey: string]: Profile | null
-}
+import { getDisplayNameFromCache, getAvatarUrlFromCache } from '../lib/utils'
+import type { Profile, ProfileCache } from '../types'
 
 interface UseProfileResult {
   profiles: ProfileCache
@@ -18,17 +14,8 @@ interface UseProfileResult {
 export function useProfile(): UseProfileResult {
   const [profiles, setProfiles] = useState<ProfileCache>({})
 
-  const getDisplayName = (pubkey: string): string => {
-    const profile = profiles[pubkey]
-    if (profile?.display_name) return profile.display_name
-    if (profile?.name) return profile.name
-    return exportNpub(pubkey).slice(0, 12) + '...'
-  }
-
-  const getAvatarUrl = (pubkey: string): string | null => {
-    const profile = profiles[pubkey]
-    return profile?.picture || null
-  }
+  const getDisplayName = (pubkey: string): string => getDisplayNameFromCache(pubkey, profiles)
+  const getAvatarUrl = (pubkey: string): string | null => getAvatarUrlFromCache(pubkey, profiles)
 
   const fetchProfilesData = async (pubkeys: string[]) => {
     const uniquePubkeys = [...new Set(pubkeys)]
