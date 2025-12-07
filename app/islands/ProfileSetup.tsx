@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'hono/jsx'
 import { getCurrentPubkey, createProfileEvent, type Profile } from '../lib/nostr/events'
 import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
-import Button from '../components/Button'
+import { Button } from '../components/ui'
 
 interface Props {
   onProfileSet?: () => void
