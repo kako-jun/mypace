@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'hono/jsx'
-import { createTextNote, createDeleteEvent, createReplyEvent, getLocalThemeColors, getThemeCardProps, type ThemeColors } from '../lib/nostr/events'
+import { createTextNote, createDeleteEvent, createReplyEvent, getLocalThemeColors, type ThemeColors } from '../lib/nostr/events'
 import { publishEvent } from '../lib/nostr/relay'
-import { renderContent } from '../lib/content-parser'
-import { uploadImage } from '../lib/upload'
 import ProfileSetup, { hasLocalProfile } from './ProfileSetup'
+import { ImageDropZone, AttachedImages, PostPreview } from '../components/post'
 import type { Event } from 'nostr-tools'
 
 interface PostFormProps {
@@ -21,16 +20,39 @@ interface PostFormProps {
   onReplyComplete?: () => void
 }
 
-export default function PostForm({ longMode, onLongModeChange, content, onContentChange, showPreview, onShowPreviewChange, editingEvent, onEditCancel, onEditComplete, replyingTo, onReplyCancel, onReplyComplete }: PostFormProps) {
+// Extract image URLs from content
+function getImageUrls(content: string): string[] {
+  const imageRegex = /https?:\/\/[^\s<>"]+\.(jpg|jpeg|png|gif|webp|svg)(\?[^\s<>"]*)?/gi
+  return content.match(imageRegex) || []
+}
+
+// Remove image URL from content
+function removeImageUrl(content: string, urlToRemove: string): string {
+  const escapedUrl = urlToRemove.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const regex = new RegExp(`\\n?${escapedUrl}\\n?`, 'g')
+  return content.replace(regex, '\n').replace(/^\n+|\n+$/g, '').replace(/\n{3,}/g, '\n\n')
+}
+
+export default function PostForm({
+  longMode,
+  onLongModeChange,
+  content,
+  onContentChange,
+  showPreview,
+  onShowPreviewChange,
+  editingEvent,
+  onEditCancel,
+  onEditComplete,
+  replyingTo,
+  onReplyCancel,
+  onReplyComplete
+}: PostFormProps) {
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState('')
   const [hasProfile, setHasProfile] = useState(false)
   const [checkingProfile, setCheckingProfile] = useState(true)
   const [themeColors, setThemeColors] = useState<ThemeColors | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [dragging, setDragging] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setHasProfile(hasLocalProfile())
@@ -51,29 +73,19 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
 
     try {
       if (replyingTo) {
-        // Create reply
         const event = await createReplyEvent(content.trim(), replyingTo)
         await publishEvent(event)
         onContentChange('')
-        if (onReplyComplete) {
-          onReplyComplete()
-        }
+        onReplyComplete?.()
       } else if (editingEvent) {
-        // If editing, delete original first
         const deleteEvent = await createDeleteEvent([editingEvent.id])
         await publishEvent(deleteEvent)
-
-        // Preserve reply tags when editing
         const preserveTags = editingEvent.tags
         const event = await createTextNote(content.trim(), preserveTags)
         await publishEvent(event)
         onContentChange('')
-
-        if (onEditComplete) {
-          onEditComplete()
-        }
+        onEditComplete?.()
       } else {
-        // Normal post
         const event = await createTextNote(content.trim())
         await publishEvent(event)
         onContentChange('')
@@ -88,31 +100,16 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
   }
 
   const handleCancel = () => {
-    if (replyingTo && onReplyCancel) {
-      onReplyCancel()
-    } else if (editingEvent && onEditCancel) {
-      onEditCancel()
+    if (replyingTo) {
+      onReplyCancel?.()
+    } else if (editingEvent) {
+      onEditCancel?.()
     }
   }
 
   const handleProfileSet = () => {
     setHasProfile(true)
     window.dispatchEvent(new CustomEvent('profileupdated'))
-  }
-
-  const handleUploadImage = async (file: File): Promise<string | null> => {
-    setUploading(true)
-    setError('')
-
-    const result = await uploadImage(file)
-    setUploading(false)
-
-    if (result.success && result.url) {
-      return result.url
-    } else {
-      setError(result.error || 'Failed to upload')
-      return null
-    }
   }
 
   const insertImageUrl = (url: string) => {
@@ -129,70 +126,12 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
     }
   }
 
-  const handleImageUpload = async (e: globalThis.Event) => {
-    const input = e.target as HTMLInputElement
-    const file = input.files?.[0]
-    if (!file) return
-
-    const url = await handleUploadImage(file)
-    if (url) {
-      insertImageUrl(url)
-    }
-    input.value = ''
+  const handleRemoveImage = (url: string) => {
+    onContentChange(removeImageUrl(content, url))
   }
 
-  const handleDragOver = (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragging(true)
-  }
-
-  const handleDragLeave = (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragging(false)
-  }
-
-  const handleDrop = async (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragging(false)
-
-    const files = e.dataTransfer?.files
-    if (!files || files.length === 0) return
-
-    const file = files[0]
-    if (!file.type.startsWith('image/')) {
-      setError('Please drop an image file')
-      return
-    }
-
-    const url = await handleUploadImage(file)
-    if (url) {
-      insertImageUrl(url)
-    }
-  }
-
-  const handleImageButtonClick = () => {
-    fileInputRef.current?.click()
-  }
-
-  // Extract image URLs from content
-  const getImageUrls = (): string[] => {
-    const imageRegex = /https?:\/\/[^\s<>"]+\.(jpg|jpeg|png|gif|webp|svg)(\?[^\s<>"]*)?/gi
-    const matches = content.match(imageRegex)
-    return matches || []
-  }
-
-  const removeImageUrl = (urlToRemove: string) => {
-    // Remove the URL and any surrounding newlines
-    const escapedUrl = urlToRemove.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const regex = new RegExp(`\\n?${escapedUrl}\\n?`, 'g')
-    const newContent = content.replace(regex, '\n').replace(/^\n+|\n+$/g, '').replace(/\n{3,}/g, '\n\n')
-    onContentChange(newContent)
-  }
-
-  const imageUrls = getImageUrls()
+  const imageUrls = getImageUrls(content)
+  const isSpecialMode = editingEvent || replyingTo
 
   if (checkingProfile) {
     return <div class="post-form loading">Loading...</div>
@@ -206,19 +145,14 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
     )
   }
 
-  const isSpecialMode = editingEvent || replyingTo
-
   return (
     <form
       class={`post-form ${longMode ? 'long-mode' : ''} ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
       onSubmit={handleSubmit}
     >
-      {editingEvent && (
-        <div class="editing-label">Editing post...</div>
-      )}
-      {replyingTo && (
-        <div class="replying-label">Replying to post...</div>
-      )}
+      {editingEvent && <div class="editing-label">Editing post...</div>}
+      {replyingTo && <div class="replying-label">Replying to post...</div>}
+
       <button
         type="button"
         class={`mode-toggle-corner ${longMode ? 'active' : ''}`}
@@ -226,6 +160,7 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
       >
         {longMode ? 'Short mode' : 'Long mode'}
       </button>
+
       <textarea
         ref={textareaRef}
         class="post-input"
@@ -235,52 +170,19 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
         rows={longMode ? 15 : 3}
         maxLength={4200}
       />
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleImageUpload}
-        style={{ display: 'none' }}
-      />
-      {imageUrls.length > 0 && (
-        <div class="attached-images">
-          {imageUrls.map((url) => (
-            <div key={url} class="attached-image">
-              <img src={url} alt="" />
-              <button
-                type="button"
-                class="remove-image-button"
-                onClick={() => removeImageUrl(url)}
-                title="Remove image"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
+
+      <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
+
+      {!longMode && showPreview && (
+        <PostPreview content={content} themeColors={themeColors} />
       )}
-      {!longMode && showPreview && content.trim() && (() => {
-        const themeProps = getThemeCardProps(themeColors)
-        return (
-          <div class={`post-preview ${themeProps.className}`} style={themeProps.style}>
-            <div class="preview-label">Preview</div>
-            <div class="preview-content">
-              {renderContent(content)}
-            </div>
-          </div>
-        )
-      })()}
+
       <div class="post-actions">
         <div class="post-actions-left">
-          <div
-            class={`image-drop-area ${dragging ? 'dragging' : ''}`}
-            onClick={handleImageButtonClick}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            {uploading ? '...' : dragging ? 'Drop' : '📷'}
-          </div>
+          <ImageDropZone
+            onImageUploaded={insertImageUrl}
+            onError={setError}
+          />
           <button
             type="button"
             class={`preview-toggle ${showPreview ? 'active' : ''}`}
@@ -303,6 +205,7 @@ export default function PostForm({ longMode, onLongModeChange, content, onConten
           </button>
         </div>
       </div>
+
       {error && <p class="error">{error}</p>}
     </form>
   )

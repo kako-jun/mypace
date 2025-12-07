@@ -1,3 +1,8 @@
 export { default as PostCard } from './PostCard'
 export { default as PostActions } from './PostActions'
+export { default as PostHeader } from './PostHeader'
 export { default as ThreadReplies } from './ThreadReplies'
+export { default as ReplyCard } from './ReplyCard'
+export { default as ImageDropZone } from './ImageDropZone'
+export { default as AttachedImages } from './AttachedImages'
+export { default as PostPreview } from './PostPreview'
