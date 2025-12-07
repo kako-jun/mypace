@@ -9,6 +9,12 @@ export interface UploadResult {
   error?: string
 }
 
+interface NostrBuildResponse {
+  status: string
+  message?: string
+  data?: Array<{ url?: string }>
+}
+
 export async function uploadImage(file: File): Promise<UploadResult> {
   // Validate file type
   if (!file.type.startsWith('image/')) {
@@ -42,7 +48,7 @@ export async function uploadImage(file: File): Promise<UploadResult> {
       throw new Error('Upload failed')
     }
 
-    const data = await response.json()
+    const data = await response.json() as NostrBuildResponse
     if (data.status === 'success' && data.data?.[0]?.url) {
       return { success: true, url: data.data[0].url }
     } else {

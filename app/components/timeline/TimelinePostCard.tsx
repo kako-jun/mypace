@@ -60,7 +60,8 @@ export default function TimelinePostCard({
     const target = e.target as HTMLElement
     if (target.closest('button') || target.closest('a') || target.closest('.post-footer') || target.closest('.thread-section')) return
     cachePost(event)
-    if (profiles[event.pubkey]) cacheProfile(event.pubkey, profiles[event.pubkey])
+    const profile = profiles[event.pubkey]
+    if (profile) cacheProfile(event.pubkey, profile)
     navigateToPost(event.id)
   }
 

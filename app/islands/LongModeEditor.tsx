@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'hono/jsx'
+import type { EditorView, ViewUpdate } from '@codemirror/view'
 
 interface LongModeEditorProps {
   value: string
@@ -16,8 +17,8 @@ export default function LongModeEditor({
   darkTheme = false,
 }: LongModeEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
-  const viewRef = useRef<any>(null)
-  const onChangeRef = useRef(onChange)
+  const viewRef = useRef<EditorView | null>(null)
+  const onChangeRef = useRef<(value: string) => void>(onChange)
   const [isVimActive, setIsVimActive] = useState(vimMode)
   const [loading, setLoading] = useState(true)
 
@@ -78,9 +79,9 @@ export default function LongModeEditor({
         theme,
         cmPlaceholder(placeholder),
         EditorView.lineWrapping,
-        EditorView.updateListener.of((update: any) => {
+        EditorView.updateListener.of((update: ViewUpdate) => {
           if (update.docChanged) {
-            onChangeRef.current(update.state.doc.toString())
+            onChangeRef.current?.(update.state.doc.toString())
           }
         }),
       ]

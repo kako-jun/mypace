@@ -57,6 +57,10 @@ export default function PostForm({
   const handleSubmit = async (e: globalThis.Event) => {
     e.preventDefault()
     if (!content.trim() || posting || !hasProfile) return
+    if (content.length > LIMITS.MAX_POST_LENGTH) {
+      setError(`Content exceeds ${LIMITS.MAX_POST_LENGTH} characters`)
+      return
+    }
 
     setPosting(true)
     setError('')
