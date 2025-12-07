@@ -11,7 +11,6 @@ interface TimelinePostCardProps {
   event: Event
   repostedBy?: { pubkey: string; timestamp: number }
   isMyPost: boolean
-  myPubkey: string | null
   profiles: ProfileCache
   reactions: ReactionData | undefined
   replies: ReplyData | undefined

@@ -18,6 +18,7 @@ export default function ColorPicker({
         value={value}
         onInput={(e) => onChange((e.target as HTMLInputElement).value)}
         disabled={disabled}
+        aria-label={label || 'Choose color'}
       />
       {label && <span class="color-picker-label">{label}</span>}
     </label>

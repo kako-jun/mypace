@@ -1,33 +1,31 @@
 import { useState } from 'hono/jsx'
 import { uploadImage } from '../lib/upload'
 
+interface UploadFileResult {
+  url: string | null
+  error: string | null
+}
+
 interface UseImageUploadResult {
   uploading: boolean
-  error: string
-  uploadFile: (file: File) => Promise<string | null>
-  clearError: () => void
+  uploadFile: (file: File) => Promise<UploadFileResult>
 }
 
 export function useImageUpload(): UseImageUploadResult {
   const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState('')
 
-  const uploadFile = async (file: File): Promise<string | null> => {
+  const uploadFile = async (file: File): Promise<UploadFileResult> => {
     setUploading(true)
-    setError('')
 
     const result = await uploadImage(file)
     setUploading(false)
 
     if (result.success && result.url) {
-      return result.url
+      return { url: result.url, error: null }
     } else {
-      setError(result.error || 'Failed to upload')
-      return null
+      return { url: null, error: result.error || 'Failed to upload' }
     }
   }
 
-  const clearError = () => setError('')
-
-  return { uploading, error, uploadFile, clearError }
+  return { uploading, uploadFile }
 }

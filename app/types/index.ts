@@ -69,12 +69,5 @@ export interface ThemeColors {
   bottomRight: string
 }
 
-export const DEFAULT_THEME_COLORS: ThemeColors = {
-  topLeft: '#ffffff',
-  topRight: '#ffffff',
-  bottomLeft: '#ff9999',
-  bottomRight: '#ff9999'
-}
-
 // Filter types
 export type FilterMode = 'and' | 'or'

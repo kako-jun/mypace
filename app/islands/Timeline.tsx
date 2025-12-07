@@ -141,7 +141,6 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
             event={event}
             repostedBy={item.repostedBy}
             isMyPost={isMyPost}
-            myPubkey={myPubkey}
             profiles={profiles}
             reactions={reactions[event.id]}
             replies={replies[event.id]}
