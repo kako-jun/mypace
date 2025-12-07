@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { createStore } from 'zustand/vanilla'
 import type { Event } from 'nostr-tools'
 import { fetchEvents, fetchReactions, fetchReplies, fetchReposts, fetchRepostEvents, publishEvent } from '../lib/nostr/relay'
 import { getCurrentPubkey, createDeleteEvent, createTextNote, createReactionEvent, createRepostEvent } from '../lib/nostr/events'
@@ -47,7 +47,7 @@ interface TimelineState {
   setFilterCopied: (copied: boolean) => void
 }
 
-export const useTimelineStore = create<TimelineState>((set, get) => ({
+export const timelineStore = createStore<TimelineState>()((set, get) => ({
   timelineItems: [],
   events: [],
   reactions: {},

@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { createStore } from 'zustand/vanilla'
 import type { ThemeColors } from '../types'
 import { getItem, setItem, getString, setString, getBoolean, setBoolean } from '../lib/utils'
 import { STORAGE_KEYS } from '../lib/constants'
@@ -62,7 +62,7 @@ function applyThemeColors(colors: ThemeColors) {
   document.body.classList.add('custom-theme')
 }
 
-export const useSettingsStore = create<SettingsState>((set, get) => ({
+export const settingsStore = createStore<SettingsState>()((set, get) => ({
   appTheme: 'light',
   themeColors: DEFAULT_COLORS,
   vimMode: false,

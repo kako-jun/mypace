@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { createStore } from 'zustand/vanilla'
 import { fetchUserProfile } from '../lib/nostr/relay'
 import { exportNpub } from '../lib/nostr/keys'
 import { parseProfile } from '../lib/utils'
@@ -17,7 +17,7 @@ interface ProfileState {
   setProfile: (pubkey: string, profile: Profile | null) => void
 }
 
-export const useProfileStore = create<ProfileState>((set, get) => ({
+export const profileStore = createStore<ProfileState>()((set, get) => ({
   profiles: {},
   loading: new Set(),
 
