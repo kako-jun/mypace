@@ -1,5 +1,5 @@
 import { useState } from 'hono/jsx'
-import { Repeat2 } from 'lucide-react'
+import { Icon } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import { renderContent } from '../../lib/content-parser'
 import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies } from '../post'
@@ -83,7 +83,7 @@ export default function TimelinePostCard({
     >
       {repostedBy && (
         <div class="repost-label">
-          <Repeat2 size={14} /> {getDisplayName(repostedBy.pubkey)} reposted
+          <Icon name="Repeat2" size={14} /> {getDisplayName(repostedBy.pubkey)} reposted
         </div>
       )}
 

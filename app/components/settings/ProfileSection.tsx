@@ -1,5 +1,5 @@
 import { useState } from 'hono/jsx'
-import { Camera } from 'lucide-react'
+import { Icon } from '../ui'
 import { uploadImage } from '../../lib/upload'
 import { createProfileEvent } from '../../lib/nostr/events'
 import type { Profile } from '../../types'
@@ -133,7 +133,7 @@ export default function ProfileSection({
             onDragLeave={handlers.onDragLeave}
             onDrop={handlers.onDrop}
           >
-            {uploading ? '...' : dragging ? 'Drop' : <Camera size={16} />}
+            {uploading ? '...' : dragging ? 'Drop' : <Icon name="Camera" size={16} />}
             <input
               type="file"
               accept="image/*"
