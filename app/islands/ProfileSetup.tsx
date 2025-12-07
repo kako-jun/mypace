@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'hono/jsx'
 import { getCurrentPubkey, createProfileEvent, type Profile } from '../lib/nostr/events'
 import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
-import { Button } from '../components/ui'
+import { Button, Input } from '../components/ui'
 
 interface Props {
   onProfileSet?: () => void
@@ -87,11 +87,10 @@ export default function ProfileSetup({ onProfileSet }: Props) {
         <p class="profile-notice">Set your name to start posting</p>
       )}
       <div class="profile-form">
-        <input
-          type="text"
+        <Input
           placeholder="Your name"
           value={name}
-          onInput={(e) => setName((e.target as HTMLInputElement).value)}
+          onChange={setName}
           maxLength={50}
         />
         <Button onClick={handleSave} disabled={saving || !name.trim()}>

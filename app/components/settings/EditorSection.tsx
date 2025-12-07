@@ -1,3 +1,5 @@
+import { Toggle } from '../ui'
+
 interface EditorSectionProps {
   vimMode: boolean
   onVimModeChange: (enabled: boolean) => void
@@ -12,14 +14,11 @@ export default function EditorSection({
       <h3>Editor</h3>
       <p class="hint">Long mode editor settings</p>
       <div class="vim-mode-toggle">
-        <label class="toggle-label">
-          <input
-            type="checkbox"
-            checked={vimMode}
-            onChange={(e) => onVimModeChange((e.target as HTMLInputElement).checked)}
-          />
-          <span class="toggle-text">Vim mode</span>
-        </label>
+        <Toggle
+          checked={vimMode}
+          onChange={onVimModeChange}
+          label="Vim mode"
+        />
       </div>
     </div>
   )
