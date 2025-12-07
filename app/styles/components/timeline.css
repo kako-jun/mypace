@@ -71,14 +71,7 @@
   min-width: 0;
 }
 
-.author-name {
-  font-weight: 500;
-  color: #555;
-}
-
-[data-theme="dark"] .author-name {
-  color: var(--text-secondary);
-}
+/* .author-name styles are defined in base.css with .text-outlined-sm */
 
 .timestamp {
   color: #bbb;
@@ -92,6 +85,7 @@
 .post-content {
   word-break: break-word;
   color: #444;
+  font-family: var(--font-mono);
 }
 
 [data-theme="dark"] .post-content {
@@ -555,33 +549,14 @@
   line-height: 1.4;
 }
 
-/* Edit button - subtle */
-.edit-button {
-  background: none;
-  border: none;
-  color: #aaa;
-  font-size: 0.75rem;
-  cursor: pointer;
-  padding: 0.25rem 0;
-  transition: color 0.2s ease;
-}
-
-.edit-button:hover {
-  color: #666;
-}
-
+/* Edit/Delete buttons - use .text-outlined-sm from base.css */
+.edit-button,
 .delete-button {
   background: none;
   border: none;
-  color: #c99;
-  font-size: 0.75rem;
   cursor: pointer;
   padding: 0.25rem 0;
-  transition: color 0.2s ease;
-}
-
-.delete-button:hover {
-  color: #c44;
+  transition: all 0.2s ease;
 }
 
 .delete-confirm {
