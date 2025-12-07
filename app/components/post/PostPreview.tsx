@@ -1,5 +1,6 @@
 import { renderContent } from '../../lib/content-parser'
-import { getThemeCardProps, type ThemeColors } from '../../lib/nostr/events'
+import { getThemeCardProps } from '../../lib/nostr/events'
+import type { ThemeColors } from '../../types'
 
 interface PostPreviewProps {
   content: string
