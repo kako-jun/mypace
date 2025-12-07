@@ -154,7 +154,7 @@ export default function PostForm({
 
       <button
         type="button"
-        class={`mode-toggle-corner ${longMode ? 'active' : ''}`}
+        class={`mode-toggle-corner text-outlined text-outlined-primary ${longMode ? 'active' : ''}`}
         onClick={() => onLongModeChange(!longMode)}
       >
         {longMode ? 'Short mode' : 'Long mode'}
@@ -179,7 +179,7 @@ export default function PostForm({
           <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
           <button
             type="button"
-            class={`preview-toggle ${showPreview ? 'active' : ''}`}
+            class={`preview-toggle text-outlined text-outlined-primary ${showPreview ? 'active' : ''}`}
             onClick={() => onShowPreviewChange(!showPreview)}
           >
             {showPreview ? 'Hide' : 'Preview'}

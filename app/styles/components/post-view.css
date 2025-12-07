@@ -7,23 +7,20 @@
 }
 
 .back-button {
-  background: none;
+  display: block;
+  margin: 0 auto 1rem;
+  background: transparent;
   border: none;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
+  padding: 0.25rem 0.5rem;
   cursor: pointer;
-  padding: 0.5rem 0;
-  margin-bottom: 1rem;
-  display: inline-block;
+  transition: all 0.2s ease;
 }
 
-.back-button:hover {
-  color: var(--text-primary);
-}
+/* .back-button uses .text-outlined class for styling */
 
 .post-card-large {
   padding: 2rem;
-  border-radius: 16px;
+  border-radius: 0;
   margin-bottom: 2rem;
 }
 

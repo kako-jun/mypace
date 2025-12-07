@@ -263,23 +263,11 @@
   right: 0.75rem;
   background: none;
   border: none;
-  color: var(--text-muted);
-  font-size: 0.75rem;
   cursor: pointer;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: color 0.2s ease, background 0.2s ease;
 }
 
-.mode-toggle-corner:hover {
-  color: var(--text-secondary);
-  background: var(--surface-tertiary);
-}
-
-.mode-toggle-corner.active {
-  color: var(--text-primary);
-  background: var(--surface-tertiary);
-}
+/* text-outlined handles color styling */
 
 /* Alias for mode-toggle (used in PostForm) */
 .mode-toggle {
@@ -304,23 +292,11 @@
 .preview-toggle {
   background: none;
   border: none;
-  color: var(--text-muted);
-  font-size: 0.8rem;
   cursor: pointer;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: color 0.2s ease, background 0.2s ease;
 }
 
-.preview-toggle:hover {
-  color: var(--text-secondary);
-  background: var(--surface-tertiary);
-}
-
-.preview-toggle.active {
-  color: var(--text-primary);
-  background: var(--surface-tertiary);
-}
+/* text-outlined handles color styling */
 
 .char-count {
   font-size: 0.8rem;
