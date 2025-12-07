@@ -9,7 +9,7 @@ import {
 } from '../lib/nostr/keys'
 import { getCurrentPubkey, type Profile } from '../lib/nostr/events'
 import { fetchUserProfile } from '../lib/nostr/relay'
-import { getLocalProfile } from './ProfileSetup'
+import { getLocalProfile, setItem, setString, setBoolean } from '../lib/utils'
 import {
   ProfileSection,
   ThemeSection,
@@ -17,88 +17,18 @@ import {
   KeysSection,
   ShareSection
 } from '../components/settings'
-import { getItem, setItem, getString, setString, getBoolean, setBoolean } from '../lib/utils'
+import {
+  getStoredThemeColors,
+  getStoredVimMode,
+  getStoredAppTheme,
+  applyThemeColors,
+  DEFAULT_COLORS,
+} from '../stores/settingsStore'
+import type { ThemeColors } from '../types'
 
-// Default colors (matches disabled background #f8f8f8)
-const DEFAULT_COLORS = {
-  topLeft: '#f8f8f8',
-  topRight: '#f8f8f8',
-  bottomLeft: '#f8f8f8',
-  bottomRight: '#f8f8f8',
-}
-
-export interface ThemeColors {
-  topLeft: string
-  topRight: string
-  bottomLeft: string
-  bottomRight: string
-}
-
-export function getStoredThemeColors(): ThemeColors {
-  return getItem<ThemeColors>('mypace_theme_colors', DEFAULT_COLORS)
-}
-
-export function getStoredVimMode(): boolean {
-  return getBoolean('mypace_vim_mode')
-}
-
-export function getStoredAppTheme(): 'light' | 'dark' {
-  return (getString('mypace_app_theme') as 'light' | 'dark') || 'light'
-}
-
-// Calculate relative luminance of a hex color
-function getLuminance(hex: string): number {
-  const r = parseInt(hex.slice(1, 3), 16) / 255
-  const g = parseInt(hex.slice(3, 5), 16) / 255
-  const b = parseInt(hex.slice(5, 7), 16) / 255
-
-  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
-
-  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)
-}
-
-// Determine if color is dark (needs light text)
-function isDarkColor(hex: string): boolean {
-  return getLuminance(hex) < 0.4
-}
-
-export function applyThemeColors(colors: ThemeColors) {
-  if (typeof document === 'undefined') return
-
-  // Create radial gradients from each corner
-  const gradient = `
-    radial-gradient(ellipse at top left, ${colors.topLeft}dd 0%, transparent 50%),
-    radial-gradient(ellipse at top right, ${colors.topRight}dd 0%, transparent 50%),
-    radial-gradient(ellipse at bottom left, ${colors.bottomLeft}dd 0%, transparent 50%),
-    radial-gradient(ellipse at bottom right, ${colors.bottomRight}dd 0%, transparent 50%),
-    linear-gradient(135deg, ${colors.topLeft} 0%, ${colors.bottomRight} 100%)
-  `
-  document.documentElement.style.setProperty('--theme-gradient', gradient)
-
-  // Set html background for overscroll (blend of diagonal corners)
-  document.documentElement.style.background = `linear-gradient(135deg, ${colors.topLeft} 0%, ${colors.bottomRight} 100%)`
-
-  // Update theme-color meta tag for browser chrome
-  const themeColorMeta = document.querySelector('meta[name="theme-color"]')
-  if (themeColorMeta) {
-    themeColorMeta.setAttribute('content', colors.topLeft)
-  }
-
-  // Set logo color based on top-left corner brightness
-  const isTopLeftDark = isDarkColor(colors.topLeft)
-  const logoColor = isTopLeftDark ? '#ffffff' : '#222222'
-  const logoShadow = isTopLeftDark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.8)'
-  document.documentElement.style.setProperty('--logo-color', logoColor)
-  document.documentElement.style.setProperty('--logo-shadow', logoShadow)
-
-  // Set settings button color based on top-right corner brightness
-  const settingsColor = isDarkColor(colors.topRight) ? '#cccccc' : '#888888'
-  const settingsHoverColor = isDarkColor(colors.topRight) ? '#ffffff' : '#444444'
-  document.documentElement.style.setProperty('--settings-color', settingsColor)
-  document.documentElement.style.setProperty('--settings-hover-color', settingsHoverColor)
-
-  document.body.classList.add('custom-theme')
-}
+// Re-export for backwards compatibility
+export { getStoredThemeColors, getStoredVimMode, getStoredAppTheme, applyThemeColors }
+export type { ThemeColors }
 
 export default function Settings() {
   const [open, setOpen] = useState(false)

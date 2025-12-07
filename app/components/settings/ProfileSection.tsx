@@ -2,7 +2,7 @@ import { useState } from 'hono/jsx'
 import { uploadImage } from '../../lib/upload'
 import { createProfileEvent, type Profile } from '../../lib/nostr/events'
 import { publishEvent } from '../../lib/nostr/relay'
-import { getLocalProfile } from '../../islands/ProfileSetup'
+import { getLocalProfile, setLocalProfile } from '../../lib/utils'
 import { Button, Input } from '../ui'
 
 interface ProfileSectionProps {
@@ -44,7 +44,7 @@ export default function ProfileSection({
       const event = await createProfileEvent(profile)
       await publishEvent(event)
 
-      localStorage.setItem('mypace_profile', JSON.stringify(profile))
+      setLocalProfile(profile)
       window.dispatchEvent(new CustomEvent('profileupdated'))
       setNameSaved(true)
       setTimeout(() => setNameSaved(false), 2000)
@@ -78,7 +78,7 @@ export default function ProfileSection({
         }
         const event = await createProfileEvent(profile)
         await publishEvent(event)
-        localStorage.setItem('mypace_profile', JSON.stringify(profile))
+        setLocalProfile(profile)
         window.dispatchEvent(new CustomEvent('profileupdated'))
       } catch (e) {
         setNameError(e instanceof Error ? e.message : 'Failed to save profile')
@@ -104,7 +104,7 @@ export default function ProfileSection({
     try {
       const event = await createProfileEvent(profile)
       await publishEvent(event)
-      localStorage.setItem('mypace_profile', JSON.stringify(profile))
+      setLocalProfile(profile)
       window.dispatchEvent(new CustomEvent('profileupdated'))
     } catch (e) {
       setNameError(e instanceof Error ? e.message : 'Failed to remove avatar')
@@ -155,7 +155,7 @@ export default function ProfileSection({
         }
         const event = await createProfileEvent(profile)
         await publishEvent(event)
-        localStorage.setItem('mypace_profile', JSON.stringify(profile))
+        setLocalProfile(profile)
         window.dispatchEvent(new CustomEvent('profileupdated'))
       } catch (e) {
         setNameError(e instanceof Error ? e.message : 'Failed to save profile')
