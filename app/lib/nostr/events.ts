@@ -3,6 +3,7 @@ import { hasNip07, getOrCreateSecretKey, getPublicKeyFromSecret } from './keys'
 import { MYPACE_TAG } from './constants'
 import { getStoredThemeColors } from './theme'
 import { THEME_TAG } from '../constants'
+import { unixNow } from '../utils'
 import type { Profile, ThemeColors } from '../../types'
 
 export { MYPACE_TAG, APP_TITLE } from './constants'
@@ -31,7 +32,7 @@ export async function createTextNote(content: string, preserveTags?: string[][])
 
   const template: EventTemplate = {
     kind: 1,
-    created_at: Math.floor(Date.now() / 1000),
+    created_at: unixNow(),
     tags,
     content,
   }
@@ -46,7 +47,7 @@ export async function createTextNote(content: string, preserveTags?: string[][])
 export async function createProfileEvent(profile: Profile): Promise<Event> {
   const template: EventTemplate = {
     kind: 0,
-    created_at: Math.floor(Date.now() / 1000),
+    created_at: unixNow(),
     tags: [],
     content: JSON.stringify(profile),
   }
@@ -61,7 +62,7 @@ export async function createProfileEvent(profile: Profile): Promise<Event> {
 export async function createDeleteEvent(eventIds: string[]): Promise<Event> {
   const template: EventTemplate = {
     kind: 5,
-    created_at: Math.floor(Date.now() / 1000),
+    created_at: unixNow(),
     tags: eventIds.map(id => ['e', id]),
     content: '',
   }
@@ -76,7 +77,7 @@ export async function createDeleteEvent(eventIds: string[]): Promise<Event> {
 export async function createNip98AuthEvent(url: string, method: string): Promise<Event> {
   const template: EventTemplate = {
     kind: 27235,
-    created_at: Math.floor(Date.now() / 1000),
+    created_at: unixNow(),
     tags: [
       ['u', url],
       ['method', method],
@@ -94,7 +95,7 @@ export async function createNip98AuthEvent(url: string, method: string): Promise
 export async function createReactionEvent(targetEvent: Event, content: string = '+'): Promise<Event> {
   const template: EventTemplate = {
     kind: 7,
-    created_at: Math.floor(Date.now() / 1000),
+    created_at: unixNow(),
     tags: [
       ['e', targetEvent.id],
       ['p', targetEvent.pubkey],
@@ -112,7 +113,7 @@ export async function createReactionEvent(targetEvent: Event, content: string = 
 export async function createRepostEvent(targetEvent: Event): Promise<Event> {
   const template: EventTemplate = {
     kind: 6,
-    created_at: Math.floor(Date.now() / 1000),
+    created_at: unixNow(),
     tags: [
       ['e', targetEvent.id, ''],
       ['p', targetEvent.pubkey],
@@ -152,7 +153,7 @@ export async function createReplyEvent(content: string, replyTo: Event, rootEven
 
   const template: EventTemplate = {
     kind: 1,
-    created_at: Math.floor(Date.now() / 1000),
+    created_at: unixNow(),
     tags,
     content,
   }

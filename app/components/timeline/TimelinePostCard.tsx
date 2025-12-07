@@ -3,6 +3,7 @@ import { getEventThemeColors, getThemeCardProps, formatTimestamp } from '../../l
 import { renderContent } from '../../lib/content-parser'
 import { PostHeader } from '../post'
 import { cachePost, cacheProfile } from '../../lib/utils'
+import { LIMITS } from '../../lib/constants'
 import type { Event } from 'nostr-tools'
 import type { ReactionData, ReplyData, RepostData, ProfileCache } from '../../types'
 
@@ -86,8 +87,8 @@ export default function TimelinePostCard({
       />
 
       <div class="post-content">
-        {event.content.length > 420 || event.content.split('\n').length > 42 ? (
-          <>{renderContent(event.content.slice(0, 420) + '...')}<span class="read-more-text">続きを読む</span></>
+        {event.content.length > LIMITS.PREVIEW_TRUNCATE_LENGTH || event.content.split('\n').length > LIMITS.PREVIEW_LINE_THRESHOLD ? (
+          <>{renderContent(event.content.slice(0, LIMITS.PREVIEW_TRUNCATE_LENGTH) + '...')}<span class="read-more-text">続きを読む</span></>
         ) : renderContent(event.content)}
       </div>
 

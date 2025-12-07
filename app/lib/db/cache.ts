@@ -1,5 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types'
 import type { Event } from 'nostr-tools'
+import { unixNow } from '../utils'
 
 const CACHE_TTL = 60 * 5 // 5 minutes
 
@@ -8,7 +9,7 @@ export async function getCachedEvents(
   kind: number,
   limit: number
 ): Promise<Event[] | null> {
-  const cutoff = Math.floor(Date.now() / 1000) - CACHE_TTL
+  const cutoff = unixNow() - CACHE_TTL
 
   const result = await db
     .prepare(
@@ -28,7 +29,7 @@ export async function getCachedEvents(
 }
 
 export async function cacheEvents(db: D1Database, events: Event[]): Promise<void> {
-  const now = Math.floor(Date.now() / 1000)
+  const now = unixNow()
 
   const stmt = db.prepare(
     `INSERT OR REPLACE INTO events
@@ -56,7 +57,7 @@ export async function getCachedProfile(
   db: D1Database,
   pubkey: string
 ): Promise<Record<string, unknown> | null> {
-  const cutoff = Math.floor(Date.now() / 1000) - CACHE_TTL * 12 // 1 hour for profiles
+  const cutoff = unixNow() - CACHE_TTL * 12 // 1 hour for profiles
 
   const result = await db
     .prepare(
@@ -74,7 +75,7 @@ export async function cacheProfile(
   pubkey: string,
   profile: Record<string, unknown>
 ): Promise<void> {
-  const now = Math.floor(Date.now() / 1000)
+  const now = unixNow()
 
   await db
     .prepare(

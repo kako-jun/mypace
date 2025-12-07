@@ -2,6 +2,7 @@ import { useState, useEffect } from 'hono/jsx'
 import { fetchEventById, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts, publishEvent } from '../lib/nostr/relay'
 import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent, getEventThemeColors, getThemeCardProps } from '../lib/nostr/events'
 import { getDisplayName, getAvatarUrl, getCachedPost, getCachedProfile } from '../lib/utils'
+import { isValidReaction, TIMEOUTS } from '../lib/constants'
 import { renderContent, setHashtagClickHandler } from '../lib/content-parser'
 import { PostHeader, ReplyCard } from '../components/post'
 import { useShare } from '../hooks'
@@ -84,7 +85,7 @@ export default function PostView({ eventId }: PostViewProps) {
 
       const eventReactions = reactionEvents.filter(r => {
         const eTag = r.tags.find(t => t[0] === 'e')
-        return eTag && eTag[1] === eventId && (r.content === '+' || r.content === '')
+        return eTag && eTag[1] === eventId && isValidReaction(r.content)
       })
       setReactions({
         count: eventReactions.length,
