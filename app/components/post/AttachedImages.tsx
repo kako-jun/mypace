@@ -10,12 +10,13 @@ export default function AttachedImages({ imageUrls, onRemove }: AttachedImagesPr
     <div class="attached-images">
       {imageUrls.map((url) => (
         <div key={url} class="attached-image">
-          <img src={url} alt="" />
+          <img src={url} alt="Attached image" />
           <button
             type="button"
             class="remove-image-button"
             onClick={() => onRemove(url)}
             title="Remove image"
+            aria-label="Remove attached image"
           >
             ×
           </button>
