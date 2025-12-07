@@ -5,7 +5,7 @@ import { publishEvent } from '../../lib/nostr/relay'
 import { getLocalProfile, setLocalProfile, getErrorMessage } from '../../lib/utils'
 import { CUSTOM_EVENTS } from '../../lib/constants'
 import { Button, Input } from '../ui'
-import { useTemporaryFlag } from '../../hooks'
+import { useTemporaryFlag, useDragDrop } from '../../hooks'
 
 interface ProfileSectionProps {
   displayName: string
@@ -24,9 +24,7 @@ export default function ProfileSection({
   const [savingName, setSavingName] = useState(false)
   const [nameError, setNameError] = useState('')
   const [nameSaved, triggerNameSaved] = useTemporaryFlag()
-  const [avatarDragging, setAvatarDragging] = useState(false)
 
-  // Common function to save profile with avatar
   const saveProfileWithAvatar = async (avatarUrl: string | undefined) => {
     const localProfile = getLocalProfile() ?? {}
     const profile: Profile = {
@@ -40,6 +38,33 @@ export default function ProfileSection({
     setLocalProfile(profile)
     window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
   }
+
+  const processAvatarUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setNameError('Please drop an image file')
+      return
+    }
+
+    setUploading(true)
+    setNameError('')
+
+    const result = await uploadImage(file)
+
+    if (result.success && result.url) {
+      onPictureUrlChange(result.url)
+      try {
+        await saveProfileWithAvatar(result.url)
+      } catch (e) {
+        setNameError(getErrorMessage(e, 'Failed to save profile'))
+      }
+    } else {
+      setNameError(result.error || 'Failed to upload')
+    }
+
+    setUploading(false)
+  }
+
+  const { dragging, handlers } = useDragDrop(processAvatarUpload)
 
   const handleSaveName = async () => {
     if (!displayName.trim()) {
@@ -75,24 +100,7 @@ export default function ProfileSection({
     const input = e.target as HTMLInputElement
     const file = input.files?.[0]
     if (!file) return
-
-    setUploading(true)
-    setNameError('')
-
-    const result = await uploadImage(file)
-
-    if (result.success && result.url) {
-      onPictureUrlChange(result.url)
-      try {
-        await saveProfileWithAvatar(result.url)
-      } catch (e) {
-        setNameError(getErrorMessage(e, 'Failed to save profile'))
-      }
-    } else {
-      setNameError(result.error || 'Failed to upload')
-    }
-
-    setUploading(false)
+    await processAvatarUpload(file)
     input.value = ''
   }
 
@@ -103,51 +111,6 @@ export default function ProfileSection({
     } catch (e) {
       setNameError(getErrorMessage(e, 'Failed to remove avatar'))
     }
-  }
-
-  const handleAvatarDragOver = (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setAvatarDragging(true)
-  }
-
-  const handleAvatarDragLeave = (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setAvatarDragging(false)
-  }
-
-  const handleAvatarDrop = async (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setAvatarDragging(false)
-
-    const files = e.dataTransfer?.files
-    if (!files || files.length === 0) return
-
-    const file = files[0]
-    if (!file.type.startsWith('image/')) {
-      setNameError('Please drop an image file')
-      return
-    }
-
-    setUploading(true)
-    setNameError('')
-
-    const result = await uploadImage(file)
-
-    if (result.success && result.url) {
-      onPictureUrlChange(result.url)
-      try {
-        await saveProfileWithAvatar(result.url)
-      } catch (e) {
-        setNameError(getErrorMessage(e, 'Failed to save profile'))
-      }
-    } else {
-      setNameError(result.error || 'Failed to upload')
-    }
-
-    setUploading(false)
   }
 
   return (
@@ -163,12 +126,12 @@ export default function ProfileSection({
         </div>
         <div class="avatar-upload-buttons">
           <label
-            class={`avatar-drop-area ${avatarDragging ? 'dragging' : ''}`}
-            onDragOver={handleAvatarDragOver}
-            onDragLeave={handleAvatarDragLeave}
-            onDrop={handleAvatarDrop}
+            class={`avatar-drop-area ${dragging ? 'dragging' : ''}`}
+            onDragOver={handlers.onDragOver}
+            onDragLeave={handlers.onDragLeave}
+            onDrop={handlers.onDrop}
           >
-            {uploading ? '...' : avatarDragging ? 'Drop' : '📷'}
+            {uploading ? '...' : dragging ? 'Drop' : '📷'}
             <input
               type="file"
               accept="image/*"

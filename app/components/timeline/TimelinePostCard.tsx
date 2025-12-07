@@ -1,9 +1,10 @@
 import { useState } from 'hono/jsx'
-import { getEventThemeColors, getThemeCardProps, formatTimestamp } from '../../lib/nostr/events'
+import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import { renderContent } from '../../lib/content-parser'
-import { PostHeader } from '../post'
+import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies } from '../post'
 import { cachePost, cacheProfile, navigateToPost } from '../../lib/utils'
 import { LIMITS } from '../../lib/constants'
+import { useDeleteConfirm } from '../../hooks'
 import type { Event } from 'nostr-tools'
 import type { ReactionData, ReplyData, RepostData, ProfileCache } from '../../types'
 
@@ -19,7 +20,6 @@ interface TimelinePostCardProps {
   repostingId: string | null
   copiedId: string | null
   onEdit: (event: Event) => void
-  onDelete: (eventId: string) => void
   onDeleteConfirm: (event: Event) => void
   onLike: (event: Event) => void
   onReply: (event: Event) => void
@@ -41,7 +41,6 @@ export default function TimelinePostCard({
   repostingId,
   copiedId,
   onEdit,
-  onDelete,
   onDeleteConfirm,
   onLike,
   onReply,
@@ -50,8 +49,8 @@ export default function TimelinePostCard({
   getDisplayName,
   getAvatarUrl,
 }: TimelinePostCardProps) {
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [expandedThread, setExpandedThread] = useState(false)
+  const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
 
   const themeProps = getThemeCardProps(getEventThemeColors(event))
 
@@ -64,11 +63,9 @@ export default function TimelinePostCard({
     navigateToPost(event.id)
   }
 
-  const handleDeleteClick = () => setConfirmDeleteId(event.id)
-  const handleDeleteCancel = () => setConfirmDeleteId(null)
   const handleDeleteConfirmClick = () => {
     onDeleteConfirm(event)
-    setConfirmDeleteId(null)
+    hideConfirm()
   }
 
   return (
@@ -93,89 +90,40 @@ export default function TimelinePostCard({
       </div>
 
       <div class="post-footer">
-        {!isMyPost && (
-          <button
-            class={`like-button ${reactions?.myReaction ? 'liked' : ''}`}
-            onClick={() => onLike(event)}
-            disabled={likingId === event.id || reactions?.myReaction}
-            aria-label={reactions?.myReaction ? 'Liked' : 'Like this post'}
-          >
-            {reactions?.myReaction ? '★' : '☆'}{reactions?.count ? ` ${reactions.count}` : ''}
-          </button>
-        )}
-        {isMyPost && reactions?.count && reactions.count > 0 && <span class="like-count">★ {reactions.count}</span>}
-
-        <button class="reply-button" onClick={() => onReply(event)} aria-label="Reply to this post">
-          💬{replies?.count ? ` ${replies.count}` : ''}
-        </button>
-
-        <button
-          class={`repost-button ${reposts?.myRepost ? 'reposted' : ''}`}
-          onClick={() => onRepost(event)}
-          disabled={repostingId === event.id || reposts?.myRepost}
-          aria-label={reposts?.myRepost ? 'Reposted' : 'Repost this post'}
-        >
-          🔁{reposts?.count ? ` ${reposts.count}` : ''}
-        </button>
-
-        <button
-          class={`share-button ${copiedId === event.id ? 'copied' : ''}`}
-          onClick={() => onShare(event.id)}
-          aria-label="Share this post"
-        >
-          {copiedId === event.id ? '✓' : '↗'}
-        </button>
+        <PostActions
+          isMyPost={isMyPost}
+          reactions={reactions}
+          replies={replies}
+          reposts={reposts}
+          likingId={likingId}
+          repostingId={repostingId}
+          eventId={event.id}
+          copied={copiedId === event.id}
+          onLike={() => onLike(event)}
+          onReply={() => onReply(event)}
+          onRepost={() => onRepost(event)}
+          onShare={() => onShare(event.id)}
+        />
 
         {isMyPost && (
-          confirmDeleteId === event.id ? (
-            <div class="delete-confirm" role="dialog" aria-label="Confirm delete">
-              <span class="delete-confirm-text">Delete?</span>
-              <button class="delete-confirm-yes" onClick={handleDeleteConfirmClick} aria-label="Confirm delete">Yes</button>
-              <button class="delete-confirm-no" onClick={handleDeleteCancel} aria-label="Cancel delete">No</button>
-            </div>
-          ) : (
-            <>
-              <button class="edit-button" onClick={() => onEdit(event)} aria-label="Edit this post">Edit</button>
-              <button class="delete-button" onClick={handleDeleteClick} aria-label="Delete this post">Delete</button>
-            </>
-          )
+          <EditDeleteButtons
+            isConfirming={isConfirming(event.id)}
+            onEdit={() => onEdit(event)}
+            onDelete={() => showConfirm(event.id)}
+            onDeleteConfirm={handleDeleteConfirmClick}
+            onDeleteCancel={hideConfirm}
+          />
         )}
       </div>
 
-      {replies?.count && replies.count > 0 && (
-        <div class="thread-section">
-          <button
-            class="thread-toggle"
-            onClick={() => setExpandedThread(!expandedThread)}
-            aria-expanded={expandedThread}
-            aria-label={`${expandedThread ? 'Hide' : 'Show'} ${replies.count} replies`}
-          >
-            {expandedThread ? '▼' : '▶'} {replies.count} replies
-          </button>
-          {expandedThread && (
-            <div class="thread-replies">
-              {replies.replies.map((reply) => {
-                const replyThemeProps = getThemeCardProps(getEventThemeColors(reply))
-                return (
-                  <div key={reply.id} class={`reply-card ${replyThemeProps.className}`} style={replyThemeProps.style}>
-                    <header class="reply-header">
-                      {getAvatarUrl(reply.pubkey) ? (
-                        <img src={getAvatarUrl(reply.pubkey)!} alt="" class="reply-avatar" />
-                      ) : (
-                        <div class="reply-avatar-placeholder" />
-                      )}
-                      <div class="reply-author-info">
-                        <span class="author-name">{getDisplayName(reply.pubkey)}</span>
-                        <time class="timestamp">{formatTimestamp(reply.created_at)}</time>
-                      </div>
-                    </header>
-                    <div class="reply-content">{renderContent(reply.content)}</div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+      {replies?.replies && replies.replies.length > 0 && (
+        <ThreadReplies
+          replies={replies.replies}
+          expanded={expandedThread}
+          onToggle={() => setExpandedThread(!expandedThread)}
+          getDisplayName={getDisplayName}
+          getAvatarUrl={getAvatarUrl}
+        />
       )}
     </article>
   )

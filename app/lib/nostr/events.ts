@@ -1,8 +1,7 @@
 import { finalizeEvent, type EventTemplate, type Event } from 'nostr-tools'
 import { hasNip07, getOrCreateSecretKey, getPublicKeyFromSecret } from './keys'
-import { MYPACE_TAG } from './constants'
+import { MYPACE_TAG, THEME_TAG } from './constants'
 import { getStoredThemeColors } from './theme'
-import { THEME_TAG } from '../constants'
 import { unixNow } from '../utils'
 import type { Profile, ThemeColors } from '../../types'
 

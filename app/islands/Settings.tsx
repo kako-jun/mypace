@@ -9,7 +9,18 @@ import {
 } from '../lib/nostr/keys'
 import { getCurrentPubkey, type Profile } from '../lib/nostr/events'
 import { fetchUserProfile } from '../lib/nostr/relay'
-import { getLocalProfile, setItem, setString, setBoolean, parseProfile } from '../lib/utils'
+import {
+  getLocalProfile,
+  setItem,
+  setString,
+  setBoolean,
+  parseProfile,
+  getUIThemeColors,
+  getStoredVimMode,
+  getStoredAppTheme,
+  applyThemeColors,
+  DEFAULT_COLORS,
+} from '../lib/utils'
 import { STORAGE_KEYS } from '../lib/constants'
 import {
   ProfileSection,
@@ -18,13 +29,6 @@ import {
   KeysSection,
   ShareSection
 } from '../components/settings'
-import {
-  getStoredThemeColors,
-  getStoredVimMode,
-  getStoredAppTheme,
-  applyThemeColors,
-  DEFAULT_COLORS,
-} from '../stores/settingsStore'
 import type { ThemeColors } from '../types'
 
 export default function Settings() {
@@ -52,7 +56,7 @@ export default function Settings() {
 
   // Load theme on mount (not just when settings panel opens)
   useEffect(() => {
-    const storedColors = getStoredThemeColors()
+    const storedColors = getUIThemeColors()
     setThemeColors(storedColors)
     applyThemeColors(storedColors)
 

@@ -3,25 +3,20 @@ import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { FilterBar, TimelinePostCard } from '../components/timeline'
 import { useTimeline, useShare } from '../hooks'
-import { shareOrCopy, navigateToHome, navigateToEdit, navigateToTag, navigateToAddTag, buildTagUrl } from '../lib/utils'
+import { shareOrCopy, navigateToHome, navigateToEdit, navigateToTag, navigateToAddTag, buildTagUrl, contentHasTag } from '../lib/utils'
 import type { Event } from 'nostr-tools'
-
-// Helper function moved outside component to prevent recreation on each render
-const contentHasTag = (content: string, tag: string): boolean => {
-  const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  return new RegExp(`#${escapedTag}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`, 'i').test(content)
-}
+import type { FilterMode } from '../types'
 
 interface TimelineProps {
   onEditStart?: (event: Event) => void
   onReplyStart?: (event: Event) => void
   initialFilterTags?: string[]
-  initialFilterMode?: 'and' | 'or'
+  initialFilterMode?: FilterMode
 }
 
 export default function Timeline({ onEditStart, onReplyStart, initialFilterTags, initialFilterMode }: TimelineProps) {
   const [filterTags] = useState<string[]>(initialFilterTags || [])
-  const [filterMode] = useState<'and' | 'or'>(initialFilterMode || 'and')
+  const [filterMode] = useState<FilterMode>(initialFilterMode || 'and')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const { copied: filterCopied, share: shareFilter } = useShare()
@@ -149,7 +144,6 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
             repostingId={repostingId}
             copiedId={copiedId}
             onEdit={handleEdit}
-            onDelete={() => {}}
             onDeleteConfirm={handleDeleteConfirm}
             onLike={handleLike}
             onReply={handleReplyClick}

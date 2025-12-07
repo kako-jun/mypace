@@ -1,5 +1,5 @@
-import { useState, useRef } from 'hono/jsx'
-import { useImageUpload } from '../../hooks'
+import { useRef } from 'hono/jsx'
+import { useImageUpload, useDragDrop } from '../../hooks'
 
 interface ImageDropZoneProps {
   onImageUploaded: (url: string) => void
@@ -7,7 +7,6 @@ interface ImageDropZoneProps {
 }
 
 export default function ImageDropZone({ onImageUploaded, onError }: ImageDropZoneProps) {
-  const [dragging, setDragging] = useState(false)
   const { uploading, uploadFile } = useImageUpload()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -20,27 +19,7 @@ export default function ImageDropZone({ onImageUploaded, onError }: ImageDropZon
     }
   }
 
-  const handleDragOver = (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragging(true)
-  }
-
-  const handleDragLeave = (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragging(false)
-  }
-
-  const handleDrop = async (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragging(false)
-
-    const files = e.dataTransfer?.files
-    if (!files || files.length === 0) return
-    await processUpload(files[0])
-  }
+  const { dragging, handlers } = useDragDrop(processUpload)
 
   const handleFileChange = async (e: globalThis.Event) => {
     const input = e.target as HTMLInputElement
@@ -50,19 +29,15 @@ export default function ImageDropZone({ onImageUploaded, onError }: ImageDropZon
     input.value = ''
   }
 
-  const handleClick = () => {
-    fileInputRef.current?.click()
-  }
-
   return (
     <>
       <button
         type="button"
         class={`image-drop-area ${dragging ? 'dragging' : ''}`}
-        onClick={handleClick}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        onDragOver={handlers.onDragOver}
+        onDragLeave={handlers.onDragLeave}
+        onDrop={handlers.onDrop}
         aria-label="Upload image"
         disabled={uploading}
       >

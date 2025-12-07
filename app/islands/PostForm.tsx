@@ -50,8 +50,8 @@ export default function PostForm({
     setThemeColors(getStoredThemeColors())
 
     const handleProfileUpdate = () => setHasProfile(hasLocalProfile())
-    window.addEventListener('profileupdated', handleProfileUpdate)
-    return () => window.removeEventListener('profileupdated', handleProfileUpdate)
+    window.addEventListener(CUSTOM_EVENTS.PROFILE_UPDATED, handleProfileUpdate)
+    return () => window.removeEventListener(CUSTOM_EVENTS.PROFILE_UPDATED, handleProfileUpdate)
   }, [])
 
   const handleSubmit = async (e: globalThis.Event) => {
