@@ -1,17 +1,18 @@
-import type { ThemeColors } from './types'
+import type { ThemeColors } from '../../types'
 import type { Event } from 'nostr-tools'
 import { getItem, getBoolean } from '../utils/storage'
+import { STORAGE_KEYS, THEME_TAG } from '../constants'
 
 // Get stored theme colors from localStorage
 export function getStoredThemeColors(): ThemeColors | null {
-  const enabled = getBoolean('mypace_theme_enabled')
+  const enabled = getBoolean(STORAGE_KEYS.THEME_ENABLED)
   if (!enabled) return null
-  return getItem<ThemeColors | null>('mypace_theme_colors', null)
+  return getItem<ThemeColors | null>(STORAGE_KEYS.THEME_COLORS, null)
 }
 
 // Extract theme colors from event tags
 export function getEventThemeColors(event: Event): ThemeColors | null {
-  const themeTag = event.tags.find(tag => tag[0] === 'mypace_theme')
+  const themeTag = event.tags.find(tag => tag[0] === THEME_TAG)
   if (themeTag && themeTag.length >= 5) {
     return {
       topLeft: themeTag[1],

@@ -2,12 +2,7 @@ import { createRoute } from 'honox/factory'
 import { SimplePool } from 'nostr-tools'
 import { getCachedEvents, cacheEvents } from '../../lib/db/cache'
 import { MYPACE_TAG } from '../../lib/nostr/events'
-
-const RELAYS = [
-  'wss://nos.lol',
-  'wss://relay.damus.io',
-  'wss://relay.nostr.band',
-]
+import { RELAYS } from '../../lib/nostr/relay'
 
 export default createRoute(async (c) => {
   const db = c.env?.DB

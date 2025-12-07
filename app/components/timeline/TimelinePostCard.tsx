@@ -2,8 +2,9 @@ import { useState } from 'hono/jsx'
 import { getEventThemeColors, getThemeCardProps, formatTimestamp } from '../../lib/nostr/events'
 import { renderContent } from '../../lib/content-parser'
 import { PostHeader } from '../post'
+import { cachePost, cacheProfile } from '../../lib/utils'
 import type { Event } from 'nostr-tools'
-import type { ReactionData, ReplyData, RepostData, ProfileCache } from '../../types/timeline'
+import type { ReactionData, ReplyData, RepostData, ProfileCache } from '../../types'
 
 interface TimelinePostCardProps {
   event: Event
@@ -57,8 +58,8 @@ export default function TimelinePostCard({
   const handleCardClick = (e: MouseEvent) => {
     const target = e.target as HTMLElement
     if (target.closest('button') || target.closest('a') || target.closest('.post-footer') || target.closest('.thread-section')) return
-    sessionStorage.setItem(`post_${event.id}`, JSON.stringify(event))
-    if (profiles[event.pubkey]) sessionStorage.setItem(`profile_${event.pubkey}`, JSON.stringify(profiles[event.pubkey]))
+    cachePost(event)
+    if (profiles[event.pubkey]) cacheProfile(event.pubkey, profiles[event.pubkey])
     window.location.href = `/post/${event.id}`
   }
 

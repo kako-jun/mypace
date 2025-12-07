@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'hono/jsx'
-import { createTextNote, createDeleteEvent, createReplyEvent, getLocalThemeColors, type ThemeColors } from '../lib/nostr/events'
+import { createTextNote, createDeleteEvent, createReplyEvent, getStoredThemeColors } from '../lib/nostr/events'
+import type { ThemeColors } from '../types'
 import { publishEvent } from '../lib/nostr/relay'
-import ProfileSetup, { hasLocalProfile } from './ProfileSetup'
+import ProfileSetup from './ProfileSetup'
+import { hasLocalProfile } from '../lib/utils'
 import { ImageDropZone, AttachedImages, PostPreview } from '../components/post'
 import type { Event } from 'nostr-tools'
 
@@ -57,7 +59,7 @@ export default function PostForm({
   useEffect(() => {
     setHasProfile(hasLocalProfile())
     setCheckingProfile(false)
-    setThemeColors(getLocalThemeColors())
+    setThemeColors(getStoredThemeColors())
 
     const handleProfileUpdate = () => setHasProfile(hasLocalProfile())
     window.addEventListener('profileupdated', handleProfileUpdate)

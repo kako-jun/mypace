@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { ThemeColors } from '../types'
 import { getItem, setItem, getString, setString, getBoolean, setBoolean } from '../lib/utils'
+import { STORAGE_KEYS } from '../lib/constants'
 
 // Default colors
 export const DEFAULT_COLORS: ThemeColors = {
@@ -69,7 +70,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   setAppTheme: (theme) => {
     set({ appTheme: theme })
-    setString('mypace_app_theme', theme)
+    setString(STORAGE_KEYS.APP_THEME, theme)
     if (typeof document !== 'undefined') {
       document.documentElement.setAttribute('data-theme', theme)
     }
@@ -77,7 +78,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   setThemeColors: (colors) => {
     set({ themeColors: colors })
-    setItem('mypace_theme_colors', colors)
+    setItem(STORAGE_KEYS.THEME_COLORS, colors)
     applyThemeColors(colors)
   },
 
@@ -88,7 +89,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   setVimMode: (enabled) => {
     set({ vimMode: enabled })
-    setBoolean('mypace_vim_mode', enabled)
+    setBoolean(STORAGE_KEYS.VIM_MODE, enabled)
   },
 
   setOpen: (open) => {
@@ -122,15 +123,15 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
 // Storage helpers
 export function getStoredThemeColors(): ThemeColors {
-  return getItem<ThemeColors>('mypace_theme_colors', DEFAULT_COLORS)
+  return getItem<ThemeColors>(STORAGE_KEYS.THEME_COLORS, DEFAULT_COLORS)
 }
 
 export function getStoredVimMode(): boolean {
-  return getBoolean('mypace_vim_mode')
+  return getBoolean(STORAGE_KEYS.VIM_MODE)
 }
 
 export function getStoredAppTheme(): 'light' | 'dark' {
-  return (getString('mypace_app_theme') as 'light' | 'dark') || 'light'
+  return (getString(STORAGE_KEYS.APP_THEME) as 'light' | 'dark') || 'light'
 }
 
 export { applyThemeColors }

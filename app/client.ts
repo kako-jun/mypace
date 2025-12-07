@@ -1,8 +1,9 @@
 import { createClient } from 'honox/client'
 import { getString } from './lib/utils/storage'
+import { STORAGE_KEYS } from './lib/constants'
 
 // Initialize theme immediately to prevent flash
-const storedAppTheme = getString('mypace_app_theme')
+const storedAppTheme = getString(STORAGE_KEYS.APP_THEME)
 if (storedAppTheme) {
   document.documentElement.setAttribute('data-theme', storedAppTheme)
 }

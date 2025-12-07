@@ -9,6 +9,7 @@ import {
 } from '../../lib/nostr/keys'
 import { Button, Input } from '../ui'
 import { copyToClipboard, removeItem, removeLocalProfile } from '../../lib/utils'
+import { STORAGE_KEYS } from '../../lib/constants'
 
 interface KeysSectionProps {
   nsec: string
@@ -49,8 +50,8 @@ export default function KeysSection({
 
       // Clear all settings for new identity
       removeLocalProfile()
-      removeItem('mypace_theme_colors')
-      removeItem('mypace_theme_enabled')
+      removeItem(STORAGE_KEYS.THEME_COLORS)
+      removeItem(STORAGE_KEYS.THEME_ENABLED)
 
       // Reload to start fresh with new identity
       window.location.reload()

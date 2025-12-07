@@ -52,6 +52,15 @@ export interface TimelineItem {
   }
 }
 
+export interface TimelineData {
+  items: TimelineItem[]
+  events: Event[]
+  profiles: ProfileCache
+  reactions: { [eventId: string]: ReactionData }
+  replies: { [eventId: string]: ReplyData }
+  reposts: { [eventId: string]: RepostData }
+}
+
 // Theme types
 export interface ThemeColors {
   topLeft: string
