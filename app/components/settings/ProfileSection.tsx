@@ -26,6 +26,21 @@ export default function ProfileSection({
   const [nameSaved, triggerNameSaved] = useTemporaryFlag()
   const [avatarDragging, setAvatarDragging] = useState(false)
 
+  // Common function to save profile with avatar
+  const saveProfileWithAvatar = async (avatarUrl: string | undefined) => {
+    const localProfile = getLocalProfile()
+    const profile: Profile = {
+      ...localProfile,
+      name: displayName.trim() || localProfile?.name || '',
+      display_name: displayName.trim() || localProfile?.display_name || '',
+      picture: avatarUrl,
+    }
+    const event = await createProfileEvent(profile)
+    await publishEvent(event)
+    setLocalProfile(profile)
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
+  }
+
   const handleSaveName = async () => {
     if (!displayName.trim()) {
       setNameError('Name is required')
@@ -68,19 +83,8 @@ export default function ProfileSection({
 
     if (result.success && result.url) {
       onPictureUrlChange(result.url)
-
       try {
-        const localProfile = getLocalProfile()
-        const profile: Profile = {
-          ...localProfile,
-          name: displayName.trim() || localProfile?.name || '',
-          display_name: displayName.trim() || localProfile?.display_name || '',
-          picture: result.url,
-        }
-        const event = await createProfileEvent(profile)
-        await publishEvent(event)
-        setLocalProfile(profile)
-        window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
+        await saveProfileWithAvatar(result.url)
       } catch (e) {
         setNameError(getErrorMessage(e, 'Failed to save profile'))
       }
@@ -94,19 +98,8 @@ export default function ProfileSection({
 
   const handleRemoveAvatar = async () => {
     onPictureUrlChange('')
-
-    const localProfile = getLocalProfile()
-    const profile: Profile = {
-      ...localProfile,
-      name: displayName.trim() || localProfile?.name || '',
-      display_name: displayName.trim() || localProfile?.display_name || '',
-      picture: undefined,
-    }
     try {
-      const event = await createProfileEvent(profile)
-      await publishEvent(event)
-      setLocalProfile(profile)
-      window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
+      await saveProfileWithAvatar(undefined)
     } catch (e) {
       setNameError(getErrorMessage(e, 'Failed to remove avatar'))
     }
@@ -145,19 +138,8 @@ export default function ProfileSection({
 
     if (result.success && result.url) {
       onPictureUrlChange(result.url)
-
       try {
-        const localProfile = getLocalProfile()
-        const profile: Profile = {
-          ...localProfile,
-          name: displayName.trim() || localProfile?.name || '',
-          display_name: displayName.trim() || localProfile?.display_name || '',
-          picture: result.url,
-        }
-        const event = await createProfileEvent(profile)
-        await publishEvent(event)
-        setLocalProfile(profile)
-        window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
+        await saveProfileWithAvatar(result.url)
       } catch (e) {
         setNameError(getErrorMessage(e, 'Failed to save profile'))
       }

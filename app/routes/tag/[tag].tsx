@@ -7,6 +7,11 @@ import { APP_TITLE } from '../../lib/nostr/events'
 export default createRoute((c) => {
   const tagParam = c.req.param('tag')
 
+  // Handle missing tag parameter
+  if (!tagParam) {
+    return c.redirect('/')
+  }
+
   // Parse tag filter: + for AND, , for OR
   let tags: string[] = []
   let filterMode: 'and' | 'or' = 'and'

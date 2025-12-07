@@ -1,4 +1,3 @@
-import type { JSX } from 'hono/jsx'
 import { Marked } from 'marked'
 import Prism from 'prismjs'
 
@@ -85,7 +84,7 @@ function processLinks(html: string): string {
   return html.replace(/<a href="/g, '<a class="content-link" target="_blank" rel="noopener noreferrer" href="')
 }
 
-export function renderContent(content: string): JSX.Element {
+export function renderContent(content: string) {
   // Parse markdown
   let html = marked.parse(content) as string
 

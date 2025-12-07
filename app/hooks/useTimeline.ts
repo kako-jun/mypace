@@ -135,12 +135,13 @@ export function useTimeline(): UseTimelineResult {
       setLoading(false)
 
       const loadedProfiles = await loadProfiles(notes, profiles)
-      Promise.all([
+      await Promise.all([
         loadReactions(notes, pubkey),
         loadRepliesData(notes, loadedProfiles),
         loadRepostsData(notes, pubkey),
       ])
 
+      // Load repost events in background (non-blocking)
       fetchRepostEvents(50).then(async repostEvents => {
         const items: TimelineItem[] = [...initialItems]
         const allOriginalEvents: Event[] = [...notes]
@@ -173,6 +174,8 @@ export function useTimeline(): UseTimelineResult {
             }).catch(() => {})
           }
         }
+      }).catch(() => {
+        // Silently ignore repost loading errors - main timeline is already loaded
       })
     } catch (err) {
       setError(getErrorMessage(err, 'Failed to load timeline'))
@@ -215,8 +218,14 @@ export function useTimeline(): UseTimelineResult {
     } catch {}
   }
 
-  const getDisplayName = (pubkey: string): string => getDisplayNameFromCache(pubkey, profiles)
-  const getAvatarUrl = (pubkey: string): string | null => getAvatarUrlFromCache(pubkey, profiles)
+  const getDisplayName = useCallback(
+    (pubkey: string): string => getDisplayNameFromCache(pubkey, profiles),
+    [profiles]
+  )
+  const getAvatarUrl = useCallback(
+    (pubkey: string): string | null => getAvatarUrlFromCache(pubkey, profiles),
+    [profiles]
+  )
 
   useEffect(() => {
     loadTimeline()

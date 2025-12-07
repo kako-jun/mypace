@@ -1,10 +1,16 @@
-import { useState, useEffect } from 'hono/jsx'
+import { useState, useEffect, useCallback } from 'hono/jsx'
 import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { FilterBar, TimelinePostCard } from '../components/timeline'
 import { useTimeline, useShare } from '../hooks'
 import { shareOrCopy, navigateToHome, navigateToEdit, navigateToTag, navigateToAddTag, buildTagUrl } from '../lib/utils'
 import type { Event } from 'nostr-tools'
+
+// Helper function moved outside component to prevent recreation on each render
+const contentHasTag = (content: string, tag: string): boolean => {
+  const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`#${escapedTag}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`, 'i').test(content)
+}
 
 interface TimelineProps {
   onEditStart?: (event: Event) => void
@@ -40,32 +46,32 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
     getAvatarUrl,
   } = useTimeline()
 
-  const handleEdit = (event: Event) => {
+  const handleEdit = useCallback((event: Event) => {
     if (onEditStart) {
       onEditStart(event)
     } else {
       navigateToEdit(event.id)
     }
-  }
+  }, [onEditStart])
 
-  const handleReplyClick = (event: Event) => onReplyStart?.(event)
+  const handleReplyClick = useCallback((event: Event) => onReplyStart?.(event), [onReplyStart])
 
-  const handleShare = async (eventId: string) => {
+  const handleShare = useCallback(async (eventId: string) => {
     const url = `${window.location.origin}/post/${eventId}`
     const result = await shareOrCopy(url)
     if (result.copied) {
       setCopiedId(eventId)
       setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
     }
-  }
+  }, [])
 
-  const handleShareFilter = () => shareFilter(window.location.href)
+  const handleShareFilter = useCallback(() => shareFilter(window.location.href), [shareFilter])
 
-  const handleDeleteConfirm = async (event: Event) => {
+  const handleDeleteConfirm = useCallback(async (event: Event) => {
     await handleDelete(event)
     setDeletedId(event.id)
     setTimeout(() => setDeletedId(null), TIMEOUTS.DELETE_CONFIRMATION)
-  }
+  }, [handleDelete])
 
   useEffect(() => {
     setHashtagClickHandler((tag) => {
@@ -86,11 +92,6 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
         <button onClick={reload}>Retry</button>
       </div>
     )
-  }
-
-  const contentHasTag = (content: string, tag: string): boolean => {
-    const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    return new RegExp(`#${escapedTag}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`, 'i').test(content)
   }
 
   const filteredItems = filterTags.length > 0
