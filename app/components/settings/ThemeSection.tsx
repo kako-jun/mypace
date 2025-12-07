@@ -1,4 +1,4 @@
-import { Button } from '../ui'
+import { Button, ColorPicker } from '../ui'
 import type { ThemeColors } from '../../types'
 
 interface ThemeSectionProps {
@@ -45,31 +45,27 @@ export default function ThemeSection({
         }}>
           <div class="color-picker-grid">
             <div class="color-picker-corner top-left">
-              <input
-                type="color"
+              <ColorPicker
                 value={themeColors.topLeft}
-                onInput={(e) => onColorChange('topLeft', (e.target as HTMLInputElement).value)}
+                onChange={(color) => onColorChange('topLeft', color)}
               />
             </div>
             <div class="color-picker-corner top-right">
-              <input
-                type="color"
+              <ColorPicker
                 value={themeColors.topRight}
-                onInput={(e) => onColorChange('topRight', (e.target as HTMLInputElement).value)}
+                onChange={(color) => onColorChange('topRight', color)}
               />
             </div>
             <div class="color-picker-corner bottom-left">
-              <input
-                type="color"
+              <ColorPicker
                 value={themeColors.bottomLeft}
-                onInput={(e) => onColorChange('bottomLeft', (e.target as HTMLInputElement).value)}
+                onChange={(color) => onColorChange('bottomLeft', color)}
               />
             </div>
             <div class="color-picker-corner bottom-right">
-              <input
-                type="color"
+              <ColorPicker
                 value={themeColors.bottomRight}
-                onInput={(e) => onColorChange('bottomRight', (e.target as HTMLInputElement).value)}
+                onChange={(color) => onColorChange('bottomRight', color)}
               />
             </div>
           </div>

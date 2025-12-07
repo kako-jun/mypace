@@ -7,7 +7,8 @@ import {
   clearSecretKey,
   getPublicKeyFromSecret,
 } from '../../lib/nostr/keys'
-import { Button } from '../ui'
+import { Button, Input } from '../ui'
+import { copyToClipboard } from '../../lib/utils'
 
 interface KeysSectionProps {
   nsec: string
@@ -27,15 +28,17 @@ export default function KeysSection({
   const [error, setError] = useState('')
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(nsec)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    if (await copyToClipboard(nsec)) {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
   }
 
   const handleCopyNpub = async () => {
-    await navigator.clipboard.writeText(npub)
-    setNpubCopied(true)
-    setTimeout(() => setNpubCopied(false), 2000)
+    if (await copyToClipboard(npub)) {
+      setNpubCopied(true)
+      setTimeout(() => setNpubCopied(false), 2000)
+    }
   }
 
   const handleImport = () => {
@@ -122,11 +125,11 @@ export default function KeysSection({
         <h3>Import Key</h3>
         <p class="hint">Paste your nsec to use an existing identity</p>
         <div class="input-row">
-          <input
+          <Input
             type="password"
             placeholder="nsec1..."
             value={importValue}
-            onInput={(e) => setImportValue((e.target as HTMLInputElement).value)}
+            onChange={setImportValue}
           />
           <Button onClick={handleImport} disabled={!importValue.trim()}>
             Import

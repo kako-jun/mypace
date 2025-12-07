@@ -3,7 +3,7 @@ import { uploadImage } from '../../lib/upload'
 import { createProfileEvent, type Profile } from '../../lib/nostr/events'
 import { publishEvent } from '../../lib/nostr/relay'
 import { getLocalProfile } from '../../islands/ProfileSetup'
-import { Button } from '../ui'
+import { Button, Input } from '../ui'
 
 interface ProfileSectionProps {
   displayName: string
@@ -200,11 +200,10 @@ export default function ProfileSection({
         </div>
       </div>
       <div class="input-row">
-        <input
-          type="text"
+        <Input
           placeholder="Your name"
           value={displayName}
-          onInput={(e) => onDisplayNameChange((e.target as HTMLInputElement).value)}
+          onChange={onDisplayNameChange}
           maxLength={50}
         />
         <Button onClick={handleSaveName} disabled={savingName || !displayName.trim()}>
