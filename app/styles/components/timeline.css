@@ -4,30 +4,35 @@
 .timeline {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 5rem;
   padding-bottom: 150px;
+  margin-top: -4rem;
 }
 
-/* Post Card - borderless, color only */
+/* Post Card - liquid style, large padding with blurred edges */
 .post-card {
-  background: #fff;
   padding: 1.25rem;
-  border-radius: 12px;
-  transition: transform 0.2s ease, background 0.2s ease;
+  border-radius: 32px;
   animation: card-appear 0.3s ease backwards;
   view-transition-name: post-card;
+  background: #fff;
 }
 
 [data-theme="dark"] .post-card {
   background: var(--surface-primary);
 }
 
-.post-card:hover {
-  background: #fafafa;
-}
-
-[data-theme="dark"] .post-card:hover {
-  background: var(--surface-secondary);
+body.custom-theme .post-card {
+  padding: 6rem;
+  margin: -4.75rem;
+  mask-image:
+    linear-gradient(to right, transparent, #000 4.75rem, #000 calc(100% - 4.75rem), transparent),
+    linear-gradient(to bottom, transparent, #000 4.75rem, #000 calc(100% - 4.75rem), transparent);
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, #000 4.75rem, #000 calc(100% - 4.75rem), transparent),
+    linear-gradient(to bottom, transparent, #000 4.75rem, #000 calc(100% - 4.75rem), transparent);
+  mask-composite: intersect;
+  -webkit-mask-composite: source-in;
 }
 
 /* Staggered animation */

@@ -27,6 +27,8 @@ import {
   navigateToPost,
   parseProfile,
   getErrorMessage,
+  getUIThemeColors,
+  applyThemeColors,
 } from '../lib/utils'
 import { isValidReaction, TIMEOUTS } from '../lib/constants'
 import { getETagValue, filterRepliesByRoot } from '../lib/nostr/tags'
@@ -57,6 +59,7 @@ export default function PostView({ eventId }: PostViewProps) {
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
 
   useEffect(() => {
+    applyThemeColors(getUIThemeColors())
     setHashtagClickHandler((tag) => navigateToTag(tag))
     loadPost()
   }, [eventId])
