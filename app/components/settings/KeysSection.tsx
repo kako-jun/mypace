@@ -8,7 +8,7 @@ import {
   getPublicKeyFromSecret,
 } from '../../lib/nostr/keys'
 import { Button, Input } from '../ui'
-import { copyToClipboard } from '../../lib/utils'
+import { copyToClipboard, removeItem, removeLocalProfile } from '../../lib/utils'
 
 interface KeysSectionProps {
   nsec: string
@@ -48,9 +48,9 @@ export default function KeysSection({
       saveSecretKey(sk)
 
       // Clear all settings for new identity
-      localStorage.removeItem('mypace_profile')
-      localStorage.removeItem('mypace_theme_colors')
-      localStorage.removeItem('mypace_theme_enabled')
+      removeLocalProfile()
+      removeItem('mypace_theme_colors')
+      removeItem('mypace_theme_enabled')
 
       // Reload to start fresh with new identity
       window.location.reload()
@@ -62,7 +62,7 @@ export default function KeysSection({
   const handleClear = () => {
     if (confirm('Are you sure? This will delete your key from this browser.')) {
       clearSecretKey()
-      localStorage.removeItem('mypace_profile')
+      removeLocalProfile()
       window.location.reload()
     }
   }

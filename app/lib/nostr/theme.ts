@@ -1,19 +1,12 @@
 import type { ThemeColors } from './types'
 import type { Event } from 'nostr-tools'
+import { getItem, getBoolean } from '../utils/storage'
 
 // Get stored theme colors from localStorage
 export function getStoredThemeColors(): ThemeColors | null {
-  if (typeof localStorage === 'undefined') return null
-  const stored = localStorage.getItem('mypace_theme_colors')
-  const enabled = localStorage.getItem('mypace_theme_enabled')
-  if (stored && enabled === 'true') {
-    try {
-      return JSON.parse(stored)
-    } catch {
-      return null
-    }
-  }
-  return null
+  const enabled = getBoolean('mypace_theme_enabled')
+  if (!enabled) return null
+  return getItem<ThemeColors | null>('mypace_theme_colors', null)
 }
 
 // Extract theme colors from event tags

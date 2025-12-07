@@ -2,6 +2,7 @@ import { useState, useEffect } from 'hono/jsx'
 import { getCurrentPubkey, createProfileEvent, type Profile } from '../lib/nostr/events'
 import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
 import { Button, Input } from '../components/ui'
+import { getLocalProfile, setLocalProfile, hasLocalProfile } from '../lib/utils'
 
 interface Props {
   onProfileSet?: () => void
@@ -34,7 +35,7 @@ export default function ProfileSetup({ onProfileSet }: Props) {
           setCurrentProfile(profile)
           setName(profile.name || profile.display_name || '')
           // Store locally for next time
-          localStorage.setItem('mypace_profile', JSON.stringify(profile))
+          setLocalProfile(profile)
         }
       } catch (e) {
         console.error('Failed to load profile:', e)
@@ -65,7 +66,7 @@ export default function ProfileSetup({ onProfileSet }: Props) {
       setCurrentProfile(profile)
 
       // Store locally for immediate access
-      localStorage.setItem('mypace_profile', JSON.stringify(profile))
+      setLocalProfile(profile)
 
       onProfileSet?.()
     } catch (e) {
@@ -102,18 +103,5 @@ export default function ProfileSetup({ onProfileSet }: Props) {
   )
 }
 
-export function getLocalProfile(): Profile | null {
-  if (typeof window === 'undefined') return null
-  const stored = localStorage.getItem('mypace_profile')
-  if (!stored) return null
-  try {
-    return JSON.parse(stored)
-  } catch {
-    return null
-  }
-}
-
-export function hasLocalProfile(): boolean {
-  const profile = getLocalProfile()
-  return !!(profile?.name || profile?.display_name)
-}
+// Re-export for backwards compatibility
+export { getLocalProfile, hasLocalProfile } from '../lib/utils'
