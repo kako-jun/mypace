@@ -15,7 +15,7 @@ export default function ThreadReplies({
   expanded,
   onToggle,
   getDisplayName,
-  getAvatarUrl
+  getAvatarUrl,
 }: ThreadRepliesProps) {
   if (replies.length === 0) return null
 
@@ -32,11 +32,7 @@ export default function ThreadReplies({
             const themeProps = getThemeCardProps(themeColors)
 
             return (
-              <div
-                key={reply.id}
-                class={`reply-card ${themeProps.className}`}
-                style={themeProps.style}
-              >
+              <div key={reply.id} class={`reply-card ${themeProps.className}`} style={themeProps.style}>
                 <header class="reply-header">
                   {getAvatarUrl(reply.pubkey) ? (
                     <img src={getAvatarUrl(reply.pubkey)!} alt="" class="reply-avatar" />

@@ -25,7 +25,7 @@ export function navigateToReply(eventId: string): void {
 export function buildTagUrl(tags: string[], mode: FilterMode): string {
   if (tags.length === 0) return '/'
   const separator = mode === 'and' ? '+' : ','
-  return `/tag/${tags.map(t => encodeURIComponent(t)).join(separator)}`
+  return `/tag/${tags.map((t) => encodeURIComponent(t)).join(separator)}`
 }
 
 export function navigateToTagFilter(tags: string[], mode: FilterMode): void {

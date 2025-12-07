@@ -13,7 +13,7 @@ export function getStoredThemeColors(): ThemeColors | null {
 
 // Extract theme colors from event tags
 export function getEventThemeColors(event: Event): ThemeColors | null {
-  const themeTag = event.tags.find(tag => tag[0] === THEME_TAG)
+  const themeTag = event.tags.find((tag) => tag[0] === THEME_TAG)
   if (themeTag && themeTag.length >= 5) {
     return {
       topLeft: themeTag[1],
@@ -30,7 +30,7 @@ function getLuminance(hex: string): number {
   const r = parseInt(hex.slice(1, 3), 16) / 255
   const g = parseInt(hex.slice(3, 5), 16) / 255
   const b = parseInt(hex.slice(5, 7), 16) / 255
-  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+  const toLinear = (c: number) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4))
   return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)
 }
 
@@ -65,8 +65,8 @@ export function getThemeCardProps(colors: ThemeColors | null): {
         radial-gradient(ellipse at bottom left, ${colors.bottomLeft}cc 0%, transparent 50%),
         radial-gradient(ellipse at bottom right, ${colors.bottomRight}cc 0%, transparent 50%),
         linear-gradient(135deg, ${colors.topLeft} 0%, ${colors.bottomRight} 100%)
-      `.trim()
+      `.trim(),
     },
-    className: `themed-card ${textClass}`
+    className: `themed-card ${textClass}`,
   }
 }

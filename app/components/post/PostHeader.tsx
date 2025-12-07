@@ -9,23 +9,17 @@ interface PostHeaderProps {
 }
 
 export default function PostHeader({
-  pubkey,
+  pubkey: _pubkey,
   createdAt,
   displayName,
   avatarUrl,
-  avatarClass = 'post-avatar'
+  avatarClass = 'post-avatar',
 }: PostHeaderProps) {
-  const placeholderClass = avatarClass === 'reply-avatar'
-    ? 'reply-avatar-placeholder'
-    : 'post-avatar-placeholder'
+  const placeholderClass = avatarClass === 'reply-avatar' ? 'reply-avatar-placeholder' : 'post-avatar-placeholder'
 
   return (
     <header class="post-header">
-      {avatarUrl ? (
-        <img src={avatarUrl} alt="" class={avatarClass} />
-      ) : (
-        <div class={placeholderClass} />
-      )}
+      {avatarUrl ? <img src={avatarUrl} alt="" class={avatarClass} /> : <div class={placeholderClass} />}
       <div class="post-author-info">
         <span class="author-name">{displayName}</span>
         <time class="timestamp">{formatTimestamp(createdAt)}</time>

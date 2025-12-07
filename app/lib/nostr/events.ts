@@ -3,7 +3,7 @@ import { hasNip07, getOrCreateSecretKey, getPublicKeyFromSecret } from './keys'
 import { MYPACE_TAG, THEME_TAG } from './constants'
 import { getStoredThemeColors } from './theme'
 import { unixNow } from '../utils'
-import type { Profile, ThemeColors } from '../../types'
+import type { Profile } from '../../types'
 
 export { MYPACE_TAG, APP_TITLE } from './constants'
 export { getEventThemeColors, getThemeCardProps, isDarkColor, getStoredThemeColors } from './theme'
@@ -36,7 +36,7 @@ export async function createTextNote(content: string, preserveTags?: string[][])
   }
 
   if (hasNip07() && window.nostr) {
-    return await window.nostr.signEvent(template) as Event
+    return (await window.nostr.signEvent(template)) as Event
   }
 
   return finalizeEvent(template, getOrCreateSecretKey())
@@ -51,7 +51,7 @@ export async function createProfileEvent(profile: Profile): Promise<Event> {
   }
 
   if (hasNip07() && window.nostr) {
-    return await window.nostr.signEvent(template) as Event
+    return (await window.nostr.signEvent(template)) as Event
   }
 
   return finalizeEvent(template, getOrCreateSecretKey())
@@ -61,12 +61,12 @@ export async function createDeleteEvent(eventIds: string[]): Promise<Event> {
   const template: EventTemplate = {
     kind: 5,
     created_at: unixNow(),
-    tags: eventIds.map(id => ['e', id]),
+    tags: eventIds.map((id) => ['e', id]),
     content: '',
   }
 
   if (hasNip07() && window.nostr) {
-    return await window.nostr.signEvent(template) as Event
+    return (await window.nostr.signEvent(template)) as Event
   }
 
   return finalizeEvent(template, getOrCreateSecretKey())
@@ -84,7 +84,7 @@ export async function createNip98AuthEvent(url: string, method: string): Promise
   }
 
   if (hasNip07() && window.nostr) {
-    return await window.nostr.signEvent(template) as Event
+    return (await window.nostr.signEvent(template)) as Event
   }
 
   return finalizeEvent(template, getOrCreateSecretKey())
@@ -102,7 +102,7 @@ export async function createReactionEvent(targetEvent: Event, content: string = 
   }
 
   if (hasNip07() && window.nostr) {
-    return await window.nostr.signEvent(template) as Event
+    return (await window.nostr.signEvent(template)) as Event
   }
 
   return finalizeEvent(template, getOrCreateSecretKey())
@@ -120,7 +120,7 @@ export async function createRepostEvent(targetEvent: Event): Promise<Event> {
   }
 
   if (hasNip07() && window.nostr) {
-    return await window.nostr.signEvent(template) as Event
+    return (await window.nostr.signEvent(template)) as Event
   }
 
   return finalizeEvent(template, getOrCreateSecretKey())
@@ -157,7 +157,7 @@ export async function createReplyEvent(content: string, replyTo: Event, rootEven
   }
 
   if (hasNip07() && window.nostr) {
-    return await window.nostr.signEvent(template) as Event
+    return (await window.nostr.signEvent(template)) as Event
   }
 
   return finalizeEvent(template, getOrCreateSecretKey())

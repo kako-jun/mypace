@@ -3,10 +3,7 @@ const IMAGE_EXTENSIONS_PATTERN = '(jpg|jpeg|png|gif|webp|svg)'
 export const IMAGE_EXTENSIONS = new RegExp(`\\.${IMAGE_EXTENSIONS_PATTERN}(\\?[^\\s]*)?$`, 'i')
 
 // Match image URLs in content
-const IMAGE_URL_REGEX = new RegExp(
-  `https?://[^\\s<>"]+\\.${IMAGE_EXTENSIONS_PATTERN}(\\?[^\\s<>"]*)?`,
-  'gi'
-)
+const IMAGE_URL_REGEX = new RegExp(`https?://[^\\s<>"]+\\.${IMAGE_EXTENSIONS_PATTERN}(\\?[^\\s<>"]*)?`, 'gi')
 
 // Extract image URLs from content
 export function getImageUrls(content: string): string[] {

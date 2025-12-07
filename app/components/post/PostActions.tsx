@@ -36,12 +36,11 @@ export default function PostActions({
           disabled={likingId === eventId || reactions?.myReaction}
           aria-label={reactions?.myReaction ? 'Liked' : 'Like this post'}
         >
-          {reactions?.myReaction ? '★' : '☆'}{reactions?.count ? ` ${reactions.count}` : ''}
+          {reactions?.myReaction ? '★' : '☆'}
+          {reactions?.count ? ` ${reactions.count}` : ''}
         </button>
       )}
-      {isMyPost && reactions?.count && reactions.count > 0 && (
-        <span class="like-count">★ {reactions.count}</span>
-      )}
+      {isMyPost && reactions?.count && reactions.count > 0 && <span class="like-count">★ {reactions.count}</span>}
 
       <button class="reply-button" onClick={onReply} aria-label="Reply to this post">
         💬{replies?.count ? ` ${replies.count}` : ''}
@@ -56,11 +55,7 @@ export default function PostActions({
         🔁{reposts?.count ? ` ${reposts.count}` : ''}
       </button>
 
-      <button
-        class={`share-button ${copied ? 'copied' : ''}`}
-        onClick={onShare}
-        aria-label="Share this post"
-      >
+      <button class={`share-button ${copied ? 'copied' : ''}`} onClick={onShare} aria-label="Share this post">
         {copied ? '✓' : '↗'}
       </button>
     </>

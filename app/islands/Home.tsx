@@ -111,7 +111,9 @@ export default function Home({ initialFilterTags, initialFilterMode }: HomeProps
         </div>
         {showPreview && (
           <div class="long-mode-preview">
-            {content.trim() ? renderContent(content) : (
+            {content.trim() ? (
+              renderContent(content)
+            ) : (
               <p class="preview-placeholder">プレビューがここに表示されます</p>
             )}
           </div>
@@ -137,7 +139,12 @@ export default function Home({ initialFilterTags, initialFilterMode }: HomeProps
         onReplyComplete={handleReplyComplete}
       />
       <div class="container">
-        <Timeline onEditStart={handleEditStart} onReplyStart={handleReplyStart} initialFilterTags={initialFilterTags} initialFilterMode={initialFilterMode} />
+        <Timeline
+          onEditStart={handleEditStart}
+          onReplyStart={handleReplyStart}
+          initialFilterTags={initialFilterTags}
+          initialFilterMode={initialFilterMode}
+        />
       </div>
     </>
   )

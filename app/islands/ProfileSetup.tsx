@@ -3,7 +3,7 @@ import { getCurrentPubkey, createProfileEvent } from '../lib/nostr/events'
 import type { Profile } from '../types'
 import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
 import { Button, Input } from '../components/ui'
-import { getLocalProfile, setLocalProfile, hasLocalProfile, getErrorMessage, parseProfile } from '../lib/utils'
+import { getLocalProfile, setLocalProfile, getErrorMessage, parseProfile } from '../lib/utils'
 
 interface Props {
   onProfileSet?: () => void
@@ -87,16 +87,9 @@ export default function ProfileSetup({ onProfileSet }: Props) {
 
   return (
     <div class="profile-setup">
-      {!hasName && (
-        <p class="profile-notice">Set your name to start posting</p>
-      )}
+      {!hasName && <p class="profile-notice">Set your name to start posting</p>}
       <div class="profile-form">
-        <Input
-          placeholder="Your name"
-          value={name}
-          onChange={setName}
-          maxLength={50}
-        />
+        <Input placeholder="Your name" value={name} onChange={setName} maxLength={50} />
         <Button onClick={handleSave} disabled={saving || !name.trim()}>
           {saving ? 'Saving...' : hasName ? 'Update' : 'Set Name'}
         </Button>

@@ -56,7 +56,13 @@ export default function TimelinePostCard({
 
   const handleCardClick = (e: MouseEvent) => {
     const target = e.target as HTMLElement
-    if (target.closest('button') || target.closest('a') || target.closest('.post-footer') || target.closest('.thread-section')) return
+    if (
+      target.closest('button') ||
+      target.closest('a') ||
+      target.closest('.post-footer') ||
+      target.closest('.thread-section')
+    )
+      return
     cachePost(event)
     const profile = profiles[event.pubkey]
     if (profile) cacheProfile(event.pubkey, profile)
@@ -84,9 +90,15 @@ export default function TimelinePostCard({
       />
 
       <div class="post-content">
-        {event.content.length > LIMITS.PREVIEW_TRUNCATE_LENGTH || event.content.split('\n').length > LIMITS.PREVIEW_LINE_THRESHOLD ? (
-          <>{renderContent(event.content.slice(0, LIMITS.PREVIEW_TRUNCATE_LENGTH) + '...')}<span class="read-more-text">続きを読む</span></>
-        ) : renderContent(event.content)}
+        {event.content.length > LIMITS.PREVIEW_TRUNCATE_LENGTH ||
+        event.content.split('\n').length > LIMITS.PREVIEW_LINE_THRESHOLD ? (
+          <>
+            {renderContent(event.content.slice(0, LIMITS.PREVIEW_TRUNCATE_LENGTH) + '...')}
+            <span class="read-more-text">続きを読む</span>
+          </>
+        ) : (
+          renderContent(event.content)
+        )}
       </div>
 
       <div class="post-footer">

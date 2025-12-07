@@ -10,21 +10,12 @@ interface ReplyCardProps {
   onClick?: () => void
 }
 
-export default function ReplyCard({
-  reply,
-  displayName,
-  avatarUrl,
-  onClick
-}: ReplyCardProps) {
+export default function ReplyCard({ reply, displayName, avatarUrl, onClick }: ReplyCardProps) {
   const themeColors = getEventThemeColors(reply)
   const themeProps = getThemeCardProps(themeColors)
 
   return (
-    <article
-      class={`post-card reply-card ${themeProps.className}`}
-      style={themeProps.style}
-      onClick={onClick}
-    >
+    <article class={`post-card reply-card ${themeProps.className}`} style={themeProps.style} onClick={onClick}>
       <PostHeader
         pubkey={reply.pubkey}
         createdAt={reply.created_at}

@@ -14,6 +14,6 @@ export function useDeleteConfirm(): UseDeleteConfirmResult {
     confirmId,
     showConfirm: (id: string) => setConfirmId(id),
     hideConfirm: () => setConfirmId(null),
-    isConfirming: (id: string) => confirmId === id
+    isConfirming: (id: string) => confirmId === id,
   }
 }

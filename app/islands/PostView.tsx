@@ -1,7 +1,33 @@
 import { useState, useEffect } from 'hono/jsx'
-import { fetchEventById, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts, publishEvent } from '../lib/nostr/relay'
-import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent, getEventThemeColors, getThemeCardProps } from '../lib/nostr/events'
-import { getDisplayName, getAvatarUrl, getCachedPost, getCachedProfile, navigateToHome, navigateToTag, navigateToEdit, navigateToReply, navigateToPost, parseProfile, getErrorMessage } from '../lib/utils'
+import {
+  fetchEventById,
+  fetchUserProfile,
+  fetchReactions,
+  fetchReplies,
+  fetchReposts,
+  publishEvent,
+} from '../lib/nostr/relay'
+import {
+  getCurrentPubkey,
+  createDeleteEvent,
+  createReactionEvent,
+  createRepostEvent,
+  getEventThemeColors,
+  getThemeCardProps,
+} from '../lib/nostr/events'
+import {
+  getDisplayName,
+  getAvatarUrl,
+  getCachedPost,
+  getCachedProfile,
+  navigateToHome,
+  navigateToTag,
+  navigateToEdit,
+  navigateToReply,
+  navigateToPost,
+  parseProfile,
+  getErrorMessage,
+} from '../lib/utils'
 import { isValidReaction, TIMEOUTS } from '../lib/constants'
 import { getETagValue, filterRepliesByRoot } from '../lib/nostr/tags'
 import { renderContent, setHashtagClickHandler } from '../lib/content-parser'
@@ -52,7 +78,7 @@ export default function PostView({ eventId }: PostViewProps) {
         if (cachedProfileData) {
           setProfile(cachedProfileData)
         } else {
-          fetchUserProfile(eventData.pubkey).then(profileEvent => {
+          fetchUserProfile(eventData.pubkey).then((profileEvent) => {
             if (profileEvent) setProfile(parseProfile(profileEvent.content))
           })
         }
@@ -79,15 +105,15 @@ export default function PostView({ eventId }: PostViewProps) {
       const [reactionEvents, replyEvents, repostEvents] = await Promise.all([
         fetchReactions([eventId]),
         fetchReplies([eventId]),
-        fetchReposts([eventId])
+        fetchReposts([eventId]),
       ])
 
-      const eventReactions = reactionEvents.filter(r => {
+      const eventReactions = reactionEvents.filter((r) => {
         return getETagValue(r.tags) === eventId && isValidReaction(r.content)
       })
       setReactions({
         count: eventReactions.length,
-        myReaction: eventReactions.some(r => r.pubkey === pubkey)
+        myReaction: eventReactions.some((r) => r.pubkey === pubkey),
       })
 
       const eventReplies = filterRepliesByRoot(replyEvents, eventId)
@@ -95,12 +121,12 @@ export default function PostView({ eventId }: PostViewProps) {
 
       setReposts({
         count: repostEvents.length,
-        myRepost: repostEvents.some(r => r.pubkey === pubkey)
+        myRepost: repostEvents.some((r) => r.pubkey === pubkey),
       })
 
       // Load reply profiles
       const profiles: { [pubkey: string]: Profile | null } = {}
-      for (const pk of [...new Set(eventReplies.map(r => r.pubkey))]) {
+      for (const pk of [...new Set(eventReplies.map((r) => r.pubkey))]) {
         try {
           const pEvent = await fetchUserProfile(pk)
           if (pEvent) profiles[pk] = parseProfile(pEvent.content)
@@ -127,7 +153,7 @@ export default function PostView({ eventId }: PostViewProps) {
     setLikingId(event.id)
     try {
       await publishEvent(await createReactionEvent(event, '+'))
-      setReactions(prev => ({ count: prev.count + 1, myReaction: true }))
+      setReactions((prev) => ({ count: prev.count + 1, myReaction: true }))
     } finally {
       setLikingId(null)
     }
@@ -138,7 +164,7 @@ export default function PostView({ eventId }: PostViewProps) {
     setRepostingId(event.id)
     try {
       await publishEvent(await createRepostEvent(event))
-      setReposts(prev => ({ count: prev.count + 1, myRepost: true }))
+      setReposts((prev) => ({ count: prev.count + 1, myRepost: true }))
     } finally {
       setRepostingId(null)
     }
@@ -175,7 +201,9 @@ export default function PostView({ eventId }: PostViewProps) {
 
   return (
     <div class="post-view">
-      <button class="back-button" onClick={handleBack}>← Back</button>
+      <button class="back-button" onClick={handleBack}>
+        ← Back
+      </button>
 
       <article class={`post-card post-card-large ${themeProps.className}`} style={themeProps.style}>
         <PostHeader
@@ -185,9 +213,7 @@ export default function PostView({ eventId }: PostViewProps) {
           avatarUrl={getProfileAvatarUrl()}
         />
 
-        <div class="post-content post-content-full">
-          {renderContent(event.content)}
-        </div>
+        <div class="post-content post-content-full">{renderContent(event.content)}</div>
 
         {deletedId === event.id && <p class="success">Deleted!</p>}
 

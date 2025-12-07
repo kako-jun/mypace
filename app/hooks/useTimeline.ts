@@ -1,8 +1,22 @@
 import { useState, useEffect, useCallback } from 'hono/jsx'
-import { fetchEvents, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts, fetchRepostEvents, publishEvent } from '../lib/nostr/relay'
+import {
+  fetchEvents,
+  fetchUserProfile,
+  fetchReactions,
+  fetchReplies,
+  fetchReposts,
+  fetchRepostEvents,
+  publishEvent,
+} from '../lib/nostr/relay'
 import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent } from '../lib/nostr/events'
 import { getETagValue, filterRepliesByRoot, hasMypaceTag } from '../lib/nostr/tags'
-import { getDisplayNameFromCache, getAvatarUrlFromCache, parseProfile, parseEventJson, getErrorMessage } from '../lib/utils'
+import {
+  getDisplayNameFromCache,
+  getAvatarUrlFromCache,
+  parseProfile,
+  parseEventJson,
+  getErrorMessage,
+} from '../lib/utils'
 import { isValidReaction, TIMEOUTS, CUSTOM_EVENTS, LIMITS, API_ENDPOINTS } from '../lib/constants'
 import type { Event } from 'nostr-tools'
 import type { ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../types'
@@ -41,7 +55,7 @@ export function useTimeline(): UseTimelineResult {
   const [repostingId, setRepostingId] = useState<string | null>(null)
 
   const loadProfiles = async (events: Event[], currentProfiles: ProfileCache) => {
-    const pubkeys = [...new Set(events.map(e => e.pubkey))]
+    const pubkeys = [...new Set(events.map((e) => e.pubkey))]
     const newProfiles: ProfileCache = { ...currentProfiles }
     for (const pubkey of pubkeys) {
       if (newProfiles[pubkey] !== undefined) continue
@@ -57,17 +71,17 @@ export function useTimeline(): UseTimelineResult {
   }
 
   const loadReactions = async (events: Event[], myPubkey: string) => {
-    const eventIds = events.map(e => e.id)
+    const eventIds = events.map((e) => e.id)
     try {
       const reactionEvents = await fetchReactions(eventIds)
       const reactionMap: { [eventId: string]: ReactionData } = {}
       for (const eventId of eventIds) {
-        const eventReactions = reactionEvents.filter(r => {
+        const eventReactions = reactionEvents.filter((r) => {
           return getETagValue(r.tags) === eventId && isValidReaction(r.content)
         })
         reactionMap[eventId] = {
           count: eventReactions.length,
-          myReaction: eventReactions.some(r => r.pubkey === myPubkey)
+          myReaction: eventReactions.some((r) => r.pubkey === myPubkey),
         }
       }
       setReactions(reactionMap)
@@ -75,7 +89,7 @@ export function useTimeline(): UseTimelineResult {
   }
 
   const loadRepliesData = async (events: Event[], currentProfiles: ProfileCache) => {
-    const eventIds = events.map(e => e.id)
+    const eventIds = events.map((e) => e.id)
     try {
       const replyEvents = await fetchReplies(eventIds)
       const replyMap: { [eventId: string]: ReplyData } = {}
@@ -85,11 +99,11 @@ export function useTimeline(): UseTimelineResult {
       }
       setReplies(replyMap)
 
-      for (const pk of [...new Set(replyEvents.map(r => r.pubkey))]) {
+      for (const pk of [...new Set(replyEvents.map((r) => r.pubkey))]) {
         if (currentProfiles[pk] === undefined) {
           try {
             const pe = await fetchUserProfile(pk)
-            if (pe) setProfiles(prev => ({ ...prev, [pk]: parseProfile(pe.content) }))
+            if (pe) setProfiles((prev) => ({ ...prev, [pk]: parseProfile(pe.content) }))
           } catch {}
         }
       }
@@ -97,15 +111,15 @@ export function useTimeline(): UseTimelineResult {
   }
 
   const loadRepostsData = async (events: Event[], myPubkey: string) => {
-    const eventIds = events.map(e => e.id)
+    const eventIds = events.map((e) => e.id)
     try {
       const repostEvents = await fetchReposts(eventIds)
       const repostMap: { [eventId: string]: RepostData } = {}
       for (const eventId of eventIds) {
-        const eventReposts = repostEvents.filter(r => getETagValue(r.tags) === eventId)
+        const eventReposts = repostEvents.filter((r) => getETagValue(r.tags) === eventId)
         repostMap[eventId] = {
           count: eventReposts.length,
-          myRepost: eventReposts.some(r => r.pubkey === myPubkey)
+          myRepost: eventReposts.some((r) => r.pubkey === myPubkey),
         }
       }
       setReposts(repostMap)
@@ -122,13 +136,13 @@ export function useTimeline(): UseTimelineResult {
       let notes: Event[] = []
       const res = await fetch(`${API_ENDPOINTS.TIMELINE}?limit=${LIMITS.TIMELINE_FETCH_LIMIT}`)
       if (res.ok) {
-        const data = await res.json() as { events: Event[] }
+        const data = (await res.json()) as { events: Event[] }
         notes = data.events
       } else {
         notes = await fetchEvents({ kinds: [1] }, LIMITS.TIMELINE_FETCH_LIMIT)
       }
 
-      const initialItems: TimelineItem[] = notes.map(note => ({ event: note }))
+      const initialItems: TimelineItem[] = notes.map((note) => ({ event: note }))
       initialItems.sort((a, b) => b.event.created_at - a.event.created_at)
       setTimelineItems(initialItems)
       setEvents(notes)
@@ -142,41 +156,47 @@ export function useTimeline(): UseTimelineResult {
       ])
 
       // Load repost events in background (non-blocking)
-      fetchRepostEvents(LIMITS.TIMELINE_FETCH_LIMIT).then(async repostEvents => {
-        const items: TimelineItem[] = [...initialItems]
-        const allOriginalEvents: Event[] = [...notes]
+      fetchRepostEvents(LIMITS.TIMELINE_FETCH_LIMIT)
+        .then(async (repostEvents) => {
+          const items: TimelineItem[] = [...initialItems]
+          const allOriginalEvents: Event[] = [...notes]
 
-        for (const repost of repostEvents) {
-          try {
-            if (!repost.content || repost.content.trim() === '') continue
-            const originalEvent = parseEventJson<Event>(repost.content)
-            if (!originalEvent) continue
-            if (hasMypaceTag(originalEvent)) {
-              items.push({
-                event: originalEvent,
-                repostedBy: { pubkey: repost.pubkey, timestamp: repost.created_at }
-              })
-              if (!allOriginalEvents.some(e => e.id === originalEvent.id)) {
-                allOriginalEvents.push(originalEvent)
+          for (const repost of repostEvents) {
+            try {
+              if (!repost.content || repost.content.trim() === '') continue
+              const originalEvent = parseEventJson<Event>(repost.content)
+              if (!originalEvent) continue
+              if (hasMypaceTag(originalEvent)) {
+                items.push({
+                  event: originalEvent,
+                  repostedBy: { pubkey: repost.pubkey, timestamp: repost.created_at },
+                })
+                if (!allOriginalEvents.some((e) => e.id === originalEvent.id)) {
+                  allOriginalEvents.push(originalEvent)
+                }
               }
-            }
-          } catch {}
-        }
-
-        items.sort((a, b) => (b.repostedBy?.timestamp || b.event.created_at) - (a.repostedBy?.timestamp || a.event.created_at))
-        setTimelineItems(items)
-        setEvents(allOriginalEvents)
-
-        for (const pk of [...new Set(items.filter(i => i.repostedBy).map(i => i.repostedBy!.pubkey))]) {
-          if (profiles[pk] === undefined) {
-            fetchUserProfile(pk).then(pe => {
-              if (pe) setProfiles(prev => ({ ...prev, [pk]: parseProfile(pe.content) }))
-            }).catch(() => {})
+            } catch {}
           }
-        }
-      }).catch(() => {
-        // Silently ignore repost loading errors - main timeline is already loaded
-      })
+
+          items.sort(
+            (a, b) => (b.repostedBy?.timestamp || b.event.created_at) - (a.repostedBy?.timestamp || a.event.created_at)
+          )
+          setTimelineItems(items)
+          setEvents(allOriginalEvents)
+
+          for (const pk of [...new Set(items.filter((i) => i.repostedBy).map((i) => i.repostedBy!.pubkey))]) {
+            if (profiles[pk] === undefined) {
+              fetchUserProfile(pk)
+                .then((pe) => {
+                  if (pe) setProfiles((prev) => ({ ...prev, [pk]: parseProfile(pe.content) }))
+                })
+                .catch(() => {})
+            }
+          }
+        })
+        .catch(() => {
+          // Silently ignore repost loading errors - main timeline is already loaded
+        })
     } catch (err) {
       setError(getErrorMessage(err, 'Failed to load timeline'))
       setLoading(false)
@@ -188,9 +208,9 @@ export function useTimeline(): UseTimelineResult {
     setLikingId(event.id)
     try {
       await publishEvent(await createReactionEvent(event, '+'))
-      setReactions(prev => ({
+      setReactions((prev) => ({
         ...prev,
-        [event.id]: { count: (prev[event.id]?.count || 0) + 1, myReaction: true }
+        [event.id]: { count: (prev[event.id]?.count || 0) + 1, myReaction: true },
       }))
     } finally {
       setLikingId(null)
@@ -202,9 +222,9 @@ export function useTimeline(): UseTimelineResult {
     setRepostingId(event.id)
     try {
       await publishEvent(await createRepostEvent(event))
-      setReposts(prev => ({
+      setReposts((prev) => ({
         ...prev,
-        [event.id]: { count: (prev[event.id]?.count || 0) + 1, myRepost: true }
+        [event.id]: { count: (prev[event.id]?.count || 0) + 1, myRepost: true },
       }))
     } finally {
       setRepostingId(null)
@@ -218,10 +238,7 @@ export function useTimeline(): UseTimelineResult {
     } catch {}
   }
 
-  const getDisplayName = useCallback(
-    (pubkey: string): string => getDisplayNameFromCache(pubkey, profiles),
-    [profiles]
-  )
+  const getDisplayName = useCallback((pubkey: string): string => getDisplayNameFromCache(pubkey, profiles), [profiles])
   const getAvatarUrl = useCallback(
     (pubkey: string): string | null => getAvatarUrlFromCache(pubkey, profiles),
     [profiles]

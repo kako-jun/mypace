@@ -17,7 +17,7 @@ export default function FilterBar({
   onRemoveTag,
   onToggleMode,
   onClearAll,
-  onShare
+  onShare,
 }: FilterBarProps) {
   if (filterTags.length === 0) return null
 
@@ -36,11 +36,15 @@ export default function FilterBar({
           )}
           <span class="filter-tag">
             #{tag}
-            <button class="filter-tag-remove" onClick={() => onRemoveTag(tag)} aria-label={`Remove tag ${tag}`}>×</button>
+            <button class="filter-tag-remove" onClick={() => onRemoveTag(tag)} aria-label={`Remove tag ${tag}`}>
+              ×
+            </button>
           </span>
         </>
       ))}
-      <button class="filter-clear-all" onClick={onClearAll} aria-label="Clear all filters">Clear all</button>
+      <button class="filter-clear-all" onClick={onClearAll} aria-label="Clear all filters">
+        Clear all
+      </button>
       <button
         class={`filter-share ${filterCopied ? 'copied' : ''}`}
         onClick={onShare}

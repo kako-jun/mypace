@@ -104,13 +104,7 @@ export function renderContent(content: string) {
     }
   }
 
-  return (
-    <div
-      class="markdown-content"
-      onClick={handleClick}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  )
+  return <div class="markdown-content" onClick={handleClick} dangerouslySetInnerHTML={{ __html: html }} />
 }
 
 // Simple text render (for previews, etc.)

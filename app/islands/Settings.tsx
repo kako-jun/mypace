@@ -22,13 +22,7 @@ import {
   DEFAULT_COLORS,
 } from '../lib/utils'
 import { STORAGE_KEYS } from '../lib/constants'
-import {
-  ProfileSection,
-  ThemeSection,
-  EditorSection,
-  KeysSection,
-  ShareSection
-} from '../components/settings'
+import { ProfileSection, ThemeSection, EditorSection, KeysSection, ShareSection } from '../components/settings'
 import type { ThemeColors } from '../types'
 
 export default function Settings() {
@@ -157,16 +151,9 @@ export default function Settings() {
           onColorChange={handleColorChange}
         />
 
-        <EditorSection
-          vimMode={vimMode}
-          onVimModeChange={handleVimModeChange}
-        />
+        <EditorSection vimMode={vimMode} onVimModeChange={handleVimModeChange} />
 
-        <KeysSection
-          nsec={nsec}
-          npub={npub}
-          usingNip07={usingNip07}
-        />
+        <KeysSection nsec={nsec} npub={npub} usingNip07={usingNip07} />
 
         <ShareSection />
       </div>

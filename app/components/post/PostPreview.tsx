@@ -15,9 +15,7 @@ export default function PostPreview({ content, themeColors }: PostPreviewProps) 
   return (
     <div class={`post-preview ${themeProps.className}`} style={themeProps.style}>
       <div class="preview-label">Preview</div>
-      <div class="preview-content">
-        {renderContent(content)}
-      </div>
+      <div class="preview-content">{renderContent(content)}</div>
     </div>
   )
 }

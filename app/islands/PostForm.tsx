@@ -35,7 +35,7 @@ export default function PostForm({
   onEditComplete,
   replyingTo,
   onReplyCancel,
-  onReplyComplete
+  onReplyComplete,
 }: PostFormProps) {
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState('')
@@ -113,7 +113,12 @@ export default function PostForm({
       const end = textarea.selectionEnd || content.length
       const before = content.slice(0, start)
       const after = content.slice(end)
-      const newContent = before + (before && !before.endsWith('\n') ? '\n' : '') + url + (after && !after.startsWith('\n') ? '\n' : '') + after
+      const newContent =
+        before +
+        (before && !before.endsWith('\n') ? '\n' : '') +
+        url +
+        (after && !after.startsWith('\n') ? '\n' : '') +
+        after
       onContentChange(newContent)
     } else {
       onContentChange(content + (content ? '\n' : '') + url)
@@ -158,7 +163,7 @@ export default function PostForm({
       <textarea
         ref={textareaRef}
         class="post-input"
-        placeholder={longMode ? "マイペースに書こう\n\n長文モードでじっくり書けます" : "マイペースに書こう"}
+        placeholder={longMode ? 'マイペースに書こう\n\n長文モードでじっくり書けます' : 'マイペースに書こう'}
         value={content}
         onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
         rows={longMode ? 15 : 3}
@@ -167,16 +172,11 @@ export default function PostForm({
 
       <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
 
-      {!longMode && showPreview && (
-        <PostPreview content={content} themeColors={themeColors} />
-      )}
+      {!longMode && showPreview && <PostPreview content={content} themeColors={themeColors} />}
 
       <div class="post-actions">
         <div class="post-actions-left">
-          <ImageDropZone
-            onImageUploaded={insertImageUrl}
-            onError={setError}
-          />
+          <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
           <button
             type="button"
             class={`preview-toggle ${showPreview ? 'active' : ''}`}
@@ -184,7 +184,9 @@ export default function PostForm({
           >
             {showPreview ? 'Hide' : 'Preview'}
           </button>
-          <span class="char-count">{content.length}/{LIMITS.MAX_POST_LENGTH}</span>
+          <span class="char-count">
+            {content.length}/{LIMITS.MAX_POST_LENGTH}
+          </span>
         </div>
         <div class="post-actions-right">
           {isSpecialMode && (
@@ -194,8 +196,16 @@ export default function PostForm({
           )}
           <button type="submit" class="post-button" disabled={posting || !content.trim()}>
             {posting
-              ? (editingEvent ? 'Saving...' : replyingTo ? 'Replying...' : 'Posting...')
-              : (editingEvent ? 'Save' : replyingTo ? 'Reply' : 'Post')}
+              ? editingEvent
+                ? 'Saving...'
+                : replyingTo
+                  ? 'Replying...'
+                  : 'Posting...'
+              : editingEvent
+                ? 'Save'
+                : replyingTo
+                  ? 'Reply'
+                  : 'Post'}
           </button>
         </div>
       </div>
