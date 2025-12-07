@@ -32,7 +32,7 @@
 
 /* Fonts */
 --font-sans: 'M PLUS Rounded 1c', -apple-system, BlinkMacSystemFont, sans-serif;
---font-mono: 'SF Mono', 'Menlo', 'Consolas', 'DejaVu Sans Mono', 'Noto Sans Mono CJK JP', 'Source Han Code JP', 'BIZ UDGothic', 'Osaka-Mono', ui-monospace, monospace;
+--font-mono: 'BIZ UDGothic', 'SF Mono', 'Menlo', 'Consolas', ui-monospace, monospace;
 }
 
 /* Outlined text base style */
@@ -343,11 +343,12 @@ body.long-mode-active .container {
   height: 64px;
   width: auto;
   filter: var(--logo-filter, none);
-  transition: filter 0.2s ease;
+  transition: filter 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
 }
 
 .logo:hover .logo-img {
   filter: var(--logo-hover-filter, none);
+  transform: scale(1.05);
 }
 
 /* Loading & Empty */
@@ -678,13 +679,7 @@ body.custom-theme .logo-pace {
   text-shadow: 0 1px 3px var(--logo-shadow, rgba(0, 0, 0, 0.4));
 }
 
-body.custom-theme .settings-toggle {
-  color: var(--settings-color, #aaa);
-}
-
-body.custom-theme .settings-toggle:hover {
-  color: var(--settings-hover-color, #666);
-}
+/* Settings uses .text-outlined style (always white) */
 
 /* Themed post cards (user gradient) */
 .post-card.themed-card {

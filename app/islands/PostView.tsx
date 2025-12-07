@@ -59,22 +59,6 @@ export default function PostView({ eventId }: PostViewProps) {
   const { copied, share } = useShare()
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
 
-  // Set mounted to true on client (skip SSR rendering)
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    applyThemeColors(getUIThemeColors())
-    setHashtagClickHandler((tag) => navigateToTag(tag))
-    loadPost()
-  }, [eventId])
-
-  // Skip rendering on server (SSR phase)
-  if (!mounted) {
-    return null
-  }
-
   const loadPost = async () => {
     setError('')
     try {
@@ -154,6 +138,22 @@ export default function PostView({ eventId }: PostViewProps) {
     }
   }
 
+  // Set mounted to true on client (skip SSR rendering)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    applyThemeColors(getUIThemeColors())
+    setHashtagClickHandler((tag) => navigateToTag(tag))
+    loadPost()
+  }, [eventId])
+
+  // Skip rendering on server (SSR phase)
+  if (!mounted) {
+    return null
+  }
+
   const getProfileDisplayName = (pubkey: string, profileData?: Profile | null): string => {
     return getDisplayName(profileData || profile, pubkey)
   }
@@ -215,8 +215,8 @@ export default function PostView({ eventId }: PostViewProps) {
 
   return (
     <div class="post-view">
-      <button class="back-button" onClick={handleBack}>
-        ← Back
+      <button class="back-button text-outlined" onClick={handleBack}>
+        Back
       </button>
 
       <article class={`post-card post-card-large ${themeProps.className}`} style={themeProps.style}>
