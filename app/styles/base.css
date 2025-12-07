@@ -208,9 +208,10 @@ to {
 
 /* Layout */
 .container {
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 6rem 1rem 2rem;
+  max-width: none;
+  width: fit-content;
+  margin: 0 0 0 auto;
+  padding: 3rem 1rem 2rem;
 }
 
 body.long-mode-active .container {
@@ -526,12 +527,6 @@ body.custom-theme .container {
   background: transparent;
 }
 
-@media (min-width: 1200px) {
-  .container {
-    max-width: none;
-    margin: 0 0 0 auto;
-  }
-}
 
 body.custom-theme .post-card {
   background: rgba(255, 255, 255, 0.95);
@@ -600,7 +595,6 @@ body.custom-theme .settings-toggle:hover {
 
 /* Themed post cards (user gradient) */
 .post-card.themed-card {
-  border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
 

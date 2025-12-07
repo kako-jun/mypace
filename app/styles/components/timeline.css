@@ -1,54 +1,39 @@
 /* Timeline component styles */
 
-/* Timeline */
+/* Timeline - flex layout from right to left */
 .timeline {
   display: flex;
-  flex-direction: column;
-  gap: 7rem;
+  flex-wrap: wrap;
+  flex-direction: row-reverse;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: 1.5rem;
   padding-bottom: 150px;
-  margin-top: -3rem;
 }
 
-/* 2-column layout for wide screens */
-@media (min-width: 1200px) {
-  .timeline {
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row-reverse;
-    gap: 0;
-  }
-
-  .timeline .post-card {
-    width: 560px;
-    flex-shrink: 0;
-  }
-
-  /* Even items (2nd, 4th, 6th...) - left column, offset down */
-  .timeline .post-card:nth-child(even) {
-    margin-top: 5rem;
-  }
+.timeline .post-card {
+  width: 560px;
+  flex-shrink: 0;
 }
 
-/* Post Card - liquid style, large padding with blurred edges */
+/* Post Card - crisp black border, no rounded corners */
 .post-card {
-  padding: 9rem;
-  margin: -7.5rem;
-  position: relative;
+  padding: 1.5rem;
   animation: card-appear 0.3s ease backwards;
   view-transition-name: post-card;
   background: #fff;
-  mask-image:
-    linear-gradient(to right, transparent, #000 7.5rem, #000 calc(100% - 7.5rem), transparent),
-    linear-gradient(to bottom, transparent, #000 7.5rem, #000 calc(100% - 7.5rem), transparent);
-  -webkit-mask-image:
-    linear-gradient(to right, transparent, #000 7.5rem, #000 calc(100% - 7.5rem), transparent),
-    linear-gradient(to bottom, transparent, #000 7.5rem, #000 calc(100% - 7.5rem), transparent);
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
+  border: 2px solid #333;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.post-card:hover {
+  opacity: 1;
 }
 
 [data-theme="dark"] .post-card {
   background: var(--surface-primary);
+  border-color: #666;
 }
 
 /* Staggered animation */
