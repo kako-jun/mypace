@@ -4,9 +4,9 @@
 .timeline {
   display: flex;
   flex-direction: column;
-  gap: 5rem;
+  gap: 7rem;
   padding-bottom: 150px;
-  margin-top: -4rem;
+  margin-top: -3rem;
 }
 
 /* Post Card - liquid style, large padding with blurred edges */
@@ -23,14 +23,15 @@
 }
 
 body.custom-theme .post-card {
-  padding: 6rem;
-  margin: -4.75rem;
+  padding: 9rem;
+  margin: -7.5rem;
+  position: relative;
   mask-image:
-    linear-gradient(to right, transparent, #000 4.75rem, #000 calc(100% - 4.75rem), transparent),
-    linear-gradient(to bottom, transparent, #000 4.75rem, #000 calc(100% - 4.75rem), transparent);
+    linear-gradient(to right, transparent, #000 7.5rem, #000 calc(100% - 7.5rem), transparent),
+    linear-gradient(to bottom, transparent, #000 7.5rem, #000 calc(100% - 7.5rem), transparent);
   -webkit-mask-image:
-    linear-gradient(to right, transparent, #000 4.75rem, #000 calc(100% - 4.75rem), transparent),
-    linear-gradient(to bottom, transparent, #000 4.75rem, #000 calc(100% - 4.75rem), transparent);
+    linear-gradient(to right, transparent, #000 7.5rem, #000 calc(100% - 7.5rem), transparent),
+    linear-gradient(to bottom, transparent, #000 7.5rem, #000 calc(100% - 7.5rem), transparent);
   mask-composite: intersect;
   -webkit-mask-composite: source-in;
 }

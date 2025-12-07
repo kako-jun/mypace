@@ -57,8 +57,8 @@ export function getThemeCardProps(colors: ThemeColors | null): {
   const avgDark = darkCount >= 2
   const textClass = avgDark ? 'light-text' : 'dark-text'
 
-  // 4.75rem is the blur edge padding
-  const edge = '4.75rem'
+  // 7.5rem is the blur edge padding
+  const edge = '7.5rem'
 
   return {
     style: {
