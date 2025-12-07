@@ -1,27 +1,14 @@
 import { useState, useEffect } from 'hono/jsx'
 import { fetchEventById, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts, publishEvent } from '../lib/nostr/relay'
-import { formatTimestamp, getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent, getEventThemeColors, getThemeCardProps, type Profile } from '../lib/nostr/events'
+import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent, getEventThemeColors, getThemeCardProps, type Profile } from '../lib/nostr/events'
 import { exportNpub } from '../lib/nostr/keys'
 import { renderContent, setHashtagClickHandler } from '../lib/content-parser'
+import { PostHeader, ReplyCard } from '../components/post'
+import { useShare } from '../hooks'
 import type { Event } from 'nostr-tools'
 
 interface PostViewProps {
   eventId: string
-}
-
-interface ReactionData {
-  count: number
-  myReaction: boolean
-}
-
-interface ReplyData {
-  count: number
-  replies: Event[]
-}
-
-interface RepostData {
-  count: number
-  myRepost: boolean
 }
 
 export default function PostView({ eventId }: PostViewProps) {
@@ -30,22 +17,20 @@ export default function PostView({ eventId }: PostViewProps) {
   const [myPubkey, setMyPubkey] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [reactions, setReactions] = useState<ReactionData>({ count: 0, myReaction: false })
-  const [replies, setReplies] = useState<ReplyData>({ count: 0, replies: [] })
-  const [reposts, setReposts] = useState<RepostData>({ count: 0, myRepost: false })
+  const [reactions, setReactions] = useState({ count: 0, myReaction: false })
+  const [replies, setReplies] = useState<{ count: number; replies: Event[] }>({ count: 0, replies: [] })
+  const [reposts, setReposts] = useState({ count: 0, myRepost: false })
   const [replyProfiles, setReplyProfiles] = useState<{ [pubkey: string]: Profile | null }>({})
   const [likingId, setLikingId] = useState<string | null>(null)
   const [repostingId, setRepostingId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+  const { copied, share } = useShare()
 
   useEffect(() => {
-    // Set up hashtag click handler to navigate to tag page
     setHashtagClickHandler((tag) => {
       window.location.href = `/tag/${encodeURIComponent(tag)}`
     })
-
     loadPost()
   }, [eventId])
 
@@ -55,26 +40,23 @@ export default function PostView({ eventId }: PostViewProps) {
       const pubkey = await getCurrentPubkey()
       setMyPubkey(pubkey)
 
-      // Try to load from cache first (from timeline navigation)
+      // Try cache first
       let eventData: Event | null = null
       const cachedEvent = sessionStorage.getItem(`post_${eventId}`)
-      const cachedProfile = sessionStorage.getItem(`profile_${eventId}_profile`)
 
       if (cachedEvent) {
         eventData = JSON.parse(cachedEvent)
         setEvent(eventData)
-        setLoading(false) // Show content immediately
+        setLoading(false)
         sessionStorage.removeItem(`post_${eventId}`)
 
-        // Load cached profile
-        const profileKey = `profile_${eventData.pubkey}`
+        const profileKey = `profile_${eventData!.pubkey}`
         const cachedProfileData = sessionStorage.getItem(profileKey)
         if (cachedProfileData) {
           setProfile(JSON.parse(cachedProfileData))
           sessionStorage.removeItem(profileKey)
         } else {
-          // Load profile in background
-          fetchUserProfile(eventData.pubkey).then(profileEvent => {
+          fetchUserProfile(eventData!.pubkey).then(profileEvent => {
             if (profileEvent) setProfile(JSON.parse(profileEvent.content))
           })
         }
@@ -89,7 +71,6 @@ export default function PostView({ eventId }: PostViewProps) {
         setEvent(eventData)
         setLoading(false)
 
-        // Load profile
         const profileEvent = await fetchUserProfile(eventData.pubkey)
         if (profileEvent) {
           setProfile(JSON.parse(profileEvent.content))
@@ -98,8 +79,13 @@ export default function PostView({ eventId }: PostViewProps) {
 
       if (!eventData) return
 
-      // Load reactions
-      const reactionEvents = await fetchReactions([eventId])
+      // Load reactions, replies, reposts
+      const [reactionEvents, replyEvents, repostEvents] = await Promise.all([
+        fetchReactions([eventId]),
+        fetchReplies([eventId]),
+        fetchReposts([eventId])
+      ])
+
       const eventReactions = reactionEvents.filter(r => {
         const eTag = r.tags.find(t => t[0] === 'e')
         return eTag && eTag[1] === eventId && (r.content === '+' || r.content === '')
@@ -109,37 +95,26 @@ export default function PostView({ eventId }: PostViewProps) {
         myReaction: eventReactions.some(r => r.pubkey === pubkey)
       })
 
-      // Load replies
-      const replyEvents = await fetchReplies([eventId])
       const eventReplies = replyEvents.filter(r => {
         const rootTag = r.tags.find(t => t[0] === 'e' && t[3] === 'root')
         return rootTag && rootTag[1] === eventId
       })
-      setReplies({
-        count: eventReplies.length,
-        replies: eventReplies
-      })
+      setReplies({ count: eventReplies.length, replies: eventReplies })
 
-      // Load reply profiles
-      const replyPubkeys = [...new Set(eventReplies.map(r => r.pubkey))]
-      const profiles: { [pubkey: string]: Profile | null } = {}
-      for (const pk of replyPubkeys) {
-        try {
-          const pEvent = await fetchUserProfile(pk)
-          if (pEvent) {
-            profiles[pk] = JSON.parse(pEvent.content)
-          }
-        } catch {}
-      }
-      setReplyProfiles(profiles)
-
-      // Load reposts
-      const repostEvents = await fetchReposts([eventId])
       setReposts({
         count: repostEvents.length,
         myRepost: repostEvents.some(r => r.pubkey === pubkey)
       })
 
+      // Load reply profiles
+      const profiles: { [pubkey: string]: Profile | null } = {}
+      for (const pk of [...new Set(eventReplies.map(r => r.pubkey))]) {
+        try {
+          const pEvent = await fetchUserProfile(pk)
+          if (pEvent) profiles[pk] = JSON.parse(pEvent.content)
+        } catch {}
+      }
+      setReplyProfiles(profiles)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load post')
     } finally {
@@ -155,24 +130,15 @@ export default function PostView({ eventId }: PostViewProps) {
   }
 
   const getAvatarUrl = (pubkey: string, profileData?: Profile | null): string | null => {
-    const p = profileData || profile
-    return p?.picture || null
+    return (profileData || profile)?.picture || null
   }
 
   const handleLike = async () => {
-    if (!event || likingId || !myPubkey || reactions.myReaction) return
-    if (event.pubkey === myPubkey) return // Can't like own post
-
+    if (!event || likingId || !myPubkey || reactions.myReaction || event.pubkey === myPubkey) return
     setLikingId(event.id)
     try {
-      const reactionEvent = await createReactionEvent(event, '+')
-      await publishEvent(reactionEvent)
-      setReactions(prev => ({
-        count: prev.count + 1,
-        myReaction: true
-      }))
-    } catch (err) {
-      console.error('Failed to like:', err)
+      await publishEvent(await createReactionEvent(event, '+'))
+      setReactions(prev => ({ count: prev.count + 1, myReaction: true }))
     } finally {
       setLikingId(null)
     }
@@ -180,96 +146,37 @@ export default function PostView({ eventId }: PostViewProps) {
 
   const handleRepost = async () => {
     if (!event || repostingId || !myPubkey || reposts.myRepost) return
-
     setRepostingId(event.id)
     try {
-      const repostEvent = await createRepostEvent(event)
-      await publishEvent(repostEvent)
-      setReposts(prev => ({
-        count: prev.count + 1,
-        myRepost: true
-      }))
-    } catch (err) {
-      console.error('Failed to repost:', err)
+      await publishEvent(await createRepostEvent(event))
+      setReposts(prev => ({ count: prev.count + 1, myRepost: true }))
     } finally {
       setRepostingId(null)
     }
   }
 
-  const handleShare = async () => {
-    const url = window.location.href
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ url })
-      } catch (e) {
-        if ((e as Error).name !== 'AbortError') {
-          await navigator.clipboard.writeText(url)
-          setCopied(true)
-          setTimeout(() => setCopied(false), 2000)
-        }
-      }
-    } else {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
-  }
-
-  const handleDeleteClick = () => {
-    if (event) setConfirmDeleteId(event.id)
-  }
-
-  const handleDeleteCancel = () => {
-    setConfirmDeleteId(null)
-  }
+  const handleShare = () => share(window.location.href)
+  const handleDeleteClick = () => event && setConfirmDeleteId(event.id)
+  const handleDeleteCancel = () => setConfirmDeleteId(null)
 
   const handleDeleteConfirm = async () => {
     if (!event) return
     try {
-      const deleteEvent = await createDeleteEvent([event.id])
-      await publishEvent(deleteEvent)
+      await publishEvent(await createDeleteEvent([event.id]))
       setConfirmDeleteId(null)
       setDeletedId(event.id)
-      setTimeout(() => {
-        window.location.href = '/'
-      }, 1500)
-    } catch (err) {
-      console.error('Failed to delete:', err)
-    }
+      setTimeout(() => { window.location.href = '/' }, 1500)
+    } catch {}
   }
 
-  const handleEdit = () => {
-    // Navigate to home with edit mode - we'll use a query param
-    window.location.href = `/?edit=${eventId}`
-  }
+  const handleBack = () => { window.location.href = '/' }
 
-  const handleReply = () => {
-    // Navigate to home with reply mode
-    window.location.href = `/?reply=${eventId}`
-  }
+  if (loading) return <div class="loading">Loading...</div>
 
-  const handleBack = () => {
-    window.location.href = '/'
-  }
-
-  if (loading) {
-    return <div class="loading">Loading...</div>
-  }
-
-  if (error) {
+  if (error || !event) {
     return (
       <div class="error-box">
-        <p>{error}</p>
-        <button onClick={handleBack}>Back to Timeline</button>
-      </div>
-    )
-  }
-
-  if (!event) {
-    return (
-      <div class="error-box">
-        <p>Post not found</p>
+        <p>{error || 'Post not found'}</p>
         <button onClick={handleBack}>Back to Timeline</button>
       </div>
     )
@@ -278,38 +185,26 @@ export default function PostView({ eventId }: PostViewProps) {
   const isMyPost = myPubkey === event.pubkey
   const themeColors = getEventThemeColors(event)
   const themeProps = getThemeCardProps(themeColors)
-  const isConfirmingDelete = confirmDeleteId === event.id
-  const justDeleted = deletedId === event.id
 
   return (
     <div class="post-view">
-      <button class="back-button" onClick={handleBack}>
-        ← Back
-      </button>
+      <button class="back-button" onClick={handleBack}>← Back</button>
 
-      <article
-        class={`post-card post-card-large ${themeProps.className}`}
-        style={themeProps.style}
-      >
-        <header class="post-header">
-          {getAvatarUrl(event.pubkey) ? (
-            <img src={getAvatarUrl(event.pubkey)!} alt="" class="post-avatar" />
-          ) : (
-            <div class="post-avatar-placeholder" />
-          )}
-          <div class="post-author-info">
-            <span class="author-name">{getDisplayName(event.pubkey)}</span>
-            <time class="timestamp">{formatTimestamp(event.created_at)}</time>
-          </div>
-        </header>
+      <article class={`post-card post-card-large ${themeProps.className}`} style={themeProps.style}>
+        <PostHeader
+          pubkey={event.pubkey}
+          createdAt={event.created_at}
+          displayName={getDisplayName(event.pubkey)}
+          avatarUrl={getAvatarUrl(event.pubkey)}
+        />
 
         <div class="post-content post-content-full">
           {renderContent(event.content)}
         </div>
 
-        {justDeleted && <p class="success">Deleted!</p>}
+        {deletedId === event.id && <p class="success">Deleted!</p>}
 
-        {!justDeleted && (
+        {deletedId !== event.id && (
           <div class="post-footer">
             {!isMyPost && (
               <button
@@ -324,7 +219,7 @@ export default function PostView({ eventId }: PostViewProps) {
             {isMyPost && reactions.count > 0 && (
               <span class="like-count">★ {reactions.count}</span>
             )}
-            <button class="reply-button" onClick={handleReply}>
+            <button class="reply-button" onClick={() => { window.location.href = `/?reply=${eventId}` }}>
               💬{replies.count > 0 && ` ${replies.count}`}
             </button>
             <button
@@ -334,63 +229,40 @@ export default function PostView({ eventId }: PostViewProps) {
             >
               🔁{reposts.count > 0 && ` ${reposts.count}`}
             </button>
-            <button
-              class={`share-button ${copied ? 'copied' : ''}`}
-              onClick={handleShare}
-              title="Share"
-            >
+            <button class={`share-button ${copied ? 'copied' : ''}`} onClick={handleShare} title="Share">
               {copied ? '✓' : '↗'}
             </button>
             {isMyPost && (
-              <>
-                {isConfirmingDelete ? (
-                  <div class="delete-confirm">
-                    <span class="delete-confirm-text">Delete?</span>
-                    <button class="delete-confirm-yes" onClick={handleDeleteConfirm}>Yes</button>
-                    <button class="delete-confirm-no" onClick={handleDeleteCancel}>No</button>
-                  </div>
-                ) : (
-                  <>
-                    <button class="edit-button" onClick={handleEdit}>Edit</button>
-                    <button class="delete-button" onClick={handleDeleteClick}>Delete</button>
-                  </>
-                )}
-              </>
+              confirmDeleteId === event.id ? (
+                <div class="delete-confirm">
+                  <span class="delete-confirm-text">Delete?</span>
+                  <button class="delete-confirm-yes" onClick={handleDeleteConfirm}>Yes</button>
+                  <button class="delete-confirm-no" onClick={handleDeleteCancel}>No</button>
+                </div>
+              ) : (
+                <>
+                  <button class="edit-button" onClick={() => { window.location.href = `/?edit=${eventId}` }}>Edit</button>
+                  <button class="delete-button" onClick={handleDeleteClick}>Delete</button>
+                </>
+              )
             )}
           </div>
         )}
       </article>
 
-      {/* Replies section */}
       {replies.count > 0 && (
         <div class="replies-section">
           <h3 class="replies-heading">{replies.count} Replies</h3>
           <div class="replies-list">
-            {replies.replies.map((reply) => {
-              const replyThemeColors = getEventThemeColors(reply)
-              const replyThemeProps = getThemeCardProps(replyThemeColors)
-              return (
-                <article
-                  key={reply.id}
-                  class={`post-card reply-card ${replyThemeProps.className}`}
-                  style={replyThemeProps.style}
-                  onClick={() => window.location.href = `/post/${reply.id}`}
-                >
-                  <header class="post-header">
-                    {getAvatarUrl(reply.pubkey, replyProfiles[reply.pubkey]) ? (
-                      <img src={getAvatarUrl(reply.pubkey, replyProfiles[reply.pubkey])!} alt="" class="post-avatar" />
-                    ) : (
-                      <div class="post-avatar-placeholder" />
-                    )}
-                    <div class="post-author-info">
-                      <span class="author-name">{getDisplayName(reply.pubkey, replyProfiles[reply.pubkey])}</span>
-                      <time class="timestamp">{formatTimestamp(reply.created_at)}</time>
-                    </div>
-                  </header>
-                  <div class="post-content">{renderContent(reply.content)}</div>
-                </article>
-              )
-            })}
+            {replies.replies.map((reply) => (
+              <ReplyCard
+                key={reply.id}
+                reply={reply}
+                displayName={getDisplayName(reply.pubkey, replyProfiles[reply.pubkey])}
+                avatarUrl={getAvatarUrl(reply.pubkey, replyProfiles[reply.pubkey])}
+                onClick={() => { window.location.href = `/post/${reply.id}` }}
+              />
+            ))}
           </div>
         </div>
       )}
