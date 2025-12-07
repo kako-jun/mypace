@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'hono/jsx'
+import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { FilterBar, TimelinePostCard } from '../components/timeline'
 import { useTimeline, useShare } from '../hooks'
@@ -54,7 +55,7 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
     const result = await shareOrCopy(url)
     if (result.copied) {
       setCopiedId(eventId)
-      setTimeout(() => setCopiedId(null), 2000)
+      setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
     }
   }
 
@@ -63,7 +64,7 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
   const handleDeleteConfirm = async (event: Event) => {
     await handleDelete(event)
     setDeletedId(event.id)
-    setTimeout(() => setDeletedId(null), 1500)
+    setTimeout(() => setDeletedId(null), TIMEOUTS.DELETE_CONFIRMATION)
   }
 
   useEffect(() => {

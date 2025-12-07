@@ -1,4 +1,5 @@
 import { createNip98AuthEvent } from './nostr/events'
+import { getErrorMessage } from './utils'
 
 const UPLOAD_URL = 'https://nostr.build/api/v2/upload/files'
 
@@ -48,6 +49,6 @@ export async function uploadImage(file: File): Promise<UploadResult> {
       throw new Error(data.message || 'Invalid response from server')
     }
   } catch (e) {
-    return { success: false, error: e instanceof Error ? e.message : 'Failed to upload' }
+    return { success: false, error: getErrorMessage(e, 'Failed to upload') }
   }
 }

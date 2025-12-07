@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import type { Event } from 'nostr-tools'
 import { fetchEvents, fetchReactions, fetchReplies, fetchReposts, fetchRepostEvents, publishEvent } from '../lib/nostr/relay'
-import { getCurrentPubkey, createDeleteEvent, createTextNote, createReactionEvent, createRepostEvent, MYPACE_TAG } from '../lib/nostr/events'
+import { getCurrentPubkey, createDeleteEvent, createTextNote, createReactionEvent, createRepostEvent } from '../lib/nostr/events'
+import { getETagValue, filterRepliesByRoot, hasMypaceTag } from '../lib/nostr/tags'
 import { isValidReaction, TIMEOUTS } from '../lib/constants'
 import type { TimelineItem, ReactionCache, ReplyCache, RepostCache, FilterMode } from '../types'
 
@@ -95,8 +96,7 @@ export const useTimelineStore = create<TimelineState>((set, get) => ({
         const reactionMap: ReactionCache = {}
         for (const eventId of eventIds) {
           const eventReactions = reactionEvents.filter(r => {
-            const eTag = r.tags.find(t => t[0] === 'e')
-            return eTag && eTag[1] === eventId && isValidReaction(r.content)
+            return getETagValue(r.tags) === eventId && isValidReaction(r.content)
           })
           reactionMap[eventId] = {
             count: eventReactions.length,
@@ -109,10 +109,7 @@ export const useTimelineStore = create<TimelineState>((set, get) => ({
       fetchReplies(eventIds).then(replyEvents => {
         const replyMap: ReplyCache = {}
         for (const eventId of eventIds) {
-          const eventReplies = replyEvents.filter(r => {
-            const rootTag = r.tags.find(t => t[0] === 'e' && t[3] === 'root')
-            return rootTag && rootTag[1] === eventId
-          })
+          const eventReplies = filterRepliesByRoot(replyEvents, eventId)
           replyMap[eventId] = {
             count: eventReplies.length,
             replies: eventReplies
@@ -124,10 +121,7 @@ export const useTimelineStore = create<TimelineState>((set, get) => ({
       fetchReposts(eventIds).then(repostEvents => {
         const repostMap: RepostCache = {}
         for (const eventId of eventIds) {
-          const eventReposts = repostEvents.filter(r => {
-            const eTag = r.tags.find(t => t[0] === 'e')
-            return eTag && eTag[1] === eventId
-          })
+          const eventReposts = repostEvents.filter(r => getETagValue(r.tags) === eventId)
           repostMap[eventId] = {
             count: eventReposts.length,
             myRepost: eventReposts.some(r => r.pubkey === pubkey)
@@ -145,10 +139,7 @@ export const useTimelineStore = create<TimelineState>((set, get) => ({
           try {
             if (!repost.content || repost.content.trim() === '') continue
             const originalEvent = JSON.parse(repost.content) as Event
-            const hasMypaceTag = originalEvent.tags?.some(
-              t => t[0] === 't' && t[1] === MYPACE_TAG
-            )
-            if (hasMypaceTag) {
+            if (hasMypaceTag(originalEvent)) {
               items.push({
                 event: originalEvent,
                 repostedBy: { pubkey: repost.pubkey, timestamp: repost.created_at }
@@ -233,7 +224,7 @@ export const useTimelineStore = create<TimelineState>((set, get) => ({
       const deleteEvent = await createDeleteEvent([event.id])
       await publishEvent(deleteEvent)
       set({ confirmDeleteId: null, editingId: null })
-      setTimeout(() => get().loadTimeline(), 1000)
+      setTimeout(() => get().loadTimeline(), TIMEOUTS.NEW_POST_RELOAD)
     } catch (err) {
       console.error('Failed to delete:', err)
     }
@@ -253,7 +244,7 @@ export const useTimelineStore = create<TimelineState>((set, get) => ({
       await publishEvent(newEvent)
 
       set({ editingId: null, editContent: '' })
-      setTimeout(() => get().loadTimeline(), 1000)
+      setTimeout(() => get().loadTimeline(), TIMEOUTS.NEW_POST_RELOAD)
     } catch (err) {
       console.error('Failed to edit:', err)
     }

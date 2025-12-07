@@ -2,7 +2,7 @@ import { useState } from 'hono/jsx'
 import { uploadImage } from '../../lib/upload'
 import { createProfileEvent, type Profile } from '../../lib/nostr/events'
 import { publishEvent } from '../../lib/nostr/relay'
-import { getLocalProfile, setLocalProfile } from '../../lib/utils'
+import { getLocalProfile, setLocalProfile, getErrorMessage } from '../../lib/utils'
 import { CUSTOM_EVENTS, TIMEOUTS } from '../../lib/constants'
 import { Button, Input } from '../ui'
 
@@ -50,7 +50,7 @@ export default function ProfileSection({
       setNameSaved(true)
       setTimeout(() => setNameSaved(false), TIMEOUTS.COPY_FEEDBACK)
     } catch (e) {
-      setNameError(e instanceof Error ? e.message : 'Failed to save')
+      setNameError(getErrorMessage(e, 'Failed to save'))
     } finally {
       setSavingName(false)
     }
@@ -82,7 +82,7 @@ export default function ProfileSection({
         setLocalProfile(profile)
         window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
       } catch (e) {
-        setNameError(e instanceof Error ? e.message : 'Failed to save profile')
+        setNameError(getErrorMessage(e, 'Failed to save profile'))
       }
     } else {
       setNameError(result.error || 'Failed to upload')
@@ -108,7 +108,7 @@ export default function ProfileSection({
       setLocalProfile(profile)
       window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
     } catch (e) {
-      setNameError(e instanceof Error ? e.message : 'Failed to remove avatar')
+      setNameError(getErrorMessage(e, 'Failed to remove avatar'))
     }
   }
 
@@ -159,7 +159,7 @@ export default function ProfileSection({
         setLocalProfile(profile)
         window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
       } catch (e) {
-        setNameError(e instanceof Error ? e.message : 'Failed to save profile')
+        setNameError(getErrorMessage(e, 'Failed to save profile'))
       }
     } else {
       setNameError(result.error || 'Failed to upload')

@@ -3,6 +3,7 @@ export const TIMEOUTS = {
   COPY_FEEDBACK: 2000,
   DELETE_CONFIRMATION: 1500,
   NEW_POST_RELOAD: 1000,
+  POST_ACTION_RELOAD: 1500,
 } as const
 
 // Content limits
