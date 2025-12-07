@@ -2,7 +2,7 @@ import { useState } from 'hono/jsx'
 import { getEventThemeColors, getThemeCardProps, formatTimestamp } from '../../lib/nostr/events'
 import { renderContent } from '../../lib/content-parser'
 import { PostHeader } from '../post'
-import { cachePost, cacheProfile } from '../../lib/utils'
+import { cachePost, cacheProfile, navigateToPost } from '../../lib/utils'
 import { LIMITS } from '../../lib/constants'
 import type { Event } from 'nostr-tools'
 import type { ReactionData, ReplyData, RepostData, ProfileCache } from '../../types'
@@ -61,7 +61,7 @@ export default function TimelinePostCard({
     if (target.closest('button') || target.closest('a') || target.closest('.post-footer') || target.closest('.thread-section')) return
     cachePost(event)
     if (profiles[event.pubkey]) cacheProfile(event.pubkey, profiles[event.pubkey])
-    window.location.href = `/post/${event.id}`
+    navigateToPost(event.id)
   }
 
   const handleDeleteClick = () => setConfirmDeleteId(event.id)

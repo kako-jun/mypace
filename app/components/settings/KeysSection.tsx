@@ -9,7 +9,8 @@ import {
 } from '../../lib/nostr/keys'
 import { Button, Input } from '../ui'
 import { copyToClipboard, removeItem, removeLocalProfile } from '../../lib/utils'
-import { STORAGE_KEYS, TIMEOUTS } from '../../lib/constants'
+import { STORAGE_KEYS } from '../../lib/constants'
+import { useTemporaryFlag } from '../../hooks'
 
 interface KeysSectionProps {
   nsec: string
@@ -24,21 +25,19 @@ export default function KeysSection({
 }: KeysSectionProps) {
   const [showNsec, setShowNsec] = useState(false)
   const [importValue, setImportValue] = useState('')
-  const [copied, setCopied] = useState(false)
-  const [npubCopied, setNpubCopied] = useState(false)
+  const [copied, triggerCopied] = useTemporaryFlag()
+  const [npubCopied, triggerNpubCopied] = useTemporaryFlag()
   const [error, setError] = useState('')
 
   const handleCopy = async () => {
     if (await copyToClipboard(nsec)) {
-      setCopied(true)
-      setTimeout(() => setCopied(false), TIMEOUTS.COPY_FEEDBACK)
+      triggerCopied()
     }
   }
 
   const handleCopyNpub = async () => {
     if (await copyToClipboard(npub)) {
-      setNpubCopied(true)
-      setTimeout(() => setNpubCopied(false), TIMEOUTS.COPY_FEEDBACK)
+      triggerNpubCopied()
     }
   }
 

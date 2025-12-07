@@ -4,6 +4,7 @@ import { fetchEvents, fetchReactions, fetchReplies, fetchReposts, fetchRepostEve
 import { getCurrentPubkey, createDeleteEvent, createTextNote, createReactionEvent, createRepostEvent } from '../lib/nostr/events'
 import { getETagValue, filterRepliesByRoot, hasMypaceTag } from '../lib/nostr/tags'
 import { isValidReaction, TIMEOUTS } from '../lib/constants'
+import { parseEventJson, getErrorMessage } from '../lib/utils'
 import type { TimelineItem, ReactionCache, ReplyCache, RepostCache, FilterMode } from '../types'
 
 interface TimelineState {
@@ -138,8 +139,8 @@ export const useTimelineStore = create<TimelineState>((set, get) => ({
         for (const repost of repostEvents) {
           try {
             if (!repost.content || repost.content.trim() === '') continue
-            const originalEvent = JSON.parse(repost.content) as Event
-            if (hasMypaceTag(originalEvent)) {
+            const originalEvent = parseEventJson<Event>(repost.content)
+            if (originalEvent && hasMypaceTag(originalEvent)) {
               items.push({
                 event: originalEvent,
                 repostedBy: { pubkey: repost.pubkey, timestamp: repost.created_at }
@@ -160,7 +161,7 @@ export const useTimelineStore = create<TimelineState>((set, get) => ({
         set({ timelineItems: items, events: allOriginalEvents })
       })
     } catch (err) {
-      set({ error: err instanceof Error ? err.message : 'Failed to load timeline', loading: false })
+      set({ error: getErrorMessage(err, 'Failed to load timeline'), loading: false })
     }
   },
 

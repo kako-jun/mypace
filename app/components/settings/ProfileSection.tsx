@@ -3,8 +3,9 @@ import { uploadImage } from '../../lib/upload'
 import { createProfileEvent, type Profile } from '../../lib/nostr/events'
 import { publishEvent } from '../../lib/nostr/relay'
 import { getLocalProfile, setLocalProfile, getErrorMessage } from '../../lib/utils'
-import { CUSTOM_EVENTS, TIMEOUTS } from '../../lib/constants'
+import { CUSTOM_EVENTS } from '../../lib/constants'
 import { Button, Input } from '../ui'
+import { useTemporaryFlag } from '../../hooks'
 
 interface ProfileSectionProps {
   displayName: string
@@ -22,7 +23,7 @@ export default function ProfileSection({
   const [uploading, setUploading] = useState(false)
   const [savingName, setSavingName] = useState(false)
   const [nameError, setNameError] = useState('')
-  const [nameSaved, setNameSaved] = useState(false)
+  const [nameSaved, triggerNameSaved] = useTemporaryFlag()
   const [avatarDragging, setAvatarDragging] = useState(false)
 
   const handleSaveName = async () => {
@@ -47,8 +48,7 @@ export default function ProfileSection({
 
       setLocalProfile(profile)
       window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
-      setNameSaved(true)
-      setTimeout(() => setNameSaved(false), TIMEOUTS.COPY_FEEDBACK)
+      triggerNameSaved()
     } catch (e) {
       setNameError(getErrorMessage(e, 'Failed to save'))
     } finally {

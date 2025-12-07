@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'hono/jsx'
 import { fetchEventById, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts, publishEvent } from '../lib/nostr/relay'
 import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent, getEventThemeColors, getThemeCardProps } from '../lib/nostr/events'
-import { getDisplayName, getAvatarUrl, getCachedPost, getCachedProfile } from '../lib/utils'
+import { getDisplayName, getAvatarUrl, getCachedPost, getCachedProfile, navigateToHome, navigateToTag, navigateToEdit, navigateToReply, navigateToPost, parseProfile, getErrorMessage } from '../lib/utils'
 import { isValidReaction, TIMEOUTS } from '../lib/constants'
 import { getETagValue, filterRepliesByRoot } from '../lib/nostr/tags'
 import { renderContent, setHashtagClickHandler } from '../lib/content-parser'
@@ -31,9 +31,7 @@ export default function PostView({ eventId }: PostViewProps) {
   const { copied, share } = useShare()
 
   useEffect(() => {
-    setHashtagClickHandler((tag) => {
-      window.location.href = `/tag/${encodeURIComponent(tag)}`
-    })
+    setHashtagClickHandler((tag) => navigateToTag(tag))
     loadPost()
   }, [eventId])
 
@@ -55,7 +53,7 @@ export default function PostView({ eventId }: PostViewProps) {
           setProfile(cachedProfileData)
         } else {
           fetchUserProfile(eventData.pubkey).then(profileEvent => {
-            if (profileEvent) setProfile(JSON.parse(profileEvent.content))
+            if (profileEvent) setProfile(parseProfile(profileEvent.content))
           })
         }
       } else {
@@ -71,7 +69,7 @@ export default function PostView({ eventId }: PostViewProps) {
 
         const profileEvent = await fetchUserProfile(eventData.pubkey)
         if (profileEvent) {
-          setProfile(JSON.parse(profileEvent.content))
+          setProfile(parseProfile(profileEvent.content))
         }
       }
 
@@ -105,12 +103,12 @@ export default function PostView({ eventId }: PostViewProps) {
       for (const pk of [...new Set(eventReplies.map(r => r.pubkey))]) {
         try {
           const pEvent = await fetchUserProfile(pk)
-          if (pEvent) profiles[pk] = JSON.parse(pEvent.content)
+          if (pEvent) profiles[pk] = parseProfile(pEvent.content)
         } catch {}
       }
       setReplyProfiles(profiles)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load post')
+      setError(getErrorMessage(err, 'Failed to load post'))
     } finally {
       setLoading(false)
     }
@@ -156,11 +154,11 @@ export default function PostView({ eventId }: PostViewProps) {
       await publishEvent(await createDeleteEvent([event.id]))
       setConfirmDeleteId(null)
       setDeletedId(event.id)
-      setTimeout(() => { window.location.href = '/' }, TIMEOUTS.POST_ACTION_RELOAD)
+      setTimeout(() => navigateToHome(), TIMEOUTS.POST_ACTION_RELOAD)
     } catch {}
   }
 
-  const handleBack = () => { window.location.href = '/' }
+  const handleBack = () => navigateToHome()
 
   if (loading) return <div class="loading">Loading...</div>
 
@@ -210,7 +208,7 @@ export default function PostView({ eventId }: PostViewProps) {
             {isMyPost && reactions.count > 0 && (
               <span class="like-count">★ {reactions.count}</span>
             )}
-            <button class="reply-button" onClick={() => { window.location.href = `/?reply=${eventId}` }}>
+            <button class="reply-button" onClick={() => navigateToReply(eventId)}>
               💬{replies.count > 0 && ` ${replies.count}`}
             </button>
             <button
@@ -232,7 +230,7 @@ export default function PostView({ eventId }: PostViewProps) {
                 </div>
               ) : (
                 <>
-                  <button class="edit-button" onClick={() => { window.location.href = `/?edit=${eventId}` }}>Edit</button>
+                  <button class="edit-button" onClick={() => navigateToEdit(eventId)}>Edit</button>
                   <button class="delete-button" onClick={handleDeleteClick}>Delete</button>
                 </>
               )
@@ -251,7 +249,7 @@ export default function PostView({ eventId }: PostViewProps) {
                 reply={reply}
                 displayName={getProfileDisplayName(reply.pubkey, replyProfiles[reply.pubkey])}
                 avatarUrl={getProfileAvatarUrl(replyProfiles[reply.pubkey])}
-                onClick={() => { window.location.href = `/post/${reply.id}` }}
+                onClick={() => navigateToPost(reply.id)}
               />
             ))}
           </div>

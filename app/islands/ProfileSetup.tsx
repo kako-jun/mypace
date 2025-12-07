@@ -2,7 +2,7 @@ import { useState, useEffect } from 'hono/jsx'
 import { getCurrentPubkey, createProfileEvent, type Profile } from '../lib/nostr/events'
 import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
 import { Button, Input } from '../components/ui'
-import { getLocalProfile, setLocalProfile, hasLocalProfile, getErrorMessage } from '../lib/utils'
+import { getLocalProfile, setLocalProfile, hasLocalProfile, getErrorMessage, parseProfile } from '../lib/utils'
 
 interface Props {
   onProfileSet?: () => void
@@ -31,11 +31,13 @@ export default function ProfileSetup({ onProfileSet }: Props) {
         const pubkey = await getCurrentPubkey()
         const profileEvent = await fetchUserProfile(pubkey)
         if (profileEvent) {
-          const profile = JSON.parse(profileEvent.content) as Profile
-          setCurrentProfile(profile)
-          setName(profile.name || profile.display_name || '')
-          // Store locally for next time
-          setLocalProfile(profile)
+          const profile = parseProfile(profileEvent.content)
+          if (profile) {
+            setCurrentProfile(profile)
+            setName(profile.name || profile.display_name || '')
+            // Store locally for next time
+            setLocalProfile(profile)
+          }
         }
       } catch (e) {
         console.error('Failed to load profile:', e)

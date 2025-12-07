@@ -3,7 +3,7 @@ import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { FilterBar, TimelinePostCard } from '../components/timeline'
 import { useTimeline, useShare } from '../hooks'
-import { shareOrCopy } from '../lib/utils'
+import { shareOrCopy, navigateToHome, navigateToEdit, navigateToTag, navigateToAddTag, buildTagUrl } from '../lib/utils'
 import type { Event } from 'nostr-tools'
 
 interface TimelineProps {
@@ -44,7 +44,7 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
     if (onEditStart) {
       onEditStart(event)
     } else {
-      window.location.href = `/?edit=${event.id}`
+      navigateToEdit(event.id)
     }
   }
 
@@ -70,10 +70,9 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
   useEffect(() => {
     setHashtagClickHandler((tag) => {
       if (filterTags.length === 0) {
-        window.location.href = `/tag/${encodeURIComponent(tag)}`
+        navigateToTag(tag)
       } else if (!filterTags.includes(tag)) {
-        const sep = filterMode === 'and' ? '+' : ','
-        window.location.href = `/tag/${[...filterTags, tag].map(t => encodeURIComponent(t)).join(sep)}`
+        navigateToAddTag(filterTags, tag, filterMode)
       }
     })
   }, [filterTags, filterMode])
@@ -100,14 +99,14 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
         : filterTags.some(tag => contentHasTag(item.event.content, tag)))
     : items
 
-  const clearFilter = () => { window.location.href = '/' }
+  const clearFilter = () => navigateToHome()
   const removeTag = (tagToRemove: string) => {
     const newTags = filterTags.filter(t => t !== tagToRemove)
-    window.location.href = newTags.length === 0 ? '/' : `/tag/${newTags.map(t => encodeURIComponent(t)).join(filterMode === 'and' ? '+' : ',')}`
+    window.location.href = buildTagUrl(newTags, filterMode)
   }
   const toggleFilterMode = () => {
     const newMode = filterMode === 'and' ? 'or' : 'and'
-    window.location.href = `/tag/${filterTags.map(t => encodeURIComponent(t)).join(newMode === 'and' ? '+' : ',')}`
+    window.location.href = buildTagUrl(filterTags, newMode)
   }
 
   return (
