@@ -1,5 +1,6 @@
 import { createNip98AuthEvent } from './nostr/events'
 import { getErrorMessage } from './utils'
+import { LIMITS } from './constants'
 
 const UPLOAD_URL = 'https://nostr.build/api/v2/upload/files'
 
@@ -21,8 +22,8 @@ export async function uploadImage(file: File): Promise<UploadResult> {
     return { success: false, error: 'Please select an image file' }
   }
 
-  // Validate file size (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
+  // Validate file size
+  if (file.size > LIMITS.MAX_IMAGE_SIZE) {
     return { success: false, error: 'Image must be less than 5MB' }
   }
 

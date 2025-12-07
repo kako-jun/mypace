@@ -99,13 +99,14 @@ export default function TimelinePostCard({
             class={`like-button ${reactions?.myReaction ? 'liked' : ''}`}
             onClick={() => onLike(event)}
             disabled={likingId === event.id || reactions?.myReaction}
+            aria-label={reactions?.myReaction ? 'Liked' : 'Like this post'}
           >
             {reactions?.myReaction ? '★' : '☆'}{reactions?.count ? ` ${reactions.count}` : ''}
           </button>
         )}
         {isMyPost && reactions?.count && reactions.count > 0 && <span class="like-count">★ {reactions.count}</span>}
 
-        <button class="reply-button" onClick={() => onReply(event)}>
+        <button class="reply-button" onClick={() => onReply(event)} aria-label="Reply to this post">
           💬{replies?.count ? ` ${replies.count}` : ''}
         </button>
 
@@ -113,6 +114,7 @@ export default function TimelinePostCard({
           class={`repost-button ${reposts?.myRepost ? 'reposted' : ''}`}
           onClick={() => onRepost(event)}
           disabled={repostingId === event.id || reposts?.myRepost}
+          aria-label={reposts?.myRepost ? 'Reposted' : 'Repost this post'}
         >
           🔁{reposts?.count ? ` ${reposts.count}` : ''}
         </button>
@@ -120,22 +122,22 @@ export default function TimelinePostCard({
         <button
           class={`share-button ${copiedId === event.id ? 'copied' : ''}`}
           onClick={() => onShare(event.id)}
-          title="Share"
+          aria-label="Share this post"
         >
           {copiedId === event.id ? '✓' : '↗'}
         </button>
 
         {isMyPost && (
           confirmDeleteId === event.id ? (
-            <div class="delete-confirm">
+            <div class="delete-confirm" role="dialog" aria-label="Confirm delete">
               <span class="delete-confirm-text">Delete?</span>
-              <button class="delete-confirm-yes" onClick={handleDeleteConfirmClick}>Yes</button>
-              <button class="delete-confirm-no" onClick={handleDeleteCancel}>No</button>
+              <button class="delete-confirm-yes" onClick={handleDeleteConfirmClick} aria-label="Confirm delete">Yes</button>
+              <button class="delete-confirm-no" onClick={handleDeleteCancel} aria-label="Cancel delete">No</button>
             </div>
           ) : (
             <>
-              <button class="edit-button" onClick={() => onEdit(event)}>Edit</button>
-              <button class="delete-button" onClick={handleDeleteClick}>Delete</button>
+              <button class="edit-button" onClick={() => onEdit(event)} aria-label="Edit this post">Edit</button>
+              <button class="delete-button" onClick={handleDeleteClick} aria-label="Delete this post">Delete</button>
             </>
           )
         )}
@@ -143,7 +145,12 @@ export default function TimelinePostCard({
 
       {replies?.count && replies.count > 0 && (
         <div class="thread-section">
-          <button class="thread-toggle" onClick={() => setExpandedThread(!expandedThread)}>
+          <button
+            class="thread-toggle"
+            onClick={() => setExpandedThread(!expandedThread)}
+            aria-expanded={expandedThread}
+            aria-label={`${expandedThread ? 'Hide' : 'Show'} ${replies.count} replies`}
+          >
             {expandedThread ? '▼' : '▶'} {replies.count} replies
           </button>
           {expandedThread && (

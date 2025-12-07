@@ -26,7 +26,11 @@ export default function FilterBar({
       {filterTags.map((tag, index) => (
         <>
           {index > 0 && (
-            <button class="filter-mode-toggle" onClick={onToggleMode}>
+            <button
+              class="filter-mode-toggle"
+              onClick={onToggleMode}
+              aria-label={`Toggle filter mode, currently ${filterMode.toUpperCase()}`}
+            >
               {filterMode === 'and' ? 'AND' : 'OR'}
             </button>
           )}
@@ -36,7 +40,7 @@ export default function FilterBar({
           </span>
         </>
       ))}
-      <button class="filter-clear-all" onClick={onClearAll}>Clear all</button>
+      <button class="filter-clear-all" onClick={onClearAll} aria-label="Clear all filters">Clear all</button>
       <button
         class={`filter-share ${filterCopied ? 'copied' : ''}`}
         onClick={onShare}

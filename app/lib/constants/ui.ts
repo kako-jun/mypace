@@ -4,6 +4,7 @@ export const TIMEOUTS = {
   DELETE_CONFIRMATION: 1500,
   NEW_POST_RELOAD: 1000,
   POST_ACTION_RELOAD: 1500,
+  DRAFT_SAVE_DELAY: 500,
 } as const
 
 // Content limits
@@ -12,6 +13,7 @@ export const LIMITS = {
   PREVIEW_TRUNCATE_LENGTH: 420,
   PREVIEW_LINE_THRESHOLD: 42,
   TIMELINE_FETCH_LIMIT: 50,
+  MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5MB
 } as const
 
 // Custom window events
