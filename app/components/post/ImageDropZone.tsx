@@ -60,21 +60,25 @@ export default function ImageDropZone({ onImageUploaded, onError }: ImageDropZon
 
   return (
     <>
-      <div
+      <button
+        type="button"
         class={`image-drop-area ${dragging ? 'dragging' : ''}`}
         onClick={handleClick}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        aria-label="Upload image"
+        disabled={uploading}
       >
         {uploading ? '...' : dragging ? 'Drop' : '📷'}
-      </div>
+      </button>
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={handleFileChange}
         style={{ display: 'none' }}
+        aria-hidden="true"
       />
     </>
   )

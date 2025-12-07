@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'hono/jsx'
+import { useState, useEffect, useRef } from 'hono/jsx'
 import PostForm from './PostForm'
 import Timeline from './Timeline'
 import { renderContent } from '../lib/content-parser'
 import { getString, setString, removeItem } from '../lib/utils'
-import { STORAGE_KEYS, CUSTOM_EVENTS } from '../lib/constants'
+import { STORAGE_KEYS, CUSTOM_EVENTS, TIMEOUTS } from '../lib/constants'
 import type { Event } from 'nostr-tools'
 
 interface HomeProps {
@@ -18,13 +18,25 @@ export default function Home({ initialFilterTags, initialFilterMode }: HomeProps
   const [showPreview, setShowPreview] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [replyingTo, setReplyingTo] = useState<Event | null>(null)
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Auto-save draft to localStorage when content changes
+  // Auto-save draft to localStorage with debounce
   useEffect(() => {
-    if (content.trim()) {
-      setString(STORAGE_KEYS.DRAFT, content)
-    } else {
-      removeItem(STORAGE_KEYS.DRAFT)
+    if (draftTimerRef.current) {
+      clearTimeout(draftTimerRef.current)
+    }
+    draftTimerRef.current = setTimeout(() => {
+      if (content.trim()) {
+        setString(STORAGE_KEYS.DRAFT, content)
+      } else {
+        removeItem(STORAGE_KEYS.DRAFT)
+      }
+    }, TIMEOUTS.DRAFT_SAVE_DELAY)
+
+    return () => {
+      if (draftTimerRef.current) {
+        clearTimeout(draftTimerRef.current)
+      }
     }
   }, [content])
 

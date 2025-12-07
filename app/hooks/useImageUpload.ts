@@ -13,11 +13,6 @@ export function useImageUpload(): UseImageUploadResult {
   const [error, setError] = useState('')
 
   const uploadFile = async (file: File): Promise<string | null> => {
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file')
-      return null
-    }
-
     setUploading(true)
     setError('')
 
