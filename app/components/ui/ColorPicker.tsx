@@ -5,12 +5,7 @@ interface ColorPickerProps {
   disabled?: boolean
 }
 
-export default function ColorPicker({
-  value,
-  onChange,
-  label,
-  disabled = false,
-}: ColorPickerProps) {
+export default function ColorPicker({ value, onChange, label, disabled = false }: ColorPickerProps) {
   return (
     <label class="color-picker">
       <input

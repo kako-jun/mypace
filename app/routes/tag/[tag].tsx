@@ -18,18 +18,19 @@ export default createRoute((c) => {
   let filterMode: FilterMode = 'and'
 
   if (tagParam.includes('+')) {
-    tags = tagParam.split('+').map(t => decodeURIComponent(t))
+    tags = tagParam.split('+').map((t) => decodeURIComponent(t))
     filterMode = 'and'
   } else if (tagParam.includes(',')) {
-    tags = tagParam.split(',').map(t => decodeURIComponent(t))
+    tags = tagParam.split(',').map((t) => decodeURIComponent(t))
     filterMode = 'or'
   } else {
     tags = [decodeURIComponent(tagParam)]
   }
 
-  const title = tags.length === 1
-    ? `#${tags[0]} - ${APP_TITLE}`
-    : `${tags.map(t => '#' + t).join(filterMode === 'and' ? ' + ' : ' | ')} - ${APP_TITLE}`
+  const title =
+    tags.length === 1
+      ? `#${tags[0]} - ${APP_TITLE}`
+      : `${tags.map((t) => '#' + t).join(filterMode === 'and' ? ' + ' : ' | ')} - ${APP_TITLE}`
 
   return c.render(
     <main class="container">

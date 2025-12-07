@@ -6,20 +6,9 @@ interface Props {
   variant?: 'primary' | 'danger' | 'secondary'
 }
 
-export default function Button({
-  children,
-  onClick,
-  disabled = false,
-  type = 'button',
-  variant = 'primary',
-}: Props) {
+export default function Button({ children, onClick, disabled = false, type = 'button', variant = 'primary' }: Props) {
   return (
-    <button
-      type={type}
-      class={`btn btn-${variant}`}
-      onClick={onClick}
-      disabled={disabled}
-    >
+    <button type={type} class={`btn btn-${variant}`} onClick={onClick} disabled={disabled}>
       {children}
     </button>
   )

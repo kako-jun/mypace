@@ -38,7 +38,7 @@ export async function uploadImage(file: File): Promise<UploadResult> {
     const response = await fetch(UPLOAD_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Nostr ${authHeader}`,
+        Authorization: `Nostr ${authHeader}`,
       },
       body: formData,
     })
@@ -49,7 +49,7 @@ export async function uploadImage(file: File): Promise<UploadResult> {
       throw new Error('Upload failed')
     }
 
-    const data = await response.json() as NostrBuildResponse
+    const data = (await response.json()) as NostrBuildResponse
     if (data.status === 'success' && data.data?.[0]?.url) {
       return { success: true, url: data.data[0].url }
     } else {

@@ -4,11 +4,7 @@ import { unixNow } from '../utils'
 
 const CACHE_TTL = 60 * 5 // 5 minutes
 
-export async function getCachedEvents(
-  db: D1Database,
-  kind: number,
-  limit: number
-): Promise<Event[] | null> {
+export async function getCachedEvents(db: D1Database, kind: number, limit: number): Promise<Event[] | null> {
   const cutoff = unixNow() - CACHE_TTL
 
   const result = await db
@@ -53,16 +49,11 @@ export async function cacheEvents(db: D1Database, events: Event[]): Promise<void
   await db.batch(batch)
 }
 
-export async function getCachedProfile(
-  db: D1Database,
-  pubkey: string
-): Promise<Record<string, unknown> | null> {
+export async function getCachedProfile(db: D1Database, pubkey: string): Promise<Record<string, unknown> | null> {
   const cutoff = unixNow() - CACHE_TTL * 12 // 1 hour for profiles
 
   const result = await db
-    .prepare(
-      `SELECT raw_json FROM profiles WHERE pubkey = ? AND cached_at > ?`
-    )
+    .prepare(`SELECT raw_json FROM profiles WHERE pubkey = ? AND cached_at > ?`)
     .bind(pubkey, cutoff)
     .first()
 
@@ -70,11 +61,7 @@ export async function getCachedProfile(
   return JSON.parse(result.raw_json as string)
 }
 
-export async function cacheProfile(
-  db: D1Database,
-  pubkey: string,
-  profile: Record<string, unknown>
-): Promise<void> {
+export async function cacheProfile(db: D1Database, pubkey: string, profile: Record<string, unknown>): Promise<void> {
   const now = unixNow()
 
   await db

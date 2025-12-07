@@ -37,6 +37,6 @@ export function useDragDrop(onFileDrop: (file: File) => void | Promise<void>): U
 
   return {
     dragging,
-    handlers: { onDragOver, onDragLeave, onDrop }
+    handlers: { onDragOver, onDragLeave, onDrop },
   }
 }

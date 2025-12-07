@@ -19,7 +19,7 @@ export default function ProfileSection({
   displayName,
   pictureUrl,
   onDisplayNameChange,
-  onPictureUrlChange
+  onPictureUrlChange,
 }: ProfileSectionProps) {
   const [uploading, setUploading] = useState(false)
   const [savingName, setSavingName] = useState(false)
@@ -141,18 +141,11 @@ export default function ProfileSection({
               style={{ display: 'none' }}
             />
           </label>
-          {pictureUrl && (
-            <Button onClick={handleRemoveAvatar}>Remove</Button>
-          )}
+          {pictureUrl && <Button onClick={handleRemoveAvatar}>Remove</Button>}
         </div>
       </div>
       <div class="input-row">
-        <Input
-          placeholder="Your name"
-          value={displayName}
-          onChange={onDisplayNameChange}
-          maxLength={50}
-        />
+        <Input placeholder="Your name" value={displayName} onChange={onDisplayNameChange} maxLength={50} />
         <Button onClick={handleSaveName} disabled={savingName || !displayName.trim()}>
           {savingName ? 'Saving...' : 'Save'}
         </Button>

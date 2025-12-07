@@ -46,31 +46,34 @@ export default function LongModeEditor({
 
       if (destroyed || !editorRef.current) return
 
-      const theme = EditorView.theme({
-        '&': {
-          height: '100%',
-          fontSize: '1rem',
-          fontFamily: "'M PLUS Rounded 1c', sans-serif",
-          backgroundColor: darkTheme ? '#1e1e1e' : '#faf8f5',
-          color: darkTheme ? '#d4d4d4' : '#333',
+      const theme = EditorView.theme(
+        {
+          '&': {
+            height: '100%',
+            fontSize: '1rem',
+            fontFamily: "'M PLUS Rounded 1c', sans-serif",
+            backgroundColor: darkTheme ? '#1e1e1e' : '#faf8f5',
+            color: darkTheme ? '#d4d4d4' : '#333',
+          },
+          '.cm-content': {
+            padding: '1rem',
+            minHeight: '200px',
+            caretColor: darkTheme ? '#fff' : '#333',
+          },
+          '.cm-focused': { outline: 'none' },
+          '.cm-scroller': {
+            overflow: 'auto',
+            fontFamily: "'M PLUS Rounded 1c', sans-serif",
+            lineHeight: '1.8',
+          },
+          '.cm-gutters': { display: 'none' },
+          '.cm-placeholder': {
+            color: darkTheme ? '#666' : '#aaa',
+            fontStyle: 'italic',
+          },
         },
-        '.cm-content': {
-          padding: '1rem',
-          minHeight: '200px',
-          caretColor: darkTheme ? '#fff' : '#333',
-        },
-        '.cm-focused': { outline: 'none' },
-        '.cm-scroller': {
-          overflow: 'auto',
-          fontFamily: "'M PLUS Rounded 1c', sans-serif",
-          lineHeight: '1.8',
-        },
-        '.cm-gutters': { display: 'none' },
-        '.cm-placeholder': {
-          color: darkTheme ? '#666' : '#aaa',
-          fontStyle: 'italic',
-        },
-      }, { dark: darkTheme })
+        { dark: darkTheme }
+      )
 
       const extensions = [
         history(),
@@ -92,7 +95,7 @@ export default function LongModeEditor({
           if (!destroyed) {
             extensions.unshift(vim())
           }
-        } catch (e) {
+        } catch {
           console.warn('Vim mode not available')
         }
       }

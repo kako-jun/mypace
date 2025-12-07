@@ -1,11 +1,7 @@
 import { SimplePool, type Filter, type Event } from 'nostr-tools'
 import { MYPACE_TAG } from './constants'
 
-export const RELAYS = [
-  'wss://nos.lol',
-  'wss://relay.damus.io',
-  'wss://relay.nostr.band',
-]
+export const RELAYS = ['wss://nos.lol', 'wss://relay.damus.io', 'wss://relay.nostr.band']
 
 let pool: SimplePool | null = null
 

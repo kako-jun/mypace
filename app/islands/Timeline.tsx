@@ -3,7 +3,15 @@ import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { FilterBar, TimelinePostCard } from '../components/timeline'
 import { useTimeline, useShare } from '../hooks'
-import { shareOrCopy, navigateToHome, navigateToEdit, navigateToTag, navigateToAddTag, buildTagUrl, contentHasTag } from '../lib/utils'
+import {
+  shareOrCopy,
+  navigateToHome,
+  navigateToEdit,
+  navigateToTag,
+  navigateToAddTag,
+  buildTagUrl,
+  contentHasTag,
+} from '../lib/utils'
 import type { Event } from 'nostr-tools'
 import type { FilterMode } from '../types'
 
@@ -41,13 +49,16 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
     getAvatarUrl,
   } = useTimeline()
 
-  const handleEdit = useCallback((event: Event) => {
-    if (onEditStart) {
-      onEditStart(event)
-    } else {
-      navigateToEdit(event.id)
-    }
-  }, [onEditStart])
+  const handleEdit = useCallback(
+    (event: Event) => {
+      if (onEditStart) {
+        onEditStart(event)
+      } else {
+        navigateToEdit(event.id)
+      }
+    },
+    [onEditStart]
+  )
 
   const handleReplyClick = useCallback((event: Event) => onReplyStart?.(event), [onReplyStart])
 
@@ -62,11 +73,14 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
 
   const handleShareFilter = useCallback(() => shareFilter(window.location.href), [shareFilter])
 
-  const handleDeleteConfirm = useCallback(async (event: Event) => {
-    await handleDelete(event)
-    setDeletedId(event.id)
-    setTimeout(() => setDeletedId(null), TIMEOUTS.DELETE_CONFIRMATION)
-  }, [handleDelete])
+  const handleDeleteConfirm = useCallback(
+    async (event: Event) => {
+      await handleDelete(event)
+      setDeletedId(event.id)
+      setTimeout(() => setDeletedId(null), TIMEOUTS.DELETE_CONFIRMATION)
+    },
+    [handleDelete]
+  )
 
   useEffect(() => {
     setHashtagClickHandler((tag) => {
@@ -89,15 +103,18 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
     )
   }
 
-  const filteredItems = filterTags.length > 0
-    ? items.filter(item => filterMode === 'and'
-        ? filterTags.every(tag => contentHasTag(item.event.content, tag))
-        : filterTags.some(tag => contentHasTag(item.event.content, tag)))
-    : items
+  const filteredItems =
+    filterTags.length > 0
+      ? items.filter((item) =>
+          filterMode === 'and'
+            ? filterTags.every((tag) => contentHasTag(item.event.content, tag))
+            : filterTags.some((tag) => contentHasTag(item.event.content, tag))
+        )
+      : items
 
   const clearFilter = () => navigateToHome()
   const removeTag = (tagToRemove: string) => {
-    const newTags = filterTags.filter(t => t !== tagToRemove)
+    const newTags = filterTags.filter((t) => t !== tagToRemove)
     window.location.href = buildTagUrl(newTags, filterMode)
   }
   const toggleFilterMode = () => {
@@ -154,7 +171,9 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
           />
         )
       })}
-      {filteredItems.length === 0 && <p class="empty">{filterTags.length > 0 ? 'No posts matching filter' : 'No posts yet'}</p>}
+      {filteredItems.length === 0 && (
+        <p class="empty">{filterTags.length > 0 ? 'No posts matching filter' : 'No posts yet'}</p>
+      )}
     </div>
   )
 }
