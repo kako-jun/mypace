@@ -13,6 +13,7 @@ interface HomeProps {
 }
 
 export default function Home({ initialFilterTags, initialFilterMode }: HomeProps) {
+  const [mounted, setMounted] = useState(false)
   const [longMode, setLongMode] = useState(false)
   // Load draft from localStorage on initial render
   const [content, setContent] = useState(() => getString(STORAGE_KEYS.DRAFT))
@@ -48,10 +49,20 @@ export default function Home({ initialFilterTags, initialFilterMode }: HomeProps
     return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
   }, [])
 
+  // Set mounted to true on client (skip SSR rendering)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Apply theme colors on initial load
   useEffect(() => {
     applyThemeColors(getUIThemeColors())
   }, [])
+
+  // Skip rendering on server (SSR phase)
+  if (!mounted) {
+    return null
+  }
 
   const handleLongModeChange = (mode: boolean) => {
     setLongMode(mode)

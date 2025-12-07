@@ -3,12 +3,12 @@
 /* Post Form - borderless */
 .post-form {
   position: fixed;
-  bottom: 1rem;
-  left: 1rem;
-  width: 420px;
+  bottom: 0;
+  left: 0;
+  width: 560px;
   background: var(--surface-primary);
   padding: 1rem;
-  border-radius: 12px;
+  border-radius: 0 12px 0 0;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   z-index: 100;
   transition: background 0.2s ease, box-shadow 0.3s ease, width 0.3s ease, opacity 0.5s ease;

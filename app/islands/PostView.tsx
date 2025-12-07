@@ -43,6 +43,7 @@ interface PostViewProps {
 }
 
 export default function PostView({ eventId }: PostViewProps) {
+  const [mounted, setMounted] = useState(false)
   const [event, setEvent] = useState<Event | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [myPubkey, setMyPubkey] = useState<string | null>(null)
@@ -58,11 +59,21 @@ export default function PostView({ eventId }: PostViewProps) {
   const { copied, share } = useShare()
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
 
+  // Set mounted to true on client (skip SSR rendering)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   useEffect(() => {
     applyThemeColors(getUIThemeColors())
     setHashtagClickHandler((tag) => navigateToTag(tag))
     loadPost()
   }, [eventId])
+
+  // Skip rendering on server (SSR phase)
+  if (!mounted) {
+    return null
+  }
 
   const loadPost = async () => {
     setError('')
