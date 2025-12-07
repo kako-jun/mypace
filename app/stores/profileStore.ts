@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { fetchUserProfile } from '../lib/nostr/relay'
 import { exportNpub } from '../lib/nostr/keys'
+import { parseProfile } from '../lib/utils'
 import type { Profile, ProfileCache } from '../types'
 
 interface ProfileState {
@@ -34,7 +35,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       const profileEvent = await fetchUserProfile(pubkey)
       if (profileEvent) {
         set(state => ({
-          profiles: { ...state.profiles, [pubkey]: JSON.parse(profileEvent.content) },
+          profiles: { ...state.profiles, [pubkey]: parseProfile(profileEvent.content) },
           loading: new Set([...state.loading].filter(p => p !== pubkey))
         }))
       } else {

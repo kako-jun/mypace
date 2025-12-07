@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'hono/jsx'
 import { fetchEvents, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts, fetchRepostEvents, publishEvent } from '../lib/nostr/relay'
 import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent } from '../lib/nostr/events'
 import { getETagValue, filterRepliesByRoot, hasMypaceTag } from '../lib/nostr/tags'
-import { getDisplayNameFromCache, getAvatarUrlFromCache } from '../lib/utils'
+import { getDisplayNameFromCache, getAvatarUrlFromCache, parseProfile, parseEventJson, getErrorMessage } from '../lib/utils'
 import { isValidReaction, TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
 import type { Event } from 'nostr-tools'
 import type { ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../types'
@@ -47,7 +47,7 @@ export function useTimeline(): UseTimelineResult {
       if (newProfiles[pubkey] !== undefined) continue
       try {
         const pe = await fetchUserProfile(pubkey)
-        newProfiles[pubkey] = pe ? JSON.parse(pe.content) : null
+        newProfiles[pubkey] = pe ? parseProfile(pe.content) : null
       } catch {
         newProfiles[pubkey] = null
       }
@@ -89,7 +89,7 @@ export function useTimeline(): UseTimelineResult {
         if (currentProfiles[pk] === undefined) {
           try {
             const pe = await fetchUserProfile(pk)
-            if (pe) setProfiles(prev => ({ ...prev, [pk]: JSON.parse(pe.content) }))
+            if (pe) setProfiles(prev => ({ ...prev, [pk]: parseProfile(pe.content) }))
           } catch {}
         }
       }
@@ -148,7 +148,8 @@ export function useTimeline(): UseTimelineResult {
         for (const repost of repostEvents) {
           try {
             if (!repost.content || repost.content.trim() === '') continue
-            const originalEvent = JSON.parse(repost.content) as Event
+            const originalEvent = parseEventJson<Event>(repost.content)
+            if (!originalEvent) continue
             if (hasMypaceTag(originalEvent)) {
               items.push({
                 event: originalEvent,
@@ -168,13 +169,13 @@ export function useTimeline(): UseTimelineResult {
         for (const pk of [...new Set(items.filter(i => i.repostedBy).map(i => i.repostedBy!.pubkey))]) {
           if (profiles[pk] === undefined) {
             fetchUserProfile(pk).then(pe => {
-              if (pe) setProfiles(prev => ({ ...prev, [pk]: JSON.parse(pe.content) }))
+              if (pe) setProfiles(prev => ({ ...prev, [pk]: parseProfile(pe.content) }))
             }).catch(() => {})
           }
         }
       })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load timeline')
+      setError(getErrorMessage(err, 'Failed to load timeline'))
       setLoading(false)
     }
   }, [])

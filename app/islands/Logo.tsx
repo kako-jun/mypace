@@ -1,7 +1,9 @@
+import { navigateToHome } from '../lib/utils'
+
 export default function Logo() {
   const handleClick = (e: Event) => {
     e.preventDefault()
-    window.location.href = '/'
+    navigateToHome()
   }
 
   return (

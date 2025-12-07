@@ -9,7 +9,7 @@ import {
 } from '../lib/nostr/keys'
 import { getCurrentPubkey, type Profile } from '../lib/nostr/events'
 import { fetchUserProfile } from '../lib/nostr/relay'
-import { getLocalProfile, setItem, setString, setBoolean } from '../lib/utils'
+import { getLocalProfile, setItem, setString, setBoolean, parseProfile } from '../lib/utils'
 import { STORAGE_KEYS } from '../lib/constants'
 import {
   ProfileSection,
@@ -77,9 +77,11 @@ export default function Settings() {
           const pubkey = await getCurrentPubkey()
           const profileEvent = await fetchUserProfile(pubkey)
           if (profileEvent) {
-            const profile = JSON.parse(profileEvent.content) as Profile
-            setDisplayName(profile.name || profile.display_name || '')
-            setPictureUrl(profile.picture || '')
+            const profile = parseProfile(profileEvent.content)
+            if (profile) {
+              setDisplayName(profile.name || profile.display_name || '')
+              setPictureUrl(profile.picture || '')
+            }
           }
         } catch {}
       }

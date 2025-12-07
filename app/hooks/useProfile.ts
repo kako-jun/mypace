@@ -1,6 +1,6 @@
 import { useState } from 'hono/jsx'
 import { fetchUserProfile } from '../lib/nostr/relay'
-import { getDisplayNameFromCache, getAvatarUrlFromCache } from '../lib/utils'
+import { getDisplayNameFromCache, getAvatarUrlFromCache, parseProfile } from '../lib/utils'
 import type { Profile, ProfileCache } from '../types'
 
 interface UseProfileResult {
@@ -26,7 +26,7 @@ export function useProfile(): UseProfileResult {
       try {
         const profileEvent = await fetchUserProfile(pubkey)
         if (profileEvent) {
-          newProfiles[pubkey] = JSON.parse(profileEvent.content)
+          newProfiles[pubkey] = parseProfile(profileEvent.content)
         } else {
           newProfiles[pubkey] = null
         }
