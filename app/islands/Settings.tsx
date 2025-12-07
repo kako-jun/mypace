@@ -17,6 +17,7 @@ import {
   KeysSection,
   ShareSection
 } from '../components/settings'
+import { getItem, setItem, getString, setString, getBoolean, setBoolean } from '../lib/utils'
 
 // Default colors (matches disabled background #f8f8f8)
 const DEFAULT_COLORS = {
@@ -34,27 +35,15 @@ export interface ThemeColors {
 }
 
 export function getStoredThemeColors(): ThemeColors {
-  if (typeof window === 'undefined') return DEFAULT_COLORS
-  const stored = localStorage.getItem('mypace_theme_colors')
-  if (stored) {
-    try {
-      return JSON.parse(stored)
-    } catch {
-      return DEFAULT_COLORS
-    }
-  }
-  return DEFAULT_COLORS
+  return getItem<ThemeColors>('mypace_theme_colors', DEFAULT_COLORS)
 }
 
 export function getStoredVimMode(): boolean {
-  if (typeof window === 'undefined') return false
-  return localStorage.getItem('mypace_vim_mode') === 'true'
+  return getBoolean('mypace_vim_mode')
 }
 
 export function getStoredAppTheme(): 'light' | 'dark' {
-  if (typeof window === 'undefined') return 'light'
-  const stored = localStorage.getItem('mypace_app_theme') as 'light' | 'dark' | null
-  return stored || 'light'
+  return (getString('mypace_app_theme') as 'light' | 'dark') || 'light'
 }
 
 // Calculate relative luminance of a hex color
@@ -141,16 +130,11 @@ export default function Settings() {
     applyThemeColors(storedColors)
 
     // Load app theme (light/dark)
-    const storedAppTheme = localStorage.getItem('mypace_app_theme') as 'light' | 'dark' | null
-    if (storedAppTheme) {
-      setAppTheme(storedAppTheme)
-      document.documentElement.setAttribute('data-theme', storedAppTheme)
-    }
+    const storedAppTheme = getStoredAppTheme()
+    setAppTheme(storedAppTheme)
+    document.documentElement.setAttribute('data-theme', storedAppTheme)
 
-    const storedVimMode = localStorage.getItem('mypace_vim_mode')
-    if (storedVimMode === 'true') {
-      setVimMode(true)
-    }
+    setVimMode(getStoredVimMode())
   }, [])
 
   useEffect(() => {
@@ -196,18 +180,18 @@ export default function Settings() {
     setThemeColors(newColors)
     // Apply and save immediately
     applyThemeColors(newColors)
-    localStorage.setItem('mypace_theme_colors', JSON.stringify(newColors))
+    setItem('mypace_theme_colors', newColors)
   }
 
   const handleAppThemeChange = (theme: 'light' | 'dark') => {
     setAppTheme(theme)
-    localStorage.setItem('mypace_app_theme', theme)
+    setString('mypace_app_theme', theme)
     document.documentElement.setAttribute('data-theme', theme)
   }
 
   const handleVimModeChange = (enabled: boolean) => {
     setVimMode(enabled)
-    localStorage.setItem('mypace_vim_mode', enabled.toString())
+    setBoolean('mypace_vim_mode', enabled)
   }
 
   if (!open) {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'hono/jsx'
 import PostForm from './PostForm'
 import Timeline from './Timeline'
 import { renderContent } from '../lib/content-parser'
+import { getString, setString, removeItem } from '../lib/utils'
 import type { Event } from 'nostr-tools'
 
 const DRAFT_KEY = 'mypace_draft'
@@ -14,12 +15,7 @@ interface HomeProps {
 export default function Home({ initialFilterTags, initialFilterMode }: HomeProps) {
   const [longMode, setLongMode] = useState(false)
   // Load draft from localStorage on initial render
-  const [content, setContent] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(DRAFT_KEY) || ''
-    }
-    return ''
-  })
+  const [content, setContent] = useState(() => getString(DRAFT_KEY))
   const [showPreview, setShowPreview] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [replyingTo, setReplyingTo] = useState<Event | null>(null)
@@ -27,17 +23,15 @@ export default function Home({ initialFilterTags, initialFilterMode }: HomeProps
   // Auto-save draft to localStorage when content changes
   useEffect(() => {
     if (content.trim()) {
-      localStorage.setItem(DRAFT_KEY, content)
+      setString(DRAFT_KEY, content)
     } else {
-      localStorage.removeItem(DRAFT_KEY)
+      removeItem(DRAFT_KEY)
     }
   }, [content])
 
   // Clear draft when a new post is successfully published
   useEffect(() => {
-    const handleNewPost = () => {
-      localStorage.removeItem(DRAFT_KEY)
-    }
+    const handleNewPost = () => removeItem(DRAFT_KEY)
     window.addEventListener('newpost', handleNewPost)
     return () => window.removeEventListener('newpost', handleNewPost)
   }, [])
