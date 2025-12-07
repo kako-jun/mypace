@@ -1,6 +1,7 @@
 import { createClient } from 'honox/client'
 import { getString } from './lib/utils/storage'
 import { STORAGE_KEYS } from './lib/constants'
+import './styles/tailwind.css'
 
 // Initialize theme immediately to prevent flash
 const storedAppTheme = getString(STORAGE_KEYS.APP_THEME)

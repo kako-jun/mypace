@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'hono/jsx'
+import { useState, useEffect, useCallback } from 'hono/jsx'
 import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { FilterBar, TimelinePostCard } from '../components/timeline'
@@ -15,11 +15,6 @@ import {
 import type { Event } from 'nostr-tools'
 import type { FilterMode } from '../types'
 
-const CARD_WIDTH = 560
-const CARD_GAP = 8 // 0.5rem
-const CARD_OVERLAP = 24 // -1.5rem overlap
-const STAGGER_OFFSET = 48 // 3rem per column
-
 interface TimelineProps {
   onEditStart?: (event: Event) => void
   onReplyStart?: (event: Event) => void
@@ -33,7 +28,6 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const { copied: filterCopied, share: shareFilter } = useShare()
-  const timelineRef = useRef<HTMLDivElement>(null)
 
   const {
     items,
@@ -98,31 +92,6 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
     })
   }, [filterTags, filterMode])
 
-  // Apply diagonal stagger based on column position
-  useEffect(() => {
-    const applyStagger = () => {
-      const timeline = timelineRef.current
-      if (!timeline) return
-
-      const cards = timeline.querySelectorAll('.post-card') as NodeListOf<HTMLElement>
-      const containerWidth = timeline.clientWidth
-      const effectiveCardWidth = CARD_WIDTH + CARD_GAP - CARD_OVERLAP
-      const columnsCount = Math.max(1, Math.floor((containerWidth + CARD_GAP) / effectiveCardWidth))
-
-      cards.forEach((card, index) => {
-        // In row-reverse, first card is rightmost (column 0)
-        // Column increases as we go left
-        const columnFromRight = index % columnsCount
-        const marginTop = columnFromRight * STAGGER_OFFSET
-        card.style.marginTop = `${marginTop}px`
-      })
-    }
-
-    applyStagger()
-    window.addEventListener('resize', applyStagger)
-    return () => window.removeEventListener('resize', applyStagger)
-  }, [items])
-
   if (loading && events.length === 0) return <div class="loading">Loading...</div>
 
   if (error) {
@@ -154,7 +123,7 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
   }
 
   return (
-    <div class="timeline" ref={timelineRef}>
+    <div class="timeline">
       {filterTags.length > 0 && (
         <FilterBar
           filterTags={filterTags}
