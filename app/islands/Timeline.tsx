@@ -16,7 +16,8 @@ import type { Event } from 'nostr-tools'
 import type { FilterMode } from '../types'
 
 const CARD_WIDTH = 560
-const CARD_GAP = 24 // 1.5rem
+const CARD_GAP = 8 // 0.5rem
+const CARD_OVERLAP = 24 // -1.5rem overlap
 const STAGGER_OFFSET = 48 // 3rem per column
 
 interface TimelineProps {
@@ -105,7 +106,8 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
 
       const cards = timeline.querySelectorAll('.post-card') as NodeListOf<HTMLElement>
       const containerWidth = timeline.clientWidth
-      const columnsCount = Math.max(1, Math.floor((containerWidth + CARD_GAP) / (CARD_WIDTH + CARD_GAP)))
+      const effectiveCardWidth = CARD_WIDTH + CARD_GAP - CARD_OVERLAP
+      const columnsCount = Math.max(1, Math.floor((containerWidth + CARD_GAP) / effectiveCardWidth))
 
       cards.forEach((card, index) => {
         // In row-reverse, first card is rightmost (column 0)
