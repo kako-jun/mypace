@@ -1,7 +1,7 @@
 import { createRoute } from 'honox/factory'
 import { SimplePool } from 'nostr-tools'
 import { getCachedEvents, cacheEvents } from '../../lib/db/cache'
-import { MYPACE_TAG } from '../../lib/nostr/events'
+import { MYPACE_TAG } from '../../lib/nostr/constants'
 import { RELAYS } from '../../lib/nostr/relay'
 
 export default createRoute(async (c) => {

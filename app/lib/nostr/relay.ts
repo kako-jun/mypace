@@ -1,5 +1,5 @@
 import { SimplePool, type Filter, type Event } from 'nostr-tools'
-import { MYPACE_TAG } from './events'
+import { MYPACE_TAG } from './constants'
 
 export const RELAYS = [
   'wss://nos.lol',

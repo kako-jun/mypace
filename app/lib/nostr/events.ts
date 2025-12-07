@@ -6,7 +6,6 @@ import { unixNow } from '../utils'
 import type { Profile, ThemeColors } from '../../types'
 
 export { MYPACE_TAG, APP_TITLE } from './constants'
-export type { Profile, ThemeColors }
 export { getEventThemeColors, getThemeCardProps, isDarkColor, getStoredThemeColors } from './theme'
 export { formatTimestamp } from './format'
 

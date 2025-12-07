@@ -1,6 +1,7 @@
 import { useState } from 'hono/jsx'
 import { uploadImage } from '../../lib/upload'
-import { createProfileEvent, type Profile } from '../../lib/nostr/events'
+import { createProfileEvent } from '../../lib/nostr/events'
+import type { Profile } from '../../types'
 import { publishEvent } from '../../lib/nostr/relay'
 import { getLocalProfile, setLocalProfile, getErrorMessage } from '../../lib/utils'
 import { CUSTOM_EVENTS } from '../../lib/constants'

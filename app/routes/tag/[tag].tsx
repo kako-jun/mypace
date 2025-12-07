@@ -3,6 +3,7 @@ import Home from '../../islands/Home'
 import Settings from '../../islands/Settings'
 import Logo from '../../islands/Logo'
 import { APP_TITLE } from '../../lib/nostr/events'
+import type { FilterMode } from '../../types'
 
 export default createRoute((c) => {
   const tagParam = c.req.param('tag')
@@ -14,7 +15,7 @@ export default createRoute((c) => {
 
   // Parse tag filter: + for AND, , for OR
   let tags: string[] = []
-  let filterMode: 'and' | 'or' = 'and'
+  let filterMode: FilterMode = 'and'
 
   if (tagParam.includes('+')) {
     tags = tagParam.split('+').map(t => decodeURIComponent(t))

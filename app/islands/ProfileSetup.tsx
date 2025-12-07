@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'hono/jsx'
-import { getCurrentPubkey, createProfileEvent, type Profile } from '../lib/nostr/events'
+import { getCurrentPubkey, createProfileEvent } from '../lib/nostr/events'
+import type { Profile } from '../types'
 import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
 import { Button, Input } from '../components/ui'
 import { getLocalProfile, setLocalProfile, hasLocalProfile, getErrorMessage, parseProfile } from '../lib/utils'

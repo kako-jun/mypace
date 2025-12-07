@@ -3,7 +3,7 @@ import { fetchEvents, fetchUserProfile, fetchReactions, fetchReplies, fetchRepos
 import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent } from '../lib/nostr/events'
 import { getETagValue, filterRepliesByRoot, hasMypaceTag } from '../lib/nostr/tags'
 import { getDisplayNameFromCache, getAvatarUrlFromCache, parseProfile, parseEventJson, getErrorMessage } from '../lib/utils'
-import { isValidReaction, TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
+import { isValidReaction, TIMEOUTS, CUSTOM_EVENTS, LIMITS, API_ENDPOINTS } from '../lib/constants'
 import type { Event } from 'nostr-tools'
 import type { ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../types'
 
@@ -120,12 +120,12 @@ export function useTimeline(): UseTimelineResult {
       setMyPubkey(pubkey)
 
       let notes: Event[] = []
-      const res = await fetch('/api/timeline?limit=50')
+      const res = await fetch(`${API_ENDPOINTS.TIMELINE}?limit=${LIMITS.TIMELINE_FETCH_LIMIT}`)
       if (res.ok) {
         const data = await res.json() as { events: Event[] }
         notes = data.events
       } else {
-        notes = await fetchEvents({ kinds: [1] }, 50)
+        notes = await fetchEvents({ kinds: [1] }, LIMITS.TIMELINE_FETCH_LIMIT)
       }
 
       const initialItems: TimelineItem[] = notes.map(note => ({ event: note }))
@@ -142,7 +142,7 @@ export function useTimeline(): UseTimelineResult {
       ])
 
       // Load repost events in background (non-blocking)
-      fetchRepostEvents(50).then(async repostEvents => {
+      fetchRepostEvents(LIMITS.TIMELINE_FETCH_LIMIT).then(async repostEvents => {
         const items: TimelineItem[] = [...initialItems]
         const allOriginalEvents: Event[] = [...notes]
 
