@@ -1,4 +1,5 @@
 import { useRef } from 'hono/jsx'
+import { Camera } from 'lucide-react'
 import { useImageUpload, useDragDrop } from '../../hooks'
 
 interface ImageDropZoneProps {
@@ -41,7 +42,7 @@ export default function ImageDropZone({ onImageUploaded, onError }: ImageDropZon
         aria-label="Upload image"
         disabled={uploading}
       >
-        {uploading ? '...' : dragging ? 'Drop' : '📷'}
+        {uploading ? '...' : dragging ? 'Drop' : <Camera size={16} />}
       </button>
       <input
         ref={fileInputRef}
