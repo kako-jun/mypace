@@ -1,4 +1,4 @@
-import { Star, Heart, MessageCircle, Repeat2, Check, Share2 } from 'lucide-react'
+import { Icon } from '../ui'
 
 interface PostActionsProps {
   isMyPost: boolean
@@ -38,18 +38,19 @@ export default function PostActions({
           disabled={likingId === eventId || reactions?.myReaction}
           aria-label={reactions?.myReaction ? 'Liked' : 'Like this post'}
         >
-          {reactions?.myReaction ? <Star size={16} fill="currentColor" /> : <Heart size={16} />}
+          {reactions?.myReaction ? <Icon name="Star" size={16} fill="currentColor" /> : <Icon name="Heart" size={16} />}
           {reactions?.count ? ` ${reactions.count}` : ''}
         </button>
       )}
-      {isMyPost && reactions?.count && reactions.count > 0 && (
+      {isMyPost && (
         <span class="like-count">
-          <Star size={16} fill="currentColor" /> {reactions.count}
+          <Icon name="Star" size={16} />
+          {reactions?.count ? ` ${reactions.count}` : ''}
         </span>
       )}
 
       <button class="reply-button" onClick={onReply} aria-label="Reply to this post">
-        <MessageCircle size={16} />
+        <Icon name="MessageCircle" size={16} />
         {replies?.count ? ` ${replies.count}` : ''}
       </button>
 
@@ -59,12 +60,12 @@ export default function PostActions({
         disabled={repostingId === eventId || reposts?.myRepost}
         aria-label={reposts?.myRepost ? 'Reposted' : 'Repost this post'}
       >
-        <Repeat2 size={16} />
+        <Icon name="Repeat2" size={16} />
         {reposts?.count ? ` ${reposts.count}` : ''}
       </button>
 
       <button class={`share-button ${copied ? 'copied' : ''}`} onClick={onShare} aria-label="Share this post">
-        {copied ? <Check size={16} /> : <Share2 size={16} />}
+        {copied ? <Icon name="Check" size={16} /> : <Icon name="Share2" size={16} />}
       </button>
     </>
   )
