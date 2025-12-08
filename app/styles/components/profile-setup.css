@@ -1,4 +1,5 @@
 /* ProfileSetup component styles */
+/* Shared styles (drop-area, avatar, input-row, profile-avatar-section) are in base.css */
 
 .profile-setup {
   padding: 0.5rem 0;
@@ -10,93 +11,10 @@
   margin-bottom: 0.75rem;
 }
 
-.profile-avatar-section {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.profile-avatar-preview {
-  flex-shrink: 0;
-}
-
-.avatar-preview {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.avatar-placeholder {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: var(--surface-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
-.avatar-upload-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.avatar-drop-area {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 32px;
-  border: 1px dashed #aaa;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #666;
-}
-
-.avatar-drop-area:hover {
-  border-color: #6699ff;
-  color: #6699ff;
-}
-
-.avatar-drop-area.dragging {
-  border-color: #6699ff;
-  background: rgba(100, 150, 255, 0.15);
-  color: #6699ff;
-}
-
-.input-row {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.input-row input {
-  flex: 1;
-  height: 36px;
-  margin: 0;
-  border: none;
-  background: var(--surface-secondary);
-  color: var(--text-primary);
-  border-radius: 8px;
-  padding: 0 0.75rem;
-  font-size: 0.85rem;
-  outline: none;
-  transition: background 0.2s ease;
-}
-
-.profile-form input:focus,
-.input-row input:focus {
+.profile-form input:focus {
   background: var(--surface-tertiary);
 }
 
-.profile-form input::placeholder,
-.input-row input::placeholder {
+.profile-form input::placeholder {
   color: var(--text-placeholder);
 }

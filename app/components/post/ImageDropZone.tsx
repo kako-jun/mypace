@@ -34,7 +34,7 @@ export default function ImageDropZone({ onImageUploaded, onError }: ImageDropZon
     <>
       <button
         type="button"
-        class={`image-drop-area ${dragging ? 'dragging' : ''}`}
+        class={`drop-area ${dragging ? 'dragging' : ''}`}
         onClick={() => fileInputRef.current?.click()}
         onDragOver={handlers.onDragOver}
         onDragLeave={handlers.onDragLeave}
