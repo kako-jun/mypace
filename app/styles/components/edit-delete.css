@@ -84,12 +84,22 @@
 
 .cancel-button,
 .save-button {
+  --btn-corner: 6px;
   border: none;
-  border-radius: 6px;
   padding: 0.4rem 0.8rem;
   font-size: 0.8rem;
   cursor: pointer;
   transition: transform 0.15s ease;
+  clip-path: polygon(
+    var(--btn-corner) 0,
+    calc(100% - var(--btn-corner)) 0,
+    100% var(--btn-corner),
+    100% calc(100% - var(--btn-corner)),
+    calc(100% - var(--btn-corner)) 100%,
+    var(--btn-corner) 100%,
+    0 calc(100% - var(--btn-corner)),
+    0 var(--btn-corner)
+  );
 }
 
 .cancel-button {
@@ -104,5 +114,5 @@
 
 .cancel-button:hover,
 .save-button:hover {
-  transform: scale(1.02);
+  transform: scale(1.05);
 }

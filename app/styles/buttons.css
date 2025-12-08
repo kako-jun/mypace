@@ -1,9 +1,11 @@
 /* ===========================================
    Button Components
+   Octagonal design with 45-degree corners
    =========================================== */
 
-/* Common Button */
+/* Common Button - Octagonal */
 .btn {
+  --btn-corner: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -11,11 +13,20 @@
   background: var(--btn-primary-bg);
   color: var(--btn-primary-text);
   border: none;
-  border-radius: 8px;
   padding: 0 1rem;
   font-size: 0.85rem;
   cursor: pointer;
   transition: transform 0.15s ease;
+  clip-path: polygon(
+    var(--btn-corner) 0,
+    calc(100% - var(--btn-corner)) 0,
+    100% var(--btn-corner),
+    100% calc(100% - var(--btn-corner)),
+    calc(100% - var(--btn-corner)) 100%,
+    var(--btn-corner) 100%,
+    0 calc(100% - var(--btn-corner)),
+    0 var(--btn-corner)
+  );
 }
 
 .btn:disabled {
@@ -24,7 +35,7 @@
 }
 
 .btn:hover:not(:disabled) {
-  transform: scale(1.02);
+  transform: scale(1.05);
 }
 
 .btn-primary {
@@ -38,15 +49,95 @@
 
 .btn-secondary {
   background: var(--btn-secondary-bg);
-  border: 2px solid var(--btn-secondary-border);
   color: var(--btn-secondary-text);
+  position: relative;
 }
 
-.btn-secondary:hover:not(:disabled) {
+/* Secondary button border using pseudo-element for octagonal shape */
+.btn-secondary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--btn-secondary-border);
+  clip-path: polygon(
+    var(--btn-corner) 0,
+    calc(100% - var(--btn-corner)) 0,
+    100% var(--btn-corner),
+    100% calc(100% - var(--btn-corner)),
+    calc(100% - var(--btn-corner)) 100%,
+    var(--btn-corner) 100%,
+    0 calc(100% - var(--btn-corner)),
+    0 var(--btn-corner)
+  );
+  z-index: -1;
+}
+
+.btn-secondary::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: var(--btn-secondary-bg);
+  clip-path: polygon(
+    calc(var(--btn-corner) - 1px) 0,
+    calc(100% - var(--btn-corner) + 1px) 0,
+    100% calc(var(--btn-corner) - 1px),
+    100% calc(100% - var(--btn-corner) + 1px),
+    calc(100% - var(--btn-corner) + 1px) 100%,
+    calc(var(--btn-corner) - 1px) 100%,
+    0 calc(100% - var(--btn-corner) + 1px),
+    0 calc(var(--btn-corner) - 1px)
+  );
+  z-index: -1;
+}
+
+.btn-secondary:hover:not(:disabled)::after {
   background: var(--btn-secondary-hover-bg);
 }
 
 .btn-danger {
-  background: #c44;
-  color: #fff;
+  background: var(--text-danger);
+  color: var(--bg);
+}
+
+/* Small button variant */
+.btn-sm {
+  --btn-corner: 6px;
+  height: 28px;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+}
+
+/* Post button - Octagonal */
+.post-button {
+  --btn-corner: 10px;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: none;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  clip-path: polygon(
+    var(--btn-corner) 0,
+    calc(100% - var(--btn-corner)) 0,
+    100% var(--btn-corner),
+    100% calc(100% - var(--btn-corner)),
+    calc(100% - var(--btn-corner)) 100%,
+    var(--btn-corner) 100%,
+    0 calc(100% - var(--btn-corner)),
+    0 var(--btn-corner)
+  );
+}
+
+.post-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.post-button:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.post-button:active:not(:disabled) {
+  transform: scale(0.98);
 }

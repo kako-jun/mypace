@@ -232,19 +232,28 @@
 }
 
 .post-form .cancel-button {
-  background: none;
-  border: 1px solid var(--border-medium);
-  color: var(--text-secondary);
+  --btn-corner: 8px;
+  background: var(--btn-cancel-bg);
+  color: var(--btn-cancel-text);
+  border: none;
   padding: 0.5rem 1rem;
-  border-radius: 8px;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease;
+  transition: transform 0.15s ease;
+  clip-path: polygon(
+    var(--btn-corner) 0,
+    calc(100% - var(--btn-corner)) 0,
+    100% var(--btn-corner),
+    100% calc(100% - var(--btn-corner)),
+    calc(100% - var(--btn-corner)) 100%,
+    var(--btn-corner) 100%,
+    0 calc(100% - var(--btn-corner)),
+    0 var(--btn-corner)
+  );
 }
 
 .post-form .cancel-button:hover {
-  border-color: var(--text-muted);
-  color: var(--text-primary);
+  transform: scale(1.05);
 }
 
 .mode-toggle-corner {
@@ -314,26 +323,4 @@
   color: var(--text-secondary);
 }
 
-.post-button {
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-  border: none;
-  border-radius: 20px;
-  padding: 0.5rem 1.5rem;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-
-.post-button:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.post-button:hover:not(:disabled) {
-  transform: scale(1.02);
-}
-
-.post-button:active:not(:disabled) {
-  transform: scale(0.98);
-}
+/* post-button styles are in buttons.css */
