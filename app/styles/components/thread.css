@@ -33,35 +33,42 @@
   margin-top: 0.5rem;
 }
 
-.reply-cancel {
-  background: none;
-  border: 1px solid var(--border-medium);
-  color: var(--text-muted);
+.reply-cancel,
+.reply-submit {
+  --btn-corner: 6px;
   font-size: 0.8rem;
   cursor: pointer;
   padding: 0.4rem 0.75rem;
-  border-radius: 4px;
-  transition: border-color 0.2s ease, color 0.2s ease;
+  border: none;
+  transition: transform 0.15s ease;
+  clip-path: polygon(
+    var(--btn-corner) 0,
+    calc(100% - var(--btn-corner)) 0,
+    100% var(--btn-corner),
+    100% calc(100% - var(--btn-corner)),
+    calc(100% - var(--btn-corner)) 100%,
+    var(--btn-corner) 100%,
+    0 calc(100% - var(--btn-corner)),
+    0 var(--btn-corner)
+  );
+}
+
+.reply-cancel {
+  background: var(--btn-cancel-bg);
+  color: var(--btn-cancel-text);
 }
 
 .reply-cancel:hover {
-  border-color: var(--text-muted);
-  color: var(--text-secondary);
+  transform: scale(1.05);
 }
 
 .reply-submit {
   background: var(--btn-primary-bg);
   color: var(--btn-primary-text);
-  border: none;
-  border-radius: 4px;
-  padding: 0.4rem 0.75rem;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: background 0.2s ease;
 }
 
 .reply-submit:hover:not(:disabled) {
-  background: var(--btn-primary-hover);
+  transform: scale(1.05);
 }
 
 .reply-submit:disabled {
