@@ -20,14 +20,10 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--surface-backdrop);
   z-index: 999;
   animation: backdrop-fade 0.2s ease;
   pointer-events: auto;
-}
-
-[data-theme="dark"] .settings-backdrop {
-  background: rgba(0, 0, 0, 0.6);
 }
 
 .settings-panel {
@@ -72,7 +68,7 @@
   border: none;
   font-size: 1.25rem;
   cursor: pointer;
-  color: #bbb;
+  color: var(--text-timestamp);
   transition: color 0.2s ease;
   pointer-events: auto;
   z-index: 201;
@@ -80,7 +76,7 @@
 }
 
 .close-button:hover {
-  color: #888;
+  color: var(--text-muted);
 }
 
 .settings-section {
@@ -154,23 +150,23 @@
   justify-content: center;
   width: 40px;
   height: 32px;
-  border: 1px dashed #aaa;
+  border: 1px dashed var(--text-placeholder);
   border-radius: 6px;
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .avatar-drop-area:hover {
-  border-color: #6699ff;
-  color: #6699ff;
+  border-color: var(--text-link);
+  color: var(--text-link);
 }
 
 .avatar-drop-area.dragging {
-  border-color: #6699ff;
+  border-color: var(--text-link);
   background: rgba(100, 150, 255, 0.15);
-  color: #6699ff;
+  color: var(--text-link);
 }
 
 .input-row {
@@ -390,13 +386,9 @@
   align-items: center;
   gap: 0.35rem;
   font-size: 0.8rem;
-  color: #666;
+  color: var(--text-secondary);
   cursor: pointer;
   flex: 1;
-}
-
-[data-theme="dark"] .theme-toggle-label {
-  color: var(--text-secondary);
 }
 
 .theme-toggle-label input[type="checkbox"] {
@@ -441,18 +433,13 @@
   width: 120px;
   height: 120px;
   border-radius: 8px;
-  background: #e0e0e0;
+  background: var(--surface-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #888;
+  color: var(--text-muted);
   font-size: 1.5rem;
   font-weight: bold;
-}
-
-[data-theme="dark"] .qr-placeholder {
-  background: #444;
-  color: #777;
 }
 
 /* Settings Footer */
@@ -470,6 +457,6 @@
 }
 
 .settings-footer a:hover {
-color: var(--text-secondary);
-text-decoration: underline;
+  color: var(--text-secondary);
+  text-decoration: underline;
 }

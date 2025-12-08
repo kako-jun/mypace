@@ -8,8 +8,8 @@
   padding: 1.5rem;
   animation: card-appear 0.3s ease backwards;
   view-transition-name: post-card;
-  background: #fff;
-  border: 2px solid #333;
+  background: var(--surface-primary);
+  border: 2px solid var(--border-card);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
 }
 
@@ -21,19 +21,9 @@
   right: 0;
   width: 20px;
   height: 20px;
-  background: linear-gradient(135deg, #ddd 50%, transparent 50%);
-  border-left: 2px solid #333;
-  border-top: 2px solid #333;
-}
-
-[data-theme="dark"] .post-card {
-  background: var(--surface-primary);
-  border-color: #666;
-}
-
-[data-theme="dark"] .post-card::before {
-  background: linear-gradient(135deg, #444 50%, transparent 50%);
-  border-color: #666;
+  background: linear-gradient(135deg, var(--surface-fold) 50%, transparent 50%);
+  border-left: 2px solid var(--border-card);
+  border-top: 2px solid var(--border-card);
 }
 
 /* Staggered animation */
@@ -73,7 +63,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--surface-secondary, #eee);
+  background: var(--surface-secondary);
   flex-shrink: 0;
 }
 
@@ -87,27 +77,19 @@
 /* .author-name styles are defined in base.css with .text-outlined-sm */
 
 .timestamp {
-  color: #bbb;
+  color: var(--text-timestamp);
   font-size: 0.75rem;
-}
-
-[data-theme="dark"] .timestamp {
-  color: var(--text-muted);
 }
 
 /* Post content */
 .post-content {
   word-break: break-word;
-  color: #444;
+  color: var(--text-secondary);
   font-family: var(--font-mono);
 }
 
-[data-theme="dark"] .post-content {
-  color: var(--text-secondary);
-}
-
 .read-more-text {
-  color: #888;
+  color: var(--text-muted);
   font-size: 0.9rem;
   margin-left: 0.25rem;
 }
@@ -131,11 +113,7 @@
   align-items: center;
   gap: 0.25rem;
   font-size: 0.75rem;
-  color: #888;
+  color: var(--text-muted);
   margin-bottom: 0.5rem;
   padding-bottom: 0.25rem;
-}
-
-[data-theme="dark"] .repost-label {
-  color: var(--text-muted);
 }
