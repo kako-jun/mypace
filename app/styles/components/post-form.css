@@ -28,23 +28,23 @@
 
 /* Editing mode */
 .post-form.editing {
-  border: 2px solid #3498db;
+  border: 2px solid var(--action-reply);
 }
 
 .post-form.replying {
-  border: 2px solid #27ae60;
+  border: 2px solid var(--action-repost);
 }
 
 .editing-label {
   font-size: 0.75rem;
-  color: #3498db;
+  color: var(--action-reply);
   margin-bottom: 0.5rem;
   font-weight: 500;
 }
 
 .replying-label {
   font-size: 0.75rem;
-  color: #27ae60;
+  color: var(--action-repost);
   margin-bottom: 0.5rem;
   font-weight: 500;
 }
@@ -169,23 +169,23 @@
   justify-content: center;
   width: 36px;
   height: 28px;
-  border: 1px dashed #aaa;
+  border: 1px dashed var(--text-placeholder);
   border-radius: 6px;
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .image-drop-area:hover {
-  border-color: #6699ff;
-  color: #6699ff;
+  border-color: var(--text-link);
+  color: var(--text-link);
 }
 
 .image-drop-area.dragging {
-  border-color: #6699ff;
+  border-color: var(--text-link);
   background: rgba(100, 150, 255, 0.15);
-  color: #6699ff;
+  color: var(--text-link);
 }
 
 .attached-images {
@@ -215,8 +215,8 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #e44;
-  color: #fff;
+  background: var(--text-danger);
+  color: var(--surface-primary);
   border: none;
   font-size: 14px;
   line-height: 1;
@@ -228,13 +228,13 @@
 }
 
 .remove-image-button:hover {
-  background: #c33;
+  opacity: 0.8;
 }
 
 .post-form .cancel-button {
   background: none;
-  border: 1px solid #ccc;
-  color: #666;
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
   padding: 0.5rem 1rem;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -242,19 +242,9 @@
   transition: border-color 0.2s ease, color 0.2s ease;
 }
 
-[data-theme="dark"] .post-form .cancel-button {
-  border-color: #555;
-  color: #aaa;
-}
-
 .post-form .cancel-button:hover {
-  border-color: #999;
-  color: #333;
-}
-
-[data-theme="dark"] .post-form .cancel-button:hover {
-  border-color: #777;
-  color: #ccc;
+  border-color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 .mode-toggle-corner {
@@ -300,24 +290,20 @@
 
 .char-count {
   font-size: 0.8rem;
-  color: #999;
+  color: var(--text-muted);
 }
 
 /* Post preview */
 .post-preview {
-  background: #fafafa;
+  background: var(--surface-secondary);
   border-radius: 8px;
   padding: 0.75rem;
   margin-top: 0.5rem;
 }
 
-[data-theme="dark"] .post-preview {
-  background: var(--surface-secondary);
-}
-
 .preview-label {
   font-size: 0.7rem;
-  color: #999;
+  color: var(--text-muted);
   margin-bottom: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -325,27 +311,18 @@
 
 .preview-content {
   font-size: 0.95rem;
-  color: #444;
-}
-
-[data-theme="dark"] .preview-content {
   color: var(--text-secondary);
 }
 
 .post-button {
-  background: #333;
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   border: none;
   border-radius: 20px;
   padding: 0.5rem 1.5rem;
   font-size: 0.85rem;
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease;
-}
-
-[data-theme="dark"] .post-button {
-  background: #fff;
-  color: #333;
 }
 
 .post-button:disabled {
@@ -358,5 +335,5 @@
 }
 
 .post-button:active:not(:disabled) {
-transform: scale(0.98);
+  transform: scale(0.98);
 }
