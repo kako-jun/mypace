@@ -14,17 +14,37 @@
   direction: ltr;
 }
 
-/* Post Card - crisp black border, no rounded corners */
+/* Post Card - crisp black border with folded corner */
 .post-card {
+  position: relative;
   padding: 1.5rem;
   animation: card-appear 0.3s ease backwards;
   view-transition-name: post-card;
   background: #fff;
   border: 2px solid #333;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+}
+
+/* Folded corner effect */
+.post-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #ddd 50%, transparent 50%);
+  border-left: 2px solid #333;
+  border-top: 2px solid #333;
 }
 
 [data-theme="dark"] .post-card {
   background: var(--surface-primary);
+  border-color: #666;
+}
+
+[data-theme="dark"] .post-card::before {
+  background: linear-gradient(135deg, #444 50%, transparent 50%);
   border-color: #666;
 }
 
@@ -251,116 +271,11 @@
   align-items: center;
   gap: 1rem;
   margin-top: 0.5rem;
+  padding-left: 1rem;
 }
 
 .post-footer .edit-button {
   margin-left: auto;
-}
-
-/* Like button */
-.like-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: none;
-  border: none;
-  color: #aaa;
-  font-size: 0.875rem;
-  cursor: pointer;
-  padding: 0.25rem 0;
-  transition: color 0.2s ease, transform 0.1s ease;
-}
-
-.like-button:hover:not(:disabled) {
-  color: #f1c40f;
-  transform: scale(1.1);
-}
-
-.like-button.liked {
-  color: #f1c40f;
-  cursor: default;
-}
-
-.like-button:disabled {
-  opacity: 0.7;
-}
-
-/* Like count (for own posts) */
-.like-count {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: #f1c40f;
-  font-size: 0.875rem;
-}
-
-/* Reply button */
-.reply-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: none;
-  border: none;
-  color: #aaa;
-  font-size: 0.875rem;
-  cursor: pointer;
-  padding: 0.25rem 0;
-  transition: color 0.2s ease, transform 0.1s ease;
-}
-
-.reply-button:hover {
-  color: #3498db;
-  transform: scale(1.1);
-}
-
-/* Repost button */
-.repost-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: none;
-  border: none;
-  color: #aaa;
-  font-size: 0.875rem;
-  cursor: pointer;
-  padding: 0.25rem 0;
-  transition: color 0.2s ease, transform 0.1s ease;
-}
-
-.repost-button:hover:not(:disabled) {
-  color: #2ecc71;
-  transform: scale(1.1);
-}
-
-.repost-button.reposted {
-  color: #2ecc71;
-  cursor: default;
-}
-
-.repost-button:disabled {
-  opacity: 0.7;
-}
-
-.share-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: none;
-  border: none;
-  color: #aaa;
-  font-size: 0.875rem;
-  cursor: pointer;
-  padding: 0.25rem 0;
-  transition: color 0.2s ease, transform 0.1s ease;
-}
-
-.share-button:hover {
-  color: #3498db;
-  transform: scale(1.1);
-}
-
-.share-button.copied {
-  color: #2ecc71;
 }
 
 /* Repost label on card */

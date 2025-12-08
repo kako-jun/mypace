@@ -12,6 +12,7 @@
 
 /* Component styles */
 @import "./components/post-form.css";
+@import "./components/post-actions.css";
 @import "./components/timeline.css";
 @import "./components/settings.css";
 @import "./components/long-mode-editor.css";
