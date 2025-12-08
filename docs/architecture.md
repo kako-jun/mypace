@@ -51,8 +51,9 @@ app/
 │   │   └── [id].tsx         # 個別投稿ページ
 │   ├── tag/
 │   │   └── [tag].tsx        # タグフィルタページ
-│   └── user/
-│       └── [pubkey].tsx     # ユーザーページ
+│   ├── user/
+│   │   └── [pubkey].tsx     # ユーザーページ
+│   └── search.tsx           # 検索ページ（キーワード+タグ）
 │
 ├── islands/                 # Islandコンポーネント（hydrate対象）
 │   ├── Home.tsx             # ホーム画面（状態管理）
@@ -85,12 +86,15 @@ app/
 │   │   └── ShareSection.tsx
 │   ├── timeline/            # タイムライン関連
 │   │   ├── TimelinePostCard.tsx
-│   │   └── FilterBar.tsx
+│   │   ├── FilterBar.tsx
+│   │   └── SearchBox.tsx
 │   └── ui/                  # 汎用UIコンポーネント
 │       ├── Button.tsx
 │       ├── Input.tsx
 │       ├── Toggle.tsx
-│       └── ColorPicker.tsx
+│       ├── ColorPicker.tsx
+│       ├── Icon.tsx            # Lucide Icons ラッパー
+│       └── SearchButton.tsx
 │
 ├── hooks/                   # カスタムフック
 │   ├── useTimeline.ts       # タイムライン取得・更新
@@ -140,7 +144,8 @@ app/
 │       ├── profile-setup.css
 │       ├── long-mode-editor.css
 │       ├── lightbox.css     # 画像拡大モーダル
-│       └── user-view.css    # ユーザーページ
+│       ├── user-view.css    # ユーザーページ
+│       └── filter-bar.css   # フィルタバー・検索ボックス
 │
 ├── types/
 │   └── index.ts             # TypeScript型定義
