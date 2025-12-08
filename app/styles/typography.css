@@ -1,0 +1,94 @@
+/* ===========================================
+   Outlined Text Styles
+   =========================================== */
+
+/* Outlined text base style */
+.text-outlined {
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: #fff;
+  -webkit-text-stroke: 1px #555;
+  text-shadow:
+    1px 1px 0 #555,
+    -1px 1px 0 #555,
+    1px -1px 0 #555,
+    -1px -1px 0 #555;
+  transition: transform 0.15s ease;
+}
+
+.text-outlined:hover {
+  transform: scale(1.15);
+}
+
+[data-theme="dark"] .text-outlined {
+  -webkit-text-stroke: 1px #222;
+  text-shadow:
+    1px 1px 0 #222,
+    -1px 1px 0 #222,
+    1px -1px 0 #222,
+    -1px -1px 0 #222;
+}
+
+/* Outlined text - primary (light blue for Edit) */
+.text-outlined-primary {
+  color: #8df;
+  -webkit-text-stroke: 1px #046;
+  text-shadow:
+    1px 1px 0 #046,
+    -1px 1px 0 #046,
+    1px -1px 0 #046,
+    -1px -1px 0 #046;
+}
+
+[data-theme="dark"] .text-outlined-primary {
+  -webkit-text-stroke: 1px #024;
+  text-shadow:
+    1px 1px 0 #024,
+    -1px 1px 0 #024,
+    1px -1px 0 #024,
+    -1px -1px 0 #024;
+}
+
+/* Outlined text - warning (orange for Delete) */
+.text-outlined-warning {
+  color: #fa0;
+  -webkit-text-stroke: 1px #640;
+  text-shadow:
+    1px 1px 0 #640,
+    -1px 1px 0 #640,
+    1px -1px 0 #640,
+    -1px -1px 0 #640;
+}
+
+[data-theme="dark"] .text-outlined-warning {
+  -webkit-text-stroke: 1px #420;
+  text-shadow:
+    1px 1px 0 #420,
+    -1px 1px 0 #420,
+    1px -1px 0 #420,
+    -1px -1px 0 #420;
+}
+
+/* Author name - uses text-outlined base */
+.author-name {
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: #fff;
+  -webkit-text-stroke: 1px #555;
+  text-shadow:
+    1px 1px 0 #555,
+    -1px 1px 0 #555,
+    1px -1px 0 #555,
+    -1px -1px 0 #555;
+}
+
+[data-theme="dark"] .author-name {
+  -webkit-text-stroke: 1px #222;
+  text-shadow:
+    1px 1px 0 #222,
+    -1px 1px 0 #222,
+    1px -1px 0 #222,
+    -1px -1px 0 #222;
+}

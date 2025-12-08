@@ -1,0 +1,204 @@
+/* ===========================================
+   Custom Theme (4-corner gradient)
+   =========================================== */
+
+body.custom-theme {
+  background: var(--theme-gradient);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+body.custom-theme .container {
+  background: transparent;
+}
+
+body.custom-theme .post-card {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+body.custom-theme[data-theme="dark"] .post-card {
+  background: rgba(30, 30, 30, 0.95);
+}
+
+body.custom-theme .settings-panel {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+}
+
+body.custom-theme[data-theme="dark"] .settings-panel {
+  background: rgba(30, 30, 30, 0.95);
+}
+
+body.custom-theme .post-form {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+}
+
+body.custom-theme[data-theme="dark"] .post-form {
+  background: rgba(30, 30, 30, 0.92);
+}
+
+body.custom-theme .filter-bar {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+}
+
+body.custom-theme[data-theme="dark"] .filter-bar {
+  background: rgba(30, 30, 30, 0.9);
+}
+
+body.custom-theme .filter-tag {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+body.custom-theme[data-theme="dark"] .filter-tag {
+  background: rgba(50, 50, 50, 0.95);
+}
+
+body.custom-theme .filter-mode-toggle {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+body.custom-theme .filter-mode-toggle:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+body.custom-theme .logo-my,
+body.custom-theme .logo-pace {
+  color: var(--logo-color, #222);
+  text-shadow: 0 1px 3px var(--logo-shadow, rgba(0, 0, 0, 0.4));
+}
+
+/* Themed post cards (user gradient) */
+.post-card.themed-card {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.post-card.themed-card .timestamp {
+  color: inherit;
+  opacity: 0.7;
+  text-shadow: inherit;
+}
+
+.post-card.themed-card .post-content {
+  color: inherit;
+  text-shadow: inherit;
+}
+
+.post-card.themed-card .like-button,
+.post-card.themed-card .reply-button,
+.post-card.themed-card .repost-button {
+  color: inherit;
+  opacity: 0.7;
+  text-shadow: inherit;
+}
+
+.post-card.themed-card .like-button:hover:not(:disabled) {
+  opacity: 1;
+  color: #f1c40f;
+}
+
+.post-card.themed-card .like-button.liked {
+  color: #f1c40f;
+  opacity: 1;
+}
+
+.post-card.themed-card .reply-button:hover {
+  opacity: 1;
+  color: #3498db;
+}
+
+.post-card.themed-card .repost-button:hover:not(:disabled) {
+  opacity: 1;
+  color: #2ecc71;
+}
+
+.post-card.themed-card .repost-button.reposted {
+  color: #2ecc71;
+  opacity: 1;
+}
+
+.post-card.themed-card .reply-form {
+  border-top-color: rgba(255, 255, 255, 0.2);
+}
+
+.post-card.themed-card .reply-input {
+  background: rgba(255, 255, 255, 0.15);
+  color: inherit;
+}
+
+.post-card.themed-card .thread-toggle {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.post-card.themed-card .read-more-text {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.post-card.themed-card .repost-label {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.post-card.themed-card .like-count {
+  color: #f1c40f;
+}
+
+/* Dark text on light background - white shadow */
+.themed-card.dark-text {
+  color: #333;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Light text for dark themed cards - black shadow */
+.themed-card.light-text {
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.light-text .author-name {
+  color: #ffffff;
+}
+
+.light-text .timestamp {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.light-text .post-content,
+.light-text .preview-content {
+  color: #ffffff;
+}
+
+.light-text .content-link {
+  color: #8fd8ff;
+}
+
+.light-text .content-hashtag {
+  color: #c8b4ff;
+}
+
+.light-text .inline-code {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffb4d8;
+}
+
+.light-text .markdown-content a {
+  color: #8fd8ff;
+}
+
+.light-text .markdown-content blockquote {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Dark text adjustments */
+.dark-text .preview-label {
+  color: #666;
+}
+
+/* Light text adjustments */
+.light-text .preview-label {
+  color: rgba(255, 255, 255, 0.7);
+}

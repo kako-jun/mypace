@@ -1,0 +1,126 @@
+/* ===========================================
+   Layout Components
+   =========================================== */
+
+/* Layout */
+.container {
+  max-width: none;
+  width: 100%;
+  padding: 3rem 1rem 2rem;
+}
+
+body.long-mode-active .container {
+  max-width: none;
+  padding: 6rem 2rem 2rem;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 1rem;
+  pointer-events: none;
+}
+
+/* Logo */
+.logo {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 101;
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 0.9;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  width: fit-content;
+  pointer-events: auto;
+}
+
+.logo-img {
+  height: 64px;
+  width: auto;
+  filter: var(--logo-filter, none);
+  transition: filter 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+}
+
+.logo:hover .logo-img {
+  filter: var(--logo-hover-filter, none);
+  transform: scale(1.05);
+}
+
+/* Loading & Empty */
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-placeholder);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-placeholder);
+}
+
+/* Error */
+.error {
+  color: #c44;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.error-box {
+  background: #fef5f5;
+  padding: 1.25rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+[data-theme="dark"] .error-box {
+  background: rgba(200, 68, 68, 0.1);
+}
+
+.error-box p {
+  color: #a44;
+  margin-bottom: 0.75rem;
+}
+
+[data-theme="dark"] .error-box p {
+  color: #f88;
+}
+
+.error-box button {
+  background: #c44;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.error-box button:hover {
+  transform: scale(1.02);
+}
+
+.success {
+  font-size: 0.8rem;
+  color: #6a6;
+  margin-top: 0.5rem;
+}
+
+.info {
+  font-size: 0.8rem;
+  color: #6a6;
+}
+
+.hint {
+  font-size: 0.7rem;
+  color: var(--text-placeholder);
+  margin-bottom: 0.5rem;
+}

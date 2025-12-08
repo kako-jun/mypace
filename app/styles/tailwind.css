@@ -1,7 +1,14 @@
 @import "tailwindcss";
 
-/* Base styles */
+/* Core styles */
+@import "./variables.css";
 @import "./base.css";
+@import "./animations.css";
+@import "./typography.css";
+@import "./buttons.css";
+@import "./layout.css";
+@import "./markdown.css";
+@import "./theme-custom.css";
 
 /* Component styles */
 @import "./components/post-form.css";
