@@ -53,6 +53,37 @@ body.long-mode-active .container {
   transform: scale(1.05);
 }
 
+/* Header Actions */
+.header-actions {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: auto;
+}
+
+.search-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.search-toggle:hover {
+  color: var(--text-link);
+  background: var(--surface-tertiary);
+}
+
 /* Loading & Empty */
 .loading {
   text-align: center;

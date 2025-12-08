@@ -30,7 +30,9 @@ app/
 ├── routes/              # ページルーティング
 │   ├── api/             # APIエンドポイント
 │   ├── post/            # 投稿詳細ページ
-│   └── tag/             # タグフィルタページ
+│   ├── tag/             # タグフィルタページ
+│   ├── user/            # ユーザーページ
+│   └── search.tsx       # 検索ページ
 ├── islands/             # Islandコンポーネント（hydrate対象）
 ├── components/          # 再利用可能コンポーネント
 │   ├── post/            # 投稿関連UI
@@ -62,6 +64,7 @@ app/
 - 鍵のエクスポート・インポート（npub/nsecコピー対応）
 - コンテンツパース（ハッシュタグ、URL、画像）
 - ハッシュタグフィルタリング（日本語対応、複数タグAND/OR）
+- キーワード検索（タグフィルタと併用可能、/search）
 - ライト/ダークテーマ切り替え（Settings/Aboutタブ分離）
 - ウィンドウカラー（4隅グラデーション背景）カスタマイズ
 - 長文モード（4200文字対応、プレビュー付き、Vimモード対応）
@@ -81,6 +84,7 @@ app/
 | `app/routes/post/[id].tsx` | 個別投稿ページ |
 | `app/routes/tag/[tag].tsx` | タグフィルタページ |
 | `app/routes/user/[pubkey].tsx` | ユーザーページ |
+| `app/routes/search.tsx` | 検索ページ（キーワード+タグ） |
 | `app/routes/api/timeline.ts` | タイムラインAPI |
 
 ### Islands（Hydrate対象）
@@ -102,8 +106,8 @@ app/
 |------|-------------|
 | `app/components/post/` | 投稿カード、アクション、ヘッダー等 |
 | `app/components/settings/` | 設定パネルの各セクション |
-| `app/components/timeline/` | タイムラインカード、フィルタバー |
-| `app/components/ui/` | Button, Toggle, ColorPicker等 |
+| `app/components/timeline/` | タイムラインカード、フィルタバー、検索ボックス |
+| `app/components/ui/` | Button, Toggle, ColorPicker, Icon, SearchButton等 |
 
 ### Hooks
 | Path | Description |

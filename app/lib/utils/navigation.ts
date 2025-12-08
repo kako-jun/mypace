@@ -41,3 +41,20 @@ export function navigateToAddTag(currentTags: string[], newTag: string, mode: Fi
   if (currentTags.includes(newTag)) return
   navigateToTagFilter([...currentTags, newTag], mode)
 }
+
+// Build search URL with query, tags, and mode
+export function buildSearchUrl(query: string, tags: string[], mode: FilterMode): string {
+  const params = new URLSearchParams()
+  if (query) params.set('q', query)
+  if (tags.length > 0) {
+    const separator = mode === 'and' ? '+' : ','
+    params.set('tags', tags.map((t) => encodeURIComponent(t)).join(separator))
+  }
+  if (mode === 'or') params.set('mode', 'or')
+  const queryString = params.toString()
+  return queryString ? `/search?${queryString}` : '/search'
+}
+
+export function navigateToSearch(query: string, tags: string[], mode: FilterMode): void {
+  window.location.href = buildSearchUrl(query, tags, mode)
+}
