@@ -32,7 +32,13 @@ import {
 } from '../lib/utils'
 import { isValidReaction, TIMEOUTS } from '../lib/constants'
 import { getETagValue, filterRepliesByRoot } from '../lib/nostr/tags'
-import { renderContent, setHashtagClickHandler } from '../lib/content-parser'
+import {
+  renderContent,
+  setHashtagClickHandler,
+  setImageClickHandler,
+  clearImageClickHandler,
+} from '../lib/content-parser'
+import LightBox, { triggerLightBox } from './LightBox'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons } from '../components/post'
 import { useShare, useDeleteConfirm } from '../hooks'
 import type { Event } from 'nostr-tools'
@@ -146,7 +152,10 @@ export default function PostView({ eventId }: PostViewProps) {
   useEffect(() => {
     applyThemeColors(getUIThemeColors())
     setHashtagClickHandler((tag) => navigateToTag(tag))
+    setImageClickHandler(triggerLightBox)
     loadPost()
+
+    return () => clearImageClickHandler()
   }, [eventId])
 
   // Skip rendering on server (SSR phase)
@@ -276,6 +285,7 @@ export default function PostView({ eventId }: PostViewProps) {
           </div>
         </div>
       )}
+      <LightBox />
     </div>
   )
 }

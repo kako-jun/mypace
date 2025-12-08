@@ -57,14 +57,14 @@
   margin-bottom: 1.25rem;
 }
 
-.settings-tab {
+/* Shared button styles for tabs and theme switcher */
+.settings-tab,
+.theme-btn {
   --btn-corner: 8px;
   flex: 1;
   background: var(--surface-secondary);
   color: var(--text-muted);
   border: none;
-  padding: 0.75rem 1rem;
-  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -80,14 +80,27 @@
   );
 }
 
-.settings-tab:hover {
+.settings-tab:hover,
+.theme-btn:hover {
   background: var(--surface-tertiary);
   color: var(--text-secondary);
 }
 
-.settings-tab.active {
+.settings-tab.active,
+.theme-btn.active {
   background: var(--btn-primary-bg);
   color: var(--btn-primary-text);
+}
+
+.settings-tab {
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+}
+
+.theme-btn {
+  max-width: 6rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.8rem;
 }
 
 .close-button {
@@ -222,20 +235,8 @@
   display: flex;
   gap: 0.5rem;
   justify-content: center;
-  align-items: center;
 }
 
-.theme-switcher .btn {
-  width: 5rem;
-}
-
-.theme-current {
-  width: 5rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  color: var(--text-primary);
-  text-align: center;
-}
 
 /* Theme Color Customization (FF7-style) */
 .theme-preview {
@@ -381,4 +382,21 @@
 .settings-footer a:hover {
   color: var(--text-secondary);
   text-decoration: underline;
+}
+
+/* Notice List */
+.notice-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.notice-list li {
+  margin-bottom: 0.5rem;
+}
+
+.notice-list li:last-child {
+  margin-bottom: 0;
 }

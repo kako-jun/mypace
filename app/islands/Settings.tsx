@@ -168,17 +168,7 @@ export default function Settings() {
           </>
         )}
 
-        {activeTab === 'about' && (
-          <>
-            <ShareSection />
-
-            <div class="settings-footer">
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer">
-                GitHub
-              </a>
-            </div>
-          </>
-        )}
+        {activeTab === 'about' && <ShareSection />}
       </div>
     </>
   )

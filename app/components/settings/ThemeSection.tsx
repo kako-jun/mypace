@@ -1,4 +1,4 @@
-import { Button, ColorPicker } from '../ui'
+import { ColorPicker } from '../ui'
 import type { ThemeColors } from '../../types'
 
 interface ThemeSectionProps {
@@ -14,16 +14,12 @@ export default function ThemeSection({ appTheme, themeColors, onAppThemeChange, 
       <div class="settings-section">
         <h3>App Theme</h3>
         <div class="theme-switcher">
-          {appTheme === 'light' ? (
-            <span class="theme-current">Light</span>
-          ) : (
-            <Button onClick={() => onAppThemeChange('light')}>Light</Button>
-          )}
-          {appTheme === 'dark' ? (
-            <span class="theme-current">Dark</span>
-          ) : (
-            <Button onClick={() => onAppThemeChange('dark')}>Dark</Button>
-          )}
+          <button class={`theme-btn ${appTheme === 'light' ? 'active' : ''}`} onClick={() => onAppThemeChange('light')}>
+            LIGHT
+          </button>
+          <button class={`theme-btn ${appTheme === 'dark' ? 'active' : ''}`} onClick={() => onAppThemeChange('dark')}>
+            DARK
+          </button>
         </div>
       </div>
 
