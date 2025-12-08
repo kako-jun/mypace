@@ -11,9 +11,13 @@
 @import "./theme-custom.css";
 
 /* Component styles */
-@import "./components/post-form.css";
+@import "./components/post-card.css";
 @import "./components/post-actions.css";
+@import "./components/post-form.css";
 @import "./components/timeline.css";
+@import "./components/filter-bar.css";
+@import "./components/thread.css";
+@import "./components/edit-delete.css";
 @import "./components/settings.css";
 @import "./components/long-mode-editor.css";
 @import "./components/profile-setup.css";
