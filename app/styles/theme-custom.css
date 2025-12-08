@@ -87,35 +87,30 @@ body.custom-theme .logo-pace {
 
 .post-card.themed-card .like-button,
 .post-card.themed-card .reply-button,
-.post-card.themed-card .repost-button {
-  color: inherit;
-  opacity: 0.7;
-  text-shadow: inherit;
+.post-card.themed-card .repost-button,
+.post-card.themed-card .share-button {
+  color: var(--text-primary);
+  text-shadow: none;
 }
 
 .post-card.themed-card .like-button:hover:not(:disabled) {
-  opacity: 1;
   color: #f1c40f;
 }
 
 .post-card.themed-card .like-button.liked {
   color: #f1c40f;
-  opacity: 1;
 }
 
 .post-card.themed-card .reply-button:hover {
-  opacity: 1;
   color: #3498db;
 }
 
 .post-card.themed-card .repost-button:hover:not(:disabled) {
-  opacity: 1;
   color: #2ecc71;
 }
 
 .post-card.themed-card .repost-button.reposted {
   color: #2ecc71;
-  opacity: 1;
 }
 
 .post-card.themed-card .reply-form {

@@ -1,0 +1,156 @@
+/* ===========================================
+   Post Actions (Like, Reply, Repost, Share)
+   =========================================== */
+
+/* Like button */
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  transition: color 0.2s ease, transform 0.1s ease;
+}
+
+.like-button svg {
+  stroke: var(--text-primary);
+  fill: #f1c40f;
+  transition: transform 0.15s ease;
+}
+
+.like-button:hover:not(:disabled) svg {
+  transform: scale(2);
+}
+
+.like-button:hover:not(:disabled) {
+  color: #f1c40f;
+  transform: scale(1.1);
+}
+
+.like-button.liked {
+  color: #f1c40f;
+  cursor: default;
+}
+
+.like-button:disabled {
+  opacity: 0.7;
+}
+
+/* Like count (for own posts) */
+.like-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #f1c40f;
+  font-size: 0.875rem;
+}
+
+.like-count svg {
+  stroke: var(--text-primary);
+  fill: #f1c40f;
+  transition: transform 0.15s ease;
+}
+
+.like-count:hover svg {
+  transform: scale(2);
+}
+
+/* Reply button */
+.reply-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  transition: color 0.2s ease, transform 0.1s ease;
+}
+
+.reply-button svg {
+  fill: #fff;
+  transition: transform 0.15s ease;
+}
+
+.reply-button:hover svg {
+  transform: scale(2);
+}
+
+.reply-button:hover {
+  color: #3498db;
+  transform: scale(1.1);
+}
+
+/* Repost button */
+.repost-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  transition: color 0.2s ease, transform 0.1s ease;
+}
+
+.repost-button svg {
+  transition: transform 0.15s ease;
+}
+
+.repost-button:hover:not(:disabled) svg {
+  transform: scale(2);
+}
+
+.repost-button:hover:not(:disabled) {
+  color: #2ecc71;
+  transform: scale(1.1);
+}
+
+.repost-button.reposted {
+  color: #2ecc71;
+  cursor: default;
+}
+
+.repost-button:disabled {
+  opacity: 0.7;
+}
+
+/* Share button */
+.share-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  transition: color 0.2s ease, transform 0.1s ease;
+}
+
+.share-button svg {
+  fill: #fff;
+  transition: transform 0.15s ease;
+}
+
+.share-button:hover svg {
+  transform: scale(2);
+}
+
+.share-button:hover {
+  color: #3498db;
+  transform: scale(1.1);
+}
+
+.share-button.copied {
+  color: #2ecc71;
+}
