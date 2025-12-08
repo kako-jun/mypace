@@ -137,9 +137,13 @@
   direction: ltr;
 }
 
-.search-box svg {
+.search-box .search-icon {
   flex-shrink: 0;
   color: var(--text-placeholder);
+}
+
+.search-box svg {
+  flex-shrink: 0;
 }
 
 .search-input {

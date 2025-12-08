@@ -1,4 +1,4 @@
-import Icon from './Icon'
+import { Icon } from '../components/ui'
 
 export default function SearchButton() {
   const handleClick = () => {
@@ -6,7 +6,7 @@ export default function SearchButton() {
   }
 
   return (
-    <button class="search-toggle text-outlined" onClick={handleClick} title="Search">
+    <button class="search-toggle" onClick={handleClick} title="Search">
       <Icon name="Search" size={20} />
     </button>
   )

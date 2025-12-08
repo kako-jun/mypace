@@ -23,7 +23,7 @@ export default function SearchBox({ searchQuery, filterTags, filterMode, onSearc
 
   return (
     <div class="search-box">
-      <Icon name="Search" size={16} />
+      <Icon name="Search" size={16} class="search-icon" />
       <input
         type="text"
         class="search-input"

@@ -1,17 +1,12 @@
 /* Settings component styles */
 
-/* Settings - floating style */
+/* Settings - now inside header-actions */
 .settings-toggle {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 101;
   background: transparent;
   border: none;
   padding: 0.25rem 0.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  pointer-events: auto;
 }
 
 .settings-backdrop {
