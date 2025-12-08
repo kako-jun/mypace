@@ -27,7 +27,9 @@ import {
   getUIThemeColors,
   applyThemeColors,
   shareOrCopy,
+  copyToClipboard,
 } from '../lib/utils'
+import { Icon } from '../components/ui'
 import { isValidReaction, TIMEOUTS } from '../lib/constants'
 import { getETagValue, filterRepliesByRoot } from '../lib/nostr/tags'
 import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
@@ -55,6 +57,7 @@ export default function UserView({ pubkey }: UserViewProps) {
   const [repostingId, setRepostingId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [npubCopied, setNpubCopied] = useState(false)
 
   const loadUserData = async () => {
     setError('')
@@ -189,9 +192,15 @@ export default function UserView({ pubkey }: UserViewProps) {
 
   const handleBack = () => navigateToHome()
 
-  // Format npub for display
   const npub = nip19.npubEncode(pubkey)
-  const shortNpub = `${npub.slice(0, 12)}...${npub.slice(-8)}`
+
+  const handleCopyNpub = async () => {
+    const success = await copyToClipboard(npub)
+    if (success) {
+      setNpubCopied(true)
+      setTimeout(() => setNpubCopied(false), TIMEOUTS.COPY_FEEDBACK)
+    }
+  }
 
   if (loading) return <div class="loading">Loading...</div>
 
@@ -220,7 +229,12 @@ export default function UserView({ pubkey }: UserViewProps) {
           {avatarUrl ? <img src={avatarUrl} alt="" class="user-avatar" /> : <div class="user-avatar-placeholder" />}
           <div class="user-info">
             <h2 class="user-name">{displayName}</h2>
-            <span class="user-npub">{shortNpub}</span>
+            <div class="user-npub-row">
+              <span class="user-npub">{npub}</span>
+              <button class="npub-copy-btn" onClick={handleCopyNpub} title="Copy npub">
+                {npubCopied ? <Icon name="Check" size={14} /> : <Icon name="Copy" size={14} />}
+              </button>
+            </div>
           </div>
         </div>
         {profile?.about && <p class="user-about">{profile.about}</p>}
