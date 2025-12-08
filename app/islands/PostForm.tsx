@@ -157,7 +157,7 @@ export default function PostForm({
         class={`mode-toggle-corner text-outlined text-outlined-primary ${longMode ? 'active' : ''}`}
         onClick={() => onLongModeChange(!longMode)}
       >
-        {longMode ? 'Short mode' : 'Long mode'}
+        {longMode ? 'SHORT' : 'LONG'}
       </button>
 
       <textarea
@@ -182,7 +182,7 @@ export default function PostForm({
             class={`preview-toggle text-outlined text-outlined-primary ${showPreview ? 'active' : ''}`}
             onClick={() => onShowPreviewChange(!showPreview)}
           >
-            {showPreview ? 'Hide' : 'Preview'}
+            {showPreview ? 'HIDE' : 'PREVIEW'}
           </button>
           <span class="char-count">
             {content.length}/{LIMITS.MAX_POST_LENGTH}

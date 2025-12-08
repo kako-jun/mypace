@@ -47,10 +47,11 @@
     -1px 1px 0 #555,
     1px -1px 0 #555,
     -1px -1px 0 #555;
+  transition: transform 0.15s ease;
 }
 
 .text-outlined:hover {
-  transform: scale(1.05);
+  transform: scale(1.15);
 }
 
 [data-theme="dark"] .text-outlined {

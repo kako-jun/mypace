@@ -124,7 +124,7 @@ export default function Settings() {
   if (!open) {
     return (
       <button class="settings-toggle text-outlined" onClick={() => setOpen(true)}>
-        Settings
+        SETTINGS
       </button>
     )
   }
