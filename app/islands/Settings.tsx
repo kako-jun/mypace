@@ -27,6 +27,7 @@ import type { ThemeColors } from '../types'
 
 export default function Settings() {
   const [open, setOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'settings' | 'about'>('settings')
   const [nsec, setNsec] = useState('')
   const [npub, setNpub] = useState('')
   const [usingNip07, setUsingNip07] = useState(false)
@@ -133,29 +134,51 @@ export default function Settings() {
     <>
       <div class="settings-backdrop" onClick={() => setOpen(false)} />
       <div class="settings-panel" onClick={(e) => e.stopPropagation()}>
-        <div class="settings-header">
-          <h2>Settings</h2>
+        <div class="settings-tabs">
+          <button
+            class={`settings-tab ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            SETTINGS
+          </button>
+          <button class={`settings-tab ${activeTab === 'about' ? 'active' : ''}`} onClick={() => setActiveTab('about')}>
+            ABOUT
+          </button>
         </div>
 
-        <ProfileSection
-          displayName={displayName}
-          pictureUrl={pictureUrl}
-          onDisplayNameChange={setDisplayName}
-          onPictureUrlChange={setPictureUrl}
-        />
+        {activeTab === 'settings' && (
+          <>
+            <ProfileSection
+              displayName={displayName}
+              pictureUrl={pictureUrl}
+              onDisplayNameChange={setDisplayName}
+              onPictureUrlChange={setPictureUrl}
+            />
 
-        <ThemeSection
-          appTheme={appTheme}
-          themeColors={themeColors}
-          onAppThemeChange={handleAppThemeChange}
-          onColorChange={handleColorChange}
-        />
+            <ThemeSection
+              appTheme={appTheme}
+              themeColors={themeColors}
+              onAppThemeChange={handleAppThemeChange}
+              onColorChange={handleColorChange}
+            />
 
-        <EditorSection vimMode={vimMode} onVimModeChange={handleVimModeChange} />
+            <EditorSection vimMode={vimMode} onVimModeChange={handleVimModeChange} />
 
-        <KeysSection nsec={nsec} npub={npub} usingNip07={usingNip07} />
+            <KeysSection nsec={nsec} npub={npub} usingNip07={usingNip07} />
+          </>
+        )}
 
-        <ShareSection />
+        {activeTab === 'about' && (
+          <>
+            <ShareSection />
+
+            <div class="settings-footer">
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+                GitHub
+              </a>
+            </div>
+          </>
+        )}
       </div>
     </>
   )
