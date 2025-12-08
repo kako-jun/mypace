@@ -71,17 +71,24 @@ body.long-mode-active .container {
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 8px;
   background: transparent;
   border: none;
-  color: var(--text-secondary);
   cursor: pointer;
-  transition: color 0.2s ease, background 0.2s ease;
+  transition: transform 0.15s ease;
+}
+
+.search-toggle svg {
+  fill: #fff;
+  stroke: var(--text-primary);
+  transition: transform 0.15s ease;
 }
 
 .search-toggle:hover {
-  color: var(--text-link);
-  background: var(--surface-tertiary);
+  transform: scale(1.1);
+}
+
+.search-toggle:hover svg {
+  transform: scale(1.5);
 }
 
 /* Loading & Empty */

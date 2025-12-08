@@ -7,19 +7,37 @@ interface IconProps {
   class?: string
 }
 
+// Render SVG child element as JSX
+function renderSvgChild(child: [string, Record<string, string>], index: number) {
+  const [tag, attrs] = child
+  const props: Record<string, string> = { key: String(index) }
+  for (const [k, v] of Object.entries(attrs)) {
+    props[k] = v
+  }
+
+  switch (tag) {
+    case 'circle':
+      return <circle {...props} />
+    case 'path':
+      return <path {...props} />
+    case 'line':
+      return <line {...props} />
+    case 'polyline':
+      return <polyline {...props} />
+    case 'polygon':
+      return <polygon {...props} />
+    case 'rect':
+      return <rect {...props} />
+    case 'ellipse':
+      return <ellipse {...props} />
+    default:
+      return null
+  }
+}
+
 export default function Icon({ name, size = 16, fill = 'none', class: className }: IconProps) {
   const icon = icons[name]
   if (!icon) return null
-
-  const svgChildren = icon
-    .map((child: [string, Record<string, string>]) => {
-      const [tag, attrs] = child
-      const attrStr = Object.entries(attrs)
-        .map(([k, v]) => `${k}="${v}"`)
-        .join(' ')
-      return `<${tag} ${attrStr} />`
-    })
-    .join('')
 
   return (
     <svg
@@ -34,7 +52,8 @@ export default function Icon({ name, size = 16, fill = 'none', class: className 
       stroke-linejoin="round"
       class={className}
       style={{ display: 'inline-block', verticalAlign: 'middle' }}
-      dangerouslySetInnerHTML={{ __html: svgChildren }}
-    />
+    >
+      {icon.map((child: [string, Record<string, string>], i: number) => renderSvgChild(child, i))}
+    </svg>
   )
 }

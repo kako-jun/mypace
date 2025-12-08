@@ -2,7 +2,7 @@ import { createRoute } from 'honox/factory'
 import PostView from '../../islands/PostView'
 import Settings from '../../islands/Settings'
 import Logo from '../../islands/Logo'
-import { SearchButton } from '../../components/ui'
+import SearchButton from '../../islands/SearchButton'
 import { APP_TITLE } from '../../lib/nostr/events'
 
 export default createRoute((c) => {
