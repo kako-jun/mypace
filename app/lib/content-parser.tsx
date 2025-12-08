@@ -27,6 +27,17 @@ export function clearHashtagClickHandler() {
   onHashtagClick = null
 }
 
+// Callback for image clicks (LightBox)
+let onImageClick: ((src: string) => void) | null = null
+
+export function setImageClickHandler(handler: (src: string) => void) {
+  onImageClick = handler
+}
+
+export function clearImageClickHandler() {
+  onImageClick = null
+}
+
 // Configure marked with Prism highlighting
 const marked = new Marked({
   breaks: true, // Convert single line breaks to <br>
@@ -75,8 +86,14 @@ function processImageUrls(html: string): string {
   // Match URLs that are on their own line or surrounded by whitespace
   const urlRegex = /(^|[\s>])(https?:\/\/[^\s<"]+\.(jpg|jpeg|png|gif|webp|svg)(\?[^\s<"]*)?)([\s<]|$)/gim
   return html.replace(urlRegex, (match, before, url, ext, query, after) => {
-    return `${before}<span class="content-image-wrapper"><a href="${url}" target="_blank" rel="noopener noreferrer"><img src="${url}" alt="" class="content-image" loading="lazy" /></a></span>${after}`
+    return `${before}<span class="content-image-wrapper"><img src="${url}" alt="" class="content-image" data-lightbox="${url}" loading="lazy" /></span>${after}`
   })
+}
+
+// Remove links that wrap images (marked auto-links image URLs)
+function removeImageLinks(html: string): string {
+  // Match <a> tags that contain only an image wrapper
+  return html.replace(/<a[^>]*>(\s*<span class="content-image-wrapper">.*?<\/span>\s*)<\/a>/gi, '$1')
 }
 
 // Add target="_blank" to links
@@ -90,16 +107,25 @@ export function renderContent(content: string) {
 
   // Process additional elements
   html = processImageUrls(html)
+  html = removeImageLinks(html)
   html = processHashtags(html)
   html = processLinks(html)
 
-  // Handle hashtag clicks via event delegation
+  // Handle clicks via event delegation
   const handleClick = (e: Event) => {
     const target = e.target as HTMLElement
     if (target.classList.contains('content-hashtag')) {
       const tag = target.getAttribute('data-tag')
       if (tag && onHashtagClick) {
         onHashtagClick(tag)
+      }
+    }
+    if (target.classList.contains('content-image')) {
+      e.preventDefault()
+      e.stopPropagation()
+      const src = target.getAttribute('data-lightbox')
+      if (src && onImageClick) {
+        onImageClick(src)
       }
     }
   }

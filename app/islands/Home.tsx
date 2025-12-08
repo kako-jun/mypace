@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'hono/jsx'
 import PostForm from './PostForm'
 import Timeline from './Timeline'
-import { renderContent } from '../lib/content-parser'
+import LightBox, { triggerLightBox } from './LightBox'
+import { renderContent, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
 import { getString, setString, removeItem, getUIThemeColors, applyThemeColors } from '../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS, TIMEOUTS } from '../lib/constants'
 import type { Event } from 'nostr-tools'
@@ -57,6 +58,12 @@ export default function Home({ initialFilterTags, initialFilterMode }: HomeProps
   // Apply theme colors on initial load
   useEffect(() => {
     applyThemeColors(getUIThemeColors())
+  }, [])
+
+  // Set up image click handler for LightBox
+  useEffect(() => {
+    setImageClickHandler(triggerLightBox)
+    return () => clearImageClickHandler()
   }, [])
 
   // Skip rendering on server (SSR phase)
@@ -162,6 +169,7 @@ export default function Home({ initialFilterTags, initialFilterMode }: HomeProps
           initialFilterMode={initialFilterMode}
         />
       </div>
+      <LightBox />
     </>
   )
 }
