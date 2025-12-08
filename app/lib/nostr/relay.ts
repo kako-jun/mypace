@@ -69,6 +69,23 @@ export async function fetchUserProfile(pubkey: string): Promise<Event | null> {
   }
 }
 
+// Fetch posts by a specific user
+export async function fetchUserPosts(pubkey: string, limit = 50): Promise<Event[]> {
+  try {
+    const p = getPool()
+    const events = await p.querySync(RELAYS, {
+      kinds: [1],
+      authors: [pubkey],
+      '#t': [MYPACE_TAG],
+      limit,
+    })
+    return events.sort((a, b) => b.created_at - a.created_at)
+  } catch (e) {
+    console.error('Failed to fetch user posts:', e)
+    return []
+  }
+}
+
 // Fetch a single event by ID
 export async function fetchEventById(eventId: string): Promise<Event | null> {
   try {

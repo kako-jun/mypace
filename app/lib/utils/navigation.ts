@@ -9,6 +9,10 @@ export function navigateToPost(eventId: string): void {
   window.location.href = `/post/${eventId}`
 }
 
+export function navigateToUser(pubkey: string): void {
+  window.location.href = `/user/${pubkey}`
+}
+
 export function navigateToTag(tag: string): void {
   window.location.href = `/tag/${encodeURIComponent(tag)}`
 }

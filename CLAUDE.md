@@ -54,6 +54,7 @@ app/
 - プロフィール設定（名前必須、アバター画像）
 - 投稿の編集・削除（編集は投稿フォームで行い、返信タグを保持）
 - 画像アップロード（nostr.build、NIP-98認証）
+- 画像クリックでLightBox表示
 - いいね（NIP-25 kind 7）- 自己いいね禁止
 - 返信（NIP-10）- スレッド表示対応
 - リポスト（NIP-18 kind 6）- タイムラインに「○○ reposted」表示
@@ -61,12 +62,15 @@ app/
 - 鍵のエクスポート・インポート（npub/nsecコピー対応）
 - コンテンツパース（ハッシュタグ、URL、画像）
 - ハッシュタグフィルタリング（日本語対応、複数タグAND/OR）
-- ライト/ダークテーマ切り替え
+- ライト/ダークテーマ切り替え（Settings/Aboutタブ分離）
 - ウィンドウカラー（4隅グラデーション背景）カスタマイズ
-- 長文モード（4200文字対応、プレビュー付き）
+- 長文モード（4200文字対応、プレビュー付き、Vimモード対応）
 - 下書き自動保存（localStorage）
 - 個別投稿ページ（/post/{id}）
+- ユーザーページ（/user/{pubkey}）
 - RESTful URL（/tag/{hashtag}）
+- Lucide Icons（ベクターアイコン）
+- 八角形ボタンデザイン
 
 ## Key Files
 
@@ -76,6 +80,7 @@ app/
 | `app/routes/index.tsx` | トップページ |
 | `app/routes/post/[id].tsx` | 個別投稿ページ |
 | `app/routes/tag/[tag].tsx` | タグフィルタページ |
+| `app/routes/user/[pubkey].tsx` | ユーザーページ |
 | `app/routes/api/timeline.ts` | タイムラインAPI |
 
 ### Islands（Hydrate対象）
@@ -85,9 +90,11 @@ app/
 | `app/islands/PostForm.tsx` | 投稿フォーム（左下固定） |
 | `app/islands/Timeline.tsx` | タイムライン表示 |
 | `app/islands/PostView.tsx` | 個別投稿表示 |
-| `app/islands/Settings.tsx` | 設定パネル |
+| `app/islands/UserView.tsx` | ユーザー詳細・投稿一覧 |
+| `app/islands/Settings.tsx` | 設定パネル（タブ切替対応） |
 | `app/islands/ProfileSetup.tsx` | プロフィール設定 |
 | `app/islands/LongModeEditor.tsx` | 長文エディタ（CodeMirror） |
+| `app/islands/LightBox.tsx` | 画像拡大表示モーダル |
 | `app/islands/Logo.tsx` | ロゴ（クリックでリロード） |
 
 ### Components

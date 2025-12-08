@@ -13,39 +13,86 @@
 - FF4のメニュー画面のように自然にカードが移動
 
 ### 3. 軽量・高速 (Lightweight)
-- Google Fonts は1種類のみ (M PLUS Rounded 1c)
+- Google Fonts は1種類のみ (BIZ UDGothic)
 - システムフォントをフォールバック
 - 最小限のCSS
+- CSSは `color-mix()` を活用したテーマ変数で管理
 
 ## Typography
 
 | 用途 | フォント | Weight |
 |------|---------|--------|
-| ロゴ | M PLUS Rounded 1c | 900 (Black) |
-| 本文 | M PLUS Rounded 1c | 400 (Regular) |
-| UI | M PLUS Rounded 1c | 400-700 |
+| ロゴ | BIZ UDGothic | 700 (Bold) |
+| 本文 | BIZ UDGothic | 400 (Regular) |
+| UI | BIZ UDGothic | 400-700 |
 
 ### ロゴ
 ```
-MY
+MY★
 PACE
 ```
 - 2行、左詰め
-- 極太ゴシック (weight: 900)
+- 太字ゴシック (weight: 700)
+- アウトラインテキスト（1pxストローク）
 - どのブラウザでも同じ見た目
+
+## Icons
+
+Lucide Icons を使用。絵文字からベクターアイコンに移行:
+
+| アイコン | 用途 |
+|---------|------|
+| `Star` / `StarOff` | いいね |
+| `Repeat2` | リポスト |
+| `MessageCircle` | 返信 |
+| `Share2` | 共有 |
+
+アイコンはテキストと縦方向に揃えて配置 (`vertical-align: middle`)。
+
+## Buttons
+
+### 八角形デザイン
+全てのボタンに45度の角カット（八角形）を適用:
+
+```css
+--btn-corner: 10px;
+clip-path: polygon(
+  var(--btn-corner) 0%, calc(100% - var(--btn-corner)) 0%,
+  100% var(--btn-corner), 100% calc(100% - var(--btn-corner)),
+  calc(100% - var(--btn-corner)) 100%, var(--btn-corner) 100%,
+  0% calc(100% - var(--btn-corner)), 0% var(--btn-corner)
+);
+```
+
+### ラベル
+- 全て大文字 (BACK, POST, CLEAR ALL 等)
+- ホバー時に右方向へ微移動 (`translateX(4px)`)
 
 ## Colors
 
+CSSカスタムプロパティで5つの基本色を定義し、`color-mix()` で派生色を生成:
+
+### 基本色 (ライトテーマ)
+| 変数 | 色 | 用途 |
+|------|-----|------|
+| `--bg-base` | `#f8f8f8` | ページ背景 |
+| `--surface-primary` | `#ffffff` | カード背景 |
+| `--surface-secondary` | `#eeeeee` | 非選択ボタン等 |
+| `--text-primary` | `#333333` | 本文テキスト |
+| `--text-muted` | `#888888` | 補助テキスト |
+
+### 派生色 (color-mix)
+```css
+--surface-hover: color-mix(in srgb, var(--surface-secondary) 70%, var(--text-muted) 30%);
+--border-color: color-mix(in srgb, var(--surface-secondary) 50%, var(--text-muted) 50%);
+```
+
+### セマンティック色
 | Element | Color |
 |---------|-------|
-| Background | `#f8f8f8` |
-| Card | `#fff` |
-| Text | `#333` / `#444` |
-| Muted | `#888` / `#aaa` / `#bbb` |
-| Logo MY | `#222` |
-| Logo PACE | `#444` |
-| Button | `#333` |
 | Error | `#c44` |
+| Success | 緑系 |
+| Link | 青紫系 |
 
 ## Animation
 
@@ -69,6 +116,37 @@ PACE
 - ボタンは押すと縮む (`scale(0.98)`)
 - 設定パネルはスライドで開く
 - ロゴクリックでトップへ遷移（選択不可）
+
+## Timeline Layout
+
+### マソンリーレイアウト
+CSS Columns を使用したマソンリー（レンガ積み）レイアウト:
+- PC: 3カラム
+- タブレット: 2カラム
+- スマホ: 1カラム
+
+```css
+.timeline-list {
+  column-count: 3;
+  column-gap: 16px;
+}
+```
+
+### 投稿カードデザイン
+
+#### 折れ角 (Folded Corner)
+カード右上に折れた紙の角を演出:
+```css
+.post-card::before {
+  /* 三角形の角 */
+  clip-path: polygon(0 0, 100% 100%, 100% 0);
+  background: var(--bg-base);
+}
+```
+
+#### ホバーエフェクト
+- 右方向へ微移動 (`translateX(4px)`)
+- 折れ角の影が濃くなる
 
 ## Post Form
 
@@ -146,12 +224,19 @@ PACE
 | `/` | タイムライン（全投稿） |
 | `/post/{event_id}` | 個別投稿ページ（大きめカード表示） |
 | `/tag/{hashtag}` | ハッシュタグフィルタ |
+| `/user/{pubkey}` | ユーザーページ（プロフィール+投稿一覧） |
 
 ### 個別投稿ページ
 - 投稿カードクリックで遷移（ボタン・リンク以外の領域）
 - 大きめカードで全文表示
 - テーマカラー背景適用
 - 返信一覧表示
+
+### ユーザーページ
+- ユーザー名/アバタークリックで遷移
+- プロフィールカード（アバター、名前、npub、about、投稿数）
+- そのユーザーのmypace投稿一覧
+- マソンリーレイアウトで表示
 
 ### 長文の折りたたみ
 - タイムライン上では420文字または42行を超える投稿は省略
@@ -162,20 +247,38 @@ PACE
 
 右からスライドで開くパネル。パネル外クリックで閉じる。
 
-- Profile: 名前変更、アバター設定
+### タブ構成
+
+2つのタブに分割:
+- **Settings**: アプリ設定
+- **About**: アプリ情報・シェア
+
+タブボタンは八角形デザイン、非選択タブは `--surface-secondary` 背景色。
+
+### Settings タブ
+
+- **Profile**: 名前変更、アバター設定
   - アバターは📷ボタンでアップロード（ドラッグ&ドロップ対応）
   - 変更は即時保存
-- App Theme: ライト/ダークテーマ切り替え
-- Editor: 長文モードエディタ設定
-  - Vimモードのオン/オフ（localStorageに保存）
-- Window Color: 4隅カラーカスタマイズ（即時保存）
-- Your Keys: npub/nsec表示、コピー機能
+  - アバターサイズ: 64px
+- **App Theme**: ライト/ダークテーマ切り替え
+  - LIGHT / DARK ボタン（八角形）
+- **Editor**: 長文モードエディタ設定
+  - Vimモード: トグルスイッチUI（localStorageに保存）
+- **Window Color**: 4隅カラーカスタマイズ（即時保存）
+- **Your Keys**: npub/nsec表示、コピー機能
   - nsecはデフォルト非表示（Show/Hideで切り替え）
-- Import Key: nsecインポート
+- **Import Key**: nsecインポート
   - インポート時に既存設定（プロフィール、テーマ）をクリア
-- Danger Zone: キー削除
-- Share App: QRコード表示（アプリURL共有用）
-- GitHub: リポジトリへのリンク（フッター）
+- **Danger Zone**: キー削除
+
+### About タブ
+
+- **Share App**: QRコード表示（アプリURL共有用）
+- **Notice**: 免責事項
+  - "This app is provided as-is without warranty. Use at your own risk."
+  - "Images uploaded to Nostr cannot be deleted due to the protocol's design."
+- **GitHub**: リポジトリへのリンク（フッター）
 
 パネル開閉時にbodyのスクロールを無効化（二重スクロールバー防止）。
 
@@ -282,6 +385,15 @@ linear-gradient(135deg, color1 0%, color4 100%)
 - **ハッシュタグ**: 青紫色で表示、クリックでフィルタリング（日本語対応）
 - **URL**: 緑色リンク、新しいタブで開く
 - **画像URL** (`.jpg`, `.png`, `.gif`, `.webp`, `.svg`): インライン画像表示
+
+### LightBox
+
+画像クリック時にLightBoxモーダルで拡大表示:
+- 背景: 半透明黒（`rgba(0,0,0,0.9)`）
+- ESCキーまたは背景クリックで閉じる
+- 右上に×ボタン
+- 画像クリック領域は画像のみ（親要素への伝播を防止）
+- 表示中はbodyスクロールを無効化
 
 ## Hashtag Filtering
 
