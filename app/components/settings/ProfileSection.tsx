@@ -128,7 +128,7 @@ export default function ProfileSection({
         </div>
         <div class="avatar-upload-buttons">
           <label
-            class={`avatar-drop-area ${dragging ? 'dragging' : ''}`}
+            class={`drop-area ${dragging ? 'dragging' : ''}`}
             onDragOver={handlers.onDragOver}
             onDragLeave={handlers.onDragLeave}
             onDrop={handlers.onDrop}

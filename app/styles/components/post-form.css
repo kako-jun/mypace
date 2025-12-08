@@ -163,30 +163,7 @@
   gap: 0.5rem;
 }
 
-.image-drop-area {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 28px;
-  border: 1px dashed var(--text-placeholder);
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--text-secondary);
-}
-
-.image-drop-area:hover {
-  border-color: var(--text-link);
-  color: var(--text-link);
-}
-
-.image-drop-area.dragging {
-  border-color: var(--text-link);
-  background: rgba(100, 150, 255, 0.15);
-  color: var(--text-link);
-}
+/* drop-area styles are in base.css */
 
 .attached-images {
   display: flex;
