@@ -49,17 +49,21 @@ app/
 │   │   └── timeline.ts      # タイムラインAPI
 │   ├── post/
 │   │   └── [id].tsx         # 個別投稿ページ
-│   └── tag/
-│       └── [tag].tsx        # タグフィルタページ
+│   ├── tag/
+│   │   └── [tag].tsx        # タグフィルタページ
+│   └── user/
+│       └── [pubkey].tsx     # ユーザーページ
 │
 ├── islands/                 # Islandコンポーネント（hydrate対象）
 │   ├── Home.tsx             # ホーム画面（状態管理）
 │   ├── PostForm.tsx         # 投稿フォーム
 │   ├── Timeline.tsx         # タイムライン表示
 │   ├── PostView.tsx         # 個別投稿詳細
-│   ├── Settings.tsx         # 設定パネル
+│   ├── UserView.tsx         # ユーザーページ
+│   ├── Settings.tsx         # 設定パネル（Settings/Aboutタブ）
 │   ├── ProfileSetup.tsx     # プロフィール設定
 │   ├── LongModeEditor.tsx   # 長文エディタ（CodeMirror）
+│   ├── LightBox.tsx         # 画像拡大表示モーダル
 │   └── Logo.tsx             # ロゴ
 │
 ├── components/              # 再利用可能コンポーネント
@@ -127,14 +131,16 @@ app/
 │
 ├── styles/                  # CSS
 │   ├── tailwind.css         # Tailwind設定
-│   ├── base.css             # ベーススタイル
+│   ├── base.css             # ベーススタイル（color-mix変数）
 │   └── components/          # コンポーネント固有
 │       ├── post-form.css
 │       ├── timeline.css
 │       ├── settings.css
 │       ├── post-view.css
 │       ├── profile-setup.css
-│       └── long-mode-editor.css
+│       ├── long-mode-editor.css
+│       ├── lightbox.css     # 画像拡大モーダル
+│       └── user-view.css    # ユーザーページ
 │
 ├── types/
 │   └── index.ts             # TypeScript型定義
@@ -186,12 +192,18 @@ routes/index.tsx
     │       ├── components/post/PostHeader.tsx
     │       ├── components/post/PostActions.tsx
     │       └── components/post/PostPreview.tsx
-    └── islands/Settings.tsx
-        ├── components/settings/ProfileSection.tsx
-        ├── components/settings/ThemeSection.tsx
-        ├── components/settings/EditorSection.tsx
-        ├── components/settings/KeysSection.tsx
-        └── components/settings/ShareSection.tsx
+    ├── islands/Settings.tsx (Settings/Aboutタブ)
+    │   ├── components/settings/ProfileSection.tsx
+    │   ├── components/settings/ThemeSection.tsx
+    │   ├── components/settings/EditorSection.tsx
+    │   ├── components/settings/KeysSection.tsx
+    │   └── components/settings/ShareSection.tsx
+    └── islands/LightBox.tsx (画像拡大モーダル)
+
+routes/user/[pubkey].tsx
+└── islands/UserView.tsx (ユーザー詳細+投稿一覧)
+    ├── components/timeline/TimelinePostCard.tsx
+    └── islands/LightBox.tsx
 ```
 
 ## Important Notes
