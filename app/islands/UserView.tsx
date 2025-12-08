@@ -243,45 +243,42 @@ export default function UserView({ pubkey }: UserViewProps) {
         </div>
       </div>
 
-      <div class="user-posts">
-        <h3 class="user-posts-heading">Posts</h3>
-        <div class="timeline-list">
-          {events.map((event) => {
-            const isMyPost = myPubkey === event.pubkey
+      <div class="timeline">
+        {events.map((event) => {
+          const isMyPost = myPubkey === event.pubkey
 
-            if (deletedId === event.id) {
-              return (
-                <article key={event.id} class="post-card">
-                  <p class="success">Deleted!</p>
-                </article>
-              )
-            }
-
+          if (deletedId === event.id) {
             return (
-              <TimelinePostCard
-                key={event.id}
-                event={event}
-                isMyPost={isMyPost}
-                profiles={{ [pubkey]: profile }}
-                reactions={reactions[event.id]}
-                replies={replies[event.id]}
-                reposts={reposts[event.id]}
-                likingId={likingId}
-                repostingId={repostingId}
-                copiedId={copiedId}
-                onEdit={() => navigateToEdit(event.id)}
-                onDeleteConfirm={() => handleDeleteConfirm(event)}
-                onLike={() => handleLike(event)}
-                onReply={() => navigateToReply(event.id)}
-                onRepost={() => handleRepost(event)}
-                onShare={() => handleShare(event.id)}
-                getDisplayName={() => displayName}
-                getAvatarUrl={() => avatarUrl}
-              />
+              <article key={event.id} class="post-card">
+                <p class="success">Deleted!</p>
+              </article>
             )
-          })}
-          {events.length === 0 && <p class="empty">No posts yet</p>}
-        </div>
+          }
+
+          return (
+            <TimelinePostCard
+              key={event.id}
+              event={event}
+              isMyPost={isMyPost}
+              profiles={{ [pubkey]: profile }}
+              reactions={reactions[event.id]}
+              replies={replies[event.id]}
+              reposts={reposts[event.id]}
+              likingId={likingId}
+              repostingId={repostingId}
+              copiedId={copiedId}
+              onEdit={() => navigateToEdit(event.id)}
+              onDeleteConfirm={() => handleDeleteConfirm(event)}
+              onLike={() => handleLike(event)}
+              onReply={() => navigateToReply(event.id)}
+              onRepost={() => handleRepost(event)}
+              onShare={() => handleShare(event.id)}
+              getDisplayName={() => displayName}
+              getAvatarUrl={() => avatarUrl}
+            />
+          )
+        })}
+        {events.length === 0 && <p class="empty">No posts yet</p>}
       </div>
       <LightBox />
     </div>
