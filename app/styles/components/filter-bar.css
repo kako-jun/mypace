@@ -118,3 +118,60 @@
 .filter-clear:hover {
   color: var(--text-secondary);
 }
+
+/* ===========================================
+   Search Box Component
+   =========================================== */
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-tertiary);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  max-width: 600px;
+  margin-left: auto;
+  column-span: all;
+  direction: ltr;
+}
+
+.search-box svg {
+  flex-shrink: 0;
+  color: var(--text-placeholder);
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+  min-width: 0;
+}
+
+.search-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.search-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--surface-secondary);
+  border: none;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.search-submit:hover {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}

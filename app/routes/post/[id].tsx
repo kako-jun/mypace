@@ -2,6 +2,7 @@ import { createRoute } from 'honox/factory'
 import PostView from '../../islands/PostView'
 import Settings from '../../islands/Settings'
 import Logo from '../../islands/Logo'
+import { SearchButton } from '../../components/ui'
 import { APP_TITLE } from '../../lib/nostr/events'
 
 export default createRoute((c) => {
@@ -16,7 +17,10 @@ export default createRoute((c) => {
     <main class="container">
       <header class="header">
         <Logo />
-        <Settings />
+        <div class="header-actions">
+          <SearchButton />
+          <Settings />
+        </div>
       </header>
       <PostView eventId={id} />
     </main>,

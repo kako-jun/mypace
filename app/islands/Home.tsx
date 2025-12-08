@@ -11,9 +11,11 @@ import type { FilterMode } from '../types'
 interface HomeProps {
   initialFilterTags?: string[]
   initialFilterMode?: FilterMode
+  initialSearchQuery?: string
+  showSearchBox?: boolean
 }
 
-export default function Home({ initialFilterTags, initialFilterMode }: HomeProps) {
+export default function Home({ initialFilterTags, initialFilterMode, initialSearchQuery, showSearchBox }: HomeProps) {
   const [mounted, setMounted] = useState(false)
   const [longMode, setLongMode] = useState(false)
   // Load draft from localStorage on initial render
@@ -167,6 +169,8 @@ export default function Home({ initialFilterTags, initialFilterMode }: HomeProps
           onReplyStart={handleReplyStart}
           initialFilterTags={initialFilterTags}
           initialFilterMode={initialFilterMode}
+          initialSearchQuery={initialSearchQuery}
+          showSearchBox={showSearchBox}
         />
       </div>
       <LightBox />

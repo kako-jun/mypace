@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'hono/jsx'
 import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
-import { FilterBar, TimelinePostCard } from '../components/timeline'
+import { FilterBar, SearchBox, TimelinePostCard } from '../components/timeline'
 import { useTimeline, useShare } from '../hooks'
 import {
   shareOrCopy,
@@ -10,6 +10,7 @@ import {
   navigateToTag,
   navigateToAddTag,
   buildTagUrl,
+  buildSearchUrl,
   contentHasTag,
 } from '../lib/utils'
 import type { Event } from 'nostr-tools'
@@ -20,11 +21,21 @@ interface TimelineProps {
   onReplyStart?: (event: Event) => void
   initialFilterTags?: string[]
   initialFilterMode?: FilterMode
+  initialSearchQuery?: string
+  showSearchBox?: boolean
 }
 
-export default function Timeline({ onEditStart, onReplyStart, initialFilterTags, initialFilterMode }: TimelineProps) {
+export default function Timeline({
+  onEditStart,
+  onReplyStart,
+  initialFilterTags,
+  initialFilterMode,
+  initialSearchQuery,
+  showSearchBox,
+}: TimelineProps) {
   const [filterTags] = useState<string[]>(initialFilterTags || [])
   const [filterMode] = useState<FilterMode>(initialFilterMode || 'and')
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery || '')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const { copied: filterCopied, share: shareFilter } = useShare()
@@ -103,7 +114,8 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
     )
   }
 
-  const filteredItems =
+  // Filter by tags
+  let filteredItems =
     filterTags.length > 0
       ? items.filter((item) =>
           filterMode === 'and'
@@ -112,18 +124,54 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
         )
       : items
 
-  const clearFilter = () => navigateToHome()
+  // Filter by search query (case-insensitive)
+  const currentSearchQuery = initialSearchQuery || ''
+  if (currentSearchQuery) {
+    const lowerQuery = currentSearchQuery.toLowerCase()
+    filteredItems = filteredItems.filter((item) => item.event.content.toLowerCase().includes(lowerQuery))
+  }
+
+  // Determine if we're on search page (has query or tags via search)
+  const isSearchPage = showSearchBox
+
+  const clearFilter = () => {
+    if (isSearchPage) {
+      window.location.href = buildSearchUrl('', [], 'and')
+    } else {
+      navigateToHome()
+    }
+  }
   const removeTag = (tagToRemove: string) => {
     const newTags = filterTags.filter((t) => t !== tagToRemove)
-    window.location.href = buildTagUrl(newTags, filterMode)
+    if (isSearchPage) {
+      window.location.href = buildSearchUrl(currentSearchQuery, newTags, filterMode)
+    } else {
+      window.location.href = buildTagUrl(newTags, filterMode)
+    }
   }
   const toggleFilterMode = () => {
     const newMode = filterMode === 'and' ? 'or' : 'and'
-    window.location.href = buildTagUrl(filterTags, newMode)
+    if (isSearchPage) {
+      window.location.href = buildSearchUrl(currentSearchQuery, filterTags, newMode)
+    } else {
+      window.location.href = buildTagUrl(filterTags, newMode)
+    }
+  }
+  const handleSearch = () => {
+    window.location.href = buildSearchUrl(searchQuery, filterTags, filterMode)
   }
 
   return (
     <div class="timeline">
+      {showSearchBox && (
+        <SearchBox
+          searchQuery={searchQuery}
+          filterTags={filterTags}
+          filterMode={filterMode}
+          onSearchChange={setSearchQuery}
+          onSearch={handleSearch}
+        />
+      )}
       {filterTags.length > 0 && (
         <FilterBar
           filterTags={filterTags}
@@ -172,7 +220,7 @@ export default function Timeline({ onEditStart, onReplyStart, initialFilterTags,
         )
       })}
       {filteredItems.length === 0 && (
-        <p class="empty">{filterTags.length > 0 ? 'No posts matching filter' : 'No posts yet'}</p>
+        <p class="empty">{currentSearchQuery || filterTags.length > 0 ? 'No posts matching filter' : 'No posts yet'}</p>
       )}
     </div>
   )
