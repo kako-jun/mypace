@@ -43,12 +43,6 @@
 
 .post-card-large .post-footer {
   margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.post-card-large.themed-card .post-footer {
-  border-top-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Replies section */
