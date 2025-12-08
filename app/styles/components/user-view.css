@@ -1,12 +1,16 @@
 /* User View Page */
 .user-view {
-  max-width: 800px;
-  margin: 0 auto;
   padding: 0 16px;
+}
+
+.user-view .timeline {
+  margin-top: 24px;
 }
 
 /* User Profile Card */
 .user-profile-card {
+  max-width: 600px;
+  margin-left: auto;
   background: var(--surface-primary);
   border-radius: 8px;
   padding: 24px;
