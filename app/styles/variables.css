@@ -64,18 +64,54 @@
    =========================================== */
 .dark,
 [data-theme="dark"] {
+  /* ===== Base 5 Colors ===== */
   --bg: #1e1e1e;
   --fg: #e0e0e0;
   --border: #666;
   --accent: #69a;
   --highlight: #f1c40f;
 
-  /* Dark-specific overrides */
+  /* ===== Derived: Surface ===== */
+  --surface-primary: var(--bg);
+  --surface-secondary: color-mix(in srgb, var(--bg) 92%, var(--fg) 8%);
+  --surface-tertiary: color-mix(in srgb, var(--bg) 88%, var(--fg) 12%);
+  --surface-fold: color-mix(in srgb, var(--bg) 80%, var(--fg) 20%);
+  --surface-hover: color-mix(in srgb, var(--bg) 92%, var(--fg) 8%);
   --surface-backdrop: rgba(0, 0, 0, 0.7);
+
+  /* ===== Derived: Text ===== */
+  --text-primary: var(--fg);
+  --text-secondary: color-mix(in srgb, var(--fg) 80%, var(--bg) 20%);
+  --text-muted: color-mix(in srgb, var(--fg) 50%, var(--bg) 50%);
+  --text-placeholder: color-mix(in srgb, var(--fg) 35%, var(--bg) 65%);
+  --text-timestamp: color-mix(in srgb, var(--fg) 30%, var(--bg) 70%);
   --text-danger: #c44;
+
+  /* ===== Derived: Border ===== */
+  --border-light: color-mix(in srgb, var(--bg) 88%, var(--fg) 12%);
+  --border-medium: color-mix(in srgb, var(--bg) 80%, var(--fg) 20%);
+  --border-dark: var(--border);
+  --border-card: var(--border);
+
+  /* ===== Derived: Button ===== */
+  --btn-primary-bg: var(--fg);
+  --btn-primary-text: var(--bg);
+  --btn-primary-hover: color-mix(in srgb, var(--fg) 70%, var(--bg) 30%);
+  --btn-secondary-bg: var(--bg);
+  --btn-secondary-border: var(--border);
+  --btn-secondary-text: var(--fg);
+  --btn-secondary-hover-bg: color-mix(in srgb, var(--bg) 92%, var(--fg) 8%);
+  --btn-cancel-bg: color-mix(in srgb, var(--bg) 88%, var(--fg) 12%);
+  --btn-cancel-text: color-mix(in srgb, var(--fg) 60%, var(--bg) 40%);
+
+  /* ===== Derived: Action ===== */
+  --action-like: var(--highlight);
   --action-reply: #3498db;
   --action-repost: #2ecc71;
   --action-danger-hover: rgba(200, 68, 68, 0.15);
+
+  /* ===== Derived: Code ===== */
+  --code-bg: color-mix(in srgb, var(--bg) 88%, var(--fg) 12%);
   --code-text: #e0e0e0;
 
   color-scheme: dark;

@@ -3,6 +3,7 @@
    =========================================== */
 
 /* Post Card - crisp black border with folded corner */
+/* Post cards always use light theme colors regardless of app theme */
 .post-card {
   position: relative;
   padding: 1.5rem;
@@ -11,6 +12,11 @@
   background: var(--surface-primary);
   border: 2px solid var(--border-card);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+  /* Lock to light theme colors */
+  --text-primary: #333;
+  --border-card: #333;
+  --surface-primary: #fff;
+  --surface-fold: color-mix(in srgb, #fff 80%, #333 20%);
 }
 
 /* Folded corner effect */
