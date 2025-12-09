@@ -53,10 +53,14 @@ body {
   color: var(--text-link);
 }
 
-/* Avatar - shared placeholder style */
+/* Avatar - shared styles */
+.avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 .avatar-placeholder {
-  width: 64px;
-  height: 64px;
   border-radius: 50%;
   background: var(--surface-secondary);
   display: flex;
@@ -64,8 +68,32 @@ body {
   justify-content: center;
   font-size: 0.7rem;
   color: var(--text-muted);
+  flex-shrink: 0;
 }
 
+/* Avatar sizes */
+.avatar-small,
+.avatar-placeholder.avatar-small {
+  width: 24px;
+  height: 24px;
+  font-size: 0.5rem;
+}
+
+.avatar-medium,
+.avatar-placeholder.avatar-medium {
+  width: 64px;
+  height: 64px;
+  font-size: 0.7rem;
+}
+
+.avatar-large,
+.avatar-placeholder.avatar-large {
+  width: 96px;
+  height: 96px;
+  font-size: 0.8rem;
+}
+
+/* Legacy alias */
 .avatar-preview {
   width: 64px;
   height: 64px;

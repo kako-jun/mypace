@@ -29,7 +29,7 @@ import {
   shareOrCopy,
   copyToClipboard,
 } from '../lib/utils'
-import { Icon } from '../components/ui'
+import { Avatar, Icon } from '../components/ui'
 import { isValidReaction, TIMEOUTS } from '../lib/constants'
 import { getETagValue, filterRepliesByRoot } from '../lib/nostr/tags'
 import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
@@ -226,7 +226,7 @@ export default function UserView({ pubkey }: UserViewProps) {
 
       <div class={`user-profile-card ${themeProps.className}`} style={themeProps.style}>
         <div class="user-profile-header">
-          {avatarUrl ? <img src={avatarUrl} alt="" class="user-avatar" /> : <div class="user-avatar-placeholder" />}
+          <Avatar src={avatarUrl} className="user-avatar" />
           <div class="user-info">
             <h2 class="user-name">{displayName}</h2>
             <div class="user-npub-row">

@@ -116,22 +116,6 @@
   margin-bottom: 0.25rem;
 }
 
-.reply-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.reply-avatar-placeholder {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--surface-tertiary);
-  flex-shrink: 0;
-}
-
 .reply-author-info {
   display: flex;
   flex-direction: column;

@@ -1,5 +1,5 @@
 import { useState } from 'hono/jsx'
-import { Icon } from '../ui'
+import { Avatar, Icon } from '../ui'
 import { uploadImage } from '../../lib/upload'
 import { createProfileEvent } from '../../lib/nostr/events'
 import type { Profile } from '../../types'
@@ -120,11 +120,7 @@ export default function ProfileSection({
       <h3>Profile</h3>
       <div class="profile-avatar-section">
         <div class="profile-avatar-preview">
-          {pictureUrl ? (
-            <img src={pictureUrl} alt="Avatar" class="avatar-preview" />
-          ) : (
-            <div class="avatar-placeholder">No image</div>
-          )}
+          <Avatar src={pictureUrl} />
         </div>
         <div class="avatar-upload-buttons">
           <label

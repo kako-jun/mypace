@@ -46,6 +46,7 @@ body.long-mode-active .container {
   width: auto;
   filter: var(--logo-filter, none);
   transition: filter 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+  transform-origin: top left;
 }
 
 .logo:hover .logo-img {
