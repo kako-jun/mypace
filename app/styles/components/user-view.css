@@ -36,18 +36,10 @@
   margin-bottom: 16px;
 }
 
-.user-avatar {
+.user-avatar,
+.avatar-placeholder.user-avatar {
   width: 80px;
   height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.user-avatar-placeholder {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: var(--surface-secondary);
 }
 
 .user-info {
@@ -116,13 +108,13 @@
   padding: 0;
   cursor: pointer;
   text-align: left;
-  transition: opacity 0.15s ease;
 }
 
-.post-header-user:hover {
-  opacity: 0.8;
+.post-header-user .author-name {
+  transition: transform 0.15s ease;
+  display: inline-block;
 }
 
 .post-header-user:hover .author-name {
-  text-decoration: underline;
+  transform: scale(1.15);
 }

@@ -16,13 +16,7 @@ export default function ReplyCard({ reply, displayName, avatarUrl, onClick }: Re
 
   return (
     <article class={`post-card reply-card ${themeProps.className}`} style={themeProps.style} onClick={onClick}>
-      <PostHeader
-        pubkey={reply.pubkey}
-        createdAt={reply.created_at}
-        displayName={displayName}
-        avatarUrl={avatarUrl}
-        avatarClass="post-avatar"
-      />
+      <PostHeader pubkey={reply.pubkey} createdAt={reply.created_at} displayName={displayName} avatarUrl={avatarUrl} />
       <div class="post-content">{renderContent(reply.content)}</div>
     </article>
   )

@@ -1,12 +1,13 @@
 import { formatTimestamp } from '../../lib/nostr/events'
 import { navigateToUser } from '../../lib/utils'
+import { Avatar } from '../ui'
 
 interface PostHeaderProps {
   pubkey: string
   createdAt: number
   displayName: string
   avatarUrl: string | null
-  avatarClass?: string
+  avatarSize?: 'small' | 'medium'
   clickable?: boolean
 }
 
@@ -15,11 +16,9 @@ export default function PostHeader({
   createdAt,
   displayName,
   avatarUrl,
-  avatarClass = 'post-avatar',
+  avatarSize = 'medium',
   clickable = true,
 }: PostHeaderProps) {
-  const placeholderClass = avatarClass === 'reply-avatar' ? 'reply-avatar-placeholder' : 'post-avatar-placeholder'
-
   const handleUserClick = (e: Event) => {
     e.stopPropagation()
     navigateToUser(pubkey)
@@ -29,7 +28,7 @@ export default function PostHeader({
     <header class="post-header">
       {clickable ? (
         <button class="post-header-user" onClick={handleUserClick}>
-          {avatarUrl ? <img src={avatarUrl} alt="" class={avatarClass} /> : <div class={placeholderClass} />}
+          <Avatar src={avatarUrl} size={avatarSize} />
           <div class="post-author-info">
             <span class="author-name">{displayName}</span>
             <time class="timestamp">{formatTimestamp(createdAt)}</time>
@@ -37,7 +36,7 @@ export default function PostHeader({
         </button>
       ) : (
         <>
-          {avatarUrl ? <img src={avatarUrl} alt="" class={avatarClass} /> : <div class={placeholderClass} />}
+          <Avatar src={avatarUrl} size={avatarSize} />
           <div class="post-author-info">
             <span class="author-name">{displayName}</span>
             <time class="timestamp">{formatTimestamp(createdAt)}</time>

@@ -1,6 +1,7 @@
 import type { Event } from 'nostr-tools'
 import { renderContent } from '../../lib/content-parser'
 import { formatTimestamp, getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
+import { Avatar } from '../ui'
 
 interface ThreadRepliesProps {
   replies: Event[]
@@ -34,11 +35,7 @@ export default function ThreadReplies({
             return (
               <div key={reply.id} class={`reply-card ${themeProps.className}`} style={themeProps.style}>
                 <header class="reply-header">
-                  {getAvatarUrl(reply.pubkey) ? (
-                    <img src={getAvatarUrl(reply.pubkey)!} alt="" class="reply-avatar" />
-                  ) : (
-                    <div class="reply-avatar-placeholder" />
-                  )}
+                  <Avatar src={getAvatarUrl(reply.pubkey)} size="small" />
                   <div class="reply-author-info">
                     <span class="author-name">{getDisplayName(reply.pubkey)}</span>
                     <time class="timestamp">{formatTimestamp(reply.created_at)}</time>
