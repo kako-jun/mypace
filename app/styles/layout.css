@@ -2,11 +2,27 @@
    Layout Components
    =========================================== */
 
+/* View Transitions - Persist header elements across navigation */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(header),
+::view-transition-new(header),
+::view-transition-old(logo),
+::view-transition-new(logo),
+::view-transition-old(header-actions),
+::view-transition-new(header-actions) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
 /* Layout */
 .container {
   max-width: none;
   width: 100%;
   padding: 3rem 1rem 2rem;
+  view-transition-name: main-content;
 }
 
 body.long-mode-active .container {
@@ -22,6 +38,7 @@ body.long-mode-active .container {
   z-index: 100;
   padding: 1rem;
   pointer-events: none;
+  view-transition-name: header;
 }
 
 /* Logo */
@@ -39,6 +56,7 @@ body.long-mode-active .container {
   cursor: pointer;
   width: fit-content;
   pointer-events: auto;
+  view-transition-name: logo;
 }
 
 .logo-img {
@@ -64,6 +82,7 @@ body.long-mode-active .container {
   align-items: center;
   gap: 0.5rem;
   pointer-events: auto;
+  view-transition-name: header-actions;
 }
 
 .search-toggle {

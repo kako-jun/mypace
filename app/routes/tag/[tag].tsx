@@ -1,8 +1,5 @@
 import { createRoute } from 'honox/factory'
 import Home from '../../islands/Home'
-import Settings from '../../islands/Settings'
-import Logo from '../../islands/Logo'
-import SearchButton from '../../islands/SearchButton'
 import { APP_TITLE } from '../../lib/nostr/events'
 import type { FilterMode } from '../../types'
 
@@ -35,13 +32,6 @@ export default createRoute((c) => {
 
   return c.render(
     <main class="container">
-      <header class="header">
-        <Logo />
-        <div class="header-actions">
-          <SearchButton />
-          <Settings />
-        </div>
-      </header>
       <Home initialFilterTags={tags} initialFilterMode={filterMode} showSearchBox />
     </main>,
     { title }

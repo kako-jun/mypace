@@ -1,6 +1,9 @@
 import { jsxRenderer } from 'hono/jsx-renderer'
 import { Script } from 'honox/server'
 import { APP_TITLE } from '../lib/nostr/events'
+import Logo from '../islands/Logo'
+import SearchButton from '../islands/SearchButton'
+import Settings from '../islands/Settings'
 
 export default jsxRenderer(({ children, title }) => {
   return (
@@ -22,7 +25,16 @@ export default jsxRenderer(({ children, title }) => {
         <link rel="stylesheet" href="/app/styles/tailwind.css" />
         <Script src="/app/client.ts" async />
       </head>
-      <body>{children}</body>
+      <body>
+        <header class="header">
+          <Logo />
+          <div class="header-actions">
+            <SearchButton />
+            <Settings />
+          </div>
+        </header>
+        {children}
+      </body>
     </html>
   )
 })

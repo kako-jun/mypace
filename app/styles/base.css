@@ -10,6 +10,7 @@
 
 html, body {
   background: color-mix(in srgb, var(--bg) 97%, var(--fg) 3%);
+  view-transition-name: none;
 }
 
 html {
