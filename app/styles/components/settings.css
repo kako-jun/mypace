@@ -347,6 +347,11 @@
   margin-bottom: 0.5rem;
 }
 
+.dark .share-app-qr img,
+[data-theme="dark"] .share-app-qr img {
+  filter: invert(1);
+}
+
 .qr-placeholder {
   width: 120px;
   height: 120px;
