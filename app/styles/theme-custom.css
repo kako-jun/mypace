@@ -16,7 +16,8 @@ body.custom-theme .post-card {
   background: rgba(255, 255, 255, 0.95);
 }
 
-body.custom-theme[data-theme="dark"] .post-card {
+html[data-theme="dark"] body.custom-theme .post-card,
+html.dark body.custom-theme .post-card {
   background: rgba(30, 30, 30, 0.95);
 }
 
@@ -25,7 +26,8 @@ body.custom-theme .settings-panel {
   backdrop-filter: blur(8px);
 }
 
-body.custom-theme[data-theme="dark"] .settings-panel {
+html[data-theme="dark"] body.custom-theme .settings-panel,
+html.dark body.custom-theme .settings-panel {
   background: rgba(30, 30, 30, 0.95);
 }
 
@@ -34,7 +36,8 @@ body.custom-theme .post-form {
   backdrop-filter: blur(8px);
 }
 
-body.custom-theme[data-theme="dark"] .post-form {
+html[data-theme="dark"] body.custom-theme .post-form,
+html.dark body.custom-theme .post-form {
   background: rgba(30, 30, 30, 0.92);
 }
 
@@ -43,7 +46,8 @@ body.custom-theme .filter-bar {
   backdrop-filter: blur(8px);
 }
 
-body.custom-theme[data-theme="dark"] .filter-bar {
+html[data-theme="dark"] body.custom-theme .filter-bar,
+html.dark body.custom-theme .filter-bar {
   background: rgba(30, 30, 30, 0.9);
 }
 
@@ -51,7 +55,8 @@ body.custom-theme .filter-tag {
   background: rgba(255, 255, 255, 0.95);
 }
 
-body.custom-theme[data-theme="dark"] .filter-tag {
+html[data-theme="dark"] body.custom-theme .filter-tag,
+html.dark body.custom-theme .filter-tag {
   background: rgba(50, 50, 50, 0.95);
 }
 
@@ -61,6 +66,16 @@ body.custom-theme .filter-mode-toggle {
 
 body.custom-theme .filter-mode-toggle:hover {
   background: rgba(255, 255, 255, 0.95);
+}
+
+html[data-theme="dark"] body.custom-theme .filter-mode-toggle,
+html.dark body.custom-theme .filter-mode-toggle {
+  background: rgba(50, 50, 50, 0.8);
+}
+
+html[data-theme="dark"] body.custom-theme .filter-mode-toggle:hover,
+html.dark body.custom-theme .filter-mode-toggle:hover {
+  background: rgba(50, 50, 50, 0.95);
 }
 
 body.custom-theme .logo-my,
