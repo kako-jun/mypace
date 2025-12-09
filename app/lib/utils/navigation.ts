@@ -1,28 +1,35 @@
 // Navigation utilities
 import type { FilterMode } from '../../types'
 
+// Navigate to a URL
+export function navigateTo(href: string): void {
+  if (href !== window.location.href) {
+    window.location.href = href
+  }
+}
+
 export function navigateToHome(): void {
-  window.location.href = '/'
+  navigateTo('/')
 }
 
 export function navigateToPost(eventId: string): void {
-  window.location.href = `/post/${eventId}`
+  navigateTo(`/post/${eventId}`)
 }
 
 export function navigateToUser(pubkey: string): void {
-  window.location.href = `/user/${pubkey}`
+  navigateTo(`/user/${pubkey}`)
 }
 
 export function navigateToTag(tag: string): void {
-  window.location.href = `/tag/${encodeURIComponent(tag)}`
+  navigateTo(`/tag/${encodeURIComponent(tag)}`)
 }
 
 export function navigateToEdit(eventId: string): void {
-  window.location.href = `/?edit=${eventId}`
+  navigateTo(`/?edit=${eventId}`)
 }
 
 export function navigateToReply(eventId: string): void {
-  window.location.href = `/?reply=${eventId}`
+  navigateTo(`/?reply=${eventId}`)
 }
 
 // Build tag filter URL
@@ -33,7 +40,7 @@ export function buildTagUrl(tags: string[], mode: FilterMode): string {
 }
 
 export function navigateToTagFilter(tags: string[], mode: FilterMode): void {
-  window.location.href = buildTagUrl(tags, mode)
+  navigateTo(buildTagUrl(tags, mode))
 }
 
 // Add tag to current filter and navigate
@@ -56,5 +63,5 @@ export function buildSearchUrl(query: string, tags: string[], mode: FilterMode):
 }
 
 export function navigateToSearch(query: string, tags: string[], mode: FilterMode): void {
-  window.location.href = buildSearchUrl(query, tags, mode)
+  navigateTo(buildSearchUrl(query, tags, mode))
 }

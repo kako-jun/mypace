@@ -9,6 +9,7 @@ import {
   navigateToEdit,
   navigateToTag,
   navigateToAddTag,
+  navigateTo,
   buildTagUrl,
   buildSearchUrl,
   contentHasTag,
@@ -136,7 +137,7 @@ export default function Timeline({
 
   const clearFilter = () => {
     if (isSearchPage) {
-      window.location.href = buildSearchUrl('', [], 'and')
+      navigateTo(buildSearchUrl('', [], 'and'))
     } else {
       navigateToHome()
     }
@@ -144,21 +145,21 @@ export default function Timeline({
   const removeTag = (tagToRemove: string) => {
     const newTags = filterTags.filter((t) => t !== tagToRemove)
     if (isSearchPage) {
-      window.location.href = buildSearchUrl(currentSearchQuery, newTags, filterMode)
+      navigateTo(buildSearchUrl(currentSearchQuery, newTags, filterMode))
     } else {
-      window.location.href = buildTagUrl(newTags, filterMode)
+      navigateTo(buildTagUrl(newTags, filterMode))
     }
   }
   const toggleFilterMode = () => {
     const newMode = filterMode === 'and' ? 'or' : 'and'
     if (isSearchPage) {
-      window.location.href = buildSearchUrl(currentSearchQuery, filterTags, newMode)
+      navigateTo(buildSearchUrl(currentSearchQuery, filterTags, newMode))
     } else {
-      window.location.href = buildTagUrl(filterTags, newMode)
+      navigateTo(buildTagUrl(filterTags, newMode))
     }
   }
   const handleSearch = () => {
-    window.location.href = buildSearchUrl(searchQuery, filterTags, filterMode)
+    navigateTo(buildSearchUrl(searchQuery, filterTags, filterMode))
   }
 
   return (
