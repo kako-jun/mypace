@@ -145,29 +145,29 @@ export function Settings() {
           </button>
         </div>
 
-        {activeTab === 'settings' && (
-          <>
-            <ProfileSection
-              displayName={displayName}
-              pictureUrl={pictureUrl}
-              onDisplayNameChange={setDisplayName}
-              onPictureUrlChange={setPictureUrl}
-            />
+        <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
+          <ProfileSection
+            displayName={displayName}
+            pictureUrl={pictureUrl}
+            onDisplayNameChange={setDisplayName}
+            onPictureUrlChange={setPictureUrl}
+          />
 
-            <ThemeSection
-              appTheme={appTheme}
-              themeColors={themeColors}
-              onAppThemeChange={handleAppThemeChange}
-              onColorChange={handleColorChange}
-            />
+          <ThemeSection
+            appTheme={appTheme}
+            themeColors={themeColors}
+            onAppThemeChange={handleAppThemeChange}
+            onColorChange={handleColorChange}
+          />
 
-            <EditorSection vimMode={vimMode} onVimModeChange={handleVimModeChange} />
+          <EditorSection vimMode={vimMode} onVimModeChange={handleVimModeChange} />
 
-            <KeysSection nsec={nsec} npub={npub} usingNip07={usingNip07} />
-          </>
-        )}
+          <KeysSection nsec={nsec} npub={npub} usingNip07={usingNip07} />
+        </div>
 
-        {activeTab === 'about' && <ShareSection />}
+        <div style={{ display: activeTab === 'about' ? 'block' : 'none' }}>
+          <ShareSection />
+        </div>
       </div>
     </>
   )
