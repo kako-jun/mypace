@@ -3,6 +3,7 @@ import { Icon } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import { renderContent } from '../../lib/content-parser'
 import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies } from '../post'
+import { PostEmbeds } from '../embed'
 import { cachePost, cacheProfile, navigateToPost } from '../../lib/utils'
 import { LIMITS } from '../../lib/constants'
 import { useDeleteConfirm } from '../../hooks'
@@ -105,6 +106,8 @@ export default function TimelinePostCard({
           renderContent(event.content)
         )}
       </div>
+
+      <PostEmbeds content={event.content} />
 
       <div className="post-footer">
         <PostActions

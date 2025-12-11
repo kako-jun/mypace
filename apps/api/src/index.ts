@@ -127,13 +127,13 @@ app.get('/api/timeline', async (c) => {
 
     if (cached.results.length > 0) {
       let events = cached.results.map((row) => ({
-        id: row.id,
-        pubkey: row.pubkey,
-        created_at: row.created_at,
-        kind: row.kind,
-        tags: JSON.parse(row.tags as string),
-        content: row.content,
-        sig: row.sig,
+        id: row.id as string,
+        pubkey: row.pubkey as string,
+        created_at: row.created_at as number,
+        kind: row.kind as number,
+        tags: JSON.parse(row.tags as string) as string[][],
+        content: row.content as string,
+        sig: row.sig as string,
       }))
 
       if (!showAll) {
@@ -451,6 +451,68 @@ app.post('/api/publish', async (c) => {
     return c.json({ error: 'Failed to publish' }, 500)
   } finally {
     pool.close(RELAYS)
+  }
+})
+
+// GET /api/ogp - OGPメタデータ取得
+app.get('/api/ogp', async (c) => {
+  const url = c.req.query('url')
+  if (!url) {
+    return c.json({ error: 'URL is required' }, 400)
+  }
+
+  try {
+    // Validate URL
+    new URL(url)
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'mypace-bot/1.0 (+https://mypace.pages.dev)',
+        Accept: 'text/html',
+      },
+    })
+
+    if (!response.ok) {
+      return c.json({ error: 'Failed to fetch URL' }, 502)
+    }
+
+    const html = await response.text()
+
+    // Extract OGP meta tags
+    const getMetaContent = (property: string): string | undefined => {
+      const regex = new RegExp(`<meta[^>]*(?:property|name)=["']${property}["'][^>]*content=["']([^"']*)["']`, 'i')
+      const match = html.match(regex)
+      if (match) return match[1]
+
+      // Try reverse order (content before property)
+      const reverseRegex = new RegExp(
+        `<meta[^>]*content=["']([^"']*)["'][^>]*(?:property|name)=["']${property}["']`,
+        'i'
+      )
+      const reverseMatch = html.match(reverseRegex)
+      return reverseMatch?.[1]
+    }
+
+    const getTitle = (): string | undefined => {
+      const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i)
+      return titleMatch?.[1]
+    }
+
+    const title = getMetaContent('og:title') || getMetaContent('twitter:title') || getTitle()
+    const description =
+      getMetaContent('og:description') || getMetaContent('twitter:description') || getMetaContent('description')
+    const image = getMetaContent('og:image') || getMetaContent('twitter:image')
+    const siteName = getMetaContent('og:site_name')
+
+    return c.json({
+      title,
+      description,
+      image,
+      siteName,
+    })
+  } catch (e) {
+    console.error('OGP fetch error:', e)
+    return c.json({ error: 'Failed to fetch OGP' }, 500)
   }
 })
 

@@ -32,9 +32,10 @@ export function FilterPanel({
   onClearTags,
 }: FilterPanelProps) {
   const navigate = useNavigate()
+  // Local state (not saved until Apply)
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery)
-  const [mypaceOnly, setMypaceOnlyState] = useState(() => getBoolean(STORAGE_KEYS.MYPACE_ONLY, true))
-  const [languageFilter, setLanguageFilterState] = useState(() => getString(STORAGE_KEYS.LANGUAGE_FILTER) || '')
+  const [mypaceOnly, setMypaceOnly] = useState(() => getBoolean(STORAGE_KEYS.MYPACE_ONLY, true))
+  const [languageFilter, setLanguageFilter] = useState(() => getString(STORAGE_KEYS.LANGUAGE_FILTER) || '')
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -43,31 +44,57 @@ export function FilterPanel({
     }
   }, [isPopup])
 
-  const handleMypaceToggle = () => {
-    const newValue = !mypaceOnly
-    setMypaceOnlyState(newValue)
-    setBoolean(STORAGE_KEYS.MYPACE_ONLY, newValue)
+  // Apply filters - save to storage and navigate
+  const handleApply = () => {
+    // Save settings to storage
+    setBoolean(STORAGE_KEYS.MYPACE_ONLY, mypaceOnly)
+    setString(STORAGE_KEYS.LANGUAGE_FILTER, languageFilter)
+
+    // Notify filter changes
     window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED))
-  }
-
-  const handleLanguageSelect = (code: string) => {
-    setLanguageFilterState(code)
-    setString(STORAGE_KEYS.LANGUAGE_FILTER, code)
     window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED))
-  }
 
-  const handleSearch = () => {
     if (onSearchQueryChange) {
       onSearchQueryChange(searchQuery)
     }
-    const url = buildSearchUrl(searchQuery, filterTags, filterMode)
-    navigate(url)
+
+    // Navigate to search URL or home
+    if (searchQuery || filterTags.length > 0) {
+      const url = buildSearchUrl(searchQuery, filterTags, filterMode)
+      navigate(url)
+    } else {
+      navigate('/')
+    }
+
+    onClose?.()
+  }
+
+  // Clear all filters - reset to defaults
+  const handleClear = () => {
+    // Reset to defaults
+    setMypaceOnly(true)
+    setLanguageFilter('')
+    setSearchQuery('')
+
+    // Save defaults to storage
+    setBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
+    setString(STORAGE_KEYS.LANGUAGE_FILTER, '')
+
+    // Clear tags if callback exists
+    onClearTags?.()
+
+    // Notify filter changes
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED))
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED))
+
+    // Navigate to home
+    navigate('/')
     onClose?.()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSearch()
+      handleApply()
     }
     if (e.key === 'Escape' && isPopup) {
       onClose?.()
@@ -91,9 +118,6 @@ export function FilterPanel({
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyDown}
         />
-        <button className="filter-search-submit" onClick={handleSearch} aria-label="Search">
-          <Icon name="ArrowRight" size={16} />
-        </button>
       </div>
 
       {/* Filter options row */}
@@ -103,7 +127,7 @@ export function FilterPanel({
           className="filter-option mypace-option"
           title={mypaceOnly ? 'Showing #mypace posts only' : 'Showing all posts'}
         >
-          <input type="checkbox" checked={mypaceOnly} onChange={handleMypaceToggle} />
+          <input type="checkbox" checked={mypaceOnly} onChange={(e) => setMypaceOnly(e.target.checked)} />
           <span className="option-label">mypace only</span>
         </label>
 
@@ -112,7 +136,7 @@ export function FilterPanel({
           <Icon name="Globe" size={14} />
           <select
             value={languageFilter}
-            onChange={(e) => handleLanguageSelect(e.target.value)}
+            onChange={(e) => setLanguageFilter(e.target.value)}
             className="language-select"
           >
             {LANGUAGES.map((lang) => (
@@ -148,11 +172,6 @@ export function FilterPanel({
               </span>
             </span>
           ))}
-          {onClearTags && (
-            <button className="filter-clear-btn" onClick={onClearTags}>
-              Clear
-            </button>
-          )}
         </div>
       )}
 
@@ -163,6 +182,16 @@ export function FilterPanel({
           {languageFilter && <span className="filter-chip">{currentLanguageLabel}</span>}
         </div>
       )}
+
+      {/* Action buttons */}
+      <div className="filter-actions">
+        <button className="filter-clear-btn" onClick={handleClear}>
+          Clear
+        </button>
+        <button className="filter-apply-btn" onClick={handleApply}>
+          Apply
+        </button>
+      </div>
     </div>
   )
 }

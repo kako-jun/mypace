@@ -38,6 +38,7 @@ import {
 } from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons } from '../components/post'
+import { PostEmbeds } from './embed'
 import { useShare, useDeleteConfirm } from '../hooks'
 import type { Event, Profile } from '../types'
 
@@ -222,6 +223,8 @@ export function PostView({ eventId }: PostViewProps) {
         />
 
         <div className="post-content post-content-full">{renderContent(event.content)}</div>
+
+        <PostEmbeds content={event.content} />
 
         {deletedId === event.id && <p className="success">Deleted!</p>}
 
