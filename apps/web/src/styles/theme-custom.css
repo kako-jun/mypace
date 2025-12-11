@@ -212,3 +212,40 @@ body.custom-theme .logo-pace {
 .light-text .preview-label {
   color: rgba(255, 255, 255, 0.7);
 }
+
+/* Corner-based color adjustments */
+/* Top-left dark: timestamp needs light color */
+.corner-tl-dark .timestamp {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Top-left light: timestamp needs dark color */
+.corner-tl-light .timestamp {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+/* Bottom-left dark: action buttons need light color */
+.corner-bl-dark .post-actions svg {
+  stroke: rgba(255, 255, 255, 0.7);
+}
+
+.corner-bl-dark .post-actions .action-count {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.corner-bl-dark .post-actions button:hover svg {
+  stroke: #fff;
+}
+
+/* Bottom-left light: action buttons need dark color */
+.corner-bl-light .post-actions svg {
+  stroke: rgba(0, 0, 0, 0.5);
+}
+
+.corner-bl-light .post-actions .action-count {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.corner-bl-light .post-actions button:hover svg {
+  stroke: #333;
+}

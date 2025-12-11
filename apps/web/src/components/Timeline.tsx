@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
-import { FilterBar, SearchBox, TimelinePostCard } from '../components/timeline'
+import { FilterBar, TimelinePostCard } from '../components/timeline'
+import { FilterPanel } from './FilterPanel'
 import { useTimeline, useShare } from '../hooks'
 import {
   shareOrCopy,
@@ -35,7 +36,6 @@ export function Timeline({
 }: TimelineProps) {
   const [filterTags] = useState<string[]>(initialFilterTags || [])
   const [filterMode] = useState<FilterMode>(initialFilterMode || 'and')
-  const [searchQuery, setSearchQuery] = useState(initialSearchQuery || '')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const { copied: filterCopied, share: shareFilter } = useShare()
@@ -159,19 +159,18 @@ export function Timeline({
       navigateTo(buildTagUrl(filterTags, newMode))
     }
   }
-  const handleSearch = () => {
-    navigateTo(buildSearchUrl(searchQuery, filterTags, filterMode))
-  }
 
   return (
     <div className="timeline">
       {showSearchBox && (
-        <SearchBox
-          searchQuery={searchQuery}
+        <FilterPanel
+          isPopup={false}
+          initialSearchQuery={initialSearchQuery}
           filterTags={filterTags}
           filterMode={filterMode}
-          onSearchChange={setSearchQuery}
-          onSearch={handleSearch}
+          onRemoveTag={removeTag}
+          onToggleMode={toggleFilterMode}
+          onClearTags={clearFilter}
         />
       )}
       {newEventCount > 0 && (
@@ -179,7 +178,7 @@ export function Timeline({
           {newEventCount}件の新着投稿があります
         </button>
       )}
-      {filterTags.length > 0 && (
+      {!showSearchBox && filterTags.length > 0 && (
         <FilterBar
           filterTags={filterTags}
           filterMode={filterMode}

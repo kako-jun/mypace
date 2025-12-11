@@ -1,12 +1,10 @@
 import type { ThemeColors, Event } from '../../types'
-import { getItem, getBoolean } from '../utils/storage'
+import { getItem } from '../utils/storage'
 import { STORAGE_KEYS } from '../constants'
 import { THEME_TAG } from './constants'
 
 // Get stored theme colors from localStorage
 export function getStoredThemeColors(): ThemeColors | null {
-  const enabled = getBoolean(STORAGE_KEYS.THEME_ENABLED)
-  if (!enabled) return null
   return getItem<ThemeColors | null>(STORAGE_KEYS.THEME_COLORS, null)
 }
 
@@ -55,6 +53,8 @@ export function getThemeCardProps(colors: ThemeColors | null): {
 
   const avgDark = darkCount >= 2
   const textClass = avgDark ? 'light-text' : 'dark-text'
+  const topLeftClass = isDarkColor(colors.topLeft) ? 'corner-tl-dark' : 'corner-tl-light'
+  const bottomLeftClass = isDarkColor(colors.bottomLeft) ? 'corner-bl-dark' : 'corner-bl-light'
 
   return {
     style: {
@@ -66,6 +66,6 @@ export function getThemeCardProps(colors: ThemeColors | null): {
         linear-gradient(135deg, ${colors.topLeft} 0%, ${colors.bottomRight} 100%)
       `.trim(),
     },
-    className: `themed-card ${textClass}`,
+    className: `themed-card ${textClass} ${topLeftClass} ${bottomLeftClass}`,
   }
 }

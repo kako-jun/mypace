@@ -39,7 +39,6 @@ export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps
       // Clear all settings for new identity
       removeLocalProfile()
       removeItem(STORAGE_KEYS.THEME_COLORS)
-      removeItem(STORAGE_KEYS.THEME_ENABLED)
 
       // Reload to start fresh with new identity
       window.location.reload()

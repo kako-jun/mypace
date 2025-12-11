@@ -92,3 +92,32 @@
     1px -1px 0 #222,
     -1px -1px 0 #222;
 }
+
+/* Rainbow loading animation for author name */
+.author-name.loading-rainbow {
+  background: linear-gradient(
+    90deg,
+    #ff6b6b,
+    #feca57,
+    #48dbfb,
+    #ff9ff3,
+    #54a0ff,
+    #5f27cd,
+    #ff6b6b
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* 黒縁は維持 */
+  animation: rainbow-flow 1s linear infinite;
+}
+
+@keyframes rainbow-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
