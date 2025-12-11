@@ -31,7 +31,7 @@
   text-align: left;
   z-index: 1000;
   animation: panel-slide 0.25s ease;
-  border-left: 2px solid var(--border-color);
+  border-left: 2px solid var(--border);
   pointer-events: auto;
 }
 
