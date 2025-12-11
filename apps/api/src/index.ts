@@ -21,57 +21,65 @@ app.use(
 
 const MYPACE_TAG = 'mypace'
 const RELAYS = ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.band']
+const CACHE_TTL_MS = 10 * 1000 // 10秒
 
 // GET /api/timeline - タイムライン取得
+// キャッシュ優先（10秒TTL）、TTL切れ時にリレーから取得
 app.get('/api/timeline', async (c) => {
   const db = c.env.DB
   const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
   const since = Number(c.req.query('since')) || 0
+  const showAll = c.req.query('all') === '1'
 
-  // まずキャッシュから取得
+  // まずキャッシュから取得（TTL内のもののみ）
+  const cacheThreshold = Date.now() - CACHE_TTL_MS
   try {
     const cached = await db
       .prepare(
         `
       SELECT id, pubkey, created_at, kind, tags, content, sig
       FROM events
-      WHERE kind = 1 AND created_at > ?
+      WHERE kind = 1 AND created_at > ? AND cached_at > ?
       ORDER BY created_at DESC
       LIMIT ?
     `
       )
-      .bind(since, limit)
+      .bind(since, cacheThreshold, limit * 2) // フィルタリング後に足りなくならないよう多めに取得
       .all()
 
     if (cached.results.length > 0) {
-      const events = cached.results
-        .map((row) => ({
-          id: row.id,
-          pubkey: row.pubkey,
-          created_at: row.created_at,
-          kind: row.kind,
-          tags: JSON.parse(row.tags as string),
-          content: row.content,
-          sig: row.sig,
-        }))
-        .filter((e) => e.tags.some((t: string[]) => t[0] === 't' && t[1] === MYPACE_TAG))
+      let events = cached.results.map((row) => ({
+        id: row.id,
+        pubkey: row.pubkey,
+        created_at: row.created_at,
+        kind: row.kind,
+        tags: JSON.parse(row.tags as string),
+        content: row.content,
+        sig: row.sig,
+      }))
 
-      if (events.length > 0) {
-        return c.json({ events, source: 'cache' })
+      if (!showAll) {
+        events = events.filter((e) => e.tags.some((t: string[]) => t[0] === 't' && t[1] === MYPACE_TAG))
+      }
+
+      if (events.length >= limit) {
+        return c.json({ events: events.slice(0, limit), source: 'cache' })
       }
     }
   } catch (e) {
     console.error('Cache read error:', e)
   }
 
-  // キャッシュにない場合はリレーから取得
+  // キャッシュにない/不十分な場合はリレーから取得
   const pool = new SimplePool()
 
   try {
     const filter: Filter = {
       kinds: [1],
-      '#t': [MYPACE_TAG],
       limit,
+    }
+    if (!showAll) {
+      filter['#t'] = [MYPACE_TAG]
     }
     if (since > 0) {
       filter.since = since
@@ -165,18 +173,20 @@ app.get('/api/profiles', async (c) => {
 
   const db = c.env.DB
   const profiles: Record<string, unknown> = {}
+  const cachedPubkeys: string[] = []
 
-  // キャッシュから
+  // キャッシュから（TTL内のもののみ）
+  const cacheThreshold = Date.now() - CACHE_TTL_MS
   try {
     const placeholders = pubkeys.map(() => '?').join(',')
     const cached = await db
       .prepare(
         `
       SELECT pubkey, name, display_name, picture, about, nip05
-      FROM profiles WHERE pubkey IN (${placeholders})
+      FROM profiles WHERE pubkey IN (${placeholders}) AND cached_at > ?
     `
       )
-      .bind(...pubkeys)
+      .bind(...pubkeys, cacheThreshold)
       .all()
 
     for (const row of cached.results) {
@@ -187,13 +197,14 @@ app.get('/api/profiles', async (c) => {
         about: row.about,
         nip05: row.nip05,
       }
+      cachedPubkeys.push(row.pubkey as string)
     }
   } catch (e) {
     console.error('Cache read error:', e)
   }
 
-  // 見つからなかったpubkeysをリレーから取得
-  const missingPubkeys = pubkeys.filter((pk) => !profiles[pk])
+  // TTL切れまたは見つからなかったpubkeysをリレーから取得
+  const missingPubkeys = pubkeys.filter((pk) => !cachedPubkeys.includes(pk))
   if (missingPubkeys.length > 0) {
     const pool = new SimplePool()
 

@@ -15,3 +15,30 @@
   margin-bottom: 1rem;
   direction: ltr;
 }
+
+/* New Posts Banner */
+.new-posts-banner {
+  column-span: all;
+  direction: ltr;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  background: var(--primary-color, #6366f1);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  text-align: center;
+}
+
+.new-posts-banner:hover {
+  background: var(--primary-hover, #4f46e5);
+  transform: scale(1.01);
+}
+
+.new-posts-banner:active {
+  transform: scale(0.99);
+}

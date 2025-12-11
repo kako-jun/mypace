@@ -7,4 +7,5 @@ export const STORAGE_KEYS = {
   APP_THEME: 'mypace_app_theme',
   VIM_MODE: 'mypace_vim_mode',
   DRAFT: 'mypace_draft',
+  MYPACE_ONLY: 'mypace_only',
 } as const

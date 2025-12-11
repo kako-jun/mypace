@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   fetchEvents,
   fetchProfiles,
@@ -8,9 +8,11 @@ import {
   publishEvent,
 } from '../lib/nostr/relay'
 import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent } from '../lib/nostr/events'
-import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage } from '../lib/utils'
-import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../lib/constants'
+import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage, getBoolean } from '../lib/utils'
+import { TIMEOUTS, CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../lib/constants'
 import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../types'
+
+const POLLING_INTERVAL = 60 * 1000 // 1分
 
 interface UseTimelineResult {
   items: TimelineItem[]
@@ -24,7 +26,9 @@ interface UseTimelineResult {
   error: string
   likingId: string | null
   repostingId: string | null
+  newEventCount: number
   reload: () => void
+  loadNewEvents: () => void
   handleLike: (event: Event) => Promise<void>
   handleRepost: (event: Event) => Promise<void>
   handleDelete: (event: Event) => Promise<void>
@@ -44,6 +48,8 @@ export function useTimeline(): UseTimelineResult {
   const [error, setError] = useState('')
   const [likingId, setLikingId] = useState<string | null>(null)
   const [repostingId, setRepostingId] = useState<string | null>(null)
+  const [pendingNewEvents, setPendingNewEvents] = useState<Event[]>([])
+  const [latestEventTime, setLatestEventTime] = useState(0)
 
   const loadProfiles = async (events: Event[], currentProfiles: ProfileCache) => {
     const pubkeys = [...new Set(events.map((e) => e.pubkey))]
@@ -127,13 +133,22 @@ export function useTimeline(): UseTimelineResult {
       const pubkey = await getCurrentPubkey()
       setMyPubkey(pubkey)
 
-      const notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT)
+      const mypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
+      const notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, mypaceOnly)
 
       const initialItems: TimelineItem[] = notes.map((note) => ({ event: note }))
       initialItems.sort((a, b) => b.event.created_at - a.event.created_at)
       setTimelineItems(initialItems)
       setEvents(notes)
       setLoading(false)
+
+      // リアルタイム購読用に最新イベント時刻を記録
+      if (notes.length > 0) {
+        const maxTime = Math.max(...notes.map((n) => n.created_at))
+        setLatestEventTime(maxTime)
+      } else {
+        setLatestEventTime(Math.floor(Date.now() / 1000))
+      }
 
       const loadedProfiles = await loadProfiles(notes, profiles)
       await Promise.all([
@@ -188,12 +203,94 @@ export function useTimeline(): UseTimelineResult {
     [profiles]
   )
 
+  // 新着イベントをタイムラインに反映
+  const loadNewEvents = useCallback(async () => {
+    if (pendingNewEvents.length === 0) return
+
+    const newItems: TimelineItem[] = pendingNewEvents.map((event) => ({ event }))
+    setTimelineItems((prev) => {
+      const existingIds = new Set(prev.map((item) => item.event.id))
+      const uniqueNewItems = newItems.filter((item) => !existingIds.has(item.event.id))
+      const merged = [...uniqueNewItems, ...prev]
+      merged.sort((a, b) => b.event.created_at - a.event.created_at)
+      return merged
+    })
+    setEvents((prev) => {
+      const existingIds = new Set(prev.map((e) => e.id))
+      const uniqueNew = pendingNewEvents.filter((e) => !existingIds.has(e.id))
+      return [...uniqueNew, ...prev].sort((a, b) => b.created_at - a.created_at)
+    })
+
+    // 新着イベントの最新時刻を記録
+    if (pendingNewEvents.length > 0) {
+      const maxTime = Math.max(...pendingNewEvents.map((e) => e.created_at))
+      setLatestEventTime((prev) => Math.max(prev, maxTime))
+    }
+
+    // プロフィール取得
+    await loadProfiles(pendingNewEvents, profiles)
+
+    setPendingNewEvents([])
+  }, [pendingNewEvents, profiles])
+
+  // 新着チェック（ポーリング）
+  const checkNewEvents = useCallback(async () => {
+    if (latestEventTime === 0) return
+
+    try {
+      const mypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
+      const newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime, mypaceOnly)
+
+      // 既存のイベントIDを除外
+      const existingIds = new Set(events.map((e) => e.id))
+      const trulyNew = newNotes.filter((e) => !existingIds.has(e.id) && e.created_at > latestEventTime)
+
+      if (trulyNew.length > 0) {
+        setPendingNewEvents((prev) => {
+          const prevIds = new Set(prev.map((e) => e.id))
+          const unique = trulyNew.filter((e) => !prevIds.has(e.id))
+          return [...prev, ...unique].sort((a, b) => b.created_at - a.created_at)
+        })
+      }
+    } catch (err) {
+      console.error('Failed to check new events:', err)
+    }
+  }, [latestEventTime, events])
+
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   useEffect(() => {
     loadTimeline()
     const handleNewPost = () => setTimeout(loadTimeline, TIMEOUTS.NEW_POST_RELOAD)
+    const handleFilterChanged = () => {
+      setPendingNewEvents([])
+      loadTimeline()
+    }
     window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
-    return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
+    window.addEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, handleFilterChanged)
+    return () => {
+      window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
+      window.removeEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, handleFilterChanged)
+    }
   }, [])
+
+  // 1分ごとのポーリング
+  useEffect(() => {
+    if (latestEventTime === 0) return
+
+    // 既存のインターバルをクリア
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current)
+    }
+
+    pollingRef.current = setInterval(checkNewEvents, POLLING_INTERVAL)
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current)
+      }
+    }
+  }, [latestEventTime, checkNewEvents])
 
   return {
     items: timelineItems,
@@ -207,7 +304,9 @@ export function useTimeline(): UseTimelineResult {
     error,
     likingId,
     repostingId,
+    newEventCount: pendingNewEvents.length,
     reload: loadTimeline,
+    loadNewEvents,
     handleLike,
     handleRepost,
     handleDelete,
