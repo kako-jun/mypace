@@ -1,0 +1,21 @@
+interface ColorPickerProps {
+  value: string
+  onChange: (value: string) => void
+  label?: string
+  disabled?: boolean
+}
+
+export default function ColorPicker({ value, onChange, label, disabled = false }: ColorPickerProps) {
+  return (
+    <label className="color-picker">
+      <input
+        type="color"
+        value={value}
+        onInput={(e) => onChange((e.target as HTMLInputElement).value)}
+        disabled={disabled}
+        aria-label={label || 'Choose color'}
+      />
+      {label && <span className="color-picker-label">{label}</span>}
+    </label>
+  )
+}

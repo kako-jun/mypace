@@ -1,0 +1,391 @@
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { SimplePool } from 'nostr-tools'
+import { useWebSocketImplementation } from 'nostr-tools/pool'
+import type { Event, Filter } from 'nostr-tools'
+
+type Bindings = {
+  DB: D1Database
+  SOCKS5_PROXY?: string
+}
+
+const app = new Hono<{ Bindings: Bindings }>()
+
+// CORS
+app.use(
+  '*',
+  cors({
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'https://mypace.pages.dev'],
+    allowMethods: ['GET', 'POST', 'OPTIONS'],
+    allowHeaders: ['Content-Type'],
+  })
+)
+
+const MYPACE_TAG = 'mypace'
+const RELAYS = ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.band']
+
+// Setup WebSocket with optional SOCKS5 proxy
+async function setupWebSocket(proxyUrl?: string) {
+  const WebSocket = (await import('ws')).default
+
+  if (proxyUrl) {
+    const { SocksProxyAgent } = await import('socks-proxy-agent')
+    const agent = new SocksProxyAgent(proxyUrl)
+
+    class ProxiedWebSocket extends WebSocket {
+      constructor(url: string, protocols?: string | string[]) {
+        super(url, protocols, { agent })
+      }
+    }
+    useWebSocketImplementation(ProxiedWebSocket as unknown as typeof globalThis.WebSocket)
+  } else {
+    useWebSocketImplementation(WebSocket as unknown as typeof globalThis.WebSocket)
+  }
+}
+
+// GET /api/timeline - タイムライン取得
+app.get('/api/timeline', async (c) => {
+  const db = c.env.DB
+  const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
+  const since = Number(c.req.query('since')) || 0
+
+  // まずキャッシュから取得
+  try {
+    const cached = await db
+      .prepare(
+        `
+      SELECT id, pubkey, created_at, kind, tags, content, sig
+      FROM events
+      WHERE kind = 1 AND created_at > ?
+      ORDER BY created_at DESC
+      LIMIT ?
+    `
+      )
+      .bind(since, limit)
+      .all()
+
+    if (cached.results.length > 0) {
+      const events = cached.results
+        .map((row) => ({
+          id: row.id,
+          pubkey: row.pubkey,
+          created_at: row.created_at,
+          kind: row.kind,
+          tags: JSON.parse(row.tags as string),
+          content: row.content,
+          sig: row.sig,
+        }))
+        .filter((e) => e.tags.some((t: string[]) => t[0] === 't' && t[1] === MYPACE_TAG))
+
+      if (events.length > 0) {
+        return c.json({ events, source: 'cache' })
+      }
+    }
+  } catch (e) {
+    console.error('Cache read error:', e)
+  }
+
+  // キャッシュにない場合はリレーから取得
+  await setupWebSocket(c.env.SOCKS5_PROXY)
+  const pool = new SimplePool()
+
+  try {
+    const filter: Filter = {
+      kinds: [1],
+      '#t': [MYPACE_TAG],
+      limit,
+    }
+    if (since > 0) {
+      filter.since = since
+    }
+
+    const events = await pool.querySync(RELAYS, filter)
+    events.sort((a, b) => b.created_at - a.created_at)
+
+    // キャッシュに保存
+    const now = Date.now()
+    for (const event of events) {
+      try {
+        await db
+          .prepare(
+            `
+          INSERT OR REPLACE INTO events (id, pubkey, created_at, kind, tags, content, sig, cached_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `
+          )
+          .bind(
+            event.id,
+            event.pubkey,
+            event.created_at,
+            event.kind,
+            JSON.stringify(event.tags),
+            event.content,
+            event.sig,
+            now
+          )
+          .run()
+      } catch (e) {
+        console.error('Cache write error:', e)
+      }
+    }
+
+    return c.json({ events, source: 'relay' })
+  } catch (e) {
+    console.error('Relay fetch error:', e)
+    return c.json({ events: [], error: 'Failed to fetch from relay' }, 500)
+  } finally {
+    pool.close(RELAYS)
+  }
+})
+
+// GET /api/events/:id - 単一イベント取得
+app.get('/api/events/:id', async (c) => {
+  const id = c.req.param('id')
+  const db = c.env.DB
+
+  // キャッシュから
+  try {
+    const cached = await db.prepare(`SELECT * FROM events WHERE id = ?`).bind(id).first()
+    if (cached) {
+      return c.json({
+        event: {
+          id: cached.id,
+          pubkey: cached.pubkey,
+          created_at: cached.created_at,
+          kind: cached.kind,
+          tags: JSON.parse(cached.tags as string),
+          content: cached.content,
+          sig: cached.sig,
+        },
+        source: 'cache',
+      })
+    }
+  } catch (e) {
+    console.error('Cache read error:', e)
+  }
+
+  // リレーから
+  await setupWebSocket(c.env.SOCKS5_PROXY)
+  const pool = new SimplePool()
+
+  try {
+    const events = await pool.querySync(RELAYS, { ids: [id] })
+    if (events.length > 0) {
+      return c.json({ event: events[0], source: 'relay' })
+    }
+    return c.json({ error: 'Event not found' }, 404)
+  } finally {
+    pool.close(RELAYS)
+  }
+})
+
+// GET /api/profiles - プロフィール取得
+app.get('/api/profiles', async (c) => {
+  const pubkeys = c.req.query('pubkeys')?.split(',').filter(Boolean) || []
+  if (pubkeys.length === 0) {
+    return c.json({ profiles: {} })
+  }
+
+  const db = c.env.DB
+  const profiles: Record<string, unknown> = {}
+
+  // キャッシュから
+  try {
+    const placeholders = pubkeys.map(() => '?').join(',')
+    const cached = await db
+      .prepare(
+        `
+      SELECT pubkey, name, display_name, picture, about, nip05
+      FROM profiles WHERE pubkey IN (${placeholders})
+    `
+      )
+      .bind(...pubkeys)
+      .all()
+
+    for (const row of cached.results) {
+      profiles[row.pubkey as string] = {
+        name: row.name,
+        display_name: row.display_name,
+        picture: row.picture,
+        about: row.about,
+        nip05: row.nip05,
+      }
+    }
+  } catch (e) {
+    console.error('Cache read error:', e)
+  }
+
+  // 見つからなかったpubkeysをリレーから取得
+  const missingPubkeys = pubkeys.filter((pk) => !profiles[pk])
+  if (missingPubkeys.length > 0) {
+    await setupWebSocket(c.env.SOCKS5_PROXY)
+    const pool = new SimplePool()
+
+    try {
+      const events = await pool.querySync(RELAYS, { kinds: [0], authors: missingPubkeys })
+      const now = Date.now()
+
+      for (const event of events) {
+        try {
+          const profile = JSON.parse(event.content)
+          profiles[event.pubkey] = profile
+
+          await db
+            .prepare(
+              `
+            INSERT OR REPLACE INTO profiles (pubkey, name, display_name, picture, about, nip05, cached_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `
+            )
+            .bind(event.pubkey, profile.name, profile.display_name, profile.picture, profile.about, profile.nip05, now)
+            .run()
+        } catch (e) {
+          console.error('Profile parse error:', e)
+        }
+      }
+    } finally {
+      pool.close(RELAYS)
+    }
+  }
+
+  return c.json({ profiles })
+})
+
+// GET /api/reactions/:eventId - リアクション取得
+app.get('/api/reactions/:eventId', async (c) => {
+  const eventId = c.req.param('eventId')
+  const pubkey = c.req.query('pubkey')
+
+  await setupWebSocket(c.env.SOCKS5_PROXY)
+  const pool = new SimplePool()
+
+  try {
+    const events = await pool.querySync(RELAYS, { kinds: [7], '#e': [eventId] })
+    const count = events.length
+    const myReaction = pubkey ? events.some((e) => e.pubkey === pubkey) : false
+
+    return c.json({ count, myReaction })
+  } finally {
+    pool.close(RELAYS)
+  }
+})
+
+// GET /api/replies/:eventId - 返信取得
+app.get('/api/replies/:eventId', async (c) => {
+  const eventId = c.req.param('eventId')
+
+  await setupWebSocket(c.env.SOCKS5_PROXY)
+  const pool = new SimplePool()
+
+  try {
+    const events = await pool.querySync(RELAYS, { kinds: [1], '#e': [eventId] })
+    // ルートへの返信のみフィルタ
+    const replies = events.filter((e) => {
+      const eTags = e.tags.filter((t) => t[0] === 'e')
+      if (eTags.length === 0) return false
+      const rootTag = eTags.find((t) => t[3] === 'root') || eTags[0]
+      return rootTag[1] === eventId
+    })
+
+    return c.json({ count: replies.length, replies })
+  } finally {
+    pool.close(RELAYS)
+  }
+})
+
+// GET /api/reposts/:eventId - リポスト取得
+app.get('/api/reposts/:eventId', async (c) => {
+  const eventId = c.req.param('eventId')
+  const pubkey = c.req.query('pubkey')
+
+  await setupWebSocket(c.env.SOCKS5_PROXY)
+  const pool = new SimplePool()
+
+  try {
+    const events = await pool.querySync(RELAYS, { kinds: [6], '#e': [eventId] })
+    const count = events.length
+    const myRepost = pubkey ? events.some((e) => e.pubkey === pubkey) : false
+
+    return c.json({ count, myRepost })
+  } finally {
+    pool.close(RELAYS)
+  }
+})
+
+// GET /api/user/:pubkey/events - ユーザーの投稿取得
+app.get('/api/user/:pubkey/events', async (c) => {
+  const pubkey = c.req.param('pubkey')
+  const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
+
+  await setupWebSocket(c.env.SOCKS5_PROXY)
+  const pool = new SimplePool()
+
+  try {
+    const events = await pool.querySync(RELAYS, {
+      kinds: [1],
+      authors: [pubkey],
+      '#t': [MYPACE_TAG],
+      limit,
+    })
+    events.sort((a, b) => b.created_at - a.created_at)
+
+    return c.json({ events })
+  } finally {
+    pool.close(RELAYS)
+  }
+})
+
+// POST /api/publish - 署名済みイベントをリレーに投稿
+app.post('/api/publish', async (c) => {
+  const body = await c.req.json<{ event: Event }>()
+  const event = body.event
+
+  if (!event || !event.id || !event.sig) {
+    return c.json({ error: 'Invalid event' }, 400)
+  }
+
+  await setupWebSocket(c.env.SOCKS5_PROXY)
+  const pool = new SimplePool()
+
+  try {
+    await Promise.all(pool.publish(RELAYS, event))
+
+    // キャッシュにも保存
+    const db = c.env.DB
+    const now = Date.now()
+    try {
+      await db
+        .prepare(
+          `
+        INSERT OR REPLACE INTO events (id, pubkey, created_at, kind, tags, content, sig, cached_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `
+        )
+        .bind(
+          event.id,
+          event.pubkey,
+          event.created_at,
+          event.kind,
+          JSON.stringify(event.tags),
+          event.content,
+          event.sig,
+          now
+        )
+        .run()
+    } catch (e) {
+      console.error('Cache write error:', e)
+    }
+
+    return c.json({ success: true, id: event.id })
+  } catch (e) {
+    console.error('Publish error:', e)
+    return c.json({ error: 'Failed to publish' }, 500)
+  } finally {
+    pool.close(RELAYS)
+  }
+})
+
+// Health check
+app.get('/health', (c) => c.json({ status: 'ok' }))
+
+export default app

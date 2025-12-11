@@ -1,8 +1,0 @@
-name = "mypace"
-compatibility_date = "2024-12-01"
-pages_build_output_dir = "dist"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "mypace-db"
-database_id = "3aa18b16-681c-467c-980e-9e2fa9b966d4"

@@ -8,6 +8,8 @@
 ## Setup D1 Database
 
 ```bash
+cd packages/api
+
 # Create database
 npx wrangler d1 create mypace-db
 
@@ -24,28 +26,92 @@ npx wrangler d1 execute mypace-db --file=./schema.sql
 ## Deploy
 
 ```bash
-npm run build
-npm run deploy
+# Deploy both web and api
+pnpm deploy
+
+# Or deploy individually
+pnpm deploy:web   # packages/web → Cloudflare Pages
+pnpm deploy:api   # packages/api → Cloudflare Workers
 ```
 
 ## Local Preview
 
 ```bash
-# With D1 local database
+# API with local D1
+cd packages/api
 npx wrangler d1 execute mypace-db --local --file=./schema.sql
-npm run preview
+pnpm dev
+
+# Frontend
+cd packages/web
+pnpm dev
 ```
 
-## Environment
+## Environment Variables
 
-No environment variables required. All configuration is in `wrangler.toml`.
+### API (packages/api/wrangler.toml)
+
+```toml
+[vars]
+# Optional: SOCKS5 proxy for relay connections
+SOCKS5_PROXY = "socks5://your-proxy:1080"
+```
+
+### Frontend (packages/web)
+
+Production environment variables are set in Cloudflare Pages dashboard:
+
+- `VITE_API_URL`: API endpoint URL (e.g., `https://mypace-api.your-subdomain.workers.dev`)
+
+## Architecture
+
+```
+┌─────────────────────────────────────────┐
+│           Cloudflare Pages              │
+│  packages/web → Static SPA              │
+│  https://mypace.pages.dev               │
+└────────────────────┬────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────┐
+│          Cloudflare Workers             │
+│  packages/api → Hono API                │
+│  https://mypace-api.workers.dev         │
+│                                         │
+│  ┌─────────────┐  ┌──────────────────┐  │
+│  │ D1 Database │  │ SOCKS5 Proxy     │  │
+│  │ (cache)     │  │ (optional)       │  │
+│  └─────────────┘  └────────┬─────────┘  │
+└────────────────────────────┼────────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │  Nostr Relays   │
+                    └─────────────────┘
+```
 
 ## Troubleshooting
 
 ### D1 not working
-- Check `database_id` in wrangler.toml matches your D1 database
-- Ensure schema is applied: `npx wrangler d1 execute mypace-db --file=./schema.sql`
 
-### WebSocket issues
-- Relay connections happen client-side, not through Workers
-- Check browser console for connection errors
+- Check `database_id` in wrangler.toml matches your D1 database
+- Ensure schema is applied:
+  ```bash
+  cd packages/api
+  npx wrangler d1 execute mypace-db --file=./schema.sql
+  ```
+
+### CORS errors
+
+- Check CORS configuration in `packages/api/src/index.ts`
+- Ensure your frontend origin is in the allowed origins list
+
+### API connection issues
+
+- Verify `VITE_API_URL` is set correctly
+- Check Cloudflare Workers logs: `npx wrangler tail`
+
+### SOCKS5 proxy not working
+
+- Verify proxy is running and accessible from Workers
+- Check `SOCKS5_PROXY` format: `socks5://host:port`

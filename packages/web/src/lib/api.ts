@@ -1,0 +1,108 @@
+// API client for mypace backend
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8787'
+
+// Types
+export interface Event {
+  id: string
+  pubkey: string
+  created_at: number
+  kind: number
+  tags: string[][]
+  content: string
+  sig: string
+}
+
+export interface Profile {
+  name?: string
+  display_name?: string
+  picture?: string
+  about?: string
+  nip05?: string
+}
+
+export interface ReactionData {
+  count: number
+  myReaction: boolean
+}
+
+export interface ReplyData {
+  count: number
+  replies: Event[]
+}
+
+export interface RepostData {
+  count: number
+  myRepost: boolean
+}
+
+// Timeline
+export async function fetchTimeline(limit = 50, since = 0): Promise<{ events: Event[]; source: string }> {
+  const params = new URLSearchParams({ limit: String(limit) })
+  if (since > 0) params.set('since', String(since))
+
+  const res = await fetch(`${API_BASE}/api/timeline?${params}`)
+  if (!res.ok) throw new Error('Failed to fetch timeline')
+  return res.json()
+}
+
+// Single event
+export async function fetchEvent(id: string): Promise<{ event: Event; source: string }> {
+  const res = await fetch(`${API_BASE}/api/events/${id}`)
+  if (!res.ok) throw new Error('Failed to fetch event')
+  return res.json()
+}
+
+// Profiles
+export async function fetchProfiles(pubkeys: string[]): Promise<{ profiles: Record<string, Profile> }> {
+  if (pubkeys.length === 0) return { profiles: {} }
+
+  const res = await fetch(`${API_BASE}/api/profiles?pubkeys=${pubkeys.join(',')}`)
+  if (!res.ok) throw new Error('Failed to fetch profiles')
+  return res.json()
+}
+
+// Reactions
+export async function fetchReactions(eventId: string, myPubkey?: string): Promise<ReactionData> {
+  const params = new URLSearchParams()
+  if (myPubkey) params.set('pubkey', myPubkey)
+
+  const res = await fetch(`${API_BASE}/api/reactions/${eventId}?${params}`)
+  if (!res.ok) throw new Error('Failed to fetch reactions')
+  return res.json()
+}
+
+// Replies
+export async function fetchReplies(eventId: string): Promise<ReplyData> {
+  const res = await fetch(`${API_BASE}/api/replies/${eventId}`)
+  if (!res.ok) throw new Error('Failed to fetch replies')
+  return res.json()
+}
+
+// Reposts
+export async function fetchReposts(eventId: string, myPubkey?: string): Promise<RepostData> {
+  const params = new URLSearchParams()
+  if (myPubkey) params.set('pubkey', myPubkey)
+
+  const res = await fetch(`${API_BASE}/api/reposts/${eventId}?${params}`)
+  if (!res.ok) throw new Error('Failed to fetch reposts')
+  return res.json()
+}
+
+// User events
+export async function fetchUserEvents(pubkey: string, limit = 50): Promise<{ events: Event[] }> {
+  const res = await fetch(`${API_BASE}/api/user/${pubkey}/events?limit=${limit}`)
+  if (!res.ok) throw new Error('Failed to fetch user events')
+  return res.json()
+}
+
+// Publish signed event
+export async function publishEvent(event: Event): Promise<{ success: boolean; id: string }> {
+  const res = await fetch(`${API_BASE}/api/publish`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ event }),
+  })
+  if (!res.ok) throw new Error('Failed to publish event')
+  return res.json()
+}

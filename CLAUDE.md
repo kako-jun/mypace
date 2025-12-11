@@ -1,27 +1,54 @@
 # mypace
 
-HonoX + Cloudflare Pages + Nostr のマイクロブログサービス。
+Vite + React SPA + Hono API + Cloudflare のマイクロブログサービス。
 
 ## Quick Reference
 
 ```bash
-npm run dev      # 開発サーバー (localhost:5173)
-npm run build    # ビルド
-npm run preview  # Cloudflareローカルプレビュー
-npm run deploy   # デプロイ
-npm run lint     # ESLintチェック
-npm run lint:fix # ESLint自動修正
-npm run format   # Prettier整形
+pnpm install       # 依存関係インストール
+pnpm dev           # フロントエンド開発サーバー (localhost:5173)
+pnpm dev:api       # API開発サーバー (localhost:8787)
+pnpm build         # ビルド
+pnpm deploy        # デプロイ（web + api）
+pnpm lint          # ESLintチェック
+pnpm lint:fix      # ESLint自動修正
+pnpm format        # Prettier整形
+pnpm typecheck     # TypeScript型チェック
 ```
 
 ## Architecture
 
-- **Frontend**: HonoX (Islands Architecture)
-- **Backend**: Cloudflare Pages Functions
+- **Frontend**: Vite + React 19 SPA
+- **API**: Hono on Cloudflare Workers
 - **Database**: Cloudflare D1 (cache)
+- **Styling**: Tailwind CSS
 - **Auth**: Auto-generated keys (localStorage) + NIP-07
 
 詳細は [docs/architecture.md](./docs/architecture.md) を参照。
+
+## Project Structure
+
+```
+packages/
+  web/             # React SPA (Cloudflare Pages)
+    src/
+      components/  # UIコンポーネント
+      hooks/       # カスタムフック
+      lib/         # ユーティリティ・API通信
+      pages/       # ルートコンポーネント
+      types/       # 型定義
+  api/             # Hono API (Cloudflare Workers)
+    src/
+      index.ts     # APIエンドポイント
+```
+
+## Data Flow
+
+- **読み取り**: Frontend → API → Nostr Relays (SOCKS5対応)
+- **書き込み**: Frontend (署名) → API → Nostr Relays
+
+フロントエンドは直接リレーに接続せず、API経由で通信。
+署名はクライアント側で行い、署名済みイベントをAPIに送信。
 
 ## Features
 
@@ -39,8 +66,6 @@ npm run format   # Prettier整形
 - 長文モード（CodeMirror、Vimモード）
 - 下書き自動保存
 
-詳細は [docs/ui-design.md](./docs/ui-design.md) を参照。
-
 ## Nostr Events
 
 | kind | 用途 |
@@ -52,13 +77,9 @@ npm run format   # Prettier整形
 | 7 | リアクション/いいね（NIP-25） |
 | 27235 | HTTP認証（NIP-98） |
 
-詳細は [docs/nostr.md](./docs/nostr.md) を参照。
-
 ## Development
 
+- pnpmモノレポ構成
 - pre-commit hookでlint-staged自動実行
 - ESLint + Prettier（セミコロンなし、シングルクォート）
-- HonoXはhono/jsx使用（ReactではないためuseMemo等なし）
-- Islandsのみがクライアントでhydrate
-
-詳細は [docs/development.md](./docs/development.md) を参照。
+- React 19 + react-router-dom v7

@@ -1,0 +1,216 @@
+import { useState, useEffect, useRef } from 'react'
+import { createTextNote, createDeleteEvent, createReplyEvent, getStoredThemeColors } from '../lib/nostr/events'
+import type { ThemeColors } from '../types'
+import { publishEvent } from '../lib/nostr/relay'
+import { ProfileSetup } from './ProfileSetup'
+import { hasLocalProfile, getImageUrls, removeImageUrl } from '../lib/utils'
+import { CUSTOM_EVENTS, LIMITS } from '../lib/constants'
+import { ImageDropZone, AttachedImages, PostPreview } from '../components/post'
+import type { Event } from '../types'
+
+interface PostFormProps {
+  longMode: boolean
+  onLongModeChange: (mode: boolean) => void
+  content: string
+  onContentChange: (content: string) => void
+  showPreview: boolean
+  onShowPreviewChange: (show: boolean) => void
+  editingEvent?: Event | null
+  onEditCancel?: () => void
+  onEditComplete?: () => void
+  replyingTo?: Event | null
+  onReplyCancel?: () => void
+  onReplyComplete?: () => void
+}
+
+export function PostForm({
+  longMode,
+  onLongModeChange,
+  content,
+  onContentChange,
+  showPreview,
+  onShowPreviewChange,
+  editingEvent,
+  onEditCancel,
+  onEditComplete,
+  replyingTo,
+  onReplyCancel,
+  onReplyComplete,
+}: PostFormProps) {
+  const [posting, setPosting] = useState(false)
+  const [error, setError] = useState('')
+  const [hasProfile, setHasProfile] = useState(false)
+  const [checkingProfile, setCheckingProfile] = useState(true)
+  const [themeColors, setThemeColors] = useState<ThemeColors | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    setHasProfile(hasLocalProfile())
+    setCheckingProfile(false)
+    setThemeColors(getStoredThemeColors())
+
+    const handleProfileUpdate = () => setHasProfile(hasLocalProfile())
+    window.addEventListener(CUSTOM_EVENTS.PROFILE_UPDATED, handleProfileUpdate)
+    return () => window.removeEventListener(CUSTOM_EVENTS.PROFILE_UPDATED, handleProfileUpdate)
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!content.trim() || posting || !hasProfile) return
+    if (content.length > LIMITS.MAX_POST_LENGTH) {
+      setError(`Content exceeds ${LIMITS.MAX_POST_LENGTH} characters`)
+      return
+    }
+
+    setPosting(true)
+    setError('')
+
+    try {
+      if (replyingTo) {
+        const event = await createReplyEvent(content.trim(), replyingTo)
+        await publishEvent(event)
+        onContentChange('')
+        onReplyComplete?.()
+      } else if (editingEvent) {
+        const deleteEvent = await createDeleteEvent([editingEvent.id])
+        await publishEvent(deleteEvent)
+        const preserveTags = editingEvent.tags
+        const event = await createTextNote(content.trim(), preserveTags)
+        await publishEvent(event)
+        onContentChange('')
+        onEditComplete?.()
+      } else {
+        const event = await createTextNote(content.trim())
+        await publishEvent(event)
+        onContentChange('')
+      }
+
+      window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NEW_POST))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to post')
+    } finally {
+      setPosting(false)
+    }
+  }
+
+  const handleCancel = () => {
+    if (replyingTo) {
+      onReplyCancel?.()
+    } else if (editingEvent) {
+      onEditCancel?.()
+    }
+  }
+
+  const handleProfileSet = () => {
+    setHasProfile(true)
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
+  }
+
+  const insertImageUrl = (url: string) => {
+    const textarea = textareaRef.current
+    if (textarea) {
+      const start = textarea.selectionStart || content.length
+      const end = textarea.selectionEnd || content.length
+      const before = content.slice(0, start)
+      const after = content.slice(end)
+      const newContent =
+        before +
+        (before && !before.endsWith('\n') ? '\n' : '') +
+        url +
+        (after && !after.startsWith('\n') ? '\n' : '') +
+        after
+      onContentChange(newContent)
+    } else {
+      onContentChange(content + (content ? '\n' : '') + url)
+    }
+  }
+
+  const handleRemoveImage = (url: string) => {
+    onContentChange(removeImageUrl(content, url))
+  }
+
+  const imageUrls = getImageUrls(content)
+  const isSpecialMode = editingEvent || replyingTo
+
+  if (checkingProfile) {
+    return <div className="post-form loading">Loading...</div>
+  }
+
+  if (!hasProfile) {
+    return (
+      <div className="post-form">
+        <ProfileSetup onProfileSet={handleProfileSet} />
+      </div>
+    )
+  }
+
+  return (
+    <form
+      className={`post-form ${longMode ? 'long-mode' : ''} ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
+      onSubmit={handleSubmit}
+    >
+      {editingEvent && <div className="editing-label">Editing post...</div>}
+      {replyingTo && <div className="replying-label">Replying to post...</div>}
+
+      <button
+        type="button"
+        className={`mode-toggle-corner text-outlined text-outlined-primary ${longMode ? 'active' : ''}`}
+        onClick={() => onLongModeChange(!longMode)}
+      >
+        {longMode ? 'SHORT' : 'LONG'}
+      </button>
+
+      <textarea
+        ref={textareaRef}
+        className="post-input"
+        placeholder={longMode ? 'マイペースに書こう\n\n長文モードでじっくり書けます' : 'マイペースに書こう'}
+        value={content}
+        onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
+        rows={longMode ? 15 : 3}
+        maxLength={LIMITS.MAX_POST_LENGTH}
+      />
+
+      <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
+
+      {!longMode && showPreview && <PostPreview content={content} themeColors={themeColors} />}
+
+      <div className="post-actions">
+        <div className="post-actions-left">
+          <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
+          <button
+            type="button"
+            className={`preview-toggle text-outlined text-outlined-primary ${showPreview ? 'active' : ''}`}
+            onClick={() => onShowPreviewChange(!showPreview)}
+          >
+            {showPreview ? 'HIDE' : 'PREVIEW'}
+          </button>
+          <span className="char-count">
+            {content.length}/{LIMITS.MAX_POST_LENGTH}
+          </span>
+        </div>
+        <div className="post-actions-right">
+          {isSpecialMode && (
+            <button type="button" className="cancel-button" onClick={handleCancel}>
+              Cancel
+            </button>
+          )}
+          <button type="submit" className="post-button" disabled={posting || !content.trim()}>
+            {posting
+              ? editingEvent
+                ? 'Saving...'
+                : replyingTo
+                  ? 'Replying...'
+                  : 'Posting...'
+              : editingEvent
+                ? 'Save'
+                : replyingTo
+                  ? 'Reply'
+                  : 'Post'}
+          </button>
+        </div>
+      </div>
+
+      {error && <p className="error">{error}</p>}
+    </form>
+  )
+}

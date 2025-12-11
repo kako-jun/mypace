@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/* Core styles */
+@import "./styles/variables.css";
+@import "./styles/base.css";
+@import "./styles/animations.css";
+@import "./styles/typography.css";
+@import "./styles/buttons.css";
+@import "./styles/layout.css";
+@import "./styles/markdown.css";
+@import "./styles/theme-custom.css";
+
+/* Component styles */
+@import "./styles/components/post-card.css";
+@import "./styles/components/post-actions.css";
+@import "./styles/components/post-form.css";
+@import "./styles/components/timeline.css";
+@import "./styles/components/filter-bar.css";
+@import "./styles/components/thread.css";
+@import "./styles/components/edit-delete.css";
+@import "./styles/components/settings.css";
+@import "./styles/components/long-mode-editor.css";
+@import "./styles/components/profile-setup.css";
+@import "./styles/components/post-view.css";
+@import "./styles/components/lightbox.css";
+@import "./styles/components/user-view.css";
