@@ -9,6 +9,7 @@ interface PostHeaderProps {
   avatarUrl: string | null
   avatarSize?: 'small' | 'medium'
   clickable?: boolean
+  isProfileLoading?: boolean
 }
 
 export default function PostHeader({
@@ -18,7 +19,9 @@ export default function PostHeader({
   avatarUrl,
   avatarSize = 'medium',
   clickable = true,
+  isProfileLoading = false,
 }: PostHeaderProps) {
+  const nameClass = `author-name${isProfileLoading ? ' loading-rainbow' : ''}`
   const handleUserClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     navigateToUser(pubkey)
@@ -30,7 +33,7 @@ export default function PostHeader({
         <button className="post-header-user" onClick={handleUserClick}>
           <Avatar src={avatarUrl} size={avatarSize} />
           <div className="post-author-info">
-            <span className="author-name">{displayName}</span>
+            <span className={nameClass}>{displayName}</span>
             <time className="timestamp">{formatTimestamp(createdAt)}</time>
           </div>
         </button>
@@ -38,7 +41,7 @@ export default function PostHeader({
         <>
           <Avatar src={avatarUrl} size={avatarSize} />
           <div className="post-author-info">
-            <span className="author-name">{displayName}</span>
+            <span className={nameClass}>{displayName}</span>
             <time className="timestamp">{formatTimestamp(createdAt)}</time>
           </div>
         </>

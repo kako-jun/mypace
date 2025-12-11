@@ -228,11 +228,23 @@ export function useTimeline(): UseTimelineResult {
       setLatestEventTime((prev) => Math.max(prev, maxTime))
     }
 
-    // プロフィール取得
-    await loadProfiles(pendingNewEvents, profiles)
+    // プロフィール取得 - setProfilesのコールバック形式で最新状態を取得
+    const pubkeys = [...new Set(pendingNewEvents.map((e) => e.pubkey))]
+    try {
+      const fetchedProfiles = await fetchProfiles(pubkeys)
+      setProfiles((prev) => {
+        const newProfiles = { ...prev }
+        for (const pk of pubkeys) {
+          if (newProfiles[pk] === undefined) {
+            newProfiles[pk] = fetchedProfiles[pk] || null
+          }
+        }
+        return newProfiles
+      })
+    } catch {}
 
     setPendingNewEvents([])
-  }, [pendingNewEvents, profiles])
+  }, [pendingNewEvents])
 
   // 新着チェック（ポーリング）
   const checkNewEvents = useCallback(async () => {

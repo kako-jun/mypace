@@ -1,0 +1,301 @@
+/* FilterPanel component styles */
+
+/* Filter Button in Header */
+.filter-button-container {
+  position: relative;
+}
+
+.filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.filter-toggle svg {
+  stroke: var(--text-secondary);
+  transition: stroke 0.15s ease;
+}
+
+.filter-toggle-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.filter-toggle:hover {
+  background: var(--surface-secondary);
+  transform: scale(1.02);
+}
+
+.filter-toggle.active {
+  background: var(--surface-secondary);
+}
+
+.filter-toggle.active svg,
+.filter-toggle.has-filters svg {
+  stroke: var(--primary-color, #6366f1);
+}
+
+.filter-toggle.has-filters .filter-toggle-label {
+  color: var(--primary-color, #6366f1);
+}
+
+/* Filter Panel Wrapper (Popup) */
+.filter-panel-wrapper {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  z-index: 200;
+}
+
+/* Filter Panel */
+.filter-panel {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 0.75rem;
+  min-width: 280px;
+  max-width: calc(100vw - 2rem);
+}
+
+.filter-panel-popup {
+  animation: filter-panel-slide 0.15s ease;
+}
+
+@keyframes filter-panel-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filter-panel-embedded {
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
+/* Search Row */
+.filter-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface-secondary);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.filter-search-icon {
+  stroke: var(--text-placeholder);
+  flex-shrink: 0;
+}
+
+.filter-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  outline: none;
+  min-width: 0;
+}
+
+.filter-search-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.filter-search-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--primary-color, #6366f1);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.filter-search-submit svg {
+  stroke: #fff;
+}
+
+.filter-search-submit:hover {
+  transform: scale(1.05);
+}
+
+/* Filter Options Row */
+.filter-options-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.filter-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.filter-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary-color, #6366f1);
+}
+
+.option-label {
+  user-select: none;
+}
+
+.language-option svg {
+  stroke: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.language-select {
+  border: none;
+  background: transparent;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  outline: none;
+  padding: 0.25rem;
+}
+
+.language-select:hover {
+  color: var(--text-primary);
+}
+
+/* Filter Tags Row */
+.filter-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.filter-tag-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.filter-mode-btn {
+  background: var(--surface-tertiary);
+  border: none;
+  border-radius: 4px;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.filter-mode-btn:hover {
+  background: var(--primary-color, #6366f1);
+  color: #fff;
+}
+
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--primary-color, #6366f1);
+  color: #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.filter-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.7rem;
+  color: #fff;
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+
+.filter-tag-remove:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.filter-clear-btn {
+  background: transparent;
+  border: none;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.filter-clear-btn:hover {
+  color: var(--text-secondary);
+}
+
+/* Filter Summary */
+.filter-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.filter-chip {
+  background: var(--surface-tertiary);
+  color: var(--text-secondary);
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.7rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .filter-toggle-label {
+    display: none;
+  }
+
+  .filter-panel {
+    min-width: 260px;
+  }
+
+  .filter-options-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

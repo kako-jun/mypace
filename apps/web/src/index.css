@@ -16,6 +16,7 @@
 @import "./styles/components/post-form.css";
 @import "./styles/components/timeline.css";
 @import "./styles/components/filter-bar.css";
+@import "./styles/components/filter-panel.css";
 @import "./styles/components/thread.css";
 @import "./styles/components/edit-delete.css";
 @import "./styles/components/settings.css";

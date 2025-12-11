@@ -130,6 +130,9 @@ export function Settings() {
     <>
       <div className="settings-backdrop" onClick={() => setOpen(false)} />
       <div className="settings-panel" onClick={(e) => e.stopPropagation()}>
+        <button className="close-button" onClick={() => setOpen(false)} aria-label="Close settings">
+          ×
+        </button>
         <div className="settings-tabs">
           <button
             className={`settings-tab ${activeTab === 'settings' ? 'active' : ''}`}
