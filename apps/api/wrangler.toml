@@ -3,7 +3,11 @@ main = "src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
+routes = [
+  { pattern = "api.mypace.llll-ll.com", custom_domain = true }
+]
+
 [[d1_databases]]
 binding = "DB"
-database_name = "mypace-cache"
-database_id = "YOUR_DATABASE_ID"
+database_name = "mypace-db"
+database_id = "3aa18b16-681c-467c-980e-9e2fa9b966d4"
