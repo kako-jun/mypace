@@ -130,13 +130,6 @@
   flex: 1;
 }
 
-.filter-option input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  accent-color: var(--primary-color, #6366f1);
-}
-
 .option-label {
   user-select: none;
 }

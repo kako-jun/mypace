@@ -215,3 +215,21 @@ body.custom-theme .logo-pace {
 .corner-bl-light .post-actions button:hover svg {
   stroke: #333;
 }
+
+/* Top-right dark: header icons need light color */
+.corner-tr-dark .filter-toggle svg {
+  stroke: rgba(255, 255, 255, 0.9);
+}
+
+.corner-tr-dark .filter-toggle:hover svg {
+  stroke: #fff;
+}
+
+/* Top-right light: header icons need dark color */
+.corner-tr-light .filter-toggle svg {
+  stroke: rgba(0, 0, 0, 0.7);
+}
+
+.corner-tr-light .filter-toggle:hover svg {
+  stroke: #000;
+}
