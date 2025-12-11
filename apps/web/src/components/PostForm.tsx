@@ -50,8 +50,14 @@ export function PostForm({
     setThemeColors(getStoredThemeColors())
 
     const handleProfileUpdate = () => setHasProfile(hasLocalProfile())
+    const handleThemeColorsChange = () => setThemeColors(getStoredThemeColors())
+
     window.addEventListener(CUSTOM_EVENTS.PROFILE_UPDATED, handleProfileUpdate)
-    return () => window.removeEventListener(CUSTOM_EVENTS.PROFILE_UPDATED, handleProfileUpdate)
+    window.addEventListener(CUSTOM_EVENTS.THEME_COLORS_CHANGED, handleThemeColorsChange)
+    return () => {
+      window.removeEventListener(CUSTOM_EVENTS.PROFILE_UPDATED, handleProfileUpdate)
+      window.removeEventListener(CUSTOM_EVENTS.THEME_COLORS_CHANGED, handleThemeColorsChange)
+    }
   }, [])
 
   // Handle long mode toggle: auto-enable preview when entering, disable when leaving
