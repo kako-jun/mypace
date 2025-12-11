@@ -22,15 +22,10 @@
   transition: stroke 0.15s ease;
 }
 
-.filter-toggle-label {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
 
 .filter-toggle:hover {
   background: var(--surface-secondary);
-  transform: scale(1.02);
+  transform: scale(1.15);
 }
 
 .filter-toggle.active {
@@ -42,9 +37,6 @@
   stroke: var(--primary-color, #6366f1);
 }
 
-.filter-toggle.has-filters .filter-toggle-label {
-  color: var(--primary-color, #6366f1);
-}
 
 /* Filter Panel Wrapper (Popup) */
 .filter-panel-wrapper {
@@ -62,7 +54,7 @@
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   padding: 0.75rem;
-  min-width: 280px;
+  min-width: 340px;
   max-width: calc(100vw - 2rem);
 }
 
@@ -316,12 +308,8 @@
 
 /* Mobile adjustments */
 @media (max-width: 480px) {
-  .filter-toggle-label {
-    display: none;
-  }
-
   .filter-panel {
-    min-width: 260px;
+    min-width: 300px;
   }
 
   .filter-options-row {

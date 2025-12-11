@@ -18,7 +18,7 @@
 }
 
 .text-outlined:hover {
-  transform: translateX(4px);
+  transform: scale(1.15);
 }
 
 /* Text-outlined button - common button style for text-outlined elements */

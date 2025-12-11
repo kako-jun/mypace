@@ -39,19 +39,19 @@ export default function PostActions({
           aria-label={reactions?.myReaction ? 'Liked' : 'Like this post'}
         >
           {reactions?.myReaction ? <Icon name="Star" size={20} fill="currentColor" /> : <Icon name="Star" size={20} />}
-          {reactions?.count ? ` ${reactions.count}` : ''}
+          {reactions?.count ? <span className="action-count">{reactions.count}</span> : null}
         </button>
       )}
       {isMyPost && (
         <span className="like-count">
           <Icon name="Star" size={20} />
-          {reactions?.count ? ` ${reactions.count}` : ''}
+          {reactions?.count ? <span className="action-count">{reactions.count}</span> : null}
         </span>
       )}
 
       <button className="reply-button" onClick={onReply} aria-label="Reply to this post">
         <Icon name="MessageCircle" size={20} />
-        {replies?.count ? ` ${replies.count}` : ''}
+        {replies?.count ? <span className="action-count">{replies.count}</span> : null}
       </button>
 
       <button
@@ -61,7 +61,7 @@ export default function PostActions({
         aria-label={reposts?.myRepost ? 'Reposted' : 'Repost this post'}
       >
         <Icon name="Repeat2" size={20} />
-        {reposts?.count ? ` ${reposts.count}` : ''}
+        {reposts?.count ? <span className="action-count">{reposts.count}</span> : null}
       </button>
 
       <button className={`share-button ${copied ? 'copied' : ''}`} onClick={onShare} aria-label="Share this post">
