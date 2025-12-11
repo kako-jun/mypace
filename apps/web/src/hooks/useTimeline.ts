@@ -260,13 +260,15 @@ export function useTimeline(): UseTimelineResult {
   }, [latestEventTime, events])
 
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const loadTimelineRef = useRef(loadTimeline)
+  loadTimelineRef.current = loadTimeline
 
   useEffect(() => {
-    loadTimeline()
-    const handleNewPost = () => setTimeout(loadTimeline, TIMEOUTS.NEW_POST_RELOAD)
+    loadTimelineRef.current()
+    const handleNewPost = () => setTimeout(() => loadTimelineRef.current(), TIMEOUTS.NEW_POST_RELOAD)
     const handleFilterChanged = () => {
       setPendingNewEvents([])
-      loadTimeline()
+      loadTimelineRef.current()
     }
     window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
     window.addEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, handleFilterChanged)
