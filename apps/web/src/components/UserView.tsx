@@ -204,7 +204,7 @@ export function UserView({ pubkey }: UserViewProps) {
 
   return (
     <div className="user-view">
-      <button className="back-button text-outlined" onClick={handleBack}>
+      <button className="back-button text-outlined text-outlined-button" onClick={handleBack}>
         BACK
       </button>
 

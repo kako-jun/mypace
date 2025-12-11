@@ -210,7 +210,7 @@ export function PostView({ eventId }: PostViewProps) {
 
   return (
     <div className="post-view">
-      <button className="back-button text-outlined" onClick={handleBack}>
+      <button className="back-button text-outlined text-outlined-button" onClick={handleBack}>
         BACK
       </button>
 

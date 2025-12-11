@@ -2,14 +2,11 @@
    Edit/Delete Buttons and Forms
    =========================================== */
 
-/* Edit/Delete buttons - use .text-outlined-sm from base.css */
+/* Edit/Delete buttons - use .text-outlined-button for base style */
 .edit-button,
 .delete-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.25rem 0;
-  transition: all 0.2s ease;
+  /* Base styles inherited from .text-outlined-button */
+  padding: 0.25rem 0; /* Override default padding */
 }
 
 /* Delete confirmation */

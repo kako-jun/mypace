@@ -6,17 +6,11 @@
   padding: 1rem;
 }
 
+/* Back button - uses .text-outlined-button for base style */
 .back-button {
   display: block;
   margin: 0 auto 1rem;
-  background: transparent;
-  border: none;
-  padding: 0.25rem 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
-
-/* .back-button uses .text-outlined class for styling */
 
 .post-card-large {
   padding: 2rem;
