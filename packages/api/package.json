@@ -4,12 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --port 8787",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "hono": "^4.6.0",
+    "https-proxy-agent": "^7.0.6",
     "nostr-tools": "^2.10.0",
     "socks-proxy-agent": "^8.0.5",
     "ws": "^8.18.3"
