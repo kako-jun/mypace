@@ -8,7 +8,7 @@
 ## Setup D1 Database
 
 ```bash
-cd packages/api
+cd apps/api
 
 # Create database
 npx wrangler d1 create mypace-db
@@ -30,26 +30,26 @@ npx wrangler d1 execute mypace-db --file=./schema.sql
 pnpm deploy
 
 # Or deploy individually
-pnpm deploy:web   # packages/web → Cloudflare Pages
-pnpm deploy:api   # packages/api → Cloudflare Workers
+pnpm deploy:web   # apps/web → Cloudflare Pages
+pnpm deploy:api   # apps/api → Cloudflare Workers
 ```
 
 ## Local Preview
 
 ```bash
 # API with local D1
-cd packages/api
+cd apps/api
 npx wrangler d1 execute mypace-db --local --file=./schema.sql
 pnpm dev
 
 # Frontend
-cd packages/web
+cd apps/web
 pnpm dev
 ```
 
 ## Environment Variables
 
-### API (packages/api/wrangler.toml)
+### API (apps/api/wrangler.toml)
 
 ```toml
 [vars]
@@ -57,7 +57,7 @@ pnpm dev
 SOCKS5_PROXY = "socks5://your-proxy:1080"
 ```
 
-### Frontend (packages/web)
+### Frontend (apps/web)
 
 Production environment variables are set in Cloudflare Pages dashboard:
 
@@ -68,14 +68,14 @@ Production environment variables are set in Cloudflare Pages dashboard:
 ```
 ┌─────────────────────────────────────────┐
 │           Cloudflare Pages              │
-│  packages/web → Static SPA              │
+│  apps/web → Static SPA              │
 │  https://mypace.pages.dev               │
 └────────────────────┬────────────────────┘
                      │
                      ▼
 ┌─────────────────────────────────────────┐
 │          Cloudflare Workers             │
-│  packages/api → Hono API                │
+│  apps/api → Hono API                │
 │  https://mypace-api.workers.dev         │
 │                                         │
 │  ┌─────────────┐  ┌──────────────────┐  │
@@ -97,13 +97,13 @@ Production environment variables are set in Cloudflare Pages dashboard:
 - Check `database_id` in wrangler.toml matches your D1 database
 - Ensure schema is applied:
   ```bash
-  cd packages/api
+  cd apps/api
   npx wrangler d1 execute mypace-db --file=./schema.sql
   ```
 
 ### CORS errors
 
-- Check CORS configuration in `packages/api/src/index.ts`
+- Check CORS configuration in `apps/api/src/index.ts`
 - Ensure your frontend origin is in the allowed origins list
 
 ### API connection issues

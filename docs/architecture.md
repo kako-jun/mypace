@@ -52,7 +52,7 @@
 
 ## Packages
 
-### packages/web (React SPA)
+### apps/web (React SPA)
 
 Cloudflare Pages にデプロイされる静的 SPA。
 
@@ -148,7 +148,7 @@ src/
 └── main.tsx             # エントリポイント
 ```
 
-### packages/api (Hono API)
+### apps/api (Hono API)
 
 Cloudflare Workers にデプロイされる API サーバー。
 
