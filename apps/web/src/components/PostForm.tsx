@@ -54,6 +54,19 @@ export function PostForm({
     return () => window.removeEventListener(CUSTOM_EVENTS.PROFILE_UPDATED, handleProfileUpdate)
   }, [])
 
+  // Handle long mode toggle: auto-enable preview when entering, disable when leaving
+  const handleLongModeToggle = () => {
+    if (!longMode) {
+      // Entering long mode: turn preview on
+      onShowPreviewChange(true)
+      onLongModeChange(true)
+    } else {
+      // Leaving long mode: turn preview off
+      onShowPreviewChange(false)
+      onLongModeChange(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!content.trim() || posting || !hasProfile) return
@@ -144,9 +157,90 @@ export function PostForm({
     )
   }
 
+  // Long mode: full-screen layout with preview
+  if (longMode) {
+    return (
+      <div className={`long-mode-container ${showPreview ? 'with-preview' : 'no-preview'}`}>
+        <button
+          type="button"
+          className="long-mode-exit-button text-outlined text-outlined-primary"
+          onClick={handleLongModeToggle}
+        >
+          SHORT
+        </button>
+
+        <div className="long-mode-editor-pane">
+          <form
+            className={`post-form long-mode ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
+            onSubmit={handleSubmit}
+          >
+            {editingEvent && <div className="editing-label">Editing post...</div>}
+            {replyingTo && <div className="replying-label">Replying to post...</div>}
+
+            <textarea
+              ref={textareaRef}
+              className="post-input"
+              placeholder="マイペースに書こう&#10;&#10;長文モードでじっくり書けます"
+              value={content}
+              onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
+              maxLength={LIMITS.MAX_POST_LENGTH}
+            />
+
+            <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
+
+            <div className="post-actions">
+              <div className="post-actions-left">
+                <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
+                <button
+                  type="button"
+                  className={`preview-toggle text-outlined text-outlined-primary ${showPreview ? 'active' : ''}`}
+                  onClick={() => onShowPreviewChange(!showPreview)}
+                >
+                  {showPreview ? 'HIDE' : 'PREVIEW'}
+                </button>
+                <span className="char-count">
+                  {content.length}/{LIMITS.MAX_POST_LENGTH}
+                </span>
+              </div>
+              <div className="post-actions-right">
+                {isSpecialMode && (
+                  <button type="button" className="cancel-button" onClick={handleCancel}>
+                    Cancel
+                  </button>
+                )}
+                <button type="submit" className="post-button" disabled={posting || !content.trim()}>
+                  {posting
+                    ? editingEvent
+                      ? 'Saving...'
+                      : replyingTo
+                        ? 'Replying...'
+                        : 'Posting...'
+                    : editingEvent
+                      ? 'Save'
+                      : replyingTo
+                        ? 'Reply'
+                        : 'Post'}
+                </button>
+              </div>
+            </div>
+
+            {error && <p className="error">{error}</p>}
+          </form>
+        </div>
+
+        {showPreview && (
+          <div className="long-mode-preview-pane">
+            <PostPreview content={content} themeColors={themeColors} />
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Short mode: compact form at bottom-left
   return (
     <form
-      className={`post-form ${longMode ? 'long-mode' : ''} ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
+      className={`post-form ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
       onSubmit={handleSubmit}
     >
       {editingEvent && <div className="editing-label">Editing post...</div>}
@@ -154,25 +248,25 @@ export function PostForm({
 
       <button
         type="button"
-        className={`mode-toggle-corner text-outlined text-outlined-primary ${longMode ? 'active' : ''}`}
-        onClick={() => onLongModeChange(!longMode)}
+        className="mode-toggle-corner text-outlined text-outlined-primary"
+        onClick={handleLongModeToggle}
       >
-        {longMode ? 'SHORT' : 'LONG'}
+        LONG
       </button>
 
       <textarea
         ref={textareaRef}
         className="post-input"
-        placeholder={longMode ? 'マイペースに書こう\n\n長文モードでじっくり書けます' : 'マイペースに書こう'}
+        placeholder="マイペースに書こう"
         value={content}
         onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
-        rows={longMode ? 15 : 3}
+        rows={3}
         maxLength={LIMITS.MAX_POST_LENGTH}
       />
 
       <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
 
-      {!longMode && showPreview && <PostPreview content={content} themeColors={themeColors} />}
+      {showPreview && <PostPreview content={content} themeColors={themeColors} />}
 
       <div className="post-actions">
         <div className="post-actions-left">
