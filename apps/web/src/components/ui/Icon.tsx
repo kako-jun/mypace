@@ -12,7 +12,7 @@ interface IconProps {
 }
 
 export function Icon({ name, size = 16, fill = 'none', className }: IconProps) {
-  const LucideIcon = (icons as Record<string, LucideIcon>)[name]
+  const LucideIcon = (icons as unknown as Record<string, LucideIcon>)[name]
   if (!LucideIcon) return null
 
   return <LucideIcon size={size} fill={fill} className={className} />

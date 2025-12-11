@@ -33,7 +33,7 @@
   background: var(--surface-primary);
   border: 2px solid #333;
   padding: 0.75rem;
-  min-width: 340px;
+  min-width: 400px;
   max-width: calc(100vw - 2rem);
 }
 
@@ -114,7 +114,7 @@
 .filter-options-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   margin-top: 0.75rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--border-light);
@@ -127,6 +127,7 @@
   font-size: 0.8rem;
   color: var(--text-secondary);
   cursor: pointer;
+  flex: 1;
 }
 
 .filter-option input[type="checkbox"] {
@@ -235,40 +236,6 @@
   border-top: 1px solid var(--border-light);
 }
 
-.filter-clear-btn {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.filter-clear-btn:hover {
-  background: var(--surface-secondary);
-  color: var(--text-primary);
-}
-
-.filter-apply-btn {
-  background: var(--primary-color, #6366f1);
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1.25rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #fff;
-  cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-
-.filter-apply-btn:hover {
-  transform: scale(1.02);
-  opacity: 0.9;
-}
-
 /* Filter Summary */
 .filter-summary {
   display: flex;
@@ -288,12 +255,6 @@
 /* Mobile adjustments */
 @media (max-width: 480px) {
   .filter-panel {
-    min-width: 300px;
-  }
-
-  .filter-options-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    min-width: 320px;
   }
 }
