@@ -60,6 +60,19 @@ export function HomePage({ initialFilterTags, initialFilterMode, initialSearchQu
     return () => clearImageClickHandler()
   }, [])
 
+  // Exit long mode when logo is clicked
+  useEffect(() => {
+    const handleLogoClick = () => {
+      if (longMode) {
+        setLongMode(false)
+        setShowPreview(false)
+        document.body.classList.remove('long-mode-active')
+      }
+    }
+    window.addEventListener(CUSTOM_EVENTS.LOGO_CLICKED, handleLogoClick)
+    return () => window.removeEventListener(CUSTOM_EVENTS.LOGO_CLICKED, handleLogoClick)
+  }, [longMode])
+
   const handleLongModeChange = (mode: boolean) => {
     setLongMode(mode)
     if (mode) {
