@@ -41,6 +41,65 @@ function detectLanguage(text: string): string {
   return 'en'
 }
 
+// ユーザーの主要言語を判定（英語以外で最も多い言語）
+function detectUserPrimaryLanguage(posts: { content: string }[]): string | null {
+  const langCounts: Record<string, number> = {}
+
+  for (const post of posts) {
+    const lang = detectLanguage(post.content)
+    if (lang !== 'en') {
+      // 英語以外をカウント
+      langCounts[lang] = (langCounts[lang] || 0) + 1
+    }
+  }
+
+  // 最も多い言語を返す（英語以外がなければnull）
+  let maxLang: string | null = null
+  let maxCount = 0
+  for (const [lang, count] of Object.entries(langCounts)) {
+    if (count > maxCount) {
+      maxCount = count
+      maxLang = lang
+    }
+  }
+
+  return maxLang
+}
+
+// 言語フィルタを適用（ユーザーの主要言語も考慮）
+function filterByLanguage<T extends { pubkey: string; content: string }>(events: T[], langFilter: string): T[] {
+  if (!langFilter) return events
+
+  // ユーザーごとに投稿をグループ化
+  const postsByUser: Record<string, T[]> = {}
+  for (const event of events) {
+    if (!postsByUser[event.pubkey]) {
+      postsByUser[event.pubkey] = []
+    }
+    postsByUser[event.pubkey].push(event)
+  }
+
+  // ユーザーごとの主要言語を判定
+  const userPrimaryLang: Record<string, string | null> = {}
+  for (const [pubkey, posts] of Object.entries(postsByUser)) {
+    userPrimaryLang[pubkey] = detectUserPrimaryLanguage(posts)
+  }
+
+  // フィルタリング：投稿の言語がマッチ OR ユーザーの主要言語がマッチ
+  return events.filter((e) => {
+    const postLang = detectLanguage(e.content)
+    const userLang = userPrimaryLang[e.pubkey]
+
+    // 投稿自体がフィルタ言語にマッチ
+    if (postLang === langFilter) return true
+
+    // ユーザーの主要言語がフィルタ言語にマッチ（英語投稿でも表示）
+    if (userLang === langFilter) return true
+
+    return false
+  })
+}
+
 // GET /api/timeline - タイムライン取得
 // キャッシュ優先（10秒TTL）、TTL切れ時にリレーから取得
 app.get('/api/timeline', async (c) => {
@@ -82,7 +141,7 @@ app.get('/api/timeline', async (c) => {
       }
 
       if (langFilter) {
-        events = events.filter((e) => detectLanguage(e.content as string) === langFilter)
+        events = filterByLanguage(events, langFilter)
       }
 
       if (events.length >= limit) {
@@ -111,9 +170,9 @@ app.get('/api/timeline', async (c) => {
     let events = await pool.querySync(RELAYS, filter)
     events.sort((a, b) => b.created_at - a.created_at)
 
-    // 言語フィルタ
+    // 言語フィルタ（ユーザーの主要言語も考慮）
     if (langFilter) {
-      events = events.filter((e) => detectLanguage(e.content) === langFilter)
+      events = filterByLanguage(events, langFilter)
     }
 
     // キャッシュに保存
