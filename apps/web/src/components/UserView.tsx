@@ -57,19 +57,25 @@ export function UserView({ pubkey }: UserViewProps) {
   const [npubCopied, setNpubCopied] = useState(false)
 
   const loadUserData = async () => {
+    // Clear previous state and show loading
     setError('')
+    setEvents([])
+    setReactions({})
+    setReplies({})
+    setReposts({})
+    setProfile(null)
+    setLoading(true)
+
     try {
       const currentPubkey = await getCurrentPubkey()
       setMyPubkey(currentPubkey)
 
-      // Fetch profile (now returns Profile directly)
-      const userProfile = await fetchUserProfile(pubkey)
+      // Fetch profile and posts in parallel from server
+      const [userProfile, userPosts] = await Promise.all([fetchUserProfile(pubkey), fetchUserPosts(pubkey)])
+
       if (userProfile) {
         setProfile(userProfile)
       }
-
-      // Fetch user posts
-      const userPosts = await fetchUserPosts(pubkey)
       setEvents(userPosts)
       setLoading(false)
 
