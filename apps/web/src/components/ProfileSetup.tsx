@@ -21,6 +21,13 @@ export function ProfileSetup({ onProfileSet }: Props) {
       // Check local storage first (more recent than relay cache)
       const localProfile = getLocalProfile()
       if (localProfile) {
+        const hasName = localProfile.name || localProfile.display_name
+        if (hasName) {
+          // Already has a name, immediately signal profile is set
+          setLoading(false)
+          onProfileSet?.()
+          return
+        }
         setCurrentProfile(localProfile)
         setName(localProfile.name || localProfile.display_name || '')
         setLoading(false)
@@ -36,6 +43,14 @@ export function ProfileSetup({ onProfileSet }: Props) {
           setName(profile.name || profile.display_name || '')
           // Store locally for next time
           setLocalProfile(profile)
+
+          // If profile has name, signal immediately
+          const hasName = profile.name || profile.display_name
+          if (hasName) {
+            setLoading(false)
+            onProfileSet?.()
+            return
+          }
         }
       } catch (e) {
         console.error('Failed to load profile:', e)
