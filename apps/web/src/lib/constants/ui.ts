@@ -21,7 +21,20 @@ export const CUSTOM_EVENTS = {
   NEW_POST: 'newpost',
   PROFILE_UPDATED: 'profileupdated',
   MYPACE_FILTER_CHANGED: 'mypacefilterchanged',
+  LANGUAGE_FILTER_CHANGED: 'languagefilterchanged',
 } as const
+
+// Supported languages for filtering
+export const LANGUAGES = [
+  { code: '', label: 'All' },
+  { code: 'ja', label: '日本語' },
+  { code: 'en', label: 'English' },
+  { code: 'zh', label: '中文' },
+  { code: 'ko', label: '한국어' },
+  { code: 'es', label: 'Español' },
+  { code: 'fr', label: 'Français' },
+  { code: 'de', label: 'Deutsch' },
+] as const
 
 // API endpoints
 export const API_ENDPOINTS = {
