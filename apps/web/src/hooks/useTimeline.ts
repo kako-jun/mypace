@@ -8,7 +8,7 @@ import {
   publishEvent,
 } from '../lib/nostr/relay'
 import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent } from '../lib/nostr/events'
-import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage, getBoolean } from '../lib/utils'
+import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage, getBoolean, getString } from '../lib/utils'
 import { TIMEOUTS, CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../lib/constants'
 import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../types'
 
@@ -134,7 +134,8 @@ export function useTimeline(): UseTimelineResult {
       setMyPubkey(pubkey)
 
       const mypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
-      const notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, mypaceOnly)
+      const language = getString(STORAGE_KEYS.LANGUAGE_FILTER) || ''
+      const notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, mypaceOnly, language)
 
       const initialItems: TimelineItem[] = notes.map((note) => ({ event: note }))
       initialItems.sort((a, b) => b.event.created_at - a.event.created_at)
@@ -239,7 +240,8 @@ export function useTimeline(): UseTimelineResult {
 
     try {
       const mypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
-      const newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime, mypaceOnly)
+      const language = getString(STORAGE_KEYS.LANGUAGE_FILTER) || ''
+      const newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime, mypaceOnly, language)
 
       // 既存のイベントIDを除外
       const existingIds = new Set(events.map((e) => e.id))
@@ -268,9 +270,11 @@ export function useTimeline(): UseTimelineResult {
     }
     window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
     window.addEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, handleFilterChanged)
+    window.addEventListener(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED, handleFilterChanged)
     return () => {
       window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
       window.removeEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, handleFilterChanged)
+      window.removeEventListener(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED, handleFilterChanged)
     }
   }, [])
 

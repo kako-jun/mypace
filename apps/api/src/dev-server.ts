@@ -25,6 +25,24 @@ app.use(
 const MYPACE_TAG = 'mypace'
 const RELAYS = ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.band']
 
+// 言語判定（簡易版）
+function detectLanguage(text: string): string {
+  // 日本語（ひらがな、カタカナ、漢字）
+  if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(text)) return 'ja'
+  // 韓国語（ハングル）
+  if (/[\uAC00-\uD7AF\u1100-\u11FF]/.test(text)) return 'ko'
+  // 中国語（漢字のみで日本語特有の文字がない場合）
+  if (/[\u4E00-\u9FFF]/.test(text) && !/[\u3040-\u309F\u30A0-\u30FF]/.test(text)) return 'zh'
+  // スペイン語（特有のアクセント文字）
+  if (/[áéíóúüñ¿¡]/i.test(text)) return 'es'
+  // フランス語（特有のアクセント文字）
+  if (/[àâçéèêëîïôùûü]/i.test(text) && !/[ß]/.test(text)) return 'fr'
+  // ドイツ語（特有の文字）
+  if (/[äöüß]/i.test(text)) return 'de'
+  // デフォルトは英語
+  return 'en'
+}
+
 // Create WebSocket class with optional HTTP proxy
 async function createWebSocketClass(proxyUrl?: string) {
   const WebSocket = (await import('ws')).default
@@ -60,13 +78,14 @@ app.get('/api/timeline', async (c) => {
   const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
   const since = Number(c.req.query('since')) || 0
   const showAll = c.req.query('all') === '1'
+  const langFilter = c.req.query('lang') || ''
 
   const pool = await createPool(HTTP_PROXY)
 
   try {
     const filter: Filter = {
       kinds: [1],
-      limit,
+      limit: langFilter ? limit * 3 : limit, // 言語フィルタ時は多めに取得
     }
     // mypaceタグでフィルタリング（all=1でない場合のみ）
     if (!showAll) {
@@ -77,9 +96,15 @@ app.get('/api/timeline', async (c) => {
     }
 
     console.log('Querying relays with filter:', filter)
-    const events = await pool.querySync(RELAYS, filter)
+    let events = await pool.querySync(RELAYS, filter)
     console.log('Got events from relay:', events.length)
     events.sort((a, b) => b.created_at - a.created_at)
+
+    // 言語フィルタ
+    if (langFilter) {
+      events = events.filter((e) => detectLanguage(e.content) === langFilter)
+      events = events.slice(0, limit)
+    }
 
     return c.json({ events, source: 'relay' })
   } catch (e) {

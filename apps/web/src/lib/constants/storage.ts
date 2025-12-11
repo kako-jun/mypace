@@ -8,4 +8,5 @@ export const STORAGE_KEYS = {
   VIM_MODE: 'mypace_vim_mode',
   DRAFT: 'mypace_draft',
   MYPACE_ONLY: 'mypace_only',
+  LANGUAGE_FILTER: 'mypace_language_filter',
 } as const

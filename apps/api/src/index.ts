@@ -23,6 +23,24 @@ const MYPACE_TAG = 'mypace'
 const RELAYS = ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.band']
 const CACHE_TTL_MS = 10 * 1000 // 10秒
 
+// 言語判定（簡易版）
+function detectLanguage(text: string): string {
+  // 日本語（ひらがな、カタカナ、漢字）
+  if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(text)) return 'ja'
+  // 韓国語（ハングル）
+  if (/[\uAC00-\uD7AF\u1100-\u11FF]/.test(text)) return 'ko'
+  // 中国語（漢字のみで日本語特有の文字がない場合）
+  if (/[\u4E00-\u9FFF]/.test(text) && !/[\u3040-\u309F\u30A0-\u30FF]/.test(text)) return 'zh'
+  // スペイン語（特有のアクセント文字）
+  if (/[áéíóúüñ¿¡]/i.test(text)) return 'es'
+  // フランス語（特有のアクセント文字）
+  if (/[àâçéèêëîïôùûü]/i.test(text) && !/[ß]/.test(text)) return 'fr'
+  // ドイツ語（特有の文字）
+  if (/[äöüß]/i.test(text)) return 'de'
+  // デフォルトは英語
+  return 'en'
+}
+
 // GET /api/timeline - タイムライン取得
 // キャッシュ優先（10秒TTL）、TTL切れ時にリレーから取得
 app.get('/api/timeline', async (c) => {
@@ -30,6 +48,7 @@ app.get('/api/timeline', async (c) => {
   const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
   const since = Number(c.req.query('since')) || 0
   const showAll = c.req.query('all') === '1'
+  const langFilter = c.req.query('lang') || ''
 
   // まずキャッシュから取得（TTL内のもののみ）
   const cacheThreshold = Date.now() - CACHE_TTL_MS
@@ -62,6 +81,10 @@ app.get('/api/timeline', async (c) => {
         events = events.filter((e) => e.tags.some((t: string[]) => t[0] === 't' && t[1] === MYPACE_TAG))
       }
 
+      if (langFilter) {
+        events = events.filter((e) => detectLanguage(e.content as string) === langFilter)
+      }
+
       if (events.length >= limit) {
         return c.json({ events: events.slice(0, limit), source: 'cache' })
       }
@@ -85,8 +108,13 @@ app.get('/api/timeline', async (c) => {
       filter.since = since
     }
 
-    const events = await pool.querySync(RELAYS, filter)
+    let events = await pool.querySync(RELAYS, filter)
     events.sort((a, b) => b.created_at - a.created_at)
+
+    // 言語フィルタ
+    if (langFilter) {
+      events = events.filter((e) => detectLanguage(e.content) === langFilter)
+    }
 
     // キャッシュに保存
     const now = Date.now()
