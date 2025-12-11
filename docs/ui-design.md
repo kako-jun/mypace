@@ -415,6 +415,58 @@ linear-gradient(135deg, color1 0%, color4 100%)
 - 画像クリック領域は画像のみ（親要素への伝播を防止）
 - 表示中はbodyスクロールを無効化
 
+## Rich Embeds
+
+投稿内のURLを検出し、リッチな埋め込みコンテンツとして表示。
+
+### 対応タイプ
+
+| タイプ | 対応URL | 表示方法 |
+|--------|---------|----------|
+| YouTube | youtube.com, youtu.be | サムネイル → クリックで動画再生 |
+| Twitter/X | twitter.com, x.com | クリックでツイート読み込み |
+| 動画 | .mp4, .webm, .ogg, .mov | HTML5 videoプレイヤー |
+| ゲーム/デモ | github.io, itch.io等 | クリックでiframe読み込み |
+| OGP | その他URL | タイトル・説明・画像のカード |
+
+### YouTube埋め込み
+- サムネイル画像を先に表示（遅延読み込み）
+- 中央に再生ボタン（赤いYouTubeスタイル）
+- クリックでプライバシー強化モード埋め込み（`youtube-nocookie.com`）
+
+### Twitter/X埋め込み
+- クリックで公式ウィジェット読み込み（遅延読み込み）
+- ダーク/ライトテーマ自動切り替え
+- 読み込み失敗時はリンクフォールバック
+
+### ゲーム/デモ埋め込み（iFrame）
+- セキュリティのため許可ドメインのみ対応:
+  - `github.io` - GitHub Pages
+  - `itch.io`, `itch.zone` - ゲーム配布
+  - `codepen.io`, `codesandbox.io`, `jsfiddle.net` - コード共有
+  - `glitch.me` - Glitchプロジェクト
+  - `vercel.app`, `netlify.app`, `pages.dev` - ホスティング
+- `sandbox`属性で権限制限:
+  - `allow-scripts` - スクリプト実行
+  - `allow-same-origin` - 同一オリジン
+  - `allow-pointer-lock` - ポインターロック（ゲーム用）
+  - ❌ `allow-top-navigation` - 親ページ操作を禁止
+  - ❌ `allow-popups` - ポップアップ禁止
+- クリックで読み込み開始（自動読み込みなし）
+- 「Open in new tab」リンク付き
+
+### OGPリンクプレビュー
+- `/api/ogp` エンドポイントでメタデータ取得
+- 取得情報: `og:title`, `og:description`, `og:image`, `og:site_name`
+- Twitter Card (`twitter:*`) もフォールバックとして使用
+- 画像+テキストのカード形式で表示
+- 取得失敗時はシンプルなリンク表示
+
+### 表示位置
+- 投稿本文の下、アクションボタンの上に表示
+- 複数URLがある場合は縦に並べて表示
+- 画像URLは埋め込み対象外（インライン画像として別処理）
+
 ## Header Filter
 
 ヘッダー右上に統合されたフィルタボタン。
@@ -426,7 +478,14 @@ linear-gradient(135deg, color1 0%, color4 100%)
 - **言語フィルタ**: ドロップダウンで言語選択
 - **タグフィルタ**: 選択中のタグを表示（AND/OR切り替え、個別削除可能）
 
-検索実行またはフィルタ変更で`/search`ページに遷移。
+### フィルタ操作
+- **適用ボタン**: 右下の「Apply」で設定を保存し、検索/タイムラインに遷移
+- **解除ボタン**: 「Clear」でデフォルト設定にリセット（mypace only=ON, 言語=なし, 検索=空）
+- **インクリメンタル検索なし**: 設定変更は即時反映せず、適用ボタン押下時のみ
+- **Enterキー**: 適用と同じ動作
+- **Escapeキー**: ポップアップを閉じる（変更は破棄）
+
+検索実行またはフィルタ適用で`/search`ページに遷移。
 遷移後のページ上部にも同じFilterPanelが埋め込み表示される（共通コンポーネント）。
 
 ### モバイル対応
