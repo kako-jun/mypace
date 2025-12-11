@@ -69,7 +69,6 @@ export function Layout() {
               title="Filter posts"
             >
               <Icon name="Filter" size={18} />
-              <span className="filter-toggle-label">Filter</span>
             </button>
             {showFilterPanel && (
               <div ref={filterPanelRef} className="filter-panel-wrapper">

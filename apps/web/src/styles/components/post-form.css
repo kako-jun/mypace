@@ -110,7 +110,7 @@
 
 .long-mode-container.no-preview .long-mode-editor-pane {
   width: 100%;
-  max-width: 700px;
+  max-width: 900px;
   display: flex;
   flex-direction: column;
 }

@@ -2,6 +2,30 @@
    Post Actions (Like, Reply, Repost, Share)
    =========================================== */
 
+/* Action count - outlined text style */
+.action-count {
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: #fff;
+  -webkit-text-stroke: 1px #555;
+  text-shadow:
+    1px 1px 0 #555,
+    -1px 1px 0 #555,
+    1px -1px 0 #555,
+    -1px -1px 0 #555;
+  margin-left: 0.25rem;
+}
+
+[data-theme="dark"] .action-count {
+  -webkit-text-stroke: 1px #222;
+  text-shadow:
+    1px 1px 0 #222,
+    -1px 1px 0 #222,
+    1px -1px 0 #222,
+    -1px -1px 0 #222;
+}
+
 /* Like button */
 .like-button {
   display: inline-flex;
@@ -13,22 +37,16 @@
   font-size: 0.875rem;
   cursor: pointer;
   padding: 0.25rem 0;
-  transition: color 0.2s ease, transform 0.1s ease;
+  transition: transform 0.15s ease;
 }
 
 .like-button svg {
   stroke: var(--text-primary);
   fill: #f1c40f;
-  transition: transform 0.15s ease;
-}
-
-.like-button:hover:not(:disabled) svg {
-  transform: scale(2);
 }
 
 .like-button:hover:not(:disabled) {
-  color: #f1c40f;
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 .like-button.liked {
@@ -47,16 +65,16 @@
   gap: 0.25rem;
   color: #f1c40f;
   font-size: 0.875rem;
+  transition: transform 0.15s ease;
 }
 
 .like-count svg {
   stroke: var(--text-primary);
   fill: #f1c40f;
-  transition: transform 0.15s ease;
 }
 
-.like-count:hover svg {
-  transform: scale(2);
+.like-count:hover {
+  transform: scale(1.15);
 }
 
 /* Reply button */
@@ -70,21 +88,15 @@
   font-size: 0.875rem;
   cursor: pointer;
   padding: 0.25rem 0;
-  transition: color 0.2s ease, transform 0.1s ease;
+  transition: transform 0.15s ease;
 }
 
 .reply-button svg {
   fill: #fff;
-  transition: transform 0.15s ease;
-}
-
-.reply-button:hover svg {
-  transform: scale(2);
 }
 
 .reply-button:hover {
-  color: #3498db;
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 /* Repost button */
@@ -98,20 +110,11 @@
   font-size: 0.875rem;
   cursor: pointer;
   padding: 0.25rem 0;
-  transition: color 0.2s ease, transform 0.1s ease;
-}
-
-.repost-button svg {
   transition: transform 0.15s ease;
 }
 
-.repost-button:hover:not(:disabled) svg {
-  transform: scale(2);
-}
-
 .repost-button:hover:not(:disabled) {
-  color: #2ecc71;
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 .repost-button.reposted {
@@ -134,21 +137,15 @@
   font-size: 0.875rem;
   cursor: pointer;
   padding: 0.25rem 0;
-  transition: color 0.2s ease, transform 0.1s ease;
+  transition: transform 0.15s ease;
 }
 
 .share-button svg {
   fill: #fff;
-  transition: transform 0.15s ease;
-}
-
-.share-button:hover svg {
-  transform: scale(2);
 }
 
 .share-button:hover {
-  color: #3498db;
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 .share-button.copied {
