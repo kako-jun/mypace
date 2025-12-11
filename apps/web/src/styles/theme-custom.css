@@ -1,5 +1,6 @@
 /* ===========================================
    Custom Theme (4-corner gradient)
+   Uses CSS variables from variables.css
    =========================================== */
 
 body.custom-theme {
@@ -13,69 +14,34 @@ body.custom-theme .container {
 }
 
 body.custom-theme .post-card {
-  background: rgba(255, 255, 255, 0.95);
-}
-
-html[data-theme="dark"] body.custom-theme .post-card,
-html.dark body.custom-theme .post-card {
-  background: rgba(30, 30, 30, 0.95);
+  background: var(--glass-heavy);
 }
 
 body.custom-theme .settings-panel {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--glass-heavy);
   backdrop-filter: blur(8px);
-}
-
-html[data-theme="dark"] body.custom-theme .settings-panel,
-html.dark body.custom-theme .settings-panel {
-  background: rgba(30, 30, 30, 0.95);
 }
 
 body.custom-theme .post-form {
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--glass-medium);
   backdrop-filter: blur(8px);
-}
-
-html[data-theme="dark"] body.custom-theme .post-form,
-html.dark body.custom-theme .post-form {
-  background: rgba(30, 30, 30, 0.92);
 }
 
 body.custom-theme .filter-bar {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--glass-light);
   backdrop-filter: blur(8px);
 }
 
-html[data-theme="dark"] body.custom-theme .filter-bar,
-html.dark body.custom-theme .filter-bar {
-  background: rgba(30, 30, 30, 0.9);
-}
-
 body.custom-theme .filter-tag {
-  background: rgba(255, 255, 255, 0.95);
-}
-
-html[data-theme="dark"] body.custom-theme .filter-tag,
-html.dark body.custom-theme .filter-tag {
-  background: rgba(50, 50, 50, 0.95);
+  background: var(--glass-heavy);
 }
 
 body.custom-theme .filter-mode-toggle {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--glass-subtle);
 }
 
 body.custom-theme .filter-mode-toggle:hover {
-  background: rgba(255, 255, 255, 0.95);
-}
-
-html[data-theme="dark"] body.custom-theme .filter-mode-toggle,
-html.dark body.custom-theme .filter-mode-toggle {
-  background: rgba(50, 50, 50, 0.8);
-}
-
-html[data-theme="dark"] body.custom-theme .filter-mode-toggle:hover,
-html.dark body.custom-theme .filter-mode-toggle:hover {
-  background: rgba(50, 50, 50, 0.95);
+  background: var(--glass-heavy);
 }
 
 body.custom-theme .logo-my,
@@ -109,23 +75,23 @@ body.custom-theme .logo-pace {
 }
 
 .post-card.themed-card .like-button:hover:not(:disabled) {
-  color: #f1c40f;
+  color: var(--highlight);
 }
 
 .post-card.themed-card .like-button.liked {
-  color: #f1c40f;
+  color: var(--highlight);
 }
 
 .post-card.themed-card .reply-button:hover {
-  color: #3498db;
+  color: var(--action-reply);
 }
 
 .post-card.themed-card .repost-button:hover:not(:disabled) {
-  color: #2ecc71;
+  color: var(--action-repost);
 }
 
 .post-card.themed-card .repost-button.reposted {
-  color: #2ecc71;
+  color: var(--action-repost);
 }
 
 .post-card.themed-card .reply-form {
@@ -153,7 +119,7 @@ body.custom-theme .logo-pace {
 }
 
 .post-card.themed-card .like-count {
-  color: #f1c40f;
+  color: var(--highlight);
 }
 
 /* Dark text on light background - white shadow */
