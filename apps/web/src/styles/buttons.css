@@ -3,6 +3,33 @@
    Octagonal design with 45-degree corners
    =========================================== */
 
+/* Icon Button - for icon-based action buttons */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  transition: color 0.2s ease;
+}
+
+.icon-button svg {
+  transition: transform 0.15s ease;
+}
+
+.icon-button:hover:not(:disabled) svg {
+  transform: scale(2);
+}
+
+.icon-button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
 /* Common Button - Octagonal */
 .btn {
   --btn-corner: 8px;

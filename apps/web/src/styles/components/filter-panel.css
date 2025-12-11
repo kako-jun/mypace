@@ -1,35 +1,16 @@
 /* FilterPanel component styles */
 
-/* Filter Button in Header */
+/* Filter Button in Header - extends .icon-button */
 .filter-button-container {
   position: relative;
 }
 
 .filter-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
   padding: 0.4rem 0.75rem;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .filter-toggle svg {
   stroke: var(--text-secondary);
-  transition: stroke 0.15s ease;
-}
-
-
-.filter-toggle:hover {
-  background: var(--surface-secondary);
-  transform: scale(1.15);
-}
-
-.filter-toggle.active {
-  background: var(--surface-secondary);
 }
 
 .filter-toggle.active svg,
