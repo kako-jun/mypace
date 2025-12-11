@@ -95,6 +95,28 @@
 
 /* Rainbow loading animation for author name */
 .author-name.loading-rainbow {
+  position: relative;
+  color: transparent;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+/* 黒縁（背面） */
+.author-name.loading-rainbow::before {
+  content: attr(data-name);
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: transparent;
+  -webkit-text-stroke: 3px #333;
+}
+
+/* 虹色テキスト（前面） */
+.author-name.loading-rainbow::after {
+  content: attr(data-name);
+  position: absolute;
+  left: 0;
+  top: 0;
   background: linear-gradient(
     90deg,
     #ff6b6b,
@@ -109,8 +131,11 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  /* 黒縁は維持 */
   animation: rainbow-flow 1s linear infinite;
+}
+
+[data-theme="dark"] .author-name.loading-rainbow::before {
+  -webkit-text-stroke: 3px #111;
 }
 
 @keyframes rainbow-flow {

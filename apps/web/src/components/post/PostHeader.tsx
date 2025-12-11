@@ -33,7 +33,9 @@ export default function PostHeader({
         <button className="post-header-user" onClick={handleUserClick}>
           <Avatar src={avatarUrl} size={avatarSize} />
           <div className="post-author-info">
-            <span className={nameClass}>{displayName}</span>
+            <span className={nameClass} data-name={displayName}>
+              {displayName}
+            </span>
             <time className="timestamp">{formatTimestamp(createdAt)}</time>
           </div>
         </button>
@@ -41,7 +43,9 @@ export default function PostHeader({
         <>
           <Avatar src={avatarUrl} size={avatarSize} />
           <div className="post-author-info">
-            <span className={nameClass}>{displayName}</span>
+            <span className={nameClass} data-name={displayName}>
+              {displayName}
+            </span>
             <time className="timestamp">{formatTimestamp(createdAt)}</time>
           </div>
         </>
