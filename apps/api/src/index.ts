@@ -25,12 +25,12 @@ const CACHE_TTL_MS = 10 * 1000 // 10秒
 
 // 言語判定（簡易版）
 function detectLanguage(text: string): string {
-  // 日本語（ひらがな、カタカナ、漢字）
-  if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(text)) return 'ja'
+  // 日本語（ひらがな・カタカナがあれば日本語）
+  if (/[\u3040-\u309F\u30A0-\u30FF]/.test(text)) return 'ja'
   // 韓国語（ハングル）
   if (/[\uAC00-\uD7AF\u1100-\u11FF]/.test(text)) return 'ko'
-  // 中国語（漢字のみで日本語特有の文字がない場合）
-  if (/[\u4E00-\u9FFF]/.test(text) && !/[\u3040-\u309F\u30A0-\u30FF]/.test(text)) return 'zh'
+  // 中国語（漢字があり、ひらがな・カタカナがない）
+  if (/[\u4E00-\u9FFF]/.test(text)) return 'zh'
   // スペイン語（特有のアクセント文字）
   if (/[áéíóúüñ¿¡]/i.test(text)) return 'es'
   // フランス語（特有のアクセント文字）
