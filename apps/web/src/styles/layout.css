@@ -18,14 +18,16 @@
 }
 
 /* Layout */
-.container {
+.container,
+.main-content {
   max-width: none;
   width: 100%;
-  padding: 3rem 1rem 2rem;
+  padding: 6rem 1rem 2rem;
   view-transition-name: main-content;
 }
 
-body.long-mode-active .container {
+body.long-mode-active .container,
+body.long-mode-active .main-content {
   max-width: none;
   padding: 6rem 2rem 2rem;
 }
