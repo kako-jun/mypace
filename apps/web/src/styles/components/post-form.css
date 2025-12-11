@@ -73,12 +73,12 @@
 /* Long mode - full screen container */
 .long-mode-container {
   position: fixed;
-  top: 0;
+  top: 5.5rem; /* Space for logo and header actions */
   left: 0;
   right: 0;
   bottom: 0;
   background: var(--bg);
-  z-index: 200;
+  z-index: 99; /* Below header (z-index: 100-101) */
   display: flex;
   flex-direction: row;
   padding: 1rem;
@@ -115,17 +115,12 @@
   flex-direction: column;
 }
 
-/* Exit button: fixed bottom-left */
+/* Exit button: fixed bottom-left (uses .text-outlined-button for base style) */
 .long-mode-exit-button {
   position: fixed;
   bottom: 1rem;
   left: 1rem;
   z-index: 201;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
 }
 
 /* Long mode preview pane */
@@ -279,46 +274,17 @@
   transform: scale(1.05);
 }
 
+/* Mode toggle button: positioned top-right (uses .text-outlined-button for base style) */
 .mode-toggle-corner {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
 }
 
-/* text-outlined handles color styling */
-
-/* Alias for mode-toggle (used in PostForm) */
-.mode-toggle {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: color 0.2s ease, background 0.2s ease;
-}
-
-.mode-toggle:hover {
-  color: var(--text-secondary);
-  background: var(--surface-tertiary);
-}
-
+/* Preview toggle: inline in post-actions (uses .text-outlined-button for base style) */
 .preview-toggle {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
+  /* No additional styles needed - inherits from .text-outlined-button */
 }
-
-/* text-outlined handles color styling */
 
 .char-count {
   font-size: 0.8rem;

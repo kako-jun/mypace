@@ -21,11 +21,15 @@ export default function EditDeleteButtons({
 
   return (
     <>
-      <button className="edit-button text-outlined text-outlined-primary" onClick={onEdit} aria-label="Edit this post">
+      <button
+        className="edit-button text-outlined text-outlined-button text-outlined-primary"
+        onClick={onEdit}
+        aria-label="Edit this post"
+      >
         EDIT
       </button>
       <button
-        className="delete-button text-outlined text-outlined-warning"
+        className="delete-button text-outlined text-outlined-button text-outlined-warning"
         onClick={onDelete}
         aria-label="Delete this post"
       >

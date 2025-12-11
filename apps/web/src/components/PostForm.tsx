@@ -163,7 +163,7 @@ export function PostForm({
       <div className={`long-mode-container ${showPreview ? 'with-preview' : 'no-preview'}`}>
         <button
           type="button"
-          className="long-mode-exit-button text-outlined text-outlined-primary"
+          className="long-mode-exit-button text-outlined text-outlined-button text-outlined-primary"
           onClick={handleLongModeToggle}
         >
           SHORT
@@ -193,7 +193,7 @@ export function PostForm({
                 <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
                 <button
                   type="button"
-                  className={`preview-toggle text-outlined text-outlined-primary ${showPreview ? 'active' : ''}`}
+                  className={`preview-toggle text-outlined text-outlined-button text-outlined-primary ${showPreview ? 'active' : ''}`}
                   onClick={() => onShowPreviewChange(!showPreview)}
                 >
                   {showPreview ? 'HIDE' : 'PREVIEW'}
@@ -248,7 +248,7 @@ export function PostForm({
 
       <button
         type="button"
-        className="mode-toggle-corner text-outlined text-outlined-primary"
+        className="mode-toggle-corner text-outlined text-outlined-button text-outlined-primary"
         onClick={handleLongModeToggle}
       >
         LONG
@@ -273,7 +273,7 @@ export function PostForm({
           <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
           <button
             type="button"
-            className={`preview-toggle text-outlined text-outlined-primary ${showPreview ? 'active' : ''}`}
+            className={`preview-toggle text-outlined text-outlined-button text-outlined-primary ${showPreview ? 'active' : ''}`}
             onClick={() => onShowPreviewChange(!showPreview)}
           >
             {showPreview ? 'HIDE' : 'PREVIEW'}

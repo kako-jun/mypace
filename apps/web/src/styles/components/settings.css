@@ -1,12 +1,8 @@
 /* Settings component styles */
 
-/* Settings - now inside header-actions */
+/* Settings toggle - uses .text-outlined-button for base style */
 .settings-toggle {
-  background: transparent;
-  border: none;
-  padding: 0.25rem 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  /* Base styles inherited from .text-outlined-button */
 }
 
 .settings-backdrop {

@@ -18,7 +18,15 @@
 }
 
 .text-outlined:hover {
-  transform: scale(1.15);
+  transform: translateX(4px);
+}
+
+/* Text-outlined button - common button style for text-outlined elements */
+.text-outlined-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
 }
 
 [data-theme="dark"] .text-outlined {

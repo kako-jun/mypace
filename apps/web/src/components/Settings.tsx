@@ -120,7 +120,7 @@ export function Settings() {
 
   if (!open) {
     return (
-      <button className="settings-toggle text-outlined" onClick={() => setOpen(true)}>
+      <button className="settings-toggle text-outlined text-outlined-button" onClick={() => setOpen(true)}>
         SETTINGS
       </button>
     )
