@@ -64,7 +64,7 @@ export function Layout() {
           <div className="filter-button-container">
             <button
               ref={filterButtonRef}
-              className={`filter-toggle ${showFilterPanel ? 'active' : ''} ${hasActiveFilters ? 'has-filters' : ''}`}
+              className={`icon-button filter-toggle ${showFilterPanel ? 'active' : ''} ${hasActiveFilters ? 'has-filters' : ''}`}
               onClick={() => setShowFilterPanel(!showFilterPanel)}
               title="Filter posts"
             >

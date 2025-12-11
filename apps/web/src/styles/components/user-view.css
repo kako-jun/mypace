@@ -108,10 +108,21 @@
   padding: 0;
   cursor: pointer;
   text-align: left;
+}
+
+.post-header-user .avatar {
   transition: transform 0.15s ease;
 }
 
-.post-header-user:hover {
+.post-header-user .author-name {
+  transition: transform 0.15s ease;
+  display: inline-block;
+}
+
+.post-header-user:hover .avatar {
   transform: scale(1.15);
-  transform-origin: left center;
+}
+
+.post-header-user:hover .author-name {
+  transform: scale(1.15);
 }
