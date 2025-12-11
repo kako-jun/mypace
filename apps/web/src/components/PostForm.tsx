@@ -230,7 +230,7 @@ export function PostForm({
 
         {showPreview && (
           <div className="long-mode-preview-pane">
-            <PostPreview content={content} themeColors={null} />
+            <PostPreview content={content} themeColors={themeColors} transparentBackground />
           </div>
         )}
       </div>
