@@ -20,7 +20,7 @@ pnpm dev:api    # API (localhost:8787)
 
 ```
 mypace/
-├── packages/
+├── apps/
 │   ├── web/                 # React SPA
 │   │   ├── src/
 │   │   │   ├── components/  # UIコンポーネント
@@ -46,7 +46,7 @@ mypace/
 
 ## Adding New Pages (React Router)
 
-`packages/web/src/App.tsx` にルートを追加:
+`apps/web/src/App.tsx` にルートを追加:
 
 ```typescript
 import { NewPage } from './pages/NewPage'
@@ -56,7 +56,7 @@ import { NewPage } from './pages/NewPage'
 
 ## Adding New API Endpoints
 
-`packages/api/src/index.ts` にエンドポイントを追加:
+`apps/api/src/index.ts` にエンドポイントを追加:
 
 ```typescript
 app.get('/api/new-endpoint', async (c) => {
@@ -99,7 +99,7 @@ NIP-07 (ブラウザ拡張) がある場合は自動的にそちらで署名。
 
 ## Environment Variables
 
-### Frontend (packages/web)
+### Frontend (apps/web)
 
 `.env` ファイル:
 
@@ -107,7 +107,7 @@ NIP-07 (ブラウザ拡張) がある場合は自動的にそちらで署名。
 VITE_API_URL=http://localhost:8787
 ```
 
-### API (packages/api)
+### API (apps/api)
 
 `wrangler.toml`:
 

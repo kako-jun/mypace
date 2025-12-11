@@ -29,7 +29,7 @@ pnpm typecheck     # TypeScript型チェック
 ## Project Structure
 
 ```
-packages/
+apps/
   web/             # React SPA (Cloudflare Pages)
     src/
       components/  # UIコンポーネント
