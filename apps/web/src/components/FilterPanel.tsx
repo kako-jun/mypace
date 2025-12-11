@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from './ui/Icon'
+import Button from './ui/Button'
 import { getBoolean, setBoolean, getString, setString, buildSearchUrl } from '../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS, LANGUAGES } from '../lib/constants'
 import type { FilterMode } from '../types'
@@ -185,12 +186,12 @@ export function FilterPanel({
 
       {/* Action buttons */}
       <div className="filter-actions">
-        <button className="filter-clear-btn" onClick={handleClear}>
+        <Button variant="secondary" onClick={handleClear}>
           Clear
-        </button>
-        <button className="filter-apply-btn" onClick={handleApply}>
+        </Button>
+        <Button variant="primary" onClick={handleApply}>
           Apply
-        </button>
+        </Button>
       </div>
     </div>
   )

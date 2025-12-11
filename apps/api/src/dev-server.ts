@@ -127,7 +127,8 @@ async function createWebSocketClass(proxyUrl?: string) {
 // Create pool with custom WebSocket implementation
 async function createPool(proxyUrl?: string) {
   const WebSocketClass = await createWebSocketClass(proxyUrl)
-  return new SimplePool({ websocketImplementation: WebSocketClass as unknown as typeof globalThis.WebSocket })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return new SimplePool({ websocketImplementation: WebSocketClass } as any)
 }
 
 const HTTP_PROXY = process.env.HTTP_PROXY
