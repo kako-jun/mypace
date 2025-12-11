@@ -5,7 +5,6 @@ import type { Event, Filter } from 'nostr-tools'
 
 type Bindings = {
   DB: D1Database
-  HTTP_PROXY?: string
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -22,36 +21,6 @@ app.use(
 
 const MYPACE_TAG = 'mypace'
 const RELAYS = ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.band']
-
-// Create WebSocket class with optional HTTP proxy
-async function createWebSocketClass(proxyUrl?: string) {
-  const WebSocket = (await import('ws')).default
-
-  if (proxyUrl) {
-    console.log('Using HTTP proxy:', proxyUrl)
-    const { HttpsProxyAgent } = await import('https-proxy-agent')
-    const agent = new HttpsProxyAgent(proxyUrl)
-
-    return class ProxiedWebSocket extends WebSocket {
-      constructor(url: string, protocols?: string | string[]) {
-        console.log('Connecting to relay via proxy:', url)
-        super(url, protocols, { agent })
-        this.on('open', () => console.log('Connected:', url))
-        this.on('error', (e: Error) => console.log('WebSocket error:', url, e.message))
-        this.on('close', (code: number) => console.log('WebSocket closed:', url, code))
-      }
-    }
-  } else {
-    console.log('No HTTP proxy configured')
-    return WebSocket
-  }
-}
-
-// Create pool with custom WebSocket implementation
-async function createPool(proxyUrl?: string) {
-  const WebSocketClass = await createWebSocketClass(proxyUrl)
-  return new SimplePool({ websocketImplementation: WebSocketClass as unknown as typeof globalThis.WebSocket })
-}
 
 // GET /api/timeline - タイムライン取得
 app.get('/api/timeline', async (c) => {
@@ -96,7 +65,7 @@ app.get('/api/timeline', async (c) => {
   }
 
   // キャッシュにない場合はリレーから取得
-  const pool = await createPool(c.env.HTTP_PROXY)
+  const pool = new SimplePool()
 
   try {
     const filter: Filter = {
@@ -108,9 +77,7 @@ app.get('/api/timeline', async (c) => {
       filter.since = since
     }
 
-    console.log('Querying relays:', RELAYS, 'with filter:', filter)
     const events = await pool.querySync(RELAYS, filter)
-    console.log('Got events from relay:', events.length)
     events.sort((a, b) => b.created_at - a.created_at)
 
     // キャッシュに保存
@@ -176,7 +143,7 @@ app.get('/api/events/:id', async (c) => {
   }
 
   // リレーから
-  const pool = await createPool(c.env.HTTP_PROXY)
+  const pool = new SimplePool()
 
   try {
     const events = await pool.querySync(RELAYS, { ids: [id] })
@@ -228,7 +195,6 @@ app.get('/api/profiles', async (c) => {
   // 見つからなかったpubkeysをリレーから取得
   const missingPubkeys = pubkeys.filter((pk) => !profiles[pk])
   if (missingPubkeys.length > 0) {
-    await setupWebSocket(c.env.HTTP_PROXY)
     const pool = new SimplePool()
 
     try {
@@ -266,7 +232,7 @@ app.get('/api/reactions/:eventId', async (c) => {
   const eventId = c.req.param('eventId')
   const pubkey = c.req.query('pubkey')
 
-  const pool = await createPool(c.env.HTTP_PROXY)
+  const pool = new SimplePool()
 
   try {
     const events = await pool.querySync(RELAYS, { kinds: [7], '#e': [eventId] })
@@ -283,7 +249,7 @@ app.get('/api/reactions/:eventId', async (c) => {
 app.get('/api/replies/:eventId', async (c) => {
   const eventId = c.req.param('eventId')
 
-  const pool = await createPool(c.env.HTTP_PROXY)
+  const pool = new SimplePool()
 
   try {
     const events = await pool.querySync(RELAYS, { kinds: [1], '#e': [eventId] })
@@ -306,7 +272,7 @@ app.get('/api/reposts/:eventId', async (c) => {
   const eventId = c.req.param('eventId')
   const pubkey = c.req.query('pubkey')
 
-  const pool = await createPool(c.env.HTTP_PROXY)
+  const pool = new SimplePool()
 
   try {
     const events = await pool.querySync(RELAYS, { kinds: [6], '#e': [eventId] })
@@ -324,7 +290,7 @@ app.get('/api/user/:pubkey/events', async (c) => {
   const pubkey = c.req.param('pubkey')
   const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
 
-  const pool = await createPool(c.env.HTTP_PROXY)
+  const pool = new SimplePool()
 
   try {
     const events = await pool.querySync(RELAYS, {
@@ -350,7 +316,7 @@ app.post('/api/publish', async (c) => {
     return c.json({ error: 'Invalid event' }, 400)
   }
 
-  const pool = await createPool(c.env.HTTP_PROXY)
+  const pool = new SimplePool()
 
   try {
     await Promise.all(pool.publish(RELAYS, event))
