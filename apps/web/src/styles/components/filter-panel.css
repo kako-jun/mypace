@@ -31,7 +31,7 @@
 /* Filter Panel */
 .filter-panel {
   background: var(--surface-primary);
-  border: 2px solid var(--border-color);
+  border: 2px solid var(--border);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
   padding: 0.75rem;
   min-width: 340px;
