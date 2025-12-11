@@ -87,6 +87,7 @@ body.long-mode-active .main-content {
   view-transition-name: header-actions;
 }
 
+.mypace-toggle,
 .search-toggle {
   display: inline-flex;
   align-items: center;
@@ -99,16 +100,24 @@ body.long-mode-active .main-content {
   transition: transform 0.15s ease;
 }
 
+.mypace-toggle svg,
 .search-toggle svg {
   fill: #fff;
   stroke: var(--text-primary);
   transition: transform 0.15s ease;
 }
 
+.mypace-toggle.active svg {
+  fill: var(--text-primary);
+  stroke: var(--text-primary);
+}
+
+.mypace-toggle:hover,
 .search-toggle:hover {
   transform: scale(1.1);
 }
 
+.mypace-toggle:hover svg,
 .search-toggle:hover svg {
   transform: scale(1.5);
 }

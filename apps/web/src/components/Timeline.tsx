@@ -52,7 +52,9 @@ export function Timeline({
     error,
     likingId,
     repostingId,
+    newEventCount,
     reload,
+    loadNewEvents,
     handleLike,
     handleRepost,
     handleDelete,
@@ -171,6 +173,11 @@ export function Timeline({
           onSearchChange={setSearchQuery}
           onSearch={handleSearch}
         />
+      )}
+      {newEventCount > 0 && (
+        <button className="new-posts-banner" onClick={loadNewEvents}>
+          {newEventCount}件の新着投稿があります
+        </button>
       )}
       {filterTags.length > 0 && (
         <FilterBar

@@ -37,9 +37,14 @@ export interface RepostData {
 }
 
 // Timeline
-export async function fetchTimeline(limit = 50, since = 0): Promise<{ events: Event[]; source: string }> {
+export async function fetchTimeline(
+  limit = 50,
+  since = 0,
+  mypaceOnly = true
+): Promise<{ events: Event[]; source: string }> {
   const params = new URLSearchParams({ limit: String(limit) })
   if (since > 0) params.set('since', String(since))
+  if (!mypaceOnly) params.set('all', '1')
 
   const res = await fetch(`${API_BASE}/api/timeline?${params}`)
   if (!res.ok) throw new Error('Failed to fetch timeline')

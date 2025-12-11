@@ -59,14 +59,18 @@ const HTTP_PROXY = process.env.HTTP_PROXY
 app.get('/api/timeline', async (c) => {
   const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
   const since = Number(c.req.query('since')) || 0
+  const showAll = c.req.query('all') === '1'
 
   const pool = await createPool(HTTP_PROXY)
 
   try {
     const filter: Filter = {
       kinds: [1],
-      '#t': [MYPACE_TAG],
       limit,
+    }
+    // mypaceタグでフィルタリング（all=1でない場合のみ）
+    if (!showAll) {
+      filter['#t'] = [MYPACE_TAG]
     }
     if (since > 0) {
       filter.since = since

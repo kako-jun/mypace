@@ -20,6 +20,7 @@ export const LIMITS = {
 export const CUSTOM_EVENTS = {
   NEW_POST: 'newpost',
   PROFILE_UPDATED: 'profileupdated',
+  MYPACE_FILTER_CHANGED: 'mypacefilterchanged',
 } as const
 
 // API endpoints
