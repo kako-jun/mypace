@@ -1,6 +1,6 @@
 /* PostForm component styles */
 
-/* Post Form - borderless */
+/* Post Form - thick border style */
 .post-form {
   position: fixed;
   bottom: 0;
@@ -10,10 +10,11 @@
   background: var(--surface-primary);
   padding: 1rem;
   box-sizing: border-box;
-  border-radius: 0 12px 0 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--border-color);
+  border-bottom: none;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
   z-index: 100;
-  transition: background 0.2s ease, box-shadow 0.3s ease, width 0.3s ease, opacity 0.5s ease;
+  transition: background 0.2s ease, width 0.3s ease, opacity 0.5s ease;
   opacity: 0.9;
 }
 
@@ -25,7 +26,6 @@
 
 .post-form:focus-within {
   background: var(--surface-primary);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
 /* Editing mode */
@@ -57,7 +57,9 @@
   width: 100%;
   max-width: none;
   padding: 1.5rem;
-  border-radius: 12px;
+  border: 2px solid var(--border-color);
+  border-bottom: 2px solid var(--border-color);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -97,8 +99,6 @@
 .long-mode-container.with-preview .long-mode-preview-pane {
   flex: 1;
   min-width: 0;
-  background: var(--surface-secondary);
-  border-radius: 12px;
   padding: 1.5rem;
   overflow-y: auto;
 }

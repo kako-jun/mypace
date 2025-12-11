@@ -12,21 +12,11 @@
   max-width: 600px;
   margin-left: auto;
   background: var(--surface-primary);
-  border-radius: 8px;
+  border: 2px solid var(--border-color);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
   padding: 24px;
   margin-bottom: 24px;
   position: relative;
-}
-
-.user-profile-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 20px;
-  height: 20px;
-  clip-path: polygon(0 0, 100% 100%, 100% 0);
-  background: var(--bg-base);
 }
 
 .user-profile-header {
