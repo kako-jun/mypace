@@ -22,6 +22,7 @@ export const CUSTOM_EVENTS = {
   PROFILE_UPDATED: 'profileupdated',
   MYPACE_FILTER_CHANGED: 'mypacefilterchanged',
   LANGUAGE_FILTER_CHANGED: 'languagefilterchanged',
+  THEME_COLORS_CHANGED: 'themecolorschanged',
 } as const
 
 // Supported languages for filtering

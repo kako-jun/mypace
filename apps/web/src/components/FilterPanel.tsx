@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from './ui/Icon'
 import Button from './ui/Button'
+import Toggle from './ui/Toggle'
 import { getBoolean, setBoolean, getString, setString, buildSearchUrl } from '../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS, LANGUAGES } from '../lib/constants'
 import type { FilterMode } from '../types'
@@ -124,13 +125,12 @@ export function FilterPanel({
       {/* Filter options row */}
       <div className="filter-options-row">
         {/* mypace only toggle */}
-        <label
+        <div
           className="filter-option mypace-option"
           title={mypaceOnly ? 'Showing #mypace posts only' : 'Showing all posts'}
         >
-          <input type="checkbox" checked={mypaceOnly} onChange={(e) => setMypaceOnly(e.target.checked)} />
-          <span className="option-label">mypace only</span>
-        </label>
+          <Toggle checked={mypaceOnly} onChange={setMypaceOnly} label="mypace only" />
+        </div>
 
         {/* Language selector */}
         <div className="filter-option language-option">

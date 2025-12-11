@@ -20,7 +20,7 @@ import {
   applyThemeColors,
   DEFAULT_COLORS,
 } from '../lib/utils'
-import { STORAGE_KEYS } from '../lib/constants'
+import { STORAGE_KEYS, CUSTOM_EVENTS } from '../lib/constants'
 import { ProfileSection, ThemeSection, EditorSection, KeysSection, ShareSection } from '../components/settings'
 import type { ThemeColors } from '../types'
 
@@ -105,6 +105,8 @@ export function Settings() {
     // Apply and save immediately
     applyThemeColors(newColors)
     setItem(STORAGE_KEYS.THEME_COLORS, newColors)
+    // Notify other components
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.THEME_COLORS_CHANGED))
   }
 
   const handleAppThemeChange = (theme: 'light' | 'dark') => {

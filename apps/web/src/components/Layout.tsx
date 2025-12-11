@@ -5,11 +5,13 @@ import { Settings } from './Settings'
 import { FilterPanel } from './FilterPanel'
 import { getBoolean, getString } from '../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS } from '../lib/constants'
+import { getStoredThemeColors, isDarkColor } from '../lib/nostr/theme'
 
 export function Layout() {
   const navigate = useNavigate()
   const [showFilterPanel, setShowFilterPanel] = useState(false)
   const [hasActiveFilters, setHasActiveFilters] = useState(false)
+  const [headerCornerClass, setHeaderCornerClass] = useState('')
   const filterButtonRef = useRef<HTMLButtonElement>(null)
   const filterPanelRef = useRef<HTMLDivElement>(null)
 
@@ -28,6 +30,24 @@ export function Layout() {
     return () => {
       window.removeEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, checkFilters)
       window.removeEventListener(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED, checkFilters)
+    }
+  }, [])
+
+  // Check theme colors for top-right corner
+  useEffect(() => {
+    const checkThemeColors = () => {
+      const colors = getStoredThemeColors()
+      if (colors?.topRight) {
+        setHeaderCornerClass(isDarkColor(colors.topRight) ? 'corner-tr-dark' : 'corner-tr-light')
+      } else {
+        setHeaderCornerClass('')
+      }
+    }
+    checkThemeColors()
+
+    window.addEventListener(CUSTOM_EVENTS.THEME_COLORS_CHANGED, checkThemeColors)
+    return () => {
+      window.removeEventListener(CUSTOM_EVENTS.THEME_COLORS_CHANGED, checkThemeColors)
     }
   }, [])
 
@@ -60,7 +80,7 @@ export function Layout() {
         <a href="/" className="logo" onClick={handleLogoClick}>
           <img src="/static/logo.webp" alt="MYPACE" className="logo-img" />
         </a>
-        <div className="header-actions">
+        <div className={`header-actions ${headerCornerClass}`}>
           <div className="filter-button-container">
             <button
               ref={filterButtonRef}

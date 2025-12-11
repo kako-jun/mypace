@@ -29,7 +29,7 @@
   --text-secondary: color-mix(in srgb, var(--fg) 80%, var(--bg) 20%);
   --text-muted: color-mix(in srgb, var(--fg) 50%, var(--bg) 50%);
   --text-placeholder: color-mix(in srgb, var(--fg) 35%, var(--bg) 65%);
-  --text-timestamp: color-mix(in srgb, var(--fg) 30%, var(--bg) 70%);
+  --text-timestamp: color-mix(in srgb, var(--fg) 45%, var(--bg) 55%);
   --text-link: var(--accent);
   --text-danger: #c44;
 
@@ -96,7 +96,7 @@
   --text-secondary: color-mix(in srgb, var(--fg) 80%, var(--bg) 20%);
   --text-muted: color-mix(in srgb, var(--fg) 50%, var(--bg) 50%);
   --text-placeholder: color-mix(in srgb, var(--fg) 35%, var(--bg) 65%);
-  --text-timestamp: color-mix(in srgb, var(--fg) 30%, var(--bg) 70%);
+  --text-timestamp: color-mix(in srgb, var(--fg) 45%, var(--bg) 55%);
   --text-danger: #c44;
 
   /* ===== Derived: Border ===== */
