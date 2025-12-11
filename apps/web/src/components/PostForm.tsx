@@ -180,7 +180,7 @@ export function PostForm({
             <textarea
               ref={textareaRef}
               className="post-input"
-              placeholder="マイペースに書こう&#10;&#10;長文モードでじっくり書けます"
+              placeholder="マイペースに書こう"
               value={content}
               onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
               maxLength={LIMITS.MAX_POST_LENGTH}
@@ -230,7 +230,7 @@ export function PostForm({
 
         {showPreview && (
           <div className="long-mode-preview-pane">
-            <PostPreview content={content} themeColors={themeColors} />
+            <PostPreview content={content} themeColors={null} />
           </div>
         )}
       </div>
