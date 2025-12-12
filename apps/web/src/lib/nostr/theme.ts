@@ -54,7 +54,6 @@ export function getThemeCardProps(colors: ThemeColors | null): {
   const avgDark = darkCount >= 2
   const textClass = avgDark ? 'light-text' : 'dark-text'
   const topLeftClass = isDarkColor(colors.topLeft) ? 'corner-tl-dark' : 'corner-tl-light'
-  const bottomLeftClass = isDarkColor(colors.bottomLeft) ? 'corner-bl-dark' : 'corner-bl-light'
 
   return {
     style: {
@@ -66,6 +65,6 @@ export function getThemeCardProps(colors: ThemeColors | null): {
         linear-gradient(135deg, ${colors.topLeft} 0%, ${colors.bottomRight} 100%)
       `.trim(),
     },
-    className: `themed-card ${textClass} ${topLeftClass} ${bottomLeftClass}`,
+    className: `themed-card ${textClass} ${topLeftClass}`,
   }
 }

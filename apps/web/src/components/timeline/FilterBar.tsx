@@ -49,7 +49,6 @@ export default function FilterBar({
       <button
         className={`filter-share ${filterCopied ? 'copied' : ''}`}
         onClick={onShare}
-        title="Share"
         aria-label={filterCopied ? 'Link copied' : 'Share filter'}
       >
         {filterCopied ? <Icon name="Check" size={14} /> : <Icon name="Share2" size={14} />}

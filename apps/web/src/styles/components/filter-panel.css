@@ -10,12 +10,13 @@
 }
 
 .filter-toggle svg {
-  stroke: var(--text-secondary);
+  stroke: #333;
+  fill: #fff;
 }
 
-.filter-toggle.active svg,
+/* Has-filters: fill with action-reply color (light blue) */
 .filter-toggle.has-filters svg {
-  stroke: var(--primary-color, #6366f1);
+  fill: var(--action-reply);
 }
 
 

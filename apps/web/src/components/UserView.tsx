@@ -215,7 +215,7 @@ export function UserView({ pubkey }: UserViewProps) {
             <h2 className="user-name">{displayName}</h2>
             <div className="user-npub-row">
               <span className="user-npub">{npub}</span>
-              <button className="npub-copy-btn" onClick={handleCopyNpub} title="Copy npub">
+              <button className="npub-copy-btn" onClick={handleCopyNpub} aria-label="Copy npub">
                 {npubCopied ? <Icon name="Check" size={14} /> : <Icon name="Copy" size={14} />}
               </button>
             </div>

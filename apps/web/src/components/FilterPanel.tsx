@@ -125,10 +125,7 @@ export function FilterPanel({
       {/* Filter options row */}
       <div className="filter-options-row">
         {/* mypace only toggle */}
-        <div
-          className="filter-option mypace-option"
-          title={mypaceOnly ? 'Showing #mypace posts only' : 'Showing all posts'}
-        >
+        <div className="filter-option mypace-option">
           <Toggle checked={mypaceOnly} onChange={setMypaceOnly} label="mypace only" />
         </div>
 
