@@ -87,7 +87,7 @@ body.long-mode-active .main-content {
   height: 22px;
   filter: var(--logo-filter, none);
   transition: filter 0.3s ease;
-  animation: star-spin 30s ease-in-out infinite;
+  animation: star-spin 42s ease-in-out infinite;
 }
 
 .logo:hover .logo-star {

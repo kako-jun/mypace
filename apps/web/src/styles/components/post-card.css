@@ -3,7 +3,7 @@
    =========================================== */
 
 /* Post Card - crisp black border with folded corner */
-/* Post cards always use light theme colors regardless of app theme */
+/* Non-mypace posts follow current theme, mypace posts use their own gradient */
 .post-card {
   position: relative;
   padding: 1.5rem;
@@ -12,14 +12,7 @@
   background: var(--surface-primary);
   border: 2px solid var(--border-card);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
-  /* Lock to light theme colors */
-  --text-primary: #333;
-  --text-secondary: color-mix(in srgb, #333 80%, #fff 20%);
-  --text-muted: color-mix(in srgb, #333 50%, #fff 50%);
-  --border-card: #333;
-  --surface-primary: #fff;
-  --surface-secondary: color-mix(in srgb, #fff 92%, #333 8%);
-  --surface-fold: color-mix(in srgb, #fff 80%, #333 20%);
+  color: var(--text-primary);
 }
 
 /* Folded corner effect */
