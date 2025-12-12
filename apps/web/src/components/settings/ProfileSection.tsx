@@ -1,5 +1,6 @@
 import { Avatar } from '../ui'
 import { getCurrentPubkey } from '../../lib/nostr/events'
+import { navigateToUser } from '../../lib/utils'
 import { useState, useEffect } from 'react'
 
 interface ProfileSectionProps {
@@ -18,7 +19,7 @@ export default function ProfileSection({ displayName, pictureUrl }: ProfileSecti
 
   const handleEditProfile = () => {
     if (pubkey) {
-      window.location.href = `/user/${pubkey}`
+      navigateToUser(pubkey)
     }
   }
 

@@ -39,9 +39,11 @@ import type { Event, Profile } from '../types'
 
 interface PostViewProps {
   eventId: string
+  isModal?: boolean
+  onClose?: () => void
 }
 
-export function PostView({ eventId }: PostViewProps) {
+export function PostView({ eventId, isModal, onClose }: PostViewProps) {
   const [mounted, setMounted] = useState(false)
   const [event, setEvent] = useState<Event | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -186,7 +188,13 @@ export function PostView({ eventId }: PostViewProps) {
     } catch {}
   }
 
-  const handleBack = () => navigateToHome()
+  const handleBack = () => {
+    if (isModal && onClose) {
+      onClose()
+    } else {
+      navigateToHome()
+    }
+  }
 
   if (loading) return <div className="loading">Loading...</div>
 
@@ -204,9 +212,9 @@ export function PostView({ eventId }: PostViewProps) {
   const themeProps = getThemeCardProps(themeColors)
 
   return (
-    <div className="post-view">
+    <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
       <button className="back-button text-outlined text-outlined-button" onClick={handleBack}>
-        ← BACK
+        {isModal ? '× CLOSE' : '← BACK'}
       </button>
 
       <article className={`post-card post-card-large ${themeProps.className}`} style={themeProps.style}>

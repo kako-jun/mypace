@@ -64,3 +64,65 @@
 .replies-list .post-card:hover {
   opacity: 0.9;
 }
+
+/* ===========================================
+   Post Modal Styles
+   =========================================== */
+
+.post-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+
+.post-modal-content {
+  width: 100%;
+  max-width: 800px;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  border-radius: 12px;
+  background: var(--bg-primary);
+}
+
+.post-view-modal {
+  padding: 1rem;
+}
+
+.post-view-modal .back-button {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-primary);
+  margin-bottom: 0.5rem;
+}
+
+.post-view-modal .post-card-large {
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .post-modal-backdrop {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .post-modal-backdrop {
+    padding: 1rem 0.5rem;
+  }
+
+  .post-modal-content {
+    max-height: calc(100vh - 2rem);
+    border-radius: 8px;
+  }
+}

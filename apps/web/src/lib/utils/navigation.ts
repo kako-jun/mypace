@@ -1,11 +1,11 @@
 // Navigation utilities
 import type { FilterMode } from '../../types'
+import { getNavigateFunction } from './router-navigation'
 
-// Navigate to a URL
+// Navigate to a URL using React Router
 export function navigateTo(href: string): void {
-  if (href !== window.location.href) {
-    window.location.href = href
-  }
+  const navigate = getNavigateFunction()
+  navigate(href)
 }
 
 export function navigateToHome(): void {

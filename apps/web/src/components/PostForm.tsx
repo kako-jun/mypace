@@ -241,7 +241,7 @@ export function PostForm({
             <LongModeEditor
               value={content}
               onChange={onContentChange}
-              placeholder="マイペースに書こう"
+              placeholder="マイペースで書こう"
               vimMode={vimMode}
               darkTheme={darkTheme}
               onWrite={() => longModeFormRef.current?.requestSubmit()}
@@ -347,7 +347,7 @@ export function PostForm({
         <textarea
           ref={textareaRef}
           className="post-input"
-          placeholder="マイペースに書こう"
+          placeholder="マイペースで書こう"
           value={content}
           onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
           rows={3}
