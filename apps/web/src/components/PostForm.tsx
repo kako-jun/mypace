@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
-import { createTextNote, createDeleteEvent, createReplyEvent, getStoredThemeColors } from '../lib/nostr/events'
+import {
+  createTextNote,
+  createDeleteEvent,
+  createReplyEvent,
+  getStoredThemeColors,
+  getCurrentPubkey,
+} from '../lib/nostr/events'
+import { navigateToUser } from '../lib/utils'
 import type { ThemeColors } from '../types'
 import { publishEvent } from '../lib/nostr/relay'
 import { ProfileSetup } from './ProfileSetup'
@@ -153,6 +160,11 @@ export function PostForm({
     window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
   }
 
+  const handleAvatarClick = async () => {
+    const pubkey = await getCurrentPubkey()
+    navigateToUser(pubkey)
+  }
+
   const insertImageUrl = (url: string) => {
     const textarea = textareaRef.current
     if (textarea) {
@@ -213,7 +225,9 @@ export function PostForm({
             {replyingTo && <div className="replying-label">Replying to post...</div>}
 
             <div className="post-form-top-actions">
-              <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
+              <button type="button" className="post-form-avatar-button" onClick={handleAvatarClick}>
+                <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
+              </button>
               <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
               <div className="vim-toggle">
                 <Toggle checked={vimMode} onChange={handleVimModeChange} label="Vim" />
@@ -304,7 +318,9 @@ export function PostForm({
       {replyingTo && <div className="replying-label">Replying to post...</div>}
 
       <div className="post-form-top-actions">
-        <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
+        <button type="button" className="post-form-avatar-button" onClick={handleAvatarClick}>
+          <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
+        </button>
         <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
         <button
           type="button"
