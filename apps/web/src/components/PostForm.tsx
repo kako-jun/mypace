@@ -14,7 +14,7 @@ import {
 import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../lib/constants'
 import { ImageDropZone, AttachedImages, PostPreview } from '../components/post'
 import { LongModeEditor } from './LongModeEditor'
-import { Toggle, Avatar } from './ui'
+import { Toggle, Avatar, Icon } from './ui'
 import { setBoolean } from '../lib/utils/storage'
 import type { Event } from '../types'
 
@@ -308,18 +308,18 @@ export function PostForm({
         <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
         <button
           type="button"
-          className="minimize-button"
-          onClick={() => setMinimized(true)}
-          aria-label="Minimize editor"
-        >
-          −
-        </button>
-        <button
-          type="button"
           className="mode-toggle-corner text-outlined text-outlined-button text-outlined-primary"
           onClick={handleLongModeToggle}
         >
           LONG ↗
+        </button>
+        <button
+          type="button"
+          className="minimize-button"
+          onClick={() => setMinimized(true)}
+          aria-label="Minimize editor"
+        >
+          <Icon name="Minus" size={20} strokeWidth={3} />
         </button>
       </div>
 
