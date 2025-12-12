@@ -59,31 +59,35 @@ body.long-mode-active .main-content {
   width: fit-content;
   pointer-events: auto;
   view-transition-name: logo;
+  transform-origin: top left;
+  transition: transform 0.3s ease;
+}
+
+.logo:hover {
+  transform: scale(1.05);
 }
 
 .logo-img {
   height: 64px;
   width: auto;
   filter: var(--logo-filter, none);
-  transition: filter 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
-  transform-origin: top left;
+  transition: filter 0.3s ease;
 }
 
 .logo:hover .logo-img {
   filter: var(--logo-hover-filter, none);
-  transform: scale(1.05);
 }
 
 /* Logo Star */
 .logo-star {
   position: absolute;
   top: 3px;
-  right: 1px;
+  right: 6px;
   width: 22px;
   height: 22px;
   filter: var(--logo-filter, none);
   transition: filter 0.3s ease;
-  animation: star-spin 20s ease-in-out infinite;
+  animation: star-spin 30s ease-in-out infinite;
 }
 
 .logo:hover .logo-star {
