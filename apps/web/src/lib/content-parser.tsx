@@ -78,7 +78,8 @@ const HASHTAG_REGEX = /#([a-zA-Z0-9_\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+)/g
 function processHashtags(html: string): string {
   return html.replace(HASHTAG_REGEX, (match, tag) => {
     const escapedTag = escapeHtml(tag)
-    return `<button class="content-hashtag" data-tag="${escapedTag}">${escapeHtml(match)}</button>`
+    const randomDelay = Math.random() * 47 // Random delay within 47s cycle
+    return `<button class="content-hashtag" data-tag="${escapedTag}" style="animation-delay: ${randomDelay.toFixed(1)}s">${escapeHtml(match)}</button>`
   })
 }
 
@@ -97,9 +98,12 @@ function removeImageLinks(html: string): string {
   return html.replace(/<a[^>]*>(\s*<span class="content-image-wrapper">.*?<\/span>\s*)<\/a>/gi, '$1')
 }
 
-// Add target="_blank" to links
+// Add target="_blank" to links with random animation delay
 function processLinks(html: string): string {
-  return html.replace(/<a href="/g, '<a class="content-link" target="_blank" rel="noopener noreferrer" href="')
+  return html.replace(/<a href="/g, () => {
+    const randomDelay = Math.random() * 59 // Random delay within 59s cycle
+    return `<a class="content-link" style="animation-delay: ${randomDelay.toFixed(1)}s" target="_blank" rel="noopener noreferrer" href="`
+  })
 }
 
 // Process custom emojis (NIP-30)
