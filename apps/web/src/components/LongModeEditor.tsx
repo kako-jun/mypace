@@ -178,24 +178,23 @@ export function LongModeEditor({
               onQuitRef.current?.()
             })
 
-            const vimExtension = vim({ status: true })
-            extensions.unshift(vimExtension)
+            extensions.unshift(vim({ status: true }))
 
-            // After vim is initialized, intercept register writes to sync with clipboard
+            // Intercept all register writes to sync with system clipboard
             // @ts-expect-error Vim internal API
             const vimGlobal = Vim.getVimGlobalState?.()
-            if (vimGlobal?.registerController) {
-              const originalPushText = vimGlobal.registerController.pushText.bind(vimGlobal.registerController)
-              vimGlobal.registerController.pushText = (
-                register: string,
-                operator: string,
-                text: string,
-                linewise: boolean
-              ) => {
-                // Call original method
-                originalPushText(register, operator, text, linewise)
-                // Sync to system clipboard
-                navigator.clipboard.writeText(text).catch(() => {})
+            if (vimGlobal?.registerController?.registers) {
+              const registers = vimGlobal.registerController.registers
+              // Wrap the unnamed register (default for yank/delete)
+              const origUnnamed = registers['']
+              if (origUnnamed) {
+                const origSetText = origUnnamed.setText?.bind(origUnnamed)
+                if (origSetText) {
+                  origUnnamed.setText = (text: string) => {
+                    origSetText(text)
+                    navigator.clipboard.writeText(text).catch(() => {})
+                  }
+                }
               }
             }
           }
