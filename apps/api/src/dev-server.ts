@@ -131,7 +131,7 @@ async function createPool(proxyUrl?: string) {
   return new SimplePool({ websocketImplementation: WebSocketClass } as any)
 }
 
-const HTTP_PROXY = process.env.HTTP_PROXY
+const NOSTR_PROXY = process.env.NOSTR_PROXY
 
 // GET /api/timeline - タイムライン取得
 app.get('/api/timeline', async (c) => {
@@ -140,7 +140,7 @@ app.get('/api/timeline', async (c) => {
   const showAll = c.req.query('all') === '1'
   const langFilter = c.req.query('lang') || ''
 
-  const pool = await createPool(HTTP_PROXY)
+  const pool = await createPool(NOSTR_PROXY)
 
   try {
     const filter: Filter = {
@@ -178,7 +178,7 @@ app.get('/api/timeline', async (c) => {
 // GET /api/events/:id - 単一イベント取得
 app.get('/api/events/:id', async (c) => {
   const id = c.req.param('id')
-  const pool = await createPool(HTTP_PROXY)
+  const pool = await createPool(NOSTR_PROXY)
 
   try {
     const events = await pool.querySync(RELAYS, { ids: [id] })
@@ -198,7 +198,7 @@ app.get('/api/profiles', async (c) => {
     return c.json({ profiles: {} })
   }
 
-  const pool = await createPool(HTTP_PROXY)
+  const pool = await createPool(NOSTR_PROXY)
   const profiles: Record<string, unknown> = {}
 
   try {
@@ -223,7 +223,7 @@ app.get('/api/reactions/:eventId', async (c) => {
   const eventId = c.req.param('eventId')
   const pubkey = c.req.query('pubkey')
 
-  const pool = await createPool(HTTP_PROXY)
+  const pool = await createPool(NOSTR_PROXY)
 
   try {
     const events = await pool.querySync(RELAYS, { kinds: [7], '#e': [eventId] })
@@ -240,7 +240,7 @@ app.get('/api/reactions/:eventId', async (c) => {
 app.get('/api/replies/:eventId', async (c) => {
   const eventId = c.req.param('eventId')
 
-  const pool = await createPool(HTTP_PROXY)
+  const pool = await createPool(NOSTR_PROXY)
 
   try {
     const events = await pool.querySync(RELAYS, { kinds: [1], '#e': [eventId] })
@@ -262,7 +262,7 @@ app.get('/api/reposts/:eventId', async (c) => {
   const eventId = c.req.param('eventId')
   const pubkey = c.req.query('pubkey')
 
-  const pool = await createPool(HTTP_PROXY)
+  const pool = await createPool(NOSTR_PROXY)
 
   try {
     const events = await pool.querySync(RELAYS, { kinds: [6], '#e': [eventId] })
@@ -282,7 +282,7 @@ app.get('/api/user/:pubkey/events', async (c) => {
   const since = Number(c.req.query('since')) || 0
   const until = Number(c.req.query('until')) || 0
 
-  const pool = await createPool(HTTP_PROXY)
+  const pool = await createPool(NOSTR_PROXY)
 
   try {
     const filter: Filter = {
@@ -316,7 +316,7 @@ app.post('/api/publish', async (c) => {
     return c.json({ error: 'Invalid event' }, 400)
   }
 
-  const pool = await createPool(HTTP_PROXY)
+  const pool = await createPool(NOSTR_PROXY)
 
   try {
     await Promise.all(pool.publish(RELAYS, event))
@@ -334,7 +334,7 @@ app.get('/health', (c) => c.json({ status: 'ok' }))
 
 const port = 8787
 console.log(`Starting dev server on http://localhost:${port}`)
-console.log(`HTTP_PROXY: ${HTTP_PROXY || '(not set)'}`)
+console.log(`NOSTR_PROXY: ${NOSTR_PROXY || '(not set)'}`)
 
 serve({
   fetch: app.fetch,
