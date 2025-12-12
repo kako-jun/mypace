@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, Fragment } from 'react'
-import { fetchUserProfile } from '../lib/nostr/relay'
-import { getEventThemeColors, getThemeCardProps } from '../lib/nostr/events'
+import { fetchUserProfile, publishEvent } from '../lib/nostr/relay'
+import { getEventThemeColors, getThemeCardProps, createProfileEvent } from '../lib/nostr/events'
 import {
   getDisplayName,
   getAvatarUrl,
@@ -12,13 +12,16 @@ import {
   applyThemeColors,
   shareOrCopy,
   copyToClipboard,
+  setLocalProfile,
+  getErrorMessage,
 } from '../lib/utils'
-import { Avatar, Icon } from '../components/ui'
-import { TIMEOUTS } from '../lib/constants'
+import { Avatar, Icon, Button, Input } from '../components/ui'
+import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
 import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
 import { TimelinePostCard } from '../components/timeline'
-import { useTimeline } from '../hooks'
+import { useTimeline, useDragDrop, useTemporaryFlag } from '../hooks'
+import { uploadImage } from '../lib/upload'
 import { nip19 } from 'nostr-tools'
 import type { Event, Profile } from '../types'
 
@@ -33,6 +36,21 @@ export function UserView({ pubkey }: UserViewProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const [npubCopied, setNpubCopied] = useState(false)
+
+  // Edit mode state
+  const [editMode, setEditMode] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editAbout, setEditAbout] = useState('')
+  const [editPicture, setEditPicture] = useState('')
+  const [editBanner, setEditBanner] = useState('')
+  const [editWebsite, setEditWebsite] = useState('')
+  const [editNip05, setEditNip05] = useState('')
+  const [editLud16, setEditLud16] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [uploadingBanner, setUploadingBanner] = useState(false)
+  const [editError, setEditError] = useState('')
+  const [editSaved, triggerEditSaved] = useTemporaryFlag()
 
   const {
     items,
@@ -104,6 +122,112 @@ export function UserView({ pubkey }: UserViewProps) {
 
   const handleBack = () => navigateToHome()
 
+  const isOwnProfile = myPubkey === pubkey
+
+  // Enter edit mode
+  const enterEditMode = () => {
+    setEditName(profile?.name || profile?.display_name || '')
+    setEditAbout(profile?.about || '')
+    setEditPicture(profile?.picture || '')
+    setEditBanner(profile?.banner || '')
+    setEditWebsite(profile?.website || '')
+    setEditNip05(profile?.nip05 || '')
+    setEditLud16(profile?.lud16 || '')
+    setEditError('')
+    setEditMode(true)
+  }
+
+  const cancelEditMode = () => {
+    setEditMode(false)
+    setEditError('')
+  }
+
+  // Save profile
+  const handleSaveProfile = async () => {
+    if (!editName.trim()) {
+      setEditError('Name is required')
+      return
+    }
+
+    setSaving(true)
+    setEditError('')
+
+    try {
+      const newProfile: Profile = {
+        name: editName.trim(),
+        display_name: editName.trim(),
+        picture: editPicture.trim() || undefined,
+        banner: editBanner.trim() || undefined,
+        about: editAbout.trim() || undefined,
+        website: editWebsite.trim() || undefined,
+        nip05: editNip05.trim() || undefined,
+        lud16: editLud16.trim() || undefined,
+      }
+
+      const event = await createProfileEvent(newProfile)
+      await publishEvent(event)
+      setLocalProfile(newProfile)
+      setProfile(newProfile)
+      window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.PROFILE_UPDATED))
+      triggerEditSaved()
+      setEditMode(false)
+    } catch (e) {
+      setEditError(getErrorMessage(e, 'Failed to save profile'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Avatar upload
+  const processAvatarUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setEditError('Please drop an image file')
+      return
+    }
+    setUploadingAvatar(true)
+    setEditError('')
+    const result = await uploadImage(file)
+    if (result.success && result.url) {
+      setEditPicture(result.url)
+    } else {
+      setEditError(result.error || 'Failed to upload avatar')
+    }
+    setUploadingAvatar(false)
+  }
+
+  const { dragging: avatarDragging, handlers: avatarHandlers } = useDragDrop(processAvatarUpload)
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) await processAvatarUpload(file)
+    e.target.value = ''
+  }
+
+  // Banner upload
+  const processBannerUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setEditError('Please drop an image file')
+      return
+    }
+    setUploadingBanner(true)
+    setEditError('')
+    const result = await uploadImage(file)
+    if (result.success && result.url) {
+      setEditBanner(result.url)
+    } else {
+      setEditError(result.error || 'Failed to upload banner')
+    }
+    setUploadingBanner(false)
+  }
+
+  const { dragging: bannerDragging, handlers: bannerHandlers } = useDragDrop(processBannerUpload)
+
+  const handleBannerFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) await processBannerUpload(file)
+    e.target.value = ''
+  }
+
   const npub = nip19.npubEncode(pubkey)
 
   const handleCopyNpub = async () => {
@@ -154,23 +278,137 @@ export function UserView({ pubkey }: UserViewProps) {
 
       {profileLoading ? (
         <div className="user-profile-card loading">Loading profile...</div>
-      ) : (
-        <div className={`user-profile-card ${themeProps.className}`} style={themeProps.style}>
-          <div className="user-profile-header">
-            <Avatar src={avatarUrl} className="user-avatar" />
-            <div className="user-info">
-              <h2 className="user-name">{displayName}</h2>
-              <div className="user-npub-row">
-                <span className="user-npub">{npub}</span>
-                <button className="npub-copy-btn" onClick={handleCopyNpub} aria-label="Copy npub">
-                  {npubCopied ? <Icon name="Check" size={14} /> : <Icon name="Copy" size={14} />}
-                </button>
+      ) : editMode ? (
+        /* Edit Mode */
+        <div className="user-profile-card user-profile-edit">
+          {/* Banner upload */}
+          <label
+            className={`banner-upload-area ${bannerDragging ? 'dragging' : ''}`}
+            onDragOver={bannerHandlers.onDragOver}
+            onDragLeave={bannerHandlers.onDragLeave}
+            onDrop={bannerHandlers.onDrop}
+          >
+            {editBanner ? (
+              <img src={editBanner} alt="Banner" className="banner-preview" />
+            ) : (
+              <div className="banner-placeholder">
+                <Icon name="Image" size={24} />
+                <span>Click or drop to add banner</span>
               </div>
+            )}
+            {uploadingBanner && <div className="upload-overlay">Uploading...</div>}
+            <input type="file" accept="image/*" onChange={handleBannerFileChange} style={{ display: 'none' }} />
+          </label>
+
+          {/* Avatar upload */}
+          <div className="edit-avatar-section">
+            <label
+              className={`avatar-upload-area ${avatarDragging ? 'dragging' : ''}`}
+              onDragOver={avatarHandlers.onDragOver}
+              onDragLeave={avatarHandlers.onDragLeave}
+              onDrop={avatarHandlers.onDrop}
+            >
+              <Avatar src={editPicture} className="user-avatar" />
+              <div className="avatar-upload-overlay">{uploadingAvatar ? '...' : <Icon name="Camera" size={20} />}</div>
+              <input type="file" accept="image/*" onChange={handleAvatarFileChange} style={{ display: 'none' }} />
+            </label>
+          </div>
+
+          {/* Form fields */}
+          <div className="edit-form">
+            <div className="edit-field">
+              <label>Name *</label>
+              <Input value={editName} onChange={setEditName} placeholder="Your name" maxLength={50} />
+            </div>
+            <div className="edit-field">
+              <label>About</label>
+              <textarea
+                value={editAbout}
+                onChange={(e) => setEditAbout(e.target.value)}
+                placeholder="Tell us about yourself"
+                rows={3}
+                className="edit-textarea"
+              />
+            </div>
+            <div className="edit-field">
+              <label>Website</label>
+              <Input value={editWebsite} onChange={setEditWebsite} placeholder="https://example.com" />
+            </div>
+            <div className="edit-field">
+              <label>NIP-05</label>
+              <Input value={editNip05} onChange={setEditNip05} placeholder="you@example.com" />
+            </div>
+            <div className="edit-field">
+              <label>Lightning Address</label>
+              <Input value={editLud16} onChange={setEditLud16} placeholder="you@getalby.com" />
+            </div>
+
+            {editError && <p className="error">{editError}</p>}
+            {editSaved && <p className="success">Saved!</p>}
+
+            <div className="edit-actions">
+              <Button onClick={handleSaveProfile} disabled={saving || !editName.trim()}>
+                {saving ? 'Saving...' : 'Save'}
+              </Button>
+              <Button onClick={cancelEditMode} disabled={saving}>
+                Cancel
+              </Button>
             </div>
           </div>
-          {profile?.about && <p className="user-about">{profile.about}</p>}
-          <div className="user-stats">
-            <span>{items.length} posts</span>
+        </div>
+      ) : (
+        /* View Mode */
+        <div className="user-profile-card-wrapper">
+          {/* Banner */}
+          {profile?.banner && (
+            <div className="user-banner">
+              <img src={profile.banner} alt="Banner" />
+            </div>
+          )}
+
+          <div className={`user-profile-card ${themeProps.className}`} style={themeProps.style}>
+            <div className="user-profile-header">
+              <Avatar src={avatarUrl} className="user-avatar" />
+              <div className="user-info">
+                <h2 className="user-name">{displayName}</h2>
+                {profile?.nip05 && (
+                  <span className="user-nip05">
+                    <Icon name="CheckCircle" size={14} /> {profile.nip05}
+                  </span>
+                )}
+              </div>
+              {isOwnProfile && (
+                <button className="edit-profile-btn text-outlined text-outlined-button" onClick={enterEditMode}>
+                  EDIT
+                </button>
+              )}
+            </div>
+
+            {profile?.about && <p className="user-about">{profile.about}</p>}
+
+            <div className="user-links">
+              {profile?.website && (
+                <a href={profile.website} target="_blank" rel="noopener noreferrer" className="user-link">
+                  <Icon name="Globe" size={14} /> {profile.website.replace(/^https?:\/\//, '')}
+                </a>
+              )}
+              {profile?.lud16 && (
+                <span className="user-link user-lightning">
+                  <Icon name="Zap" size={14} /> {profile.lud16}
+                </span>
+              )}
+            </div>
+
+            <div className="user-npub-row">
+              <span className="user-npub">{npub}</span>
+              <button className="npub-copy-btn" onClick={handleCopyNpub} aria-label="Copy npub">
+                {npubCopied ? <Icon name="Check" size={14} /> : <Icon name="Copy" size={14} />}
+              </button>
+            </div>
+
+            <div className="user-stats">
+              <span>{items.length} posts</span>
+            </div>
           </div>
         </div>
       )}

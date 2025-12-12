@@ -280,7 +280,7 @@ app.get('/api/profiles', async (c) => {
     const cached = await db
       .prepare(
         `
-      SELECT pubkey, name, display_name, picture, about, nip05
+      SELECT pubkey, name, display_name, picture, about, nip05, banner, website, lud16
       FROM profiles WHERE pubkey IN (${placeholders}) AND cached_at > ?
     `
       )
@@ -294,6 +294,9 @@ app.get('/api/profiles', async (c) => {
         picture: row.picture,
         about: row.about,
         nip05: row.nip05,
+        banner: row.banner,
+        website: row.website,
+        lud16: row.lud16,
       }
       cachedPubkeys.push(row.pubkey as string)
     }
@@ -318,11 +321,22 @@ app.get('/api/profiles', async (c) => {
           await db
             .prepare(
               `
-            INSERT OR REPLACE INTO profiles (pubkey, name, display_name, picture, about, nip05, cached_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT OR REPLACE INTO profiles (pubkey, name, display_name, picture, about, nip05, banner, website, lud16, cached_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `
             )
-            .bind(event.pubkey, profile.name, profile.display_name, profile.picture, profile.about, profile.nip05, now)
+            .bind(
+              event.pubkey,
+              profile.name,
+              profile.display_name,
+              profile.picture,
+              profile.about,
+              profile.nip05,
+              profile.banner,
+              profile.website,
+              profile.lud16,
+              now
+            )
             .run()
         } catch (e) {
           console.error('Profile parse error:', e)
