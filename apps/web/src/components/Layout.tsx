@@ -21,8 +21,8 @@ export function Layout() {
     const checkFilters = () => {
       const mypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
       const languageFilter = getString(STORAGE_KEYS.LANGUAGE_FILTER) || ''
-      // Consider filter "active" if not default (mypaceOnly=true, language=all)
-      setHasActiveFilters(!mypaceOnly || !!languageFilter)
+      // Consider filter "active" when mypace filter is ON or language filter is set
+      setHasActiveFilters(mypaceOnly || !!languageFilter)
     }
     checkFilters()
 
