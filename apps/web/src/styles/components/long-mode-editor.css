@@ -91,3 +91,190 @@
   height: 300px;
   color: var(--text-muted);
 }
+
+/* ===========================================
+   Markdown Syntax Highlighting - Light Theme
+   =========================================== */
+
+/* Base text */
+.cm-editor .cm-content {
+  color: #24292e;
+}
+
+/* Headers */
+.cm-editor .cm-header {
+  color: #0550ae;
+  font-weight: 600;
+}
+
+.cm-editor .cm-header-1 {
+  font-size: 1.5em;
+}
+
+.cm-editor .cm-header-2 {
+  font-size: 1.3em;
+}
+
+.cm-editor .cm-header-3 {
+  font-size: 1.1em;
+}
+
+/* Links */
+.cm-editor .cm-link,
+.cm-editor .cm-url {
+  color: #0969da;
+  text-decoration: underline;
+}
+
+/* Bold/Strong */
+.cm-editor .cm-strong {
+  color: #24292e;
+  font-weight: 700;
+}
+
+/* Italic/Emphasis */
+.cm-editor .cm-em {
+  color: #24292e;
+  font-style: italic;
+}
+
+/* Inline code */
+.cm-editor .cm-monospace {
+  color: #cf222e;
+  background: rgba(175, 184, 193, 0.2);
+  border-radius: 3px;
+  padding: 0.1em 0.3em;
+}
+
+/* Code blocks */
+.cm-editor .cm-comment {
+  color: #6e7781;
+}
+
+/* Blockquotes */
+.cm-editor .cm-quote {
+  color: #57606a;
+  font-style: italic;
+}
+
+/* Lists */
+.cm-editor .cm-list {
+  color: #0550ae;
+}
+
+/* Strikethrough */
+.cm-editor .cm-strikethrough {
+  text-decoration: line-through;
+  color: #6e7781;
+}
+
+/* HR */
+.cm-editor .cm-hr {
+  color: #8c959f;
+}
+
+/* Meta (formatting characters like **, ##, etc.) */
+.cm-editor .cm-meta,
+.cm-editor .cm-processingInstruction {
+  color: #8c959f;
+}
+
+/* ===========================================
+   Markdown Syntax Highlighting - Dark Theme
+   =========================================== */
+
+[data-theme="dark"] .cm-editor .cm-content,
+.dark .cm-editor .cm-content {
+  color: #e6edf3;
+}
+
+/* Headers - Dark */
+[data-theme="dark"] .cm-editor .cm-header,
+.dark .cm-editor .cm-header {
+  color: #79c0ff;
+  font-weight: 600;
+}
+
+/* Links - Dark */
+[data-theme="dark"] .cm-editor .cm-link,
+[data-theme="dark"] .cm-editor .cm-url,
+.dark .cm-editor .cm-link,
+.dark .cm-editor .cm-url {
+  color: #58a6ff;
+  text-decoration: underline;
+}
+
+/* Bold/Strong - Dark */
+[data-theme="dark"] .cm-editor .cm-strong,
+.dark .cm-editor .cm-strong {
+  color: #e6edf3;
+  font-weight: 700;
+}
+
+/* Italic/Emphasis - Dark */
+[data-theme="dark"] .cm-editor .cm-em,
+.dark .cm-editor .cm-em {
+  color: #e6edf3;
+  font-style: italic;
+}
+
+/* Inline code - Dark */
+[data-theme="dark"] .cm-editor .cm-monospace,
+.dark .cm-editor .cm-monospace {
+  color: #ff7b72;
+  background: rgba(110, 118, 129, 0.3);
+}
+
+/* Code blocks - Dark */
+[data-theme="dark"] .cm-editor .cm-comment,
+.dark .cm-editor .cm-comment {
+  color: #8b949e;
+}
+
+/* Blockquotes - Dark */
+[data-theme="dark"] .cm-editor .cm-quote,
+.dark .cm-editor .cm-quote {
+  color: #8b949e;
+  font-style: italic;
+}
+
+/* Lists - Dark */
+[data-theme="dark"] .cm-editor .cm-list,
+.dark .cm-editor .cm-list {
+  color: #79c0ff;
+}
+
+/* Strikethrough - Dark */
+[data-theme="dark"] .cm-editor .cm-strikethrough,
+.dark .cm-editor .cm-strikethrough {
+  color: #8b949e;
+}
+
+/* HR - Dark */
+[data-theme="dark"] .cm-editor .cm-hr,
+.dark .cm-editor .cm-hr {
+  color: #484f58;
+}
+
+/* Meta - Dark */
+[data-theme="dark"] .cm-editor .cm-meta,
+[data-theme="dark"] .cm-editor .cm-processingInstruction,
+.dark .cm-editor .cm-meta,
+.dark .cm-editor .cm-processingInstruction {
+  color: #6e7681;
+}
+
+/* Cursor - make visible in both themes */
+.cm-editor .cm-cursor {
+  border-left-color: var(--text-primary) !important;
+}
+
+/* Active line highlight */
+.cm-editor .cm-activeLine {
+  background: rgba(128, 128, 128, 0.1);
+}
+
+[data-theme="dark"] .cm-editor .cm-activeLine,
+.dark .cm-editor .cm-activeLine {
+  background: rgba(255, 255, 255, 0.05);
+}
