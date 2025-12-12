@@ -142,7 +142,7 @@ export function Settings() {
         </div>
 
         <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
-          <ProfileSection displayName={displayName} pictureUrl={pictureUrl} />
+          <ProfileSection displayName={displayName} pictureUrl={pictureUrl} onClose={() => setOpen(false)} />
 
           <ThemeSection
             appTheme={appTheme}

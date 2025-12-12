@@ -6,9 +6,10 @@ import { useState, useEffect } from 'react'
 interface ProfileSectionProps {
   displayName: string
   pictureUrl: string
+  onClose?: () => void
 }
 
-export default function ProfileSection({ displayName, pictureUrl }: ProfileSectionProps) {
+export default function ProfileSection({ displayName, pictureUrl, onClose }: ProfileSectionProps) {
   const [pubkey, setPubkey] = useState('')
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export default function ProfileSection({ displayName, pictureUrl }: ProfileSecti
 
   const handleEditProfile = () => {
     if (pubkey) {
+      onClose?.()
       navigateToUser(pubkey)
     }
   }
