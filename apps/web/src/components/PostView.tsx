@@ -33,7 +33,7 @@ import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent } from '../components/post'
-import { parseEmojiTags } from '../components/ui'
+import { parseEmojiTags, Loading } from '../components/ui'
 import { useShare, useDeleteConfirm } from '../hooks'
 import type { Event, Profile } from '../types'
 
@@ -197,11 +197,7 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
   }
 
   if (loading) {
-    return (
-      <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
-        <div className="loading">Loading...</div>
-      </div>
-    )
+    return <Loading />
   }
 
   if (error || !event) {
