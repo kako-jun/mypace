@@ -92,7 +92,7 @@
 }
 
 .post-modal-content {
-  width: 100%;
+  width: calc(100% - 2rem);
   max-width: 800px;
   max-height: calc(100vh - 4rem);
   overflow-y: auto;
@@ -137,11 +137,12 @@
 /* Mobile adjustments */
 @media (max-width: 640px) {
   .post-modal-backdrop {
-    padding: 1rem 0.5rem;
+    padding: 2rem 1rem;
   }
 
   .post-modal-content {
-    max-height: calc(100vh - 2rem);
+    width: calc(100% - 1rem);
+    max-height: calc(100vh - 4rem);
     border-radius: 8px;
   }
 }

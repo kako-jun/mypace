@@ -98,7 +98,7 @@ function processImageUrls(html: string): string {
     if (YOUTUBE_THUMBNAIL_REGEX.test(url)) {
       return _match
     }
-    return `${before}<span class="content-image-wrapper"><img src="${url}" alt="" class="content-image" data-lightbox="${url}" loading="lazy" /></span>${after}`
+    return `${before}<span class="content-image-wrapper"><img src="${url}" alt="" class="content-image" data-lightbox="${url}" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML+='<div class=content-image-error>404</div>'" /></span>${after}`
   })
 }
 
