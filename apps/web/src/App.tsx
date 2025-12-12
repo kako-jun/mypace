@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
+import { Routes, Route, useLocation, useNavigate, type Location } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { HomePage } from './pages/HomePage'
 import { PostPage } from './pages/PostPage'
@@ -39,7 +39,7 @@ export default function App() {
 
       {/* Render modal when there's a background location */}
       {backgroundLocation && (
-        <Routes>
+        <Routes location={location}>
           <Route path="/post/:id" element={<PostModal />} />
         </Routes>
       )}

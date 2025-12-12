@@ -9,6 +9,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true,
+      },
       includeAssets: ['favicon.webp', 'apple-touch-icon.webp', 'static/*.webp'],
       manifest: {
         name: 'MY PACE',
