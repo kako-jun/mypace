@@ -11,6 +11,7 @@
   padding: 1rem;
   box-sizing: border-box;
   border: 2px solid #333;
+  border-left: none;
   border-bottom: none;
   z-index: 100;
   transition: background 0.2s ease, width 0.3s ease, opacity 0.5s ease;
@@ -30,10 +31,14 @@
 /* Editing mode */
 .post-form.editing {
   border: 2px solid var(--action-reply);
+  border-left: none;
+  border-bottom: none;
 }
 
 .post-form.replying {
   border: 2px solid var(--action-repost);
+  border-left: none;
+  border-bottom: none;
 }
 
 .editing-label {

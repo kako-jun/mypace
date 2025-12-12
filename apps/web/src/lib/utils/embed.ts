@@ -1,6 +1,15 @@
 // Embed URL detection and parsing utilities
 
-export type EmbedType = 'youtube' | 'twitter' | 'video' | 'iframe' | 'ogp'
+export type EmbedType =
+  | 'youtube'
+  | 'youtube-shorts'
+  | 'twitter'
+  | 'instagram'
+  | 'tiktok'
+  | 'spotify'
+  | 'video'
+  | 'iframe'
+  | 'ogp'
 
 export interface EmbedInfo {
   type: EmbedType
@@ -9,6 +18,14 @@ export interface EmbedInfo {
   videoId?: string
   // Twitter specific
   tweetId?: string
+  // Instagram specific
+  instagramId?: string
+  instagramType?: 'post' | 'reel' | 'stories'
+  // TikTok specific
+  tiktokId?: string
+  // Spotify specific
+  spotifyType?: 'track' | 'album' | 'playlist' | 'episode' | 'show'
+  spotifyId?: string
   // Iframe specific (games)
   iframeSrc?: string
 }
@@ -38,24 +55,24 @@ const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']
 const URL_REGEX = /https?:\/\/[^\s<"]+/gi
 
 /**
- * Extract YouTube video ID from URL
+ * Extract YouTube video ID and detect if it's Shorts
  */
-function extractYouTubeId(url: string): string | null {
+function extractYouTubeInfo(url: string): { videoId: string; isShorts: boolean } | null {
+  // youtube.com/shorts/VIDEO_ID (must check first)
+  const shortsMatch = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/)
+  if (shortsMatch) return { videoId: shortsMatch[1], isShorts: true }
+
   // youtube.com/watch?v=VIDEO_ID
   const watchMatch = url.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/)
-  if (watchMatch) return watchMatch[1]
+  if (watchMatch) return { videoId: watchMatch[1], isShorts: false }
 
   // youtu.be/VIDEO_ID
   const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/)
-  if (shortMatch) return shortMatch[1]
+  if (shortMatch) return { videoId: shortMatch[1], isShorts: false }
 
   // youtube.com/embed/VIDEO_ID
   const embedMatch = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/)
-  if (embedMatch) return embedMatch[1]
-
-  // youtube.com/shorts/VIDEO_ID
-  const shortsMatch = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/)
-  if (shortsMatch) return shortsMatch[1]
+  if (embedMatch) return { videoId: embedMatch[1], isShorts: false }
 
   return null
 }
@@ -67,6 +84,70 @@ function extractTweetId(url: string): string | null {
   // twitter.com/user/status/TWEET_ID or x.com/user/status/TWEET_ID
   const match = url.match(/(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)/)
   return match ? match[1] : null
+}
+
+/**
+ * Extract Instagram post/reel ID from URL
+ */
+function extractInstagramInfo(url: string): { id: string; type: 'post' | 'reel' | 'stories' } | null {
+  // instagram.com/p/POST_ID/ (post)
+  const postMatch = url.match(/instagram\.com\/p\/([a-zA-Z0-9_-]+)/)
+  if (postMatch) return { id: postMatch[1], type: 'post' }
+
+  // instagram.com/reel/REEL_ID/ (reel)
+  const reelMatch = url.match(/instagram\.com\/reel\/([a-zA-Z0-9_-]+)/)
+  if (reelMatch) return { id: reelMatch[1], type: 'reel' }
+
+  // instagram.com/stories/USERNAME/STORY_ID/ (stories)
+  const storiesMatch = url.match(/instagram\.com\/stories\/[^/]+\/(\d+)/)
+  if (storiesMatch) return { id: storiesMatch[1], type: 'stories' }
+
+  return null
+}
+
+/**
+ * Extract TikTok video ID from URL
+ */
+function extractTikTokId(url: string): string | null {
+  // tiktok.com/@user/video/VIDEO_ID
+  const videoMatch = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/)
+  if (videoMatch) return videoMatch[1]
+
+  // vm.tiktok.com/SHORT_CODE/ or vt.tiktok.com/SHORT_CODE/
+  // These are short URLs that redirect, so we'll use them as-is
+  const shortMatch = url.match(/(?:vm|vt)\.tiktok\.com\/([a-zA-Z0-9]+)/)
+  if (shortMatch) return shortMatch[1]
+
+  return null
+}
+
+/**
+ * Extract Spotify info from URL
+ */
+function extractSpotifyInfo(
+  url: string
+): { id: string; type: 'track' | 'album' | 'playlist' | 'episode' | 'show' } | null {
+  // open.spotify.com/track/TRACK_ID
+  const trackMatch = url.match(/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/)
+  if (trackMatch) return { id: trackMatch[1], type: 'track' }
+
+  // open.spotify.com/album/ALBUM_ID
+  const albumMatch = url.match(/open\.spotify\.com\/album\/([a-zA-Z0-9]+)/)
+  if (albumMatch) return { id: albumMatch[1], type: 'album' }
+
+  // open.spotify.com/playlist/PLAYLIST_ID
+  const playlistMatch = url.match(/open\.spotify\.com\/playlist\/([a-zA-Z0-9]+)/)
+  if (playlistMatch) return { id: playlistMatch[1], type: 'playlist' }
+
+  // open.spotify.com/episode/EPISODE_ID (podcast episode)
+  const episodeMatch = url.match(/open\.spotify\.com\/episode\/([a-zA-Z0-9]+)/)
+  if (episodeMatch) return { id: episodeMatch[1], type: 'episode' }
+
+  // open.spotify.com/show/SHOW_ID (podcast)
+  const showMatch = url.match(/open\.spotify\.com\/show\/([a-zA-Z0-9]+)/)
+  if (showMatch) return { id: showMatch[1], type: 'show' }
+
+  return null
 }
 
 /**
@@ -109,16 +190,48 @@ export function detectEmbed(url: string): EmbedInfo | null {
   // Skip image URLs (handled separately)
   if (isImageUrl(url)) return null
 
-  // YouTube
-  const youtubeId = extractYouTubeId(url)
-  if (youtubeId) {
-    return { type: 'youtube', url, videoId: youtubeId }
+  // YouTube (including Shorts)
+  const youtubeInfo = extractYouTubeInfo(url)
+  if (youtubeInfo) {
+    return {
+      type: youtubeInfo.isShorts ? 'youtube-shorts' : 'youtube',
+      url,
+      videoId: youtubeInfo.videoId,
+    }
   }
 
   // Twitter/X
   const tweetId = extractTweetId(url)
   if (tweetId) {
     return { type: 'twitter', url, tweetId }
+  }
+
+  // Instagram
+  const instagramInfo = extractInstagramInfo(url)
+  if (instagramInfo) {
+    return {
+      type: 'instagram',
+      url,
+      instagramId: instagramInfo.id,
+      instagramType: instagramInfo.type,
+    }
+  }
+
+  // TikTok
+  const tiktokId = extractTikTokId(url)
+  if (tiktokId) {
+    return { type: 'tiktok', url, tiktokId }
+  }
+
+  // Spotify
+  const spotifyInfo = extractSpotifyInfo(url)
+  if (spotifyInfo) {
+    return {
+      type: 'spotify',
+      url,
+      spotifyId: spotifyInfo.id,
+      spotifyType: spotifyInfo.type,
+    }
   }
 
   // Direct video file
@@ -170,4 +283,25 @@ export function getYouTubeThumbnail(videoId: string): string {
  */
 export function getYouTubeEmbedUrl(videoId: string): string {
   return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`
+}
+
+/**
+ * Get YouTube Shorts embed URL
+ */
+export function getYouTubeShortsEmbedUrl(videoId: string): string {
+  return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`
+}
+
+/**
+ * Get Instagram embed URL
+ */
+export function getInstagramEmbedUrl(id: string): string {
+  return `https://www.instagram.com/p/${id}/embed`
+}
+
+/**
+ * Get Spotify embed URL
+ */
+export function getSpotifyEmbedUrl(id: string, type: 'track' | 'album' | 'playlist' | 'episode' | 'show'): string {
+  return `https://open.spotify.com/embed/${type}/${id}`
 }

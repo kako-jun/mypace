@@ -12,7 +12,7 @@
 .embed-container {
   border-radius: 8px;
   overflow: hidden;
-  background: var(--card-bg);
+  background: var(--surface-primary);
   border: 1px solid var(--border-color);
 }
 
@@ -157,13 +157,22 @@
   opacity: 0.7;
 }
 
-/* Twitter Embed */
+/* Twitter Embed (react-tweet) */
 .embed-twitter {
   min-height: 100px;
+  background: transparent;
+  border: none;
+}
+
+.embed-twitter .react-tweet-theme {
+  --tweet-container-margin: 0;
+  margin: 0 !important;
 }
 
 .embed-twitter.embed-placeholder {
   min-height: 120px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
 }
 
 .embed-twitter.embed-error {
@@ -171,6 +180,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
 }
 
 .embed-twitter.embed-error a {
@@ -183,6 +194,214 @@
 
 .embed-twitter.embed-error a:hover {
   color: var(--accent-color);
+}
+
+/* react-tweet dark mode support */
+html[data-theme="dark"] .embed-twitter {
+  --tweet-bg-color: var(--surface-primary);
+  --tweet-border: 1px solid var(--border-color);
+  --tweet-color: var(--text-primary);
+  --tweet-color-secondary: var(--text-secondary);
+}
+
+/* Instagram Embed */
+.embed-instagram {
+  position: relative;
+  min-height: 400px;
+  max-width: 540px;
+}
+
+.embed-instagram iframe {
+  width: 100%;
+  min-height: 400px;
+  border: none;
+}
+
+.embed-instagram.embed-vertical {
+  max-width: 400px;
+  min-height: 600px;
+}
+
+.embed-instagram.embed-vertical iframe {
+  min-height: 600px;
+}
+
+.embed-instagram.embed-placeholder {
+  min-height: 150px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.embed-instagram.embed-simple-link {
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  min-height: auto;
+}
+
+.embed-instagram.embed-simple-link a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.embed-instagram.embed-simple-link a:hover {
+  color: var(--accent-color);
+}
+
+.embed-instagram .embed-external-link {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.embed-instagram:hover .embed-external-link {
+  opacity: 1;
+}
+
+/* YouTube Shorts Embed */
+.embed-youtube-shorts {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  max-width: 320px;
+  max-height: 570px;
+  margin: 0 auto;
+}
+
+.embed-youtube-shorts iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 8px;
+}
+
+.embed-youtube-shorts.embed-thumbnail {
+  cursor: pointer;
+}
+
+.embed-youtube-shorts.embed-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.embed-shorts-button {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 0, 0, 0.9);
+}
+
+.embed-shorts-badge {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 0, 0, 0.9);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* TikTok Embed */
+.embed-tiktok {
+  position: relative;
+  min-height: 400px;
+  max-width: 605px;
+}
+
+.embed-tiktok iframe {
+  width: 100%;
+  min-height: 700px;
+  border: none;
+}
+
+.embed-tiktok.embed-placeholder {
+  min-height: 150px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.embed-tiktok.embed-error {
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: auto;
+}
+
+.embed-tiktok.embed-error a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.embed-tiktok.embed-error a:hover {
+  color: var(--accent-color);
+}
+
+/* Spotify Embed */
+.embed-spotify {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.embed-spotify iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.embed-spotify.embed-placeholder {
+  min-height: 152px;
+  background: linear-gradient(135deg, #1db954 0%, #191414 100%);
+  border: none;
+}
+
+.embed-spotify.embed-placeholder .embed-placeholder-content {
+  color: white;
+}
+
+.embed-spotify .embed-external-link {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.embed-spotify:hover .embed-external-link {
+  opacity: 1;
 }
 
 /* Link Preview (OGP) */
