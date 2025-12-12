@@ -40,6 +40,12 @@ export function FilterPanel({
   const [languageFilter, setLanguageFilter] = useState(() => getString(STORAGE_KEYS.LANGUAGE_FILTER) || '')
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Track initial values for dirty detection
+  const initialMypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
+  const initialLanguageFilter = getString(STORAGE_KEYS.LANGUAGE_FILTER) || ''
+  const isDirty =
+    searchQuery !== initialSearchQuery || mypaceOnly !== initialMypaceOnly || languageFilter !== initialLanguageFilter
+
   useEffect(() => {
     if (isPopup && inputRef.current) {
       inputRef.current.focus()
@@ -184,7 +190,7 @@ export function FilterPanel({
       {/* Action buttons */}
       <div className="filter-actions">
         <Button onClick={handleClear}>Clear</Button>
-        <Button variant="primary" onClick={handleApply}>
+        <Button variant="primary" className={`btn-save ${isDirty ? 'is-dirty' : ''}`} onClick={handleApply}>
           Save
         </Button>
       </div>
