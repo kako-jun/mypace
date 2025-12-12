@@ -14,15 +14,11 @@
   font-size: 0.875rem;
   cursor: pointer;
   padding: 0.25rem 0;
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, transform 0.15s ease;
 }
 
-.icon-button svg {
-  transition: transform 0.15s ease;
-}
-
-.icon-button:hover:not(:disabled) svg {
-  transform: scale(2);
+.icon-button:hover:not(:disabled) {
+  transform: scale(1.3);
 }
 
 .icon-button:disabled {
