@@ -333,9 +333,25 @@
   flex-shrink: 0;
 }
 
-/* Avatar on the left, pushes remaining items to the right */
-.post-form-avatar {
+/* Avatar button - clickable to go to profile */
+.post-form-avatar-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   margin-right: auto;
+  border-radius: 50%;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.post-form-avatar-button:hover {
+  transform: scale(1.1);
+  opacity: 0.9;
+}
+
+/* Avatar on the left */
+.post-form-avatar {
+  display: block;
 }
 
 /* Vim mode toggle in long mode */
