@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, Fragment } from 'react'
+import { useState, useEffect, useCallback, Fragment, useRef } from 'react'
 import { fetchUserProfile, publishEvent } from '../lib/nostr/relay'
 import { getEventThemeColors, getThemeCardProps, createProfileEvent } from '../lib/nostr/events'
 import {
@@ -53,6 +53,15 @@ export function UserView({ pubkey }: UserViewProps) {
   const [uploadingBanner, setUploadingBanner] = useState(false)
   const [editError, setEditError] = useState('')
   const [editSaved, triggerEditSaved] = useTemporaryFlag()
+  const editInitialRef = useRef({
+    name: '',
+    about: '',
+    picture: '',
+    banner: '',
+    website: '',
+    nip05: '',
+    lud16: '',
+  })
 
   const {
     items,
@@ -138,16 +147,45 @@ export function UserView({ pubkey }: UserViewProps) {
 
   // Enter edit mode
   const enterEditMode = () => {
-    setEditName(profile?.name || profile?.display_name || '')
-    setEditAbout(profile?.about || '')
-    setEditPicture(profile?.picture || '')
-    setEditBanner(profile?.banner || '')
-    setEditWebsite(profile?.website || '')
-    setEditNip05(profile?.nip05 || '')
-    setEditLud16(profile?.lud16 || '')
+    const initialName = profile?.name || profile?.display_name || ''
+    const initialAbout = profile?.about || ''
+    const initialPicture = profile?.picture || ''
+    const initialBanner = profile?.banner || ''
+    const initialWebsite = profile?.website || ''
+    const initialNip05 = profile?.nip05 || ''
+    const initialLud16 = profile?.lud16 || ''
+
+    editInitialRef.current = {
+      name: initialName,
+      about: initialAbout,
+      picture: initialPicture,
+      banner: initialBanner,
+      website: initialWebsite,
+      nip05: initialNip05,
+      lud16: initialLud16,
+    }
+
+    setEditName(initialName)
+    setEditAbout(initialAbout)
+    setEditPicture(initialPicture)
+    setEditBanner(initialBanner)
+    setEditWebsite(initialWebsite)
+    setEditNip05(initialNip05)
+    setEditLud16(initialLud16)
     setEditError('')
     setEditMode(true)
   }
+
+  // Check if profile has been modified
+  const isProfileDirty =
+    editMode &&
+    (editName !== editInitialRef.current.name ||
+      editAbout !== editInitialRef.current.about ||
+      editPicture !== editInitialRef.current.picture ||
+      editBanner !== editInitialRef.current.banner ||
+      editWebsite !== editInitialRef.current.website ||
+      editNip05 !== editInitialRef.current.nip05 ||
+      editLud16 !== editInitialRef.current.lud16)
 
   const cancelEditMode = () => {
     setEditMode(false)
@@ -362,7 +400,12 @@ export function UserView({ pubkey }: UserViewProps) {
               <Button onClick={cancelEditMode} disabled={saving}>
                 Cancel
               </Button>
-              <Button variant="primary" onClick={handleSaveProfile} disabled={saving || !editName.trim()}>
+              <Button
+                variant="primary"
+                className={`btn-save ${isProfileDirty ? 'is-dirty' : ''}`}
+                onClick={handleSaveProfile}
+                disabled={saving || !editName.trim()}
+              >
                 {saving ? 'Saving...' : 'Save'}
               </Button>
             </div>

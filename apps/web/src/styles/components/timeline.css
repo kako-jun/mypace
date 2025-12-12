@@ -100,13 +100,17 @@
   opacity: 0.6;
 }
 
-/* End of timeline message */
+/* End of timeline message - same style as load-more-button */
 .timeline-end {
   column-span: all;
   direction: ltr;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.85rem;
+  width: 100%;
   padding: 1rem;
   margin-top: 1rem;
+  background: transparent;
+  border: 2px dashed var(--border-light);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
 }

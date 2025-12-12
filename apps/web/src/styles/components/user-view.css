@@ -399,3 +399,19 @@
 .edit-actions .btn {
   flex: 1;
 }
+
+/* Dirty indicator on Save button */
+.edit-actions .btn-save {
+  position: relative;
+}
+
+.edit-actions .btn-save.is-dirty::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background: #e53935;
+  border-radius: 50%;
+}
