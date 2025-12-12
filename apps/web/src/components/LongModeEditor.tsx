@@ -177,6 +177,27 @@ export function LongModeEditor({
               onWriteRef.current?.()
               onQuitRef.current?.()
             })
+
+            // Sync yank with system clipboard using * register
+            const clipboardRegister = {
+              setText: (text: string) => {
+                navigator.clipboard.writeText(text).catch(() => {})
+              },
+              getText: () => '',
+              pushText: (text: string) => {
+                navigator.clipboard.writeText(text).catch(() => {})
+              },
+            }
+
+            // @ts-expect-error Vim internal API
+            const vimGlobal = Vim.getVimGlobalState?.()
+            if (vimGlobal?.registerController) {
+              vimGlobal.registerController.registers['*'] = clipboardRegister
+              vimGlobal.registerController.registers['+'] = clipboardRegister
+              // Make default yank go to clipboard
+              vimGlobal.registerController.unnamedRegister = clipboardRegister
+            }
+
             extensions.unshift(vim({ status: true }))
           }
         } catch {

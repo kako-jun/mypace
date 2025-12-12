@@ -183,7 +183,7 @@
 /* Clear content button - center right of textarea */
 .clear-content-button {
   position: absolute;
-  right: 0.25rem;
+  right: 1rem;
   top: 50%;
   transform: translateY(-50%);
   width: 1.5rem;
