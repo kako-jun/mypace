@@ -18,13 +18,20 @@ export function getCachedPost(eventId: string): Event | null {
   try {
     const cached = sessionStorage.getItem(`${CACHE_KEYS.POST}${eventId}`)
     if (cached) {
-      sessionStorage.removeItem(`${CACHE_KEYS.POST}${eventId}`)
       return JSON.parse(cached)
     }
   } catch {
     // Parse error or unavailable
   }
   return null
+}
+
+export function clearCachedPost(eventId: string): void {
+  try {
+    sessionStorage.removeItem(`${CACHE_KEYS.POST}${eventId}`)
+  } catch {
+    // Ignore
+  }
 }
 
 // Profile cache
@@ -40,11 +47,18 @@ export function getCachedProfile(pubkey: string): Profile | null {
   try {
     const cached = sessionStorage.getItem(`${CACHE_KEYS.PROFILE}${pubkey}`)
     if (cached) {
-      sessionStorage.removeItem(`${CACHE_KEYS.PROFILE}${pubkey}`)
       return JSON.parse(cached)
     }
   } catch {
     // Parse error or unavailable
   }
   return null
+}
+
+export function clearCachedProfile(pubkey: string): void {
+  try {
+    sessionStorage.removeItem(`${CACHE_KEYS.PROFILE}${pubkey}`)
+  } catch {
+    // Ignore
+  }
 }
