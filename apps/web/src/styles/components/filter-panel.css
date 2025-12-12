@@ -10,8 +10,8 @@
 }
 
 .filter-toggle svg {
-  stroke: #333;
-  fill: #fff;
+  stroke: var(--text-primary);
+  fill: var(--bg);
 }
 
 /* Has-filters: fill with action-reply color (light blue) */
@@ -31,7 +31,7 @@
 /* Filter Panel */
 .filter-panel {
   background: var(--surface-primary);
-  border: 2px solid #333;
+  border: 2px solid var(--border-dark);
   padding: 0.75rem;
   min-width: 400px;
   max-width: calc(100vw - 2rem);
@@ -94,7 +94,7 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  background: var(--primary-color, #6366f1);
+  background: var(--btn-primary-bg);
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -103,7 +103,7 @@
 }
 
 .filter-search-submit svg {
-  stroke: #fff;
+  stroke: var(--btn-primary-text);
 }
 
 .filter-search-submit:hover {
@@ -185,40 +185,40 @@
 }
 
 .filter-mode-btn:hover {
-  background: var(--primary-color, #6366f1);
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
 }
 
-.filter-tag {
+.filter-panel .filter-tag {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  background: var(--primary-color, #6366f1);
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   padding: 0.25rem 0.5rem;
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 500;
 }
 
-.filter-tag-remove {
+.filter-panel .filter-tag-remove {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
-  background: rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--btn-primary-text) 20%, transparent);
   border: none;
   border-radius: 50%;
   cursor: pointer;
   font-size: 0.7rem;
-  color: #fff;
+  color: var(--btn-primary-text);
   line-height: 1;
   transition: background 0.15s ease;
 }
 
-.filter-tag-remove:hover {
-  background: rgba(255, 255, 255, 0.4);
+.filter-panel .filter-tag-remove:hover {
+  background: color-mix(in srgb, var(--btn-primary-text) 40%, transparent);
 }
 
 /* Filter Actions Row */
