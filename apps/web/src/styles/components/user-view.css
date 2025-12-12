@@ -328,9 +328,7 @@
   padding: 0 24px 24px;
 }
 
-.user-profile-edit {
-  max-width: 100%;
-}
+/* Edit mode should keep same width as view mode */
 
 .edit-field {
   margin-bottom: 16px;

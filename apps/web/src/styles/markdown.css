@@ -217,6 +217,32 @@
   }
 }
 
+/* Nostr mentions (@user) */
+.nostr-mention {
+  color: #9a6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.nostr-mention:hover {
+  color: #bd8;
+  text-decoration: underline;
+}
+
+/* Nostr note references */
+.nostr-note-ref {
+  color: #69a;
+  text-decoration: none;
+  font-size: 0.9em;
+  transition: color 0.15s ease;
+}
+
+.nostr-note-ref:hover {
+  color: #8bc;
+  text-decoration: underline;
+}
+
 /* Content images */
 .content-image-wrapper {
   display: block;

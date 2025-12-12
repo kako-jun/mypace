@@ -1,6 +1,8 @@
 import { Marked } from 'marked'
 import Prism from 'prismjs'
+import { nip19 } from 'nostr-tools'
 import type { EmojiTag } from '../types'
+import type { Profile } from '../types'
 
 // Load common languages
 import 'prismjs/components/prism-typescript'
@@ -83,11 +85,18 @@ function processHashtags(html: string): string {
   })
 }
 
+// YouTube thumbnail URL patterns to exclude from image processing
+const YOUTUBE_THUMBNAIL_REGEX = /^https?:\/\/(img\.youtube\.com|i\.ytimg\.com)\//i
+
 // Process image URLs (standalone URLs that are images)
 function processImageUrls(html: string): string {
   // Match URLs that are on their own line or surrounded by whitespace
   const urlRegex = /(^|[\s>])(https?:\/\/[^\s<"]+\.(jpg|jpeg|png|gif|webp|svg)(\?[^\s<"]*)?)([\s<]|$)/gim
   return html.replace(urlRegex, (_match, before, url, _ext, _query, after) => {
+    // Skip YouTube thumbnail URLs (they're shown via YouTubeEmbed component)
+    if (YOUTUBE_THUMBNAIL_REGEX.test(url)) {
+      return _match
+    }
     return `${before}<span class="content-image-wrapper"><img src="${url}" alt="" class="content-image" data-lightbox="${url}" loading="lazy" /></span>${after}`
   })
 }
@@ -119,13 +128,61 @@ function processCustomEmojis(html: string, emojis: EmojiTag[]): string {
   })
 }
 
-export function renderContent(content: string, emojis: EmojiTag[] = []) {
+// Nostr URI regex (NIP-19: npub, nprofile, note, nevent)
+const NOSTR_URI_REGEX = /nostr:(npub1[a-zA-Z0-9]+|nprofile1[a-zA-Z0-9]+|note1[a-zA-Z0-9]+|nevent1[a-zA-Z0-9]+)/g
+
+// Process Nostr URIs (NIP-19 mentions and references)
+function processNostrMentions(html: string, profiles: Record<string, Profile | null | undefined>): string {
+  return html.replace(NOSTR_URI_REGEX, (match, encoded: string) => {
+    try {
+      const decoded = nip19.decode(encoded)
+      const type = decoded.type
+
+      if (type === 'npub') {
+        const pubkey = decoded.data as string
+        const profile = profiles[pubkey]
+        const displayName = profile?.name || profile?.display_name || `${encoded.slice(0, 12)}...`
+        return `<a href="/profile/${pubkey}" class="nostr-mention" data-pubkey="${pubkey}">@${escapeHtml(displayName)}</a>`
+      }
+
+      if (type === 'nprofile') {
+        const data = decoded.data as { pubkey: string; relays?: string[] }
+        const pubkey = data.pubkey
+        const profile = profiles[pubkey]
+        const displayName = profile?.name || profile?.display_name || `${encoded.slice(0, 12)}...`
+        return `<a href="/profile/${pubkey}" class="nostr-mention" data-pubkey="${pubkey}">@${escapeHtml(displayName)}</a>`
+      }
+
+      if (type === 'note') {
+        const noteId = decoded.data as string
+        return `<a href="/post/${noteId}" class="nostr-note-ref">📝 note</a>`
+      }
+
+      if (type === 'nevent') {
+        const data = decoded.data as { id: string; relays?: string[]; author?: string }
+        return `<a href="/post/${data.id}" class="nostr-note-ref">📝 note</a>`
+      }
+
+      return match
+    } catch {
+      // Invalid encoding, return as-is
+      return match
+    }
+  })
+}
+
+export function renderContent(
+  content: string,
+  emojis: EmojiTag[] = [],
+  profiles: Record<string, Profile | null | undefined> = {}
+) {
   // Parse markdown
   let html = marked.parse(content) as string
 
   // Process additional elements
   html = processImageUrls(html)
   html = removeImageLinks(html)
+  html = processNostrMentions(html, profiles)
   html = processHashtags(html)
   html = processLinks(html)
   html = processCustomEmojis(html, emojis)

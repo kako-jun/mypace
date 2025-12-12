@@ -220,3 +220,28 @@ const nip05 = profile.nip05  // "user@domain.com"
 
 - プロフィールページでチェックマーク表示
 - キャッシュして再検証の負荷を軽減
+
+## NIP-19: Bech32 Entity Encoding
+
+投稿内の `nostr:` URIをパースしてリンク表示:
+
+| URI形式 | 表示 | リンク先 |
+|---------|------|----------|
+| `nostr:npub1...` | `@ユーザー名` | プロフィールページ |
+| `nostr:nprofile1...` | `@ユーザー名` | プロフィールページ |
+| `nostr:note1...` | `📝 note` | 投稿ページ |
+| `nostr:nevent1...` | `📝 note` | 投稿ページ |
+
+```typescript
+// content-parser.tsx でパース
+const NOSTR_URI_REGEX = /nostr:(npub1|nprofile1|note1|nevent1)[a-zA-Z0-9]+/g
+
+// nip19.decode() でデコード
+const decoded = nip19.decode(encoded)
+// decoded.type: 'npub' | 'nprofile' | 'note' | 'nevent'
+// decoded.data: pubkey | { pubkey, relays } | noteId | { id, relays }
+```
+
+- プロフィールが取得済みの場合はユーザー名を表示
+- 未取得の場合は短縮形式（`@npub1abc...`）を表示
+- クリックでプロフィールページまたは投稿ページに遷移
