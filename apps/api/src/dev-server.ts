@@ -206,7 +206,12 @@ app.get('/api/profiles', async (c) => {
 
     for (const event of events) {
       try {
-        profiles[event.pubkey] = JSON.parse(event.content)
+        const profile = JSON.parse(event.content)
+        // Extract emoji tags (NIP-30)
+        const emojis = event.tags
+          .filter((t: string[]) => t[0] === 'emoji' && t[1] && t[2])
+          .map((t: string[]) => ({ shortcode: t[1], url: t[2] }))
+        profiles[event.pubkey] = { ...profile, emojis }
       } catch (e) {
         console.error('Profile parse error:', e)
       }
