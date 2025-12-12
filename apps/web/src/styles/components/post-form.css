@@ -312,6 +312,18 @@
   margin-bottom: 0.5rem;
 }
 
+/* Vim mode toggle in long mode */
+.vim-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.vim-toggle .toggle-label {
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
 /* Mode toggle button (uses .text-outlined-button for base style) */
 .mode-toggle-corner {
   /* No positioning needed - flows naturally in flex container */

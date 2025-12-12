@@ -333,12 +333,6 @@
   cursor: pointer;
 }
 
-/* Vim Mode Toggle */
-.vim-mode-toggle {
-  display: flex;
-  justify-content: center;
-}
-
 /* toggle styles are in base.css */
 
 /* Share App QR */

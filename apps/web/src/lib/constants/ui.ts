@@ -23,6 +23,7 @@ export const CUSTOM_EVENTS = {
   MYPACE_FILTER_CHANGED: 'mypacefilterchanged',
   LANGUAGE_FILTER_CHANGED: 'languagefilterchanged',
   THEME_COLORS_CHANGED: 'themecolorschanged',
+  APP_THEME_CHANGED: 'appthemechanged',
   LOGO_CLICKED: 'logoclicked',
 } as const
 

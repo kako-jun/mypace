@@ -3,9 +3,12 @@ import { createTextNote, createDeleteEvent, createReplyEvent, getStoredThemeColo
 import type { ThemeColors } from '../types'
 import { publishEvent } from '../lib/nostr/relay'
 import { ProfileSetup } from './ProfileSetup'
-import { hasLocalProfile, getImageUrls, removeImageUrl } from '../lib/utils'
-import { CUSTOM_EVENTS, LIMITS } from '../lib/constants'
+import { hasLocalProfile, getImageUrls, removeImageUrl, getStoredVimMode, getStoredAppTheme } from '../lib/utils'
+import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../lib/constants'
 import { ImageDropZone, AttachedImages, PostPreview } from '../components/post'
+import { LongModeEditor } from './LongModeEditor'
+import { Toggle } from './ui'
+import { setBoolean } from '../lib/utils/storage'
 import type { Event } from '../types'
 
 interface PostFormProps {
@@ -42,6 +45,8 @@ export function PostForm({
   const [hasProfile, setHasProfile] = useState(false)
   const [checkingProfile, setCheckingProfile] = useState(true)
   const [themeColors, setThemeColors] = useState<ThemeColors | null>(null)
+  const [vimMode, setVimMode] = useState(() => getStoredVimMode())
+  const [darkTheme, setDarkTheme] = useState(() => getStoredAppTheme() === 'dark')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -51,14 +56,22 @@ export function PostForm({
 
     const handleProfileUpdate = () => setHasProfile(hasLocalProfile())
     const handleThemeColorsChange = () => setThemeColors(getStoredThemeColors())
+    const handleAppThemeChange = () => setDarkTheme(getStoredAppTheme() === 'dark')
 
     window.addEventListener(CUSTOM_EVENTS.PROFILE_UPDATED, handleProfileUpdate)
     window.addEventListener(CUSTOM_EVENTS.THEME_COLORS_CHANGED, handleThemeColorsChange)
+    window.addEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
     return () => {
       window.removeEventListener(CUSTOM_EVENTS.PROFILE_UPDATED, handleProfileUpdate)
       window.removeEventListener(CUSTOM_EVENTS.THEME_COLORS_CHANGED, handleThemeColorsChange)
+      window.removeEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
     }
   }, [])
+
+  const handleVimModeChange = (enabled: boolean) => {
+    setVimMode(enabled)
+    setBoolean(STORAGE_KEYS.VIM_MODE, enabled)
+  }
 
   // Handle long mode toggle: auto-enable preview when entering, disable when leaving
   const handleLongModeToggle = () => {
@@ -185,15 +198,17 @@ export function PostForm({
 
             <div className="post-form-top-actions">
               <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
+              <div className="vim-toggle">
+                <Toggle checked={vimMode} onChange={handleVimModeChange} label="Vim" />
+              </div>
             </div>
 
-            <textarea
-              ref={textareaRef}
-              className="post-input"
-              placeholder="マイペースに書こう"
+            <LongModeEditor
               value={content}
-              onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
-              maxLength={LIMITS.MAX_POST_LENGTH}
+              onChange={onContentChange}
+              placeholder="マイペースに書こう"
+              vimMode={vimMode}
+              darkTheme={darkTheme}
             />
 
             <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
