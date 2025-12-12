@@ -96,6 +96,7 @@ src/
 │   │   ├── ColorPicker.tsx
 │   │   ├── Icon.tsx
 │   │   ├── Avatar.tsx
+│   │   ├── Loading.tsx    # ローディングオーバーレイ
 │   │   └── SearchButton.tsx
 │   ├── PostForm.tsx
 │   ├── Timeline.tsx
