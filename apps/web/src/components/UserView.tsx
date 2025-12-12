@@ -16,7 +16,7 @@ import {
   getErrorMessage,
   verifyNip05,
 } from '../lib/utils'
-import { Avatar, Icon, Button, Input } from '../components/ui'
+import { Avatar, Icon, Button, Input, Loading } from '../components/ui'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
 import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
@@ -292,7 +292,7 @@ export function UserView({ pubkey }: UserViewProps) {
     return null
   }
 
-  if (loading && items.length === 0) return <div className="loading">Loading...</div>
+  if (loading && items.length === 0) return <Loading />
 
   if (error) {
     return (

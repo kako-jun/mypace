@@ -3,6 +3,7 @@ import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { FilterBar, TimelinePostCard } from '../components/timeline'
 import { FilterPanel } from './FilterPanel'
+import { Loading } from './ui'
 import { useTimeline, useShare } from '../hooks'
 import {
   shareOrCopy,
@@ -111,7 +112,7 @@ export function Timeline({
     })
   }, [filterTags, filterMode])
 
-  if (loading && events.length === 0) return <div className="loading">Loading...</div>
+  if (loading && events.length === 0) return <Loading />
 
   if (error) {
     return (
