@@ -279,16 +279,26 @@ app.get('/api/reposts/:eventId', async (c) => {
 app.get('/api/user/:pubkey/events', async (c) => {
   const pubkey = c.req.param('pubkey')
   const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
+  const since = Number(c.req.query('since')) || 0
+  const until = Number(c.req.query('until')) || 0
 
   const pool = await createPool(HTTP_PROXY)
 
   try {
-    const events = await pool.querySync(RELAYS, {
+    const filter: Filter = {
       kinds: [1],
       authors: [pubkey],
       '#t': [MYPACE_TAG],
       limit,
-    })
+    }
+    if (since > 0) {
+      filter.since = since
+    }
+    if (until > 0) {
+      filter.until = until
+    }
+
+    const events = await pool.querySync(RELAYS, filter)
     events.sort((a, b) => b.created_at - a.created_at)
 
     return c.json({ events })
