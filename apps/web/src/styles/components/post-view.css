@@ -129,12 +129,36 @@
 /* Mobile adjustments */
 @media (max-width: 640px) {
   .post-modal-backdrop {
-    padding: 2rem 1rem;
+    padding: 0;
   }
 
   .post-modal-content {
-    width: calc(100% - 1rem);
-    max-height: calc(100vh - 4rem);
-    border-radius: 8px;
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .post-view-modal {
+    padding: 0;
+  }
+
+  /* Reset large card styles to match timeline cards */
+  .post-view-modal .post-card-large {
+    padding: 1rem;
+    border-radius: 0;
+    margin-bottom: 0;
+  }
+
+  .post-view-modal .post-card-large .post-header {
+    font-size: inherit;
+  }
+
+  .post-view-modal .post-card-large .author-name {
+    font-size: inherit;
+  }
+
+  .post-view-modal .post-card-large .post-content {
+    font-size: inherit;
+    line-height: inherit;
   }
 }
