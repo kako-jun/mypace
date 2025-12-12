@@ -32,6 +32,15 @@
   font-family: var(--font-mono);
 }
 
+/* Selection highlight - make it more visible */
+.long-mode-editor .cm-selectionBackground {
+  background: rgba(100, 150, 255, 0.4) !important;
+}
+
+.long-mode-editor .cm-focused .cm-selectionBackground {
+  background: rgba(80, 130, 255, 0.5) !important;
+}
+
 /* Vim status panel (from @replit/codemirror-vim) */
 .cm-vim-panel {
   background: rgba(0, 0, 0, 0.6) !important;
