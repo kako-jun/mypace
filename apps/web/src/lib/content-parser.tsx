@@ -74,15 +74,15 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;')
 }
 
-// Hashtag regex (supports ASCII and Japanese characters)
-const HASHTAG_REGEX = /#([a-zA-Z0-9_\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+)/g
+// Hashtag regex (requires whitespace or start of string before #)
+const HASHTAG_REGEX = /(^|[\s>])#([a-zA-Z0-9_\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+)/g
 
 // Process hashtags in HTML (after markdown parsing)
 function processHashtags(html: string): string {
-  return html.replace(HASHTAG_REGEX, (match, tag) => {
+  return html.replace(HASHTAG_REGEX, (match, prefix, tag) => {
     const escapedTag = escapeHtml(tag)
     const randomDelay = Math.random() * 18 // Random delay within 18s cycle
-    return `<button class="content-hashtag" data-tag="${escapedTag}" style="animation-delay: ${randomDelay.toFixed(1)}s">${escapeHtml(match)}</button>`
+    return `${prefix}<button class="content-hashtag" data-tag="${escapedTag}" style="animation-delay: ${randomDelay.toFixed(1)}s">#${escapeHtml(tag)}</button>`
   })
 }
 
