@@ -33,6 +33,7 @@ import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent } from '../components/post'
+import { parseEmojiTags } from '../components/ui'
 import { useShare, useDeleteConfirm } from '../hooks'
 import type { Event, Profile } from '../types'
 
@@ -215,10 +216,11 @@ export function PostView({ eventId }: PostViewProps) {
           displayName={getProfileDisplayName(event.pubkey)}
           avatarUrl={getProfileAvatarUrl()}
           isProfileLoading={!profile}
+          emojis={profile?.emojis}
         />
 
         <div className="post-content post-content-full">
-          <PostContent content={event.content} />
+          <PostContent content={event.content} emojis={parseEmojiTags(event.tags)} />
         </div>
 
         {deletedId === event.id && <p className="success">Deleted!</p>}
@@ -263,6 +265,7 @@ export function PostView({ eventId }: PostViewProps) {
                 displayName={getProfileDisplayName(reply.pubkey, replyProfiles[reply.pubkey])}
                 avatarUrl={getProfileAvatarUrl(replyProfiles[reply.pubkey])}
                 isProfileLoading={replyProfiles[reply.pubkey] === undefined}
+                emojis={replyProfiles[reply.pubkey]?.emojis}
                 onClick={() => navigateToPost(reply.id)}
               />
             ))}

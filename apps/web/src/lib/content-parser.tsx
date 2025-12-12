@@ -1,5 +1,6 @@
 import { Marked } from 'marked'
 import Prism from 'prismjs'
+import type { EmojiTag } from '../types'
 
 // Load common languages
 import 'prismjs/components/prism-typescript'
@@ -101,7 +102,20 @@ function processLinks(html: string): string {
   return html.replace(/<a href="/g, '<a class="content-link" target="_blank" rel="noopener noreferrer" href="')
 }
 
-export function renderContent(content: string) {
+// Process custom emojis (NIP-30)
+function processCustomEmojis(html: string, emojis: EmojiTag[]): string {
+  if (!emojis.length) return html
+  const emojiMap = new Map(emojis.map((e) => [e.shortcode, e.url]))
+  return html.replace(/:([a-zA-Z0-9_]+):/g, (match, shortcode) => {
+    const url = emojiMap.get(shortcode)
+    if (url) {
+      return `<img src="${escapeHtml(url)}" alt=":${escapeHtml(shortcode)}:" class="custom-emoji" loading="lazy" />`
+    }
+    return match
+  })
+}
+
+export function renderContent(content: string, emojis: EmojiTag[] = []) {
   // Parse markdown
   let html = marked.parse(content) as string
 
@@ -110,6 +124,7 @@ export function renderContent(content: string) {
   html = removeImageLinks(html)
   html = processHashtags(html)
   html = processLinks(html)
+  html = processCustomEmojis(html, emojis)
 
   // Handle clicks via event delegation
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {

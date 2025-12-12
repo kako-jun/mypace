@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import { formatTimestamp } from '../../lib/nostr/events'
 import { navigateToUser } from '../../lib/utils'
-import { Avatar } from '../ui'
+import { Avatar, EmojiText } from '../ui'
+import type { EmojiTag } from '../../types'
 
 const AVATAR_ANIMATIONS = ['avatar-pulse', 'avatar-bounce', 'avatar-wink']
 
@@ -13,6 +14,7 @@ interface PostHeaderProps {
   avatarSize?: 'small' | 'medium'
   clickable?: boolean
   isProfileLoading?: boolean
+  emojis?: EmojiTag[]
 }
 
 export default function PostHeader({
@@ -23,6 +25,7 @@ export default function PostHeader({
   avatarSize = 'medium',
   clickable = true,
   isProfileLoading = false,
+  emojis = [],
 }: PostHeaderProps) {
   const nameClass = `author-name${isProfileLoading ? ' loading-rainbow' : ''}`
 
@@ -41,6 +44,8 @@ export default function PostHeader({
     </span>
   )
 
+  const nameContent = emojis.length > 0 ? <EmojiText text={displayName} emojis={emojis} /> : displayName
+
   return (
     <header className="post-header">
       {clickable ? (
@@ -48,7 +53,7 @@ export default function PostHeader({
           {avatarWrapper}
           <div className="post-author-info">
             <span className={nameClass} data-name={displayName}>
-              {displayName}
+              {nameContent}
             </span>
             <time className="timestamp">{formatTimestamp(createdAt)}</time>
           </div>
@@ -58,7 +63,7 @@ export default function PostHeader({
           {avatarWrapper}
           <div className="post-author-info">
             <span className={nameClass} data-name={displayName}>
-              {displayName}
+              {nameContent}
             </span>
             <time className="timestamp">{formatTimestamp(createdAt)}</time>
           </div>

@@ -259,3 +259,16 @@ body {
     transform: scaleY(1);
   }
 }
+
+/* Custom emoji (NIP-30) */
+.custom-emoji {
+  display: inline-block;
+  height: 1.2em;
+  width: auto;
+  vertical-align: middle;
+  margin: 0 0.1em;
+}
+
+.emoji-text {
+  display: inline;
+}

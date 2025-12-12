@@ -316,7 +316,11 @@ app.get('/api/profiles', async (c) => {
       for (const event of events) {
         try {
           const profile = JSON.parse(event.content)
-          profiles[event.pubkey] = profile
+          // Extract emoji tags (NIP-30)
+          const emojis = event.tags
+            .filter((t: string[]) => t[0] === 'emoji' && t[1] && t[2])
+            .map((t: string[]) => ({ shortcode: t[1], url: t[2] }))
+          profiles[event.pubkey] = { ...profile, emojis }
 
           await db
             .prepare(

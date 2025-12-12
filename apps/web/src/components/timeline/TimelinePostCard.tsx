@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Icon } from '../ui'
+import { Icon, parseEmojiTags } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies, PostContent } from '../post'
 import { cachePost, cacheProfile, navigateToPost } from '../../lib/utils'
@@ -90,10 +90,11 @@ export default function TimelinePostCard({
         displayName={getDisplayName(event.pubkey)}
         avatarUrl={getAvatarUrl(event.pubkey)}
         isProfileLoading={profiles[event.pubkey] === undefined}
+        emojis={profiles[event.pubkey]?.emojis}
       />
 
       <div className="post-content">
-        <PostContent content={event.content} truncate />
+        <PostContent content={event.content} truncate emojis={parseEmojiTags(event.tags)} />
       </div>
 
       <div className="post-footer">

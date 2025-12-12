@@ -9,6 +9,12 @@ export interface Event {
   sig: string
 }
 
+// Emoji type for NIP-30 custom emojis
+export interface EmojiTag {
+  shortcode: string
+  url: string
+}
+
 // Profile types
 export interface Profile {
   name?: string
@@ -19,6 +25,7 @@ export interface Profile {
   banner?: string
   website?: string
   lud16?: string
+  emojis?: EmojiTag[]
 }
 
 export interface ProfileCache {

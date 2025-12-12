@@ -1,6 +1,7 @@
 import type { Event, ProfileCache } from '../../types'
 import PostHeader from './PostHeader'
 import { PostContent } from './PostContent'
+import { parseEmojiTags } from '../ui'
 
 interface ThreadRepliesProps {
   replies: Event[]
@@ -40,9 +41,10 @@ export default function ThreadReplies({
                 avatarSize="small"
                 clickable={false}
                 isProfileLoading={profiles[reply.pubkey] === undefined}
+                emojis={profiles[reply.pubkey]?.emojis}
               />
               <div className="reply-content">
-                <PostContent content={reply.content} />
+                <PostContent content={reply.content} emojis={parseEmojiTags(reply.tags)} />
               </div>
             </div>
           ))}
