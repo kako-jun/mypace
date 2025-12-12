@@ -42,3 +42,25 @@ export function getDisplayNameFromCache(pubkey: string, profiles: ProfileCache):
 export function getAvatarUrlFromCache(pubkey: string, profiles: ProfileCache): string | null {
   return getAvatarUrl(profiles[pubkey])
 }
+
+// Verify NIP-05 identifier
+export async function verifyNip05(nip05: string, pubkey: string): Promise<boolean> {
+  try {
+    // Parse nip05: user@domain or _@domain
+    const match = nip05.match(/^([^@]+)@(.+)$/)
+    if (!match) return false
+
+    const [, name, domain] = match
+    const url = `https://${domain}/.well-known/nostr.json?name=${encodeURIComponent(name)}`
+
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) })
+    if (!res.ok) return false
+
+    const data = await res.json()
+    const expectedPubkey = data?.names?.[name]
+
+    return expectedPubkey === pubkey
+  } catch {
+    return false
+  }
+}

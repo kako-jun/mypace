@@ -14,6 +14,7 @@ import {
   copyToClipboard,
   setLocalProfile,
   getErrorMessage,
+  verifyNip05,
 } from '../lib/utils'
 import { Avatar, Icon, Button, Input } from '../components/ui'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
@@ -36,6 +37,7 @@ export function UserView({ pubkey }: UserViewProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const [npubCopied, setNpubCopied] = useState(false)
+  const [nip05Verified, setNip05Verified] = useState<boolean | null>(null)
 
   // Edit mode state
   const [editMode, setEditMode] = useState(false)
@@ -98,6 +100,16 @@ export function UserView({ pubkey }: UserViewProps) {
 
     return () => clearImageClickHandler()
   }, [pubkey])
+
+  // Verify NIP-05 when profile changes
+  useEffect(() => {
+    if (profile?.nip05) {
+      setNip05Verified(null) // Reset while verifying
+      verifyNip05(profile.nip05, pubkey).then(setNip05Verified)
+    } else {
+      setNip05Verified(null)
+    }
+  }, [profile?.nip05, pubkey])
 
   const handleEdit = useCallback((event: Event) => navigateToEdit(event.id), [])
   const handleReplyClick = useCallback((event: Event) => navigateToReply(event.id), [])
@@ -372,8 +384,17 @@ export function UserView({ pubkey }: UserViewProps) {
               <div className="user-info">
                 <h2 className="user-name">{displayName}</h2>
                 {profile?.nip05 && (
-                  <span className="user-nip05">
-                    <Icon name="CheckCircle" size={14} /> {profile.nip05}
+                  <span
+                    className={`user-nip05 ${nip05Verified === true ? 'verified' : nip05Verified === false ? 'unverified' : ''}`}
+                  >
+                    {nip05Verified === true ? (
+                      <Icon name="CheckCircle" size={14} />
+                    ) : nip05Verified === false ? (
+                      <Icon name="XCircle" size={14} />
+                    ) : (
+                      <span className="verifying">...</span>
+                    )}{' '}
+                    {profile.nip05}
                   </span>
                 )}
               </div>

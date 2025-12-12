@@ -191,7 +191,21 @@
   align-items: center;
   gap: 4px;
   font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+}
+
+.user-nip05.verified {
   color: var(--accent);
+}
+
+.user-nip05.unverified {
+  color: var(--error, #ff4444);
+}
+
+.user-nip05 .verifying {
+  font-size: 0.7rem;
+  opacity: 0.7;
 }
 
 /* ===== Links ===== */
@@ -314,6 +328,10 @@
   padding: 0 24px 24px;
 }
 
+.user-profile-edit {
+  max-width: 100%;
+}
+
 .edit-field {
   margin-bottom: 16px;
 }
@@ -323,24 +341,55 @@
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+}
+
+.edit-field input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  font-family: var(--font-mono);
+  border: 2px solid var(--border);
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.edit-field input:hover {
+  background: var(--surface-hover);
+}
+
+.edit-field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface-primary);
+}
+
+.edit-field input::placeholder {
+  color: var(--text-placeholder);
 }
 
 .edit-textarea {
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 12px;
   font-size: 0.95rem;
   font-family: var(--font-mono);
   border: 2px solid var(--border);
-  background: var(--surface-primary);
+  background: var(--surface-secondary);
   color: var(--text-primary);
   resize: vertical;
   min-height: 80px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.edit-textarea:hover {
+  background: var(--surface-hover);
 }
 
 .edit-textarea:focus {
   outline: none;
   border-color: var(--accent);
+  background: var(--surface-primary);
 }
 
 .edit-actions {
