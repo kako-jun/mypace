@@ -37,7 +37,7 @@
   --border-light: color-mix(in srgb, var(--bg) 88%, var(--fg) 12%);
   --border-medium: color-mix(in srgb, var(--bg) 80%, var(--fg) 20%);
   --border-dark: var(--border);
-  --border-card: var(--border);
+  --border-card: #333;
 
   /* ===== Derived: Button ===== */
   --btn-primary-bg: var(--fg);
