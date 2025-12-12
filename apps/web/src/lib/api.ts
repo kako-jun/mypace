@@ -20,6 +20,9 @@ export interface Profile {
   picture?: string
   about?: string
   nip05?: string
+  banner?: string
+  website?: string
+  lud16?: string
 }
 
 export interface ReactionData {

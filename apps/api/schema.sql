@@ -22,5 +22,13 @@ CREATE TABLE IF NOT EXISTS profiles (
   picture TEXT,
   about TEXT,
   nip05 TEXT,
+  banner TEXT,
+  website TEXT,
+  lud16 TEXT,
   cached_at INTEGER NOT NULL
 );
+
+-- Migration: Add new profile columns (run manually if table exists)
+-- ALTER TABLE profiles ADD COLUMN banner TEXT;
+-- ALTER TABLE profiles ADD COLUMN website TEXT;
+-- ALTER TABLE profiles ADD COLUMN lud16 TEXT;

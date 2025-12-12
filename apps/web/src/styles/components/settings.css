@@ -143,7 +143,49 @@
   margin: 0 auto;
 }
 
-/* Profile - shared styles (avatar, input-row, profile-avatar-section) are in base.css */
+/* Profile display (simplified) */
+.profile-display {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-display .avatar {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.profile-display-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-display-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.profile-edit-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--accent);
+  cursor: pointer;
+  text-align: left;
+}
+
+.profile-edit-link:hover {
+  text-decoration: underline;
+}
+
+.profile-edit-link:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
 
 /* Key display */
 .key-display {
