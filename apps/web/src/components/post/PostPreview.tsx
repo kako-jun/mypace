@@ -1,5 +1,5 @@
-import { renderContent } from '../../lib/content-parser'
 import { getThemeCardProps } from '../../lib/nostr/events'
+import { PostContent } from './PostContent'
 import type { ThemeColors } from '../../types'
 
 interface PostPreviewProps {
@@ -16,7 +16,9 @@ export default function PostPreview({ content, themeColors, transparentBackgroun
   return (
     <div className={`post-preview ${themeProps.className}`} style={transparentBackground ? {} : themeProps.style}>
       <div className="preview-label">Preview</div>
-      <div className="preview-content">{renderContent(content)}</div>
+      <div className="preview-content">
+        <PostContent content={content} />
+      </div>
     </div>
   )
 }

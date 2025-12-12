@@ -1,7 +1,7 @@
 import type { Event } from '../../types'
-import { renderContent } from '../../lib/content-parser'
 import { formatTimestamp, getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import { Avatar } from '../ui'
+import { PostContent } from './PostContent'
 
 interface ThreadRepliesProps {
   replies: Event[]
@@ -41,7 +41,9 @@ export default function ThreadReplies({
                     <time className="timestamp">{formatTimestamp(reply.created_at)}</time>
                   </div>
                 </header>
-                <div className="reply-content">{renderContent(reply.content)}</div>
+                <div className="reply-content">
+                  <PostContent content={reply.content} />
+                </div>
               </div>
             )
           })}

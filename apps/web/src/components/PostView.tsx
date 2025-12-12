@@ -30,15 +30,9 @@ import {
   applyThemeColors,
 } from '../lib/utils'
 import { TIMEOUTS } from '../lib/constants'
-import {
-  renderContent,
-  setHashtagClickHandler,
-  setImageClickHandler,
-  clearImageClickHandler,
-} from '../lib/content-parser'
+import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
-import { PostHeader, ReplyCard, PostActions, EditDeleteButtons } from '../components/post'
-import { PostEmbeds } from './embed'
+import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent } from '../components/post'
 import { useShare, useDeleteConfirm } from '../hooks'
 import type { Event, Profile } from '../types'
 
@@ -222,9 +216,9 @@ export function PostView({ eventId }: PostViewProps) {
           avatarUrl={getProfileAvatarUrl()}
         />
 
-        <div className="post-content post-content-full">{renderContent(event.content)}</div>
-
-        <PostEmbeds content={event.content} />
+        <div className="post-content post-content-full">
+          <PostContent content={event.content} />
+        </div>
 
         {deletedId === event.id && <p className="success">Deleted!</p>}
 
