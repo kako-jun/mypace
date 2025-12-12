@@ -303,7 +303,11 @@ body.long-mode-active .main-content {
   content: '';
   width: 64px;
   height: 64px;
-  background: var(--bg-primary) url('/static/star.webp') no-repeat center / 48px 48px;
+  background-color: var(--bg);
+  background-image: url('/static/star.webp');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 48px 48px;
   border-radius: 50%;
   animation: loading-spin 1s linear infinite;
 }
