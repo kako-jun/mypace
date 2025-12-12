@@ -194,15 +194,24 @@ export function renderContent(
   useEffect(() => {
     if (!contentRef.current) return
 
+    const handleImageError = (imgEl: HTMLImageElement) => {
+      // Skip if already handled
+      if (imgEl.style.display === 'none') return
+      imgEl.style.display = 'none'
+      const errorDiv = document.createElement('div')
+      errorDiv.className = 'content-image-error'
+      errorDiv.textContent = '404'
+      imgEl.parentNode?.appendChild(errorDiv)
+    }
+
     const images = contentRef.current.querySelectorAll('.content-image')
     images.forEach((img) => {
       const imgEl = img as HTMLImageElement
-      imgEl.onerror = () => {
-        imgEl.style.display = 'none'
-        const errorDiv = document.createElement('div')
-        errorDiv.className = 'content-image-error'
-        errorDiv.textContent = '404'
-        imgEl.parentNode?.appendChild(errorDiv)
+      // Check if image already failed to load
+      if (imgEl.complete && imgEl.naturalWidth === 0) {
+        handleImageError(imgEl)
+      } else {
+        imgEl.onerror = () => handleImageError(imgEl)
       }
     })
   }, [html])
