@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   banner TEXT,
   website TEXT,
   lud16 TEXT,
+  emojis TEXT,
   cached_at INTEGER NOT NULL
 );
 
@@ -32,3 +33,4 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- ALTER TABLE profiles ADD COLUMN banner TEXT;
 -- ALTER TABLE profiles ADD COLUMN website TEXT;
 -- ALTER TABLE profiles ADD COLUMN lud16 TEXT;
+-- ALTER TABLE profiles ADD COLUMN emojis TEXT;
