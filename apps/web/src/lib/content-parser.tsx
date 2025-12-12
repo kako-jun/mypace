@@ -98,7 +98,7 @@ function processImageUrls(html: string): string {
     if (YOUTUBE_THUMBNAIL_REGEX.test(url)) {
       return _match
     }
-    return `${before}<span class="content-image-wrapper"><img src="${url}" alt="" class="content-image" data-lightbox="${url}" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML+='<div class=content-image-error>404</div>'" /></span>${after}`
+    return `${before}<span class="content-image-wrapper"><img src="${url}" alt="404" class="content-image" data-lightbox="${url}" /></span>${after}`
   })
 }
 
@@ -190,30 +190,44 @@ export function renderContent(
 
   const contentRef = useRef<HTMLDivElement>(null)
 
-  // Handle image errors after render
+  // Handle image errors using event delegation with capture phase
   useEffect(() => {
-    if (!contentRef.current) return
+    const container = contentRef.current
+    if (!container) return
 
-    const handleImageError = (imgEl: HTMLImageElement) => {
-      // Skip if already handled
-      if (imgEl.style.display === 'none') return
-      imgEl.style.display = 'none'
+    const handleError = (e: Event) => {
+      const img = e.target as HTMLImageElement
+      if (!img.classList.contains('content-image')) return
+
+      const wrapper = img.parentElement
+      if (!wrapper || wrapper.querySelector('.content-image-error')) return
+
+      img.style.display = 'none'
       const errorDiv = document.createElement('div')
       errorDiv.className = 'content-image-error'
       errorDiv.textContent = '404'
-      imgEl.parentNode?.appendChild(errorDiv)
+      wrapper.appendChild(errorDiv)
     }
 
-    const images = contentRef.current.querySelectorAll('.content-image')
-    images.forEach((img) => {
+    // Use capture phase to catch errors before they bubble
+    container.addEventListener('error', handleError, true)
+
+    // Check images that may have already errored
+    container.querySelectorAll('.content-image').forEach((img) => {
       const imgEl = img as HTMLImageElement
-      // Check if image already failed to load
-      if (imgEl.complete && imgEl.naturalWidth === 0) {
-        handleImageError(imgEl)
-      } else {
-        imgEl.onerror = () => handleImageError(imgEl)
+      if (imgEl.complete && imgEl.naturalHeight === 0 && imgEl.naturalWidth === 0) {
+        const wrapper = imgEl.parentElement
+        if (!wrapper || wrapper.querySelector('.content-image-error')) return
+
+        imgEl.style.display = 'none'
+        const errorDiv = document.createElement('div')
+        errorDiv.className = 'content-image-error'
+        errorDiv.textContent = '404'
+        wrapper.appendChild(errorDiv)
       }
     })
+
+    return () => container.removeEventListener('error', handleError, true)
   }, [html])
 
   // Handle clicks via event delegation
