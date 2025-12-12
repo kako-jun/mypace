@@ -172,13 +172,6 @@
   color: var(--highlight);
 }
 
-/* ===== Edit Button ===== */
-.edit-profile-btn {
-  margin-left: auto;
-  padding: 4px 12px;
-  font-size: 0.8rem;
-}
-
 /* ===== Edit Mode ===== */
 .user-profile-edit {
   padding: 0;
@@ -290,7 +283,7 @@
   width: 100%;
   padding: 8px 12px;
   font-size: 0.95rem;
-  font-family: inherit;
+  font-family: var(--font-mono);
   border: 2px solid var(--border);
   background: var(--surface-primary);
   color: var(--text-primary);
