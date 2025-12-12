@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { PostForm } from '../components/PostForm'
 import { Timeline } from '../components/Timeline'
 import { LightBox, triggerLightBox } from '../components/LightBox'
-import { renderContent, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
+import { setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
 import { getString, setString, removeItem, getUIThemeColors, applyThemeColors } from '../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS, TIMEOUTS } from '../lib/constants'
 import type { Event, FilterMode } from '../types'
@@ -117,33 +117,20 @@ export function HomePage({ initialFilterTags, initialFilterMode, initialSearchQu
 
   if (longMode) {
     return (
-      <div className={`long-mode-container ${showPreview ? '' : 'no-preview'}`}>
-        <div className="long-mode-editor">
-          <PostForm
-            longMode={longMode}
-            onLongModeChange={handleLongModeChange}
-            content={content}
-            onContentChange={setContent}
-            showPreview={showPreview}
-            onShowPreviewChange={setShowPreview}
-            editingEvent={editingEvent}
-            onEditCancel={handleEditCancel}
-            onEditComplete={handleEditComplete}
-            replyingTo={replyingTo}
-            onReplyCancel={handleReplyCancel}
-            onReplyComplete={handleReplyComplete}
-          />
-        </div>
-        {showPreview && (
-          <div className="long-mode-preview">
-            {content.trim() ? (
-              renderContent(content)
-            ) : (
-              <p className="preview-placeholder">プレビューがここに表示されます</p>
-            )}
-          </div>
-        )}
-      </div>
+      <PostForm
+        longMode={longMode}
+        onLongModeChange={handleLongModeChange}
+        content={content}
+        onContentChange={setContent}
+        showPreview={showPreview}
+        onShowPreviewChange={setShowPreview}
+        editingEvent={editingEvent}
+        onEditCancel={handleEditCancel}
+        onEditComplete={handleEditComplete}
+        replyingTo={replyingTo}
+        onReplyCancel={handleReplyCancel}
+        onReplyComplete={handleReplyComplete}
+      />
     )
   }
 

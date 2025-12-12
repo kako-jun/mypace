@@ -3,11 +3,18 @@ import { createTextNote, createDeleteEvent, createReplyEvent, getStoredThemeColo
 import type { ThemeColors } from '../types'
 import { publishEvent } from '../lib/nostr/relay'
 import { ProfileSetup } from './ProfileSetup'
-import { hasLocalProfile, getImageUrls, removeImageUrl, getStoredVimMode, getStoredAppTheme } from '../lib/utils'
+import {
+  hasLocalProfile,
+  getLocalProfile,
+  getImageUrls,
+  removeImageUrl,
+  getStoredVimMode,
+  getStoredAppTheme,
+} from '../lib/utils'
 import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../lib/constants'
 import { ImageDropZone, AttachedImages, PostPreview } from '../components/post'
 import { LongModeEditor } from './LongModeEditor'
-import { Toggle } from './ui'
+import { Toggle, Avatar } from './ui'
 import { setBoolean } from '../lib/utils/storage'
 import type { Event } from '../types'
 
@@ -45,17 +52,23 @@ export function PostForm({
   const [hasProfile, setHasProfile] = useState(false)
   const [checkingProfile, setCheckingProfile] = useState(true)
   const [themeColors, setThemeColors] = useState<ThemeColors | null>(null)
+  const [myAvatarUrl, setMyAvatarUrl] = useState<string | undefined>(undefined)
   const [vimMode, setVimMode] = useState(() => getStoredVimMode())
   const [darkTheme, setDarkTheme] = useState(() => getStoredAppTheme() === 'dark')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const longModeFormRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
+    const profile = getLocalProfile()
     setHasProfile(hasLocalProfile())
     setCheckingProfile(false)
     setThemeColors(getStoredThemeColors())
+    setMyAvatarUrl(profile?.picture)
 
-    const handleProfileUpdate = () => setHasProfile(hasLocalProfile())
+    const handleProfileUpdate = () => {
+      setHasProfile(hasLocalProfile())
+      setMyAvatarUrl(getLocalProfile()?.picture)
+    }
     const handleThemeColorsChange = () => setThemeColors(getStoredThemeColors())
     const handleAppThemeChange = () => setDarkTheme(getStoredAppTheme() === 'dark')
 
@@ -199,6 +212,7 @@ export function PostForm({
             {replyingTo && <div className="replying-label">Replying to post...</div>}
 
             <div className="post-form-top-actions">
+              <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
               <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
               <div className="vim-toggle">
                 <Toggle checked={vimMode} onChange={handleVimModeChange} label="Vim" />
@@ -275,6 +289,7 @@ export function PostForm({
       {replyingTo && <div className="replying-label">Replying to post...</div>}
 
       <div className="post-form-top-actions">
+        <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
         <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
         <button
           type="button"
