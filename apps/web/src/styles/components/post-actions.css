@@ -29,7 +29,7 @@
 
 /* Like button - extends .icon-button */
 .like-button svg {
-  stroke: var(--text-primary);
+  stroke: #333;
   fill: #f1c40f;
 }
 
@@ -52,7 +52,7 @@
 }
 
 .like-count svg {
-  stroke: var(--text-primary);
+  stroke: #333;
   fill: #f1c40f;
 }
 
@@ -62,6 +62,7 @@
 
 /* Reply button - extends .icon-button */
 .reply-button svg {
+  stroke: #333;
   fill: #fff;
 }
 
@@ -70,6 +71,11 @@
 }
 
 /* Repost button - extends .icon-button */
+.repost-button svg {
+  stroke: #333;
+  fill: #fff;
+}
+
 .repost-button:hover:not(:disabled) {
   color: #2ecc71;
 }
@@ -80,6 +86,7 @@
 
 /* Share button - extends .icon-button */
 .share-button svg {
+  stroke: #333;
   fill: #fff;
 }
 
