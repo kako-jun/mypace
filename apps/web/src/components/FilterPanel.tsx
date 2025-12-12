@@ -7,6 +7,20 @@ import { getBoolean, setBoolean, getString, setString, buildSearchUrl } from '..
 import { STORAGE_KEYS, CUSTOM_EVENTS, LANGUAGES } from '../lib/constants'
 import type { FilterMode } from '../types'
 
+// Helper to get/set NG words array
+function getNgWords(): string[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.NG_WORDS)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+function setNgWords(words: string[]): void {
+  localStorage.setItem(STORAGE_KEYS.NG_WORDS, JSON.stringify(words))
+}
+
 interface FilterPanelProps {
   // Popup mode
   isPopup?: boolean
@@ -38,13 +52,18 @@ export function FilterPanel({
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery)
   const [mypaceOnly, setMypaceOnly] = useState(() => getBoolean(STORAGE_KEYS.MYPACE_ONLY, true))
   const [languageFilter, setLanguageFilter] = useState(() => getString(STORAGE_KEYS.LANGUAGE_FILTER) || '')
+  const [ngWordsInput, setNgWordsInput] = useState(() => getNgWords().join(', '))
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Track initial values for dirty detection
   const initialMypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
   const initialLanguageFilter = getString(STORAGE_KEYS.LANGUAGE_FILTER) || ''
+  const initialNgWords = getNgWords().join(', ')
   const isDirty =
-    searchQuery !== initialSearchQuery || mypaceOnly !== initialMypaceOnly || languageFilter !== initialLanguageFilter
+    searchQuery !== initialSearchQuery ||
+    mypaceOnly !== initialMypaceOnly ||
+    languageFilter !== initialLanguageFilter ||
+    ngWordsInput !== initialNgWords
 
   useEffect(() => {
     if (isPopup && inputRef.current) {
@@ -52,15 +71,25 @@ export function FilterPanel({
     }
   }, [isPopup])
 
+  // Parse NG words input to array
+  const parseNgWords = (input: string): string[] => {
+    return input
+      .split(',')
+      .map((w) => w.trim())
+      .filter((w) => w.length > 0)
+  }
+
   // Apply filters - save to storage and navigate
   const handleApply = () => {
     // Save settings to storage
     setBoolean(STORAGE_KEYS.MYPACE_ONLY, mypaceOnly)
     setString(STORAGE_KEYS.LANGUAGE_FILTER, languageFilter)
+    setNgWords(parseNgWords(ngWordsInput))
 
     // Notify filter changes
     window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED))
     window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED))
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NG_WORDS_CHANGED))
 
     if (onSearchQueryChange) {
       onSearchQueryChange(searchQuery)
@@ -83,10 +112,12 @@ export function FilterPanel({
     setMypaceOnly(true)
     setLanguageFilter('')
     setSearchQuery('')
+    setNgWordsInput('')
 
     // Save defaults to storage
     setBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
     setString(STORAGE_KEYS.LANGUAGE_FILTER, '')
+    setNgWords([])
 
     // Clear tags if callback exists
     onClearTags?.()
@@ -94,6 +125,7 @@ export function FilterPanel({
     // Notify filter changes
     window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED))
     window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED))
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NG_WORDS_CHANGED))
 
     // Navigate to home
     navigate('/')
@@ -110,11 +142,11 @@ export function FilterPanel({
   }
 
   const currentLanguageLabel = LANGUAGES.find((l) => l.code === languageFilter)?.label || 'All'
-  const hasActiveFilters = searchQuery || filterTags.length > 0 || languageFilter || !mypaceOnly
+  const currentNgWords = parseNgWords(ngWordsInput)
 
   return (
     <div className={`filter-panel ${isPopup ? 'filter-panel-popup' : 'filter-panel-embedded'}`}>
-      {/* Search input */}
+      {/* OK word input (include) */}
       <div className="filter-search-row">
         <Icon name="Search" size={16} className="filter-search-icon" />
         <input
@@ -122,8 +154,21 @@ export function FilterPanel({
           type="text"
           className="filter-search-input"
           value={searchQuery}
-          placeholder="Search posts..."
+          placeholder="OK word..."
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+      </div>
+
+      {/* NG word input (exclude) */}
+      <div className="filter-search-row filter-ng-row">
+        <Icon name="Ban" size={16} className="filter-search-icon filter-ng-icon" />
+        <input
+          type="text"
+          className="filter-search-input"
+          value={ngWordsInput}
+          placeholder="NG word..."
+          onChange={(e) => setNgWordsInput(e.target.value)}
           onKeyDown={handleKeyDown}
         />
       </div>
@@ -180,10 +225,11 @@ export function FilterPanel({
       )}
 
       {/* Active filters summary (for popup) */}
-      {isPopup && hasActiveFilters && (
+      {isPopup && (mypaceOnly || languageFilter || currentNgWords.length > 0) && (
         <div className="filter-summary">
           {mypaceOnly && <span className="filter-chip">mypace</span>}
           {languageFilter && <span className="filter-chip">{currentLanguageLabel}</span>}
+          {currentNgWords.length > 0 && <span className="filter-chip filter-chip-ng">NG: {currentNgWords.length}</span>}
         </div>
       )}
 

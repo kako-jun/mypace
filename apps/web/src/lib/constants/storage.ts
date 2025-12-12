@@ -8,4 +8,5 @@ export const STORAGE_KEYS = {
   DRAFT: 'mypace_draft',
   MYPACE_ONLY: 'mypace_only',
   LANGUAGE_FILTER: 'mypace_language_filter',
+  NG_WORDS: 'mypace_ng_words',
 } as const

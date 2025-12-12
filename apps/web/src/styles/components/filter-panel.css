@@ -88,6 +88,15 @@
   color: var(--text-placeholder);
 }
 
+/* NG word row styling */
+.filter-ng-row {
+  margin-top: 0.5rem;
+}
+
+.filter-ng-icon {
+  stroke: var(--action-delete) !important;
+}
+
 .filter-search-submit {
   display: flex;
   align-items: center;
@@ -266,6 +275,11 @@
   padding: 0.15rem 0.5rem;
   border-radius: 10px;
   font-size: 0.7rem;
+}
+
+.filter-chip-ng {
+  background: color-mix(in srgb, var(--action-delete) 20%, transparent);
+  color: var(--action-delete);
 }
 
 /* Mobile adjustments */
