@@ -391,7 +391,12 @@ export function UserView({ pubkey }: UserViewProps) {
 
             <div className="user-links">
               {profile?.website && (
-                <a href={profile.website} target="_blank" rel="noopener noreferrer" className="user-link">
+                <a
+                  href={profile.website.match(/^https?:\/\//) ? profile.website : `https://${profile.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="user-link"
+                >
                   <Icon name="Globe" size={14} /> {profile.website.replace(/^https?:\/\//, '')}
                 </a>
               )}
