@@ -5,36 +5,53 @@
   right: 0;
   bottom: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: transparent;
   z-index: 9999;
 }
 
+.loading-circle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background-color: rgba(128, 128, 128, 0.1);
+  border-radius: 9999px;
+  animation: loading-pulse 3s ease-in-out infinite;
+}
+
 .loading-star {
-  width: 48px;
-  height: 48px;
-  padding: 8px;
-  background-color: var(--bg);
-  border-radius: 50%;
-  animation: loading-spin 1s linear infinite;
+  width: 20px;
+  height: 20px;
+  animation: loading-spin 4s linear infinite;
+  filter: brightness(0) saturate(100%);
 }
 
 .loading-text {
-  margin-top: 0.75rem;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .loading-star {
+  filter: brightness(0) invert(1);
 }
 
 @keyframes loading-spin {
-  0% {
-    transform: rotate(0deg) scale(1);
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loading-pulse {
+  0%, 100% {
+    transform: scale(1);
   }
   50% {
-    transform: rotate(180deg) scale(1.2);
-  }
-  100% {
-    transform: rotate(360deg) scale(1);
+    transform: scale(1.05);
   }
 }
