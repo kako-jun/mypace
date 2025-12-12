@@ -1,20 +1,6 @@
-import { useState, useEffect } from 'react'
-import {
-  fetchUserProfile,
-  fetchUserPosts,
-  fetchReactions,
-  fetchReplies,
-  fetchReposts,
-  publishEvent,
-} from '../lib/nostr/relay'
-import {
-  getCurrentPubkey,
-  createDeleteEvent,
-  createReactionEvent,
-  createRepostEvent,
-  getEventThemeColors,
-  getThemeCardProps,
-} from '../lib/nostr/events'
+import { useState, useEffect, useCallback, Fragment } from 'react'
+import { fetchUserProfile } from '../lib/nostr/relay'
+import { getEventThemeColors, getThemeCardProps } from '../lib/nostr/events'
 import {
   getDisplayName,
   getAvatarUrl,
@@ -22,7 +8,6 @@ import {
   navigateToTag,
   navigateToEdit,
   navigateToReply,
-  getErrorMessage,
   getUIThemeColors,
   applyThemeColors,
   shareOrCopy,
@@ -33,8 +18,9 @@ import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
 import { TimelinePostCard } from '../components/timeline'
+import { useTimeline } from '../hooks'
 import { nip19 } from 'nostr-tools'
-import type { Event, Profile, ReplyData } from '../types'
+import type { Event, Profile } from '../types'
 
 interface UserViewProps {
   pubkey: string
@@ -43,69 +29,42 @@ interface UserViewProps {
 export function UserView({ pubkey }: UserViewProps) {
   const [mounted, setMounted] = useState(false)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [events, setEvents] = useState<Event[]>([])
-  const [myPubkey, setMyPubkey] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [reactions, setReactions] = useState<{ [eventId: string]: { count: number; myReaction: boolean } }>({})
-  const [replies, setReplies] = useState<{ [eventId: string]: ReplyData }>({})
-  const [reposts, setReposts] = useState<{ [eventId: string]: { count: number; myRepost: boolean } }>({})
-  const [likingId, setLikingId] = useState<string | null>(null)
-  const [repostingId, setRepostingId] = useState<string | null>(null)
-  const [deletedId, setDeletedId] = useState<string | null>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [deletedId, setDeletedId] = useState<string | null>(null)
   const [npubCopied, setNpubCopied] = useState(false)
 
-  const loadUserData = async () => {
-    // Clear previous state and show loading
-    setError('')
-    setEvents([])
-    setReactions({})
-    setReplies({})
-    setReposts({})
-    setProfile(null)
-    setLoading(true)
+  const {
+    items,
+    profiles,
+    reactions,
+    replies,
+    reposts,
+    myPubkey,
+    loading,
+    error,
+    likingId,
+    repostingId,
+    gaps,
+    hasMore,
+    loadingMore,
+    loadingGap,
+    loadOlderEvents,
+    fillGap,
+    handleLike,
+    handleRepost,
+    handleDelete,
+  } = useTimeline({ authorPubkey: pubkey })
 
+  const loadProfile = async () => {
+    setProfileLoading(true)
     try {
-      const currentPubkey = await getCurrentPubkey()
-      setMyPubkey(currentPubkey)
-
-      // Fetch profile and posts in parallel from server
-      const [userProfile, userPosts] = await Promise.all([fetchUserProfile(pubkey), fetchUserPosts(pubkey)])
-
-      if (userProfile) {
-        setProfile(userProfile)
-      }
-      setEvents(userPosts)
-      setLoading(false)
-
-      if (userPosts.length === 0) return
-
-      // Load reactions, replies, reposts in parallel for each event
-      const reactionsMap: { [eventId: string]: { count: number; myReaction: boolean } } = {}
-      const repliesMap: { [eventId: string]: ReplyData } = {}
-      const repostsMap: { [eventId: string]: { count: number; myRepost: boolean } } = {}
-
-      await Promise.all(
-        userPosts.map(async (event) => {
-          const [reactionData, replyData, repostData] = await Promise.all([
-            fetchReactions(event.id, currentPubkey),
-            fetchReplies(event.id),
-            fetchReposts(event.id, currentPubkey),
-          ])
-          reactionsMap[event.id] = reactionData
-          repliesMap[event.id] = replyData
-          repostsMap[event.id] = repostData
-        })
-      )
-
-      setReactions(reactionsMap)
-      setReplies(repliesMap)
-      setReposts(repostsMap)
+      const userProfile = await fetchUserProfile(pubkey)
+      setProfile(userProfile)
     } catch (err) {
-      setError(getErrorMessage(err, 'Failed to load user data'))
+      console.error('Failed to fetch profile:', err)
     } finally {
-      setLoading(false)
+      setProfileLoading(false)
     }
   }
 
@@ -117,62 +76,31 @@ export function UserView({ pubkey }: UserViewProps) {
     applyThemeColors(getUIThemeColors())
     setHashtagClickHandler((tag) => navigateToTag(tag))
     setImageClickHandler(triggerLightBox)
-    loadUserData()
+    loadProfile()
 
     return () => clearImageClickHandler()
   }, [pubkey])
 
-  if (!mounted) {
-    return null
-  }
+  const handleEdit = useCallback((event: Event) => navigateToEdit(event.id), [])
+  const handleReplyClick = useCallback((event: Event) => navigateToReply(event.id), [])
 
-  const handleLike = async (event: Event) => {
-    if (likingId || !myPubkey || reactions[event.id]?.myReaction || event.pubkey === myPubkey) return
-    setLikingId(event.id)
-    try {
-      await publishEvent(await createReactionEvent(event, '+'))
-      setReactions((prev) => ({
-        ...prev,
-        [event.id]: { count: (prev[event.id]?.count || 0) + 1, myReaction: true },
-      }))
-    } finally {
-      setLikingId(null)
-    }
-  }
-
-  const handleRepost = async (event: Event) => {
-    if (repostingId || !myPubkey || reposts[event.id]?.myRepost) return
-    setRepostingId(event.id)
-    try {
-      await publishEvent(await createRepostEvent(event))
-      setReposts((prev) => ({
-        ...prev,
-        [event.id]: { count: (prev[event.id]?.count || 0) + 1, myRepost: true },
-      }))
-    } finally {
-      setRepostingId(null)
-    }
-  }
-
-  const handleShare = async (eventId: string) => {
+  const handleShare = useCallback(async (eventId: string) => {
     const url = `${window.location.origin}/post/${eventId}`
     const result = await shareOrCopy(url)
     if (result.copied) {
       setCopiedId(eventId)
       setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
     }
-  }
+  }, [])
 
-  const handleDeleteConfirm = async (event: Event) => {
-    try {
-      await publishEvent(await createDeleteEvent([event.id]))
+  const handleDeleteConfirm = useCallback(
+    async (event: Event) => {
+      await handleDelete(event)
       setDeletedId(event.id)
-      setTimeout(() => {
-        setEvents((prev) => prev.filter((e) => e.id !== event.id))
-        setDeletedId(null)
-      }, TIMEOUTS.POST_ACTION_RELOAD)
-    } catch {}
-  }
+      setTimeout(() => setDeletedId(null), TIMEOUTS.DELETE_CONFIRMATION)
+    },
+    [handleDelete]
+  )
 
   const handleBack = () => navigateToHome()
 
@@ -186,7 +114,11 @@ export function UserView({ pubkey }: UserViewProps) {
     }
   }
 
-  if (loading) return <div className="loading">Loading...</div>
+  if (!mounted) {
+    return null
+  }
+
+  if (loading && items.length === 0) return <div className="loading">Loading...</div>
 
   if (error) {
     return (
@@ -202,34 +134,52 @@ export function UserView({ pubkey }: UserViewProps) {
   const themeColors = profile ? getEventThemeColors({ tags: [] } as unknown as Event) : null
   const themeProps = themeColors ? getThemeCardProps(themeColors) : { className: '', style: {} }
 
+  const getDisplayNameForEvent = (eventPubkey: string) => {
+    if (eventPubkey === pubkey) return displayName
+    const eventProfile = profiles[eventPubkey]
+    return getDisplayName(eventProfile, eventPubkey)
+  }
+
+  const getAvatarUrlForEvent = (eventPubkey: string) => {
+    if (eventPubkey === pubkey) return avatarUrl
+    const eventProfile = profiles[eventPubkey]
+    return getAvatarUrl(eventProfile)
+  }
+
   return (
     <div className="user-view">
       <button className="back-button text-outlined text-outlined-button" onClick={handleBack}>
         ← BACK
       </button>
 
-      <div className={`user-profile-card ${themeProps.className}`} style={themeProps.style}>
-        <div className="user-profile-header">
-          <Avatar src={avatarUrl} className="user-avatar" />
-          <div className="user-info">
-            <h2 className="user-name">{displayName}</h2>
-            <div className="user-npub-row">
-              <span className="user-npub">{npub}</span>
-              <button className="npub-copy-btn" onClick={handleCopyNpub} aria-label="Copy npub">
-                {npubCopied ? <Icon name="Check" size={14} /> : <Icon name="Copy" size={14} />}
-              </button>
+      {profileLoading ? (
+        <div className="user-profile-card loading">Loading profile...</div>
+      ) : (
+        <div className={`user-profile-card ${themeProps.className}`} style={themeProps.style}>
+          <div className="user-profile-header">
+            <Avatar src={avatarUrl} className="user-avatar" />
+            <div className="user-info">
+              <h2 className="user-name">{displayName}</h2>
+              <div className="user-npub-row">
+                <span className="user-npub">{npub}</span>
+                <button className="npub-copy-btn" onClick={handleCopyNpub} aria-label="Copy npub">
+                  {npubCopied ? <Icon name="Check" size={14} /> : <Icon name="Copy" size={14} />}
+                </button>
+              </div>
             </div>
           </div>
+          {profile?.about && <p className="user-about">{profile.about}</p>}
+          <div className="user-stats">
+            <span>{items.length} posts</span>
+          </div>
         </div>
-        {profile?.about && <p className="user-about">{profile.about}</p>}
-        <div className="user-stats">
-          <span>{events.length} posts</span>
-        </div>
-      </div>
+      )}
 
       <div className="timeline">
-        {events.map((event) => {
+        {items.map((item) => {
+          const event = item.event
           const isMyPost = myPubkey === event.pubkey
+          const gapAfterThis = gaps.find((g) => g.afterEventId === event.id)
 
           if (deletedId === event.id) {
             return (
@@ -240,29 +190,45 @@ export function UserView({ pubkey }: UserViewProps) {
           }
 
           return (
-            <TimelinePostCard
-              key={event.id}
-              event={event}
-              isMyPost={isMyPost}
-              profiles={{ [pubkey]: profile }}
-              reactions={reactions[event.id]}
-              replies={replies[event.id]}
-              reposts={reposts[event.id]}
-              likingId={likingId}
-              repostingId={repostingId}
-              copiedId={copiedId}
-              onEdit={() => navigateToEdit(event.id)}
-              onDeleteConfirm={() => handleDeleteConfirm(event)}
-              onLike={() => handleLike(event)}
-              onReply={() => navigateToReply(event.id)}
-              onRepost={() => handleRepost(event)}
-              onShare={() => handleShare(event.id)}
-              getDisplayName={() => displayName}
-              getAvatarUrl={() => avatarUrl}
-            />
+            <Fragment key={event.id}>
+              <TimelinePostCard
+                event={event}
+                isMyPost={isMyPost}
+                profiles={{ ...profiles, [pubkey]: profile }}
+                reactions={reactions[event.id]}
+                replies={replies[event.id]}
+                reposts={reposts[event.id]}
+                likingId={likingId}
+                repostingId={repostingId}
+                copiedId={copiedId}
+                onEdit={() => handleEdit(event)}
+                onDeleteConfirm={() => handleDeleteConfirm(event)}
+                onLike={() => handleLike(event)}
+                onReply={() => handleReplyClick(event)}
+                onRepost={() => handleRepost(event)}
+                onShare={() => handleShare(event.id)}
+                getDisplayName={getDisplayNameForEvent}
+                getAvatarUrl={getAvatarUrlForEvent}
+              />
+              {gapAfterThis && (
+                <button
+                  className="timeline-gap-button"
+                  onClick={() => fillGap(gapAfterThis.id)}
+                  disabled={loadingGap === gapAfterThis.id}
+                >
+                  {loadingGap === gapAfterThis.id ? '読み込み中...' : 'さらに表示'}
+                </button>
+              )}
+            </Fragment>
           )
         })}
-        {events.length === 0 && <p className="empty">No posts yet</p>}
+        {items.length === 0 && <p className="empty">No posts yet</p>}
+        {items.length > 0 && hasMore && (
+          <button className="load-more-button" onClick={loadOlderEvents} disabled={loadingMore}>
+            {loadingMore ? '読み込み中...' : '過去の投稿を読み込む'}
+          </button>
+        )}
+        {items.length > 0 && !hasMore && <p className="timeline-end">これ以上の投稿はありません</p>}
       </div>
       <LightBox />
     </div>

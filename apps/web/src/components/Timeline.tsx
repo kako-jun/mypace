@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Fragment } from 'react'
 import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { FilterBar, TimelinePostCard } from '../components/timeline'
@@ -53,8 +53,14 @@ export function Timeline({
     likingId,
     repostingId,
     newEventCount,
+    gaps,
+    hasMore,
+    loadingMore,
+    loadingGap,
     reload,
     loadNewEvents,
+    loadOlderEvents,
+    fillGap,
     handleLike,
     handleRepost,
     handleDelete,
@@ -193,6 +199,9 @@ export function Timeline({
         const event = item.event
         const isMyPost = myPubkey === event.pubkey
 
+        // このイベントの後にギャップがあるか確認
+        const gapAfterThis = gaps.find((g) => g.afterEventId === event.id)
+
         if (deletedId === event.id) {
           return (
             <article key={event.id} className="post-card">
@@ -202,27 +211,37 @@ export function Timeline({
         }
 
         return (
-          <TimelinePostCard
-            key={item.repostedBy ? `repost-${event.id}-${item.repostedBy.pubkey}` : event.id}
-            event={event}
-            repostedBy={item.repostedBy}
-            isMyPost={isMyPost}
-            profiles={profiles}
-            reactions={reactions[event.id]}
-            replies={replies[event.id]}
-            reposts={reposts[event.id]}
-            likingId={likingId}
-            repostingId={repostingId}
-            copiedId={copiedId}
-            onEdit={handleEdit}
-            onDeleteConfirm={handleDeleteConfirm}
-            onLike={handleLike}
-            onReply={handleReplyClick}
-            onRepost={handleRepost}
-            onShare={handleShare}
-            getDisplayName={getDisplayName}
-            getAvatarUrl={getAvatarUrl}
-          />
+          <Fragment key={item.repostedBy ? `repost-${event.id}-${item.repostedBy.pubkey}` : event.id}>
+            <TimelinePostCard
+              event={event}
+              repostedBy={item.repostedBy}
+              isMyPost={isMyPost}
+              profiles={profiles}
+              reactions={reactions[event.id]}
+              replies={replies[event.id]}
+              reposts={reposts[event.id]}
+              likingId={likingId}
+              repostingId={repostingId}
+              copiedId={copiedId}
+              onEdit={handleEdit}
+              onDeleteConfirm={handleDeleteConfirm}
+              onLike={handleLike}
+              onReply={handleReplyClick}
+              onRepost={handleRepost}
+              onShare={handleShare}
+              getDisplayName={getDisplayName}
+              getAvatarUrl={getAvatarUrl}
+            />
+            {gapAfterThis && (
+              <button
+                className="timeline-gap-button"
+                onClick={() => fillGap(gapAfterThis.id)}
+                disabled={loadingGap === gapAfterThis.id}
+              >
+                {loadingGap === gapAfterThis.id ? '読み込み中...' : 'さらに表示'}
+              </button>
+            )}
+          </Fragment>
         )
       })}
       {filteredItems.length === 0 && (
@@ -230,6 +249,12 @@ export function Timeline({
           {currentSearchQuery || filterTags.length > 0 ? 'No posts matching filter' : 'No posts yet'}
         </p>
       )}
+      {filteredItems.length > 0 && hasMore && (
+        <button className="load-more-button" onClick={loadOlderEvents} disabled={loadingMore}>
+          {loadingMore ? '読み込み中...' : '過去の投稿を読み込む'}
+        </button>
+      )}
+      {filteredItems.length > 0 && !hasMore && <p className="timeline-end">これ以上の投稿はありません</p>}
     </div>
   )
 }

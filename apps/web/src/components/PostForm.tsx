@@ -55,6 +55,7 @@ export function PostForm({
   const [myAvatarUrl, setMyAvatarUrl] = useState<string | undefined>(undefined)
   const [vimMode, setVimMode] = useState(() => getStoredVimMode())
   const [darkTheme, setDarkTheme] = useState(() => getStoredAppTheme() === 'dark')
+  const [minimized, setMinimized] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const longModeFormRef = useRef<HTMLFormElement>(null)
 
@@ -280,6 +281,20 @@ export function PostForm({
   }
 
   // Short mode: compact form at bottom-left
+  // Minimized view: just avatar in a small square
+  if (minimized) {
+    return (
+      <button
+        type="button"
+        className="post-form-minimized"
+        onClick={() => setMinimized(false)}
+        aria-label="Expand editor"
+      >
+        <Avatar src={myAvatarUrl} size="small" />
+      </button>
+    )
+  }
+
   return (
     <form
       className={`post-form ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
@@ -291,6 +306,14 @@ export function PostForm({
       <div className="post-form-top-actions">
         <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
         <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
+        <button
+          type="button"
+          className="minimize-button"
+          onClick={() => setMinimized(true)}
+          aria-label="Minimize editor"
+        >
+          −
+        </button>
         <button
           type="button"
           className="mode-toggle-corner text-outlined text-outlined-button text-outlined-primary"

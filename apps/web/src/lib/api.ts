@@ -42,10 +42,12 @@ export async function fetchTimeline(
   limit = 50,
   since = 0,
   mypaceOnly = true,
-  language = ''
+  language = '',
+  until = 0
 ): Promise<{ events: Event[]; source: string }> {
   const params = new URLSearchParams({ limit: String(limit) })
   if (since > 0) params.set('since', String(since))
+  if (until > 0) params.set('until', String(until))
   if (!mypaceOnly) params.set('all', '1')
   if (language) params.set('lang', language)
 
@@ -98,8 +100,12 @@ export async function fetchReposts(eventId: string, myPubkey?: string): Promise<
 }
 
 // User events
-export async function fetchUserEvents(pubkey: string, limit = 50): Promise<{ events: Event[] }> {
-  const res = await fetch(`${API_BASE}/api/user/${pubkey}/events?limit=${limit}`)
+export async function fetchUserEvents(pubkey: string, limit = 50, since = 0, until = 0): Promise<{ events: Event[] }> {
+  const params = new URLSearchParams({ limit: String(limit) })
+  if (since > 0) params.set('since', String(since))
+  if (until > 0) params.set('until', String(until))
+
+  const res = await fetch(`${API_BASE}/api/user/${pubkey}/events?${params}`)
   if (!res.ok) throw new Error('Failed to fetch user events')
   return res.json()
 }
