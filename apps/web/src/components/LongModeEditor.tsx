@@ -178,27 +178,26 @@ export function LongModeEditor({
               onQuitRef.current?.()
             })
 
-            // Sync yank with system clipboard using * register
-            const clipboardRegister = {
-              setText: (text: string) => {
-                navigator.clipboard.writeText(text).catch(() => {})
-              },
-              getText: () => '',
-              pushText: (text: string) => {
-                navigator.clipboard.writeText(text).catch(() => {})
-              },
-            }
+            const vimExtension = vim({ status: true })
+            extensions.unshift(vimExtension)
 
+            // After vim is initialized, intercept register writes to sync with clipboard
             // @ts-expect-error Vim internal API
             const vimGlobal = Vim.getVimGlobalState?.()
             if (vimGlobal?.registerController) {
-              vimGlobal.registerController.registers['*'] = clipboardRegister
-              vimGlobal.registerController.registers['+'] = clipboardRegister
-              // Make default yank go to clipboard
-              vimGlobal.registerController.unnamedRegister = clipboardRegister
+              const originalPushText = vimGlobal.registerController.pushText.bind(vimGlobal.registerController)
+              vimGlobal.registerController.pushText = (
+                register: string,
+                operator: string,
+                text: string,
+                linewise: boolean
+              ) => {
+                // Call original method
+                originalPushText(register, operator, text, linewise)
+                // Sync to system clipboard
+                navigator.clipboard.writeText(text).catch(() => {})
+              }
             }
-
-            extensions.unshift(vim({ status: true }))
           }
         } catch {
           console.warn('Vim mode not available')
