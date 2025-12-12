@@ -127,6 +127,8 @@
 .post-view-modal .post-card-large {
   border-radius: 8px;
   margin-bottom: 1rem;
+  transform: none !important;
+  filter: none !important;
 }
 
 /* Dark theme adjustments */
