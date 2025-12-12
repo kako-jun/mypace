@@ -99,6 +99,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.38.8
         version: 6.39.2
+      '@lezer/highlight':
+        specifier: ^1.2.3
+        version: 1.2.3
       '@replit/codemirror-vim':
         specifier: ^6.3.0
         version: 6.3.0(@codemirror/commands@6.10.0)(@codemirror/language@6.11.3)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/view@6.39.2)
