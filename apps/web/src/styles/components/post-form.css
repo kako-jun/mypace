@@ -147,10 +147,25 @@
     padding-bottom: 4rem;
   }
 
-  .long-mode-container.with-preview .long-mode-editor-pane,
+  .long-mode-container.with-preview .long-mode-editor-pane {
+    flex: none;
+    height: calc(50vh - 3rem);
+    display: flex;
+    flex-direction: column;
+  }
+
   .long-mode-container.with-preview .long-mode-preview-pane {
     flex: none;
     height: calc(50vh - 3rem);
+  }
+
+  .long-mode-container.with-preview .post-form.long-mode {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .long-mode-container.with-preview .long-mode-editor-wrapper {
+    min-height: 100px;
   }
 
   .long-mode-container.no-preview .long-mode-editor-pane {
@@ -215,6 +230,7 @@
   padding-top: 0.75rem;
   opacity: 0.6;
   transition: opacity 0.2s ease;
+  flex-shrink: 0;
 }
 
 .post-form:focus-within .post-actions {
@@ -303,13 +319,18 @@
   transform: scale(1.05);
 }
 
-/* Top actions: image upload + LONG button (right-aligned) */
+/* Top actions: avatar (left) + image upload + LONG button (right) */
 .post-form-top-actions {
   display: flex;
-  justify-content: flex-end;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Avatar on the left, pushes remaining items to the right */
+.post-form-avatar {
+  margin-right: auto;
 }
 
 /* Vim mode toggle in long mode */
