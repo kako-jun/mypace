@@ -352,6 +352,8 @@
 /* Avatar on the left */
 .post-form-avatar {
   display: block;
+  width: 40px !important;
+  height: 40px !important;
 }
 
 /* Vim mode toggle in long mode */
