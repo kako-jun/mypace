@@ -13,15 +13,13 @@ import {
   getLocalProfile,
   setItem,
   setString,
-  setBoolean,
   getUIThemeColors,
-  getStoredVimMode,
   getStoredAppTheme,
   applyThemeColors,
   DEFAULT_COLORS,
 } from '../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS } from '../lib/constants'
-import { ProfileSection, ThemeSection, EditorSection, KeysSection, ShareSection } from '../components/settings'
+import { ProfileSection, ThemeSection, KeysSection, ShareSection } from '../components/settings'
 import type { ThemeColors } from '../types'
 
 export function Settings() {
@@ -34,7 +32,6 @@ export function Settings() {
   const [pictureUrl, setPictureUrl] = useState('')
   const [themeColors, setThemeColors] = useState<ThemeColors>(DEFAULT_COLORS)
   const [appTheme, setAppTheme] = useState<'light' | 'dark'>('light')
-  const [vimMode, setVimMode] = useState(false)
 
   // Disable body scroll when settings panel is open
   useEffect(() => {
@@ -58,8 +55,6 @@ export function Settings() {
     const storedAppTheme = getStoredAppTheme()
     setAppTheme(storedAppTheme)
     document.documentElement.setAttribute('data-theme', storedAppTheme)
-
-    setVimMode(getStoredVimMode())
   }, [])
 
   useEffect(() => {
@@ -113,11 +108,7 @@ export function Settings() {
     setAppTheme(theme)
     setString(STORAGE_KEYS.APP_THEME, theme)
     document.documentElement.setAttribute('data-theme', theme)
-  }
-
-  const handleVimModeChange = (enabled: boolean) => {
-    setVimMode(enabled)
-    setBoolean(STORAGE_KEYS.VIM_MODE, enabled)
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.APP_THEME_CHANGED))
   }
 
   if (!open) {
@@ -164,8 +155,6 @@ export function Settings() {
             onAppThemeChange={handleAppThemeChange}
             onColorChange={handleColorChange}
           />
-
-          <EditorSection vimMode={vimMode} onVimModeChange={handleVimModeChange} />
 
           <KeysSection nsec={nsec} npub={npub} usingNip07={usingNip07} />
         </div>
