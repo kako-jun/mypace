@@ -16,13 +16,13 @@
   direction: ltr;
 }
 
-.filter-label {
+.filter-bar .filter-label {
   color: var(--text-link);
   font-weight: 500;
   font-size: 0.9rem;
 }
 
-.filter-tag {
+.filter-bar .filter-tag {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -34,7 +34,7 @@
   font-size: 0.9rem;
 }
 
-.filter-tag-remove {
+.filter-bar .filter-tag-remove {
   background: none;
   border: none;
   color: var(--text-muted);
@@ -45,11 +45,11 @@
   margin-left: 0.25rem;
 }
 
-.filter-tag-remove:hover {
+.filter-bar .filter-tag-remove:hover {
   color: var(--text-danger);
 }
 
-.filter-mode-toggle {
+.filter-bar .filter-mode-toggle {
   background: var(--surface-secondary);
   border: none;
   color: var(--text-secondary);
@@ -61,12 +61,12 @@
   text-transform: uppercase;
 }
 
-.filter-mode-toggle:hover {
+.filter-bar .filter-mode-toggle:hover {
   background: var(--surface-hover);
   color: var(--text-primary);
 }
 
-.filter-clear-all {
+.filter-bar .filter-clear-all {
   background: none;
   border: 1px solid var(--border-medium);
   color: var(--text-muted);
@@ -77,12 +77,12 @@
   margin-left: auto;
 }
 
-.filter-clear-all:hover {
+.filter-bar .filter-clear-all:hover {
   border-color: var(--text-muted);
   color: var(--text-secondary);
 }
 
-.filter-share {
+.filter-bar .filter-share {
   display: inline-flex;
   align-items: center;
   background: none;
@@ -95,17 +95,17 @@
   margin-left: 0.5rem;
 }
 
-.filter-share:hover {
+.filter-bar .filter-share:hover {
   border-color: var(--action-reply);
   color: var(--action-reply);
 }
 
-.filter-share.copied {
+.filter-bar .filter-share.copied {
   border-color: var(--action-repost);
   color: var(--action-repost);
 }
 
-.filter-clear {
+.filter-bar .filter-clear {
   background: none;
   border: none;
   color: var(--text-muted);
@@ -115,7 +115,7 @@
   line-height: 1;
 }
 
-.filter-clear:hover {
+.filter-bar .filter-clear:hover {
   color: var(--text-secondary);
 }
 
