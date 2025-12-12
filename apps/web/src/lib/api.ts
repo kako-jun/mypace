@@ -81,12 +81,17 @@ export async function fetchUserEvents(pubkey: string, limit = 50, since = 0, unt
 }
 
 // Publish signed event
-export async function publishEvent(event: Event): Promise<{ success: boolean; id: string }> {
+export async function publishEvent(event: Event): Promise<{ success: boolean; id: string; relays?: number }> {
   const res = await fetch(`${API_BASE}/api/publish`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ event }),
   })
-  if (!res.ok) throw new Error('Failed to publish event')
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    const message = errorData.error || 'Failed to publish event'
+    console.error('Publish failed:', errorData)
+    throw new Error(message)
+  }
   return res.json()
 }

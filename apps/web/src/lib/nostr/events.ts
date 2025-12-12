@@ -43,11 +43,22 @@ export async function createTextNote(content: string, preserveTags?: string[][])
 }
 
 export async function createProfileEvent(profile: Profile): Promise<Event> {
+  // Extract emojis for tags (NIP-30)
+  const tags: string[][] = []
+  if (profile.emojis) {
+    for (const emoji of profile.emojis) {
+      tags.push(['emoji', emoji.shortcode, emoji.url])
+    }
+  }
+
+  // Remove emojis from content JSON (they go in tags, not content)
+  const { emojis: _emojis, ...profileContent } = profile
+
   const template: EventTemplate = {
     kind: 0,
     created_at: unixNow(),
-    tags: [],
-    content: JSON.stringify(profile),
+    tags,
+    content: JSON.stringify(profileContent),
   }
 
   if (hasNip07() && window.nostr) {

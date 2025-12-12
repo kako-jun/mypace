@@ -452,13 +452,26 @@ app.post('/api/publish', async (c) => {
   const event = body.event
 
   if (!event || !event.id || !event.sig) {
-    return c.json({ error: 'Invalid event' }, 400)
+    return c.json({ error: 'Invalid event: missing id or sig' }, 400)
   }
 
   const pool = new SimplePool()
 
   try {
-    await Promise.all(pool.publish(RELAYS, event))
+    // Try to publish and collect results
+    const publishResults = pool.publish(RELAYS, event)
+    const results = await Promise.allSettled(publishResults)
+
+    // Check if at least one relay accepted the event
+    const successCount = results.filter((r) => r.status === 'fulfilled').length
+    const failedRelays = results
+      .map((r, i) => (r.status === 'rejected' ? `${RELAYS[i]}: ${r.reason}` : null))
+      .filter(Boolean)
+
+    if (successCount === 0) {
+      console.error('All relays rejected:', failedRelays)
+      return c.json({ error: 'All relays rejected the event', details: failedRelays }, 500)
+    }
 
     // キャッシュにも保存
     const db = c.env.DB
@@ -486,10 +499,10 @@ app.post('/api/publish', async (c) => {
       console.error('Cache write error:', e)
     }
 
-    return c.json({ success: true, id: event.id })
+    return c.json({ success: true, id: event.id, relays: successCount })
   } catch (e) {
     console.error('Publish error:', e)
-    return c.json({ error: 'Failed to publish' }, 500)
+    return c.json({ error: `Failed to publish: ${e instanceof Error ? e.message : 'Unknown error'}` }, 500)
   } finally {
     pool.close(RELAYS)
   }
