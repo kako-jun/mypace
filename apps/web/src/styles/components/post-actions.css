@@ -15,7 +15,6 @@
     -1px 1px 0 #555,
     1px -1px 0 #555,
     -1px -1px 0 #555;
-  transition: transform 0.15s ease;
   display: inline-block;
 }
 
@@ -26,11 +25,6 @@
     -1px 1px 0 #222,
     1px -1px 0 #222,
     -1px -1px 0 #222;
-}
-
-/* Action count hover - scales with icon */
-.icon-button:hover:not(:disabled) .action-count {
-  transform: scale(1.5);
 }
 
 /* Like button - extends .icon-button */
@@ -54,20 +48,16 @@
   gap: 0.1rem;
   color: #f1c40f;
   font-size: 0.875rem;
+  transition: transform 0.15s ease;
 }
 
 .like-count svg {
   stroke: var(--text-primary);
   fill: #f1c40f;
-  transition: transform 0.15s ease;
 }
 
-.like-count:hover svg {
-  transform: scale(2);
-}
-
-.like-count:hover .action-count {
-  transform: scale(1.5);
+.like-count:hover {
+  transform: scale(1.3);
 }
 
 /* Reply button - extends .icon-button */
