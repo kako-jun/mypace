@@ -7,7 +7,7 @@ import {
   getCurrentPubkey,
 } from '../lib/nostr/events'
 import { navigateToUser } from '../lib/utils'
-import type { ThemeColors } from '../types'
+import type { ThemeColors, EmojiTag } from '../types'
 import { publishEvent } from '../lib/nostr/relay'
 import { ProfileSetup } from './ProfileSetup'
 import {
@@ -60,6 +60,7 @@ export function PostForm({
   const [checkingProfile, setCheckingProfile] = useState(true)
   const [themeColors, setThemeColors] = useState<ThemeColors | null>(null)
   const [myAvatarUrl, setMyAvatarUrl] = useState<string | undefined>(undefined)
+  const [myEmojis, setMyEmojis] = useState<EmojiTag[]>([])
   const [vimMode, setVimMode] = useState(() => getStoredVimMode())
   const [darkTheme, setDarkTheme] = useState(() => getStoredAppTheme() === 'dark')
   const [minimized, setMinimized] = useState(false)
@@ -72,10 +73,13 @@ export function PostForm({
     setCheckingProfile(false)
     setThemeColors(getStoredThemeColors())
     setMyAvatarUrl(profile?.picture)
+    setMyEmojis(profile?.emojis || [])
 
     const handleProfileUpdate = () => {
+      const updatedProfile = getLocalProfile()
       setHasProfile(hasLocalProfile())
-      setMyAvatarUrl(getLocalProfile()?.picture)
+      setMyAvatarUrl(updatedProfile?.picture)
+      setMyEmojis(updatedProfile?.emojis || [])
     }
     const handleThemeColorsChange = () => setThemeColors(getStoredThemeColors())
     const handleAppThemeChange = () => setDarkTheme(getStoredAppTheme() === 'dark')
@@ -287,7 +291,7 @@ export function PostForm({
 
         {showPreview && (
           <div className="long-mode-preview-pane">
-            <PostPreview content={content} themeColors={themeColors} transparentBackground />
+            <PostPreview content={content} themeColors={themeColors} transparentBackground emojis={myEmojis} />
           </div>
         )}
       </div>
@@ -363,7 +367,7 @@ export function PostForm({
 
       <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
 
-      {showPreview && <PostPreview content={content} themeColors={themeColors} />}
+      {showPreview && <PostPreview content={content} themeColors={themeColors} emojis={myEmojis} />}
 
       <div className="post-actions">
         <div className="post-actions-left">
