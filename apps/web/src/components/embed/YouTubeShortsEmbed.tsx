@@ -8,6 +8,27 @@ interface YouTubeShortsEmbedProps {
 
 export default function YouTubeShortsEmbed({ videoId }: YouTubeShortsEmbedProps) {
   const [loaded, setLoaded] = useState(false)
+  const [error, setError] = useState(false)
+
+  const handleError = () => {
+    setError(true)
+  }
+
+  if (error) {
+    return (
+      <div className="embed-container embed-youtube-shorts embed-error">
+        <a
+          href={`https://youtube.com/shorts/${videoId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="embed-error-link"
+        >
+          <Icon name="Youtube" size={24} />
+          <span>Watch on YouTube</span>
+        </a>
+      </div>
+    )
+  }
 
   if (loaded) {
     return (
@@ -19,6 +40,7 @@ export default function YouTubeShortsEmbed({ videoId }: YouTubeShortsEmbedProps)
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           loading="lazy"
+          onError={handleError}
         />
       </div>
     )
@@ -26,7 +48,7 @@ export default function YouTubeShortsEmbed({ videoId }: YouTubeShortsEmbedProps)
 
   return (
     <div className="embed-container embed-youtube-shorts embed-thumbnail" onClick={() => setLoaded(true)}>
-      <img src={getYouTubeThumbnail(videoId)} alt="YouTube Shorts thumbnail" loading="lazy" />
+      <img src={getYouTubeThumbnail(videoId)} alt="YouTube Shorts thumbnail" loading="lazy" onError={handleError} />
       <div className="embed-play-overlay">
         <div className="embed-play-button embed-shorts-button">
           <Icon name="Play" size={24} />
