@@ -54,6 +54,7 @@
   --action-like: var(--highlight);
   --action-reply: #3498db;
   --action-repost: #2ecc71;
+  --action-delete: #e53935;
   --action-danger-hover: color-mix(in srgb, var(--bg) 95%, #c44 5%);
 
   /* ===== Derived: Code ===== */
@@ -120,6 +121,7 @@
   --action-like: var(--highlight);
   --action-reply: #3498db;
   --action-repost: #2ecc71;
+  --action-delete: #e53935;
   --action-danger-hover: rgba(200, 68, 68, 0.15);
 
   /* ===== Derived: Code ===== */
