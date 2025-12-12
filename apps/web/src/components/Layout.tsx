@@ -79,7 +79,7 @@ export function Layout() {
     <div className="min-h-screen bg-[var(--bg-primary)]">
       <header className="header">
         <a href="/" className="logo" onClick={handleLogoClick}>
-          <img src="/static/logo.webp" alt="MYPACE" className="logo-img" />
+          <img src="/static/logo.webp" alt="MY PACE" className="logo-img" />
         </a>
         <div className={`header-actions ${headerCornerClass}`}>
           <div className="filter-button-container">
