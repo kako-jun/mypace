@@ -314,7 +314,16 @@ app.get('/api/profiles', async (c) => {
       const events = await pool.querySync(RELAYS, { kinds: [0], authors: missingPubkeys })
       const now = Date.now()
 
+      // Group by pubkey and keep only the most recent event
+      const latestEvents = new Map<string, (typeof events)[0]>()
       for (const event of events) {
+        const existing = latestEvents.get(event.pubkey)
+        if (!existing || event.created_at > existing.created_at) {
+          latestEvents.set(event.pubkey, event)
+        }
+      }
+
+      for (const event of latestEvents.values()) {
         try {
           const profile = JSON.parse(event.content)
           // Extract emoji tags (NIP-30)
