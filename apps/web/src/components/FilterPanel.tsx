@@ -183,11 +183,9 @@ export function FilterPanel({
 
       {/* Action buttons */}
       <div className="filter-actions">
-        <Button variant="secondary" onClick={handleClear}>
-          Clear
-        </Button>
+        <Button onClick={handleClear}>Clear</Button>
         <Button variant="primary" onClick={handleApply}>
-          Apply
+          Save
         </Button>
       </div>
     </div>

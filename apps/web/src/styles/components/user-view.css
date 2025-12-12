@@ -79,6 +79,8 @@
 .user-about {
   margin: 0 0 16px 0;
   color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
   line-height: 1.6;
   white-space: pre-wrap;
   background: var(--surface-secondary);

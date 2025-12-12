@@ -350,7 +350,7 @@ export function UserView({ pubkey }: UserViewProps) {
               <Button onClick={cancelEditMode} disabled={saving}>
                 Cancel
               </Button>
-              <Button onClick={handleSaveProfile} disabled={saving || !editName.trim()}>
+              <Button variant="primary" onClick={handleSaveProfile} disabled={saving || !editName.trim()}>
                 {saving ? 'Saving...' : 'Save'}
               </Button>
             </div>
