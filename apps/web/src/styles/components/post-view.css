@@ -104,17 +104,6 @@
 
 .post-view-modal {
   padding: 1rem;
-  min-height: 280px;
-  display: flex;
-  flex-direction: column;
-}
-
-.post-view-modal .loading {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
 }
 
 .post-view-modal .back-button {
