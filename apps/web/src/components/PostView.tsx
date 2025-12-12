@@ -214,6 +214,7 @@ export function PostView({ eventId }: PostViewProps) {
           createdAt={event.created_at}
           displayName={getProfileDisplayName(event.pubkey)}
           avatarUrl={getProfileAvatarUrl()}
+          isProfileLoading={!profile}
         />
 
         <div className="post-content post-content-full">
@@ -261,6 +262,7 @@ export function PostView({ eventId }: PostViewProps) {
                 reply={reply}
                 displayName={getProfileDisplayName(reply.pubkey, replyProfiles[reply.pubkey])}
                 avatarUrl={getProfileAvatarUrl(replyProfiles[reply.pubkey])}
+                isProfileLoading={replyProfiles[reply.pubkey] === undefined}
                 onClick={() => navigateToPost(reply.id)}
               />
             ))}
