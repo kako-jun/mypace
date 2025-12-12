@@ -183,6 +183,10 @@ export function PostForm({
             {editingEvent && <div className="editing-label">Editing post...</div>}
             {replyingTo && <div className="replying-label">Replying to post...</div>}
 
+            <div className="post-form-top-actions">
+              <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
+            </div>
+
             <textarea
               ref={textareaRef}
               className="post-input"
@@ -196,7 +200,6 @@ export function PostForm({
 
             <div className="post-actions">
               <div className="post-actions-left">
-                <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
                 <button
                   type="button"
                   className={`preview-toggle text-outlined text-outlined-button text-outlined-primary ${showPreview ? 'active' : ''}`}
