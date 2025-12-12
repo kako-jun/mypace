@@ -20,12 +20,11 @@
 }
 
 
-/* Filter Panel Wrapper (Popup) */
+/* Filter Panel Wrapper (Popup) - fixed to top-right corner */
 .filter-panel-wrapper {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 0.5rem;
+  position: fixed;
+  top: 3.5rem;
+  right: 1rem;
   z-index: 200;
 }
 
