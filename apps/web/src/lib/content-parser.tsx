@@ -80,7 +80,7 @@ const HASHTAG_REGEX = /#([a-zA-Z0-9_\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+)/g
 function processHashtags(html: string): string {
   return html.replace(HASHTAG_REGEX, (match, tag) => {
     const escapedTag = escapeHtml(tag)
-    const randomDelay = Math.random() * 47 // Random delay within 47s cycle
+    const randomDelay = Math.random() * 18 // Random delay within 18s cycle
     return `<button class="content-hashtag" data-tag="${escapedTag}" style="animation-delay: ${randomDelay.toFixed(1)}s">${escapeHtml(match)}</button>`
   })
 }
@@ -110,7 +110,7 @@ function removeImageLinks(html: string): string {
 // Add target="_blank" to links with random animation delay
 function processLinks(html: string): string {
   return html.replace(/<a href="/g, () => {
-    const randomDelay = Math.random() * 59 // Random delay within 59s cycle
+    const randomDelay = Math.random() * 12 // Random delay within 12s cycle
     return `<a class="content-link" style="animation-delay: ${randomDelay.toFixed(1)}s" target="_blank" rel="noopener noreferrer" href="`
   })
 }
