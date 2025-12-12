@@ -211,7 +211,7 @@ export function PostView({ eventId }: PostViewProps) {
   return (
     <div className="post-view">
       <button className="back-button text-outlined text-outlined-button" onClick={handleBack}>
-        BACK
+        ← BACK
       </button>
 
       <article className={`post-card post-card-large ${themeProps.className}`} style={themeProps.style}>

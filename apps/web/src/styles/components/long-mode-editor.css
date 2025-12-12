@@ -35,6 +35,25 @@
   font-family: var(--font-mono);
 }
 
+/* Vim status panel (from @replit/codemirror-vim) */
+.cm-vim-panel {
+  background: rgba(0, 0, 0, 0.6) !important;
+  color: #0f0 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.75rem !important;
+  padding: 0.3rem 0.5rem !important;
+  border-radius: 0 0 8px 8px;
+}
+
+.cm-vim-panel input {
+  background: transparent !important;
+  color: #0f0 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.75rem !important;
+  border: none !important;
+  outline: none !important;
+}
+
 .vim-mode-indicator {
   position: absolute;
   bottom: 0.5rem;

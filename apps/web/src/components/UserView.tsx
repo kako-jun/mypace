@@ -205,7 +205,7 @@ export function UserView({ pubkey }: UserViewProps) {
   return (
     <div className="user-view">
       <button className="back-button text-outlined text-outlined-button" onClick={handleBack}>
-        BACK
+        ← BACK
       </button>
 
       <div className={`user-profile-card ${themeProps.className}`} style={themeProps.style}>

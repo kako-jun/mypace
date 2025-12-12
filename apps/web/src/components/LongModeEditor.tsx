@@ -75,9 +75,12 @@ export function LongModeEditor({
             color: darkTheme ? '#d4d4d4' : '#333',
           },
           '.cm-content': {
-            padding: '1rem',
+            padding: '1rem 0',
             minHeight: '200px',
             caretColor: darkTheme ? '#fff' : '#333',
+          },
+          '.cm-line': {
+            padding: '0 1rem',
           },
           '.cm-focused': { outline: 'none' },
           '.cm-scroller': {
@@ -155,7 +158,7 @@ export function LongModeEditor({
         try {
           const { vim } = await import('@replit/codemirror-vim')
           if (!destroyed) {
-            extensions.unshift(vim())
+            extensions.unshift(vim({ status: true }))
           }
         } catch {
           console.warn('Vim mode not available')
