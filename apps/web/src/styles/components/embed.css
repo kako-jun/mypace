@@ -175,25 +175,83 @@
   border: 1px solid var(--border-color);
 }
 
-.embed-twitter.embed-error {
+.embed-twitter.embed-error,
+.embed-twitter.embed-fallback {
   padding: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
 }
 
-.embed-twitter.embed-error a {
+.embed-twitter.embed-error a,
+.embed-twitter-link {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   color: var(--text-secondary);
   text-decoration: none;
 }
 
-.embed-twitter.embed-error a:hover {
+.embed-twitter.embed-error a:hover,
+.embed-twitter-link:hover {
   color: var(--accent-color);
+}
+
+/* Twitter fallback content */
+.embed-twitter-fallback-content {
+  display: flex;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.embed-twitter-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.embed-twitter-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.embed-twitter-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.embed-twitter-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.embed-twitter-handle {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.embed-twitter-text {
+  color: var(--text-primary);
+  margin: 0.5rem 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.embed-twitter-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.embed-twitter-fallback-content:hover .embed-twitter-footer {
+  color: #1da1f2;
 }
 
 /* react-tweet dark mode support */
@@ -486,16 +544,21 @@ html[data-theme="dark"] .embed-twitter {
 
 .embed-link.embed-simple {
   padding: 0.5rem 0.75rem;
-  display: inline-flex;
+  display: inline-flex !important;
+  flex-direction: row !important;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 0.5rem;
   font-size: 0.875rem;
   color: var(--text-secondary);
   width: auto;
+  border: none;
+  background: none;
 }
 
 .embed-link.embed-simple:hover {
   color: var(--accent-color);
+  background: none;
 }
 
 /* Mobile adjustments */
