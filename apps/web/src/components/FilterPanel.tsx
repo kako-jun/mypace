@@ -130,9 +130,9 @@ export function FilterPanel({
 
       {/* Filter options row */}
       <div className="filter-options-row">
-        {/* mypace only toggle */}
+        {/* mypace toggle */}
         <div className="filter-option mypace-option">
-          <Toggle checked={mypaceOnly} onChange={setMypaceOnly} label="mypace only" />
+          <Toggle checked={mypaceOnly} onChange={setMypaceOnly} label="MY PACE" />
         </div>
 
         {/* Language selector */}
