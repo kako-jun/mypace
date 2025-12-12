@@ -8,8 +8,15 @@
 
 /* Back button - uses .text-outlined-button for base style */
 .back-button {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
   margin: 0 auto 1rem;
+}
+
+.back-button-icon {
+  line-height: 1;
 }
 
 .post-card-large {
@@ -78,7 +85,7 @@
   background: rgba(0, 0, 0, 0.7);
   z-index: 1000;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
   overflow-y: auto;
@@ -91,10 +98,22 @@
   overflow-y: auto;
   border-radius: 12px;
   background: var(--bg-primary);
+  margin: auto;
 }
 
 .post-view-modal {
   padding: 1rem;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-view-modal .loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .post-view-modal .back-button {

@@ -196,13 +196,21 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
     }
   }
 
-  if (loading) return <div className="loading">Loading...</div>
+  if (loading) {
+    return (
+      <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
+        <div className="loading">Loading...</div>
+      </div>
+    )
+  }
 
   if (error || !event) {
     return (
-      <div className="error-box">
-        <p>{error || 'Post not found'}</p>
-        <button onClick={handleBack}>Back to Timeline</button>
+      <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
+        <div className="error-box">
+          <p>{error || 'Post not found'}</p>
+          <button onClick={handleBack}>Back to Timeline</button>
+        </div>
       </div>
     )
   }
@@ -214,7 +222,8 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
   return (
     <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
       <button className="back-button text-outlined text-outlined-button" onClick={handleBack}>
-        {isModal ? '× CLOSE' : '← BACK'}
+        <span className="back-button-icon">{isModal ? '×' : '←'}</span>
+        <span>{isModal ? 'CLOSE' : 'BACK'}</span>
       </button>
 
       <article className={`post-card post-card-large ${themeProps.className}`} style={themeProps.style}>
