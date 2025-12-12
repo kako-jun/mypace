@@ -25,17 +25,42 @@
   width: 20px;
   height: 20px;
   animation: loading-spin 4s linear infinite;
-  filter: brightness(0) saturate(100%);
 }
 
 .loading-text {
   font-size: 0.9rem;
-  color: var(--text-primary);
   white-space: nowrap;
 }
 
-[data-theme="dark"] .loading-star {
+/* Default: use app theme colors */
+.loading-circle:not(.loading-light):not(.loading-dark) .loading-star {
+  filter: brightness(0) saturate(100%);
+}
+
+.loading-circle:not(.loading-light):not(.loading-dark) .loading-text {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .loading-circle:not(.loading-light):not(.loading-dark) .loading-star {
   filter: brightness(0) invert(1);
+}
+
+/* Light text (for dark backgrounds based on 4-corner colors) */
+.loading-light .loading-star {
+  filter: brightness(0) invert(1);
+}
+
+.loading-light .loading-text {
+  color: #fff;
+}
+
+/* Dark text (for light backgrounds based on 4-corner colors) */
+.loading-dark .loading-star {
+  filter: brightness(0) saturate(100%);
+}
+
+.loading-dark .loading-text {
+  color: #000;
 }
 
 @keyframes loading-spin {
