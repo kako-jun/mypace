@@ -97,7 +97,9 @@ function processImageUrls(html: string): string {
     if (YOUTUBE_THUMBNAIL_REGEX.test(url)) {
       return _match
     }
-    return `${before}<span class="content-image-wrapper"><img src="${url}" alt="" class="content-image" data-lightbox="${url}" loading="lazy" /></span>${after}`
+    // Add onerror handler to show 404 placeholder when image fails to load
+    const errorHandler = `this.onerror=null;this.style.display='none';this.parentNode.insertAdjacentHTML('beforeend','<div class=\\"content-image-error\\">404</div>')`
+    return `${before}<span class="content-image-wrapper"><img src="${url}" alt="" class="content-image" data-lightbox="${url}" loading="lazy" onerror="${errorHandler}" /></span>${after}`
   })
 }
 
