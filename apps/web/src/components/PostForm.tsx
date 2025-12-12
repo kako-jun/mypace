@@ -252,23 +252,38 @@ export function PostForm({
       {editingEvent && <div className="editing-label">Editing post...</div>}
       {replyingTo && <div className="replying-label">Replying to post...</div>}
 
-      <button
-        type="button"
-        className="mode-toggle-corner text-outlined text-outlined-button text-outlined-primary"
-        onClick={handleLongModeToggle}
-      >
-        LONG
-      </button>
+      <div className="post-form-top-actions">
+        <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
+        <button
+          type="button"
+          className="mode-toggle-corner text-outlined text-outlined-button text-outlined-primary"
+          onClick={handleLongModeToggle}
+        >
+          LONG
+        </button>
+      </div>
 
-      <textarea
-        ref={textareaRef}
-        className="post-input"
-        placeholder="マイペースに書こう"
-        value={content}
-        onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
-        rows={3}
-        maxLength={LIMITS.MAX_POST_LENGTH}
-      />
+      <div className="post-input-wrapper">
+        <textarea
+          ref={textareaRef}
+          className="post-input"
+          placeholder="マイペースに書こう"
+          value={content}
+          onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
+          rows={3}
+          maxLength={LIMITS.MAX_POST_LENGTH}
+        />
+        {content && (
+          <button
+            type="button"
+            className="clear-content-button"
+            onClick={() => onContentChange('')}
+            aria-label="Clear content"
+          >
+            ×
+          </button>
+        )}
+      </div>
 
       <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
 
@@ -276,7 +291,6 @@ export function PostForm({
 
       <div className="post-actions">
         <div className="post-actions-left">
-          <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
           <button
             type="button"
             className={`preview-toggle text-outlined text-outlined-button text-outlined-primary ${showPreview ? 'active' : ''}`}
