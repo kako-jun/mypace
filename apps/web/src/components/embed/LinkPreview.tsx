@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Icon } from '../ui'
+import { API_BASE } from '../../lib/api'
 
 interface OgpData {
   title?: string
@@ -22,7 +23,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
 
     const fetchOgp = async () => {
       try {
-        const response = await fetch(`/api/ogp?url=${encodeURIComponent(url)}`)
+        const response = await fetch(`${API_BASE}/api/ogp?url=${encodeURIComponent(url)}`)
         if (!response.ok) throw new Error('Failed to fetch OGP')
         const data = await response.json()
         if (mounted) {
