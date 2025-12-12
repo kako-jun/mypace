@@ -7,6 +7,8 @@ interface LongModeEditorProps {
   placeholder?: string
   vimMode?: boolean
   darkTheme?: boolean
+  onWrite?: () => void
+  onQuit?: () => void
 }
 
 export function LongModeEditor({
@@ -15,14 +17,20 @@ export function LongModeEditor({
   placeholder = '',
   vimMode = false,
   darkTheme = false,
+  onWrite,
+  onQuit,
 }: LongModeEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const onChangeRef = useRef<(value: string) => void>(onChange)
+  const onWriteRef = useRef<(() => void) | undefined>(onWrite)
+  const onQuitRef = useRef<(() => void) | undefined>(onQuit)
   const [isVimActive, setIsVimActive] = useState(vimMode)
   const [loading, setLoading] = useState(true)
 
   onChangeRef.current = onChange
+  onWriteRef.current = onWrite
+  onQuitRef.current = onQuit
 
   useEffect(() => {
     if (!editorRef.current) return
@@ -156,8 +164,19 @@ export function LongModeEditor({
 
       if (vimMode) {
         try {
-          const { vim } = await import('@replit/codemirror-vim')
+          const { vim, Vim } = await import('@replit/codemirror-vim')
           if (!destroyed) {
+            // Define custom Ex commands
+            Vim.defineEx('write', 'w', () => {
+              onWriteRef.current?.()
+            })
+            Vim.defineEx('quit', 'q', () => {
+              onQuitRef.current?.()
+            })
+            Vim.defineEx('wq', 'wq', () => {
+              onWriteRef.current?.()
+              onQuitRef.current?.()
+            })
             extensions.unshift(vim({ status: true }))
           }
         } catch {

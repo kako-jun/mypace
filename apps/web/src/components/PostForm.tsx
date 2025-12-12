@@ -48,6 +48,7 @@ export function PostForm({
   const [vimMode, setVimMode] = useState(() => getStoredVimMode())
   const [darkTheme, setDarkTheme] = useState(() => getStoredAppTheme() === 'dark')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const longModeFormRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     setHasProfile(hasLocalProfile())
@@ -190,6 +191,7 @@ export function PostForm({
 
         <div className="long-mode-editor-pane">
           <form
+            ref={longModeFormRef}
             className={`post-form long-mode ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
             onSubmit={handleSubmit}
           >
@@ -209,6 +211,8 @@ export function PostForm({
               placeholder="マイペースに書こう"
               vimMode={vimMode}
               darkTheme={darkTheme}
+              onWrite={() => longModeFormRef.current?.requestSubmit()}
+              onQuit={handleLongModeToggle}
             />
 
             <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />

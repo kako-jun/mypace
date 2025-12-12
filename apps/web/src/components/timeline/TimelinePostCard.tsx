@@ -1,11 +1,8 @@
 import { useState } from 'react'
 import { Icon } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
-import { renderContent } from '../../lib/content-parser'
-import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies } from '../post'
-import { PostEmbeds } from '../embed'
+import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies, PostContent } from '../post'
 import { cachePost, cacheProfile, navigateToPost } from '../../lib/utils'
-import { LIMITS } from '../../lib/constants'
 import { useDeleteConfirm } from '../../hooks'
 import type { Event, ReactionData, ReplyData, RepostData, ProfileCache } from '../../types'
 
@@ -96,18 +93,8 @@ export default function TimelinePostCard({
       />
 
       <div className="post-content">
-        {event.content.length > LIMITS.PREVIEW_TRUNCATE_LENGTH ||
-        event.content.split('\n').length > LIMITS.PREVIEW_LINE_THRESHOLD ? (
-          <>
-            {renderContent(event.content.slice(0, LIMITS.PREVIEW_TRUNCATE_LENGTH) + '...')}
-            <span className="read-more-text">続きを読む</span>
-          </>
-        ) : (
-          renderContent(event.content)
-        )}
+        <PostContent content={event.content} truncate />
       </div>
-
-      <PostEmbeds content={event.content} />
 
       <div className="post-footer">
         <PostActions
