@@ -151,10 +151,38 @@
   color: #4a9;
   text-decoration: none;
   word-break: break-all;
+  position: relative;
+  background: linear-gradient(
+    90deg,
+    #4a9 0%,
+    #4a9 40%,
+    #fff 50%,
+    #4a9 60%,
+    #4a9 100%
+  );
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: link-shimmer 59s ease-in-out infinite;
 }
 
 .content-link:hover {
   text-decoration: underline;
+  -webkit-text-fill-color: #4a9;
+}
+
+@keyframes link-shimmer {
+  0%, 95% {
+    background-position: 100% 0;
+  }
+  98% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 /* Content hashtags */
@@ -167,10 +195,26 @@
   padding: 0;
   font-size: inherit;
   font-family: inherit;
+  animation: hashtag-sparkle 47s ease-in-out infinite;
 }
 
 .content-hashtag:hover {
   text-decoration: underline;
+}
+
+@keyframes hashtag-sparkle {
+  0%, 94%, 100% {
+    color: #69a;
+    text-shadow: none;
+  }
+  96% {
+    color: #fff;
+    text-shadow: 0 0 8px #69a, 0 0 16px #69a;
+  }
+  98% {
+    color: #69a;
+    text-shadow: none;
+  }
 }
 
 /* Content images */

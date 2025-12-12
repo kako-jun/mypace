@@ -206,3 +206,56 @@ body {
   color: var(--text-primary);
   user-select: none;
 }
+
+/* Avatar animations */
+.avatar-animate {
+  display: inline-block;
+}
+
+.avatar-pulse {
+  animation: avatar-pulse 90s ease-in-out infinite;
+}
+
+.avatar-bounce {
+  animation: avatar-bounce 90s ease-in-out infinite;
+}
+
+.avatar-wink {
+  animation: avatar-wink 90s ease-in-out infinite;
+}
+
+@keyframes avatar-pulse {
+  0%, 95%, 100% {
+    transform: scale(1);
+  }
+  97% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes avatar-bounce {
+  0%, 95%, 100% {
+    transform: translateY(0);
+  }
+  96% {
+    transform: translateY(-6px);
+  }
+  97% {
+    transform: translateY(0);
+  }
+  98% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes avatar-wink {
+  0%, 95%, 100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.2);
+  }
+  97% {
+    transform: scaleY(1);
+  }
+}

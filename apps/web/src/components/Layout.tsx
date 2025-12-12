@@ -12,6 +12,7 @@ export function Layout() {
   const [showFilterPanel, setShowFilterPanel] = useState(false)
   const [hasActiveFilters, setHasActiveFilters] = useState(false)
   const [headerCornerClass, setHeaderCornerClass] = useState('')
+  const [starAnimationPhase, setStarAnimationPhase] = useState<'initial' | 'normal'>('initial')
   const filterButtonRef = useRef<HTMLButtonElement>(null)
   const filterPanelRef = useRef<HTMLDivElement>(null)
 
@@ -51,6 +52,14 @@ export function Layout() {
     }
   }, [])
 
+  // Star animation: first spin after 2s, then every 42s
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setStarAnimationPhase('normal')
+    }, 2500) // 2s delay + 0.5s for spin animation
+    return () => clearTimeout(timer)
+  }, [])
+
   // Close panel when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -80,7 +89,11 @@ export function Layout() {
       <header className="header">
         <a href="/" className="logo" onClick={handleLogoClick}>
           <img src="/static/logo-text.webp" alt="MY PACE" className="logo-img" />
-          <img src="/static/star.webp" alt="" className="logo-star" />
+          <img
+            src="/static/star.webp"
+            alt=""
+            className={`logo-star ${starAnimationPhase === 'initial' ? 'logo-star-initial' : ''}`}
+          />
         </a>
         <div className={`header-actions ${headerCornerClass}`}>
           <div className="filter-button-container">

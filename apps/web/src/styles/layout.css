@@ -90,6 +90,11 @@ body.long-mode-active .main-content {
   animation: star-spin 42s ease-in-out infinite;
 }
 
+/* Initial animation: spin after 2 seconds */
+.logo-star.logo-star-initial {
+  animation: star-spin-initial 2.5s ease-in-out forwards;
+}
+
 .logo:hover .logo-star {
   filter: var(--logo-hover-filter, none);
 }
@@ -100,6 +105,15 @@ body.long-mode-active .main-content {
   }
   95% {
     transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes star-spin-initial {
+  0%, 80% {
+    transform: rotate(0deg);
   }
   100% {
     transform: rotate(360deg);

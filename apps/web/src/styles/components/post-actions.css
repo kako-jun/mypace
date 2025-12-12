@@ -90,3 +90,21 @@
 .share-button.copied {
   color: #2ecc71;
 }
+
+/* Action star spin animation */
+.action-star {
+  display: inline-flex;
+  animation: action-star-spin 42s ease-in-out infinite;
+}
+
+@keyframes action-star-spin {
+  0%, 90% {
+    transform: rotate(0deg);
+  }
+  95% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
