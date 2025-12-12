@@ -293,3 +293,19 @@ vite-plugin-pwaによるPWA対応:
 5. 戻る/閉じる → タイムラインのスクロール位置が保持される
 
 直接 `/post/:id` にアクセスした場合は通常のフルページ表示。
+
+## Client-Side Caching
+
+`sessionStorage` を使用したクライアント側キャッシュ:
+
+| 関数 | 説明 |
+|------|------|
+| `cachePost(event)` | 投稿をキャッシュに保存 |
+| `getCachedPost(eventId)` | キャッシュから投稿を取得（削除しない） |
+| `clearCachedPost(eventId)` | キャッシュから投稿を削除 |
+| `cacheProfile(pubkey, profile)` | プロフィールをキャッシュに保存 |
+| `getCachedProfile(pubkey)` | キャッシュからプロフィールを取得（削除しない） |
+| `clearCachedProfile(pubkey)` | キャッシュからプロフィールを削除 |
+
+**注意**: `getCachedPost` / `getCachedProfile` は読み取り時にキャッシュを削除しない。
+これはReact 18 StrictModeでエフェクトが2回実行されても問題なく動作するため。
