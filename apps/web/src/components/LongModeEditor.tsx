@@ -31,27 +31,46 @@ export function LongModeEditor({
 
     const initEditor = async () => {
       const [
-        { EditorView, keymap, placeholder: cmPlaceholder },
+        {
+          EditorView,
+          keymap,
+          placeholder: cmPlaceholder,
+          lineNumbers,
+          highlightActiveLine,
+          highlightActiveLineGutter,
+          highlightSpecialChars,
+          drawSelection,
+          dropCursor,
+          rectangularSelection,
+          crosshairCursor,
+        },
         { EditorState },
         { markdown },
         { languages },
-        { defaultKeymap, history, historyKeymap },
+        { defaultKeymap, history, historyKeymap, indentWithTab },
+        { syntaxHighlighting, defaultHighlightStyle, bracketMatching, foldGutter, foldKeymap, indentOnInput },
+        { closeBrackets, closeBracketsKeymap, autocompletion, completionKeymap },
+        { searchKeymap, highlightSelectionMatches },
       ] = await Promise.all([
         import('@codemirror/view'),
         import('@codemirror/state'),
         import('@codemirror/lang-markdown'),
         import('@codemirror/language-data'),
         import('@codemirror/commands'),
+        import('@codemirror/language'),
+        import('@codemirror/autocomplete'),
+        import('@codemirror/search'),
       ])
 
       if (destroyed || !editorRef.current) return
 
+      const monoFont = "'BIZ UDGothic', 'SF Mono', 'Menlo', 'Consolas', ui-monospace, monospace"
       const theme = EditorView.theme(
         {
           '&': {
             height: '100%',
             fontSize: '1rem',
-            fontFamily: "'M PLUS Rounded 1c', sans-serif",
+            fontFamily: monoFont,
             backgroundColor: darkTheme ? '#1e1e1e' : '#faf8f5',
             color: darkTheme ? '#d4d4d4' : '#333',
           },
@@ -63,10 +82,30 @@ export function LongModeEditor({
           '.cm-focused': { outline: 'none' },
           '.cm-scroller': {
             overflow: 'auto',
-            fontFamily: "'M PLUS Rounded 1c', sans-serif",
+            fontFamily: monoFont,
             lineHeight: '1.8',
           },
-          '.cm-gutters': { display: 'none' },
+          '.cm-gutters': {
+            backgroundColor: darkTheme ? '#1e1e1e' : '#faf8f5',
+            color: darkTheme ? '#666' : '#999',
+            border: 'none',
+          },
+          '.cm-activeLineGutter': {
+            backgroundColor: darkTheme ? '#2a2a2a' : '#f0ede8',
+          },
+          '.cm-activeLine': {
+            backgroundColor: darkTheme ? '#2a2a2a' : '#f0ede8',
+          },
+          '.cm-selectionMatch': {
+            backgroundColor: darkTheme ? '#3a3a3a' : '#e0ddd5',
+          },
+          '.cm-matchingBracket': {
+            backgroundColor: darkTheme ? '#3a3a3a' : '#e0ddd5',
+            outline: '1px solid ' + (darkTheme ? '#666' : '#999'),
+          },
+          '.cm-foldGutter': {
+            width: '1em',
+          },
           '.cm-placeholder': {
             color: darkTheme ? '#666' : '#aaa',
             fontStyle: 'italic',
@@ -76,9 +115,32 @@ export function LongModeEditor({
       )
 
       const extensions = [
+        lineNumbers(),
+        highlightActiveLineGutter(),
+        highlightSpecialChars(),
         history(),
-        keymap.of([...defaultKeymap, ...historyKeymap]),
+        foldGutter(),
+        drawSelection(),
+        dropCursor(),
+        indentOnInput(),
+        bracketMatching(),
+        closeBrackets(),
+        autocompletion(),
+        rectangularSelection(),
+        crosshairCursor(),
+        highlightActiveLine(),
+        highlightSelectionMatches(),
+        keymap.of([
+          ...closeBracketsKeymap,
+          ...defaultKeymap,
+          ...searchKeymap,
+          ...historyKeymap,
+          ...foldKeymap,
+          ...completionKeymap,
+          indentWithTab,
+        ]),
         markdown({ codeLanguages: languages }),
+        syntaxHighlighting(defaultHighlightStyle),
         theme,
         cmPlaceholder(placeholder),
         EditorView.lineWrapping,
