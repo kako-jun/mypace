@@ -334,6 +334,81 @@ app.post('/api/publish', async (c) => {
   }
 })
 
+// GET /api/ogp - OGPメタデータ取得
+app.get('/api/ogp', async (c) => {
+  const url = c.req.query('url')
+
+  if (!url) {
+    return c.json({ error: 'URL is required' }, 400)
+  }
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'mypace-bot/1.0 (OGP fetcher)',
+        Accept: 'text/html',
+      },
+    })
+
+    if (!response.ok) {
+      return c.json({ error: 'Failed to fetch URL' }, 502)
+    }
+
+    const html = await response.text()
+
+    // Parse OGP tags
+    const getMetaContent = (property: string): string | undefined => {
+      const regex = new RegExp(`<meta[^>]*property=["']${property}["'][^>]*content=["']([^"']*)["']`, 'i')
+      const altRegex = new RegExp(`<meta[^>]*content=["']([^"']*)["'][^>]*property=["']${property}["']`, 'i')
+      const match = html.match(regex) || html.match(altRegex)
+      return match?.[1]
+    }
+
+    const ogp = {
+      title: getMetaContent('og:title') || html.match(/<title>([^<]*)<\/title>/i)?.[1],
+      description: getMetaContent('og:description'),
+      image: getMetaContent('og:image'),
+      siteName: getMetaContent('og:site_name'),
+    }
+
+    return c.json(ogp)
+  } catch (e) {
+    console.error('OGP fetch error:', e)
+    return c.json({ error: 'Failed to fetch OGP' }, 500)
+  }
+})
+
+// GET /api/tweet/:id - ツイートデータ取得（react-tweet用）
+app.get('/api/tweet/:id', async (c) => {
+  const tweetId = c.req.param('id')
+
+  if (!tweetId || !/^\d+$/.test(tweetId)) {
+    return c.json({ error: 'Invalid tweet ID' }, 400)
+  }
+
+  try {
+    // Twitter Syndication API
+    const response = await fetch(`https://cdn.syndication.twimg.com/tweet-result?id=${tweetId}&lang=en&token=0`, {
+      headers: {
+        'User-Agent': 'mypace-bot/1.0',
+      },
+    })
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return c.json({ error: 'Tweet not found' }, 404)
+      }
+      return c.json({ error: 'Failed to fetch tweet' }, 502)
+    }
+
+    const data = await response.json()
+    return c.json(data)
+  } catch (e) {
+    console.error('Tweet fetch error:', e)
+    return c.json({ error: 'Failed to fetch tweet' }, 500)
+  }
+})
+
 // Health check
 app.get('/health', (c) => c.json({ status: 'ok' }))
 
