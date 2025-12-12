@@ -106,23 +106,31 @@ app.get('/api/timeline', async (c) => {
   const db = c.env.DB
   const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
   const since = Number(c.req.query('since')) || 0
+  const until = Number(c.req.query('until')) || 0
   const showAll = c.req.query('all') === '1'
   const langFilter = c.req.query('lang') || ''
 
   // まずキャッシュから取得（TTL内のもののみ）
   const cacheThreshold = Date.now() - CACHE_TTL_MS
   try {
-    const cached = await db
-      .prepare(
-        `
+    let query = `
       SELECT id, pubkey, created_at, kind, tags, content, sig
       FROM events
       WHERE kind = 1 AND created_at > ? AND cached_at > ?
-      ORDER BY created_at DESC
-      LIMIT ?
     `
-      )
-      .bind(since, cacheThreshold, limit * 2) // フィルタリング後に足りなくならないよう多めに取得
+    const params: (number | string)[] = [since, cacheThreshold]
+
+    if (until > 0) {
+      query += ` AND created_at < ?`
+      params.push(until)
+    }
+
+    query += ` ORDER BY created_at DESC LIMIT ?`
+    params.push(limit * 2) // フィルタリング後に足りなくならないよう多めに取得
+
+    const cached = await db
+      .prepare(query)
+      .bind(...params)
       .all()
 
     if (cached.results.length > 0) {
@@ -165,6 +173,9 @@ app.get('/api/timeline', async (c) => {
     }
     if (since > 0) {
       filter.since = since
+    }
+    if (until > 0) {
+      filter.until = until
     }
 
     let events = await pool.querySync(RELAYS, filter)
@@ -387,16 +398,26 @@ app.get('/api/reposts/:eventId', async (c) => {
 app.get('/api/user/:pubkey/events', async (c) => {
   const pubkey = c.req.param('pubkey')
   const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
+  const since = Number(c.req.query('since')) || 0
+  const until = Number(c.req.query('until')) || 0
 
   const pool = new SimplePool()
 
   try {
-    const events = await pool.querySync(RELAYS, {
+    const filter: Filter = {
       kinds: [1],
       authors: [pubkey],
       '#t': [MYPACE_TAG],
       limit,
-    })
+    }
+    if (since > 0) {
+      filter.since = since
+    }
+    if (until > 0) {
+      filter.until = until
+    }
+
+    const events = await pool.querySync(RELAYS, filter)
     events.sort((a, b) => b.created_at - a.created_at)
 
     return c.json({ events })

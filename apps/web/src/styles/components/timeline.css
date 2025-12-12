@@ -42,3 +42,71 @@
 .new-posts-banner:active {
   transform: scale(0.99);
 }
+
+/* Gap button - shows between posts when there's a gap */
+.timeline-gap-button {
+  break-inside: avoid;
+  direction: ltr;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  background: transparent;
+  color: var(--text-muted);
+  border: 2px dashed var(--text-muted);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  text-align: center;
+}
+
+.timeline-gap-button:hover:not(:disabled) {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+  background: var(--surface-secondary);
+}
+
+.timeline-gap-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+/* Load more button - at the bottom of timeline */
+.load-more-button {
+  column-span: all;
+  direction: ltr;
+  width: 100%;
+  padding: 1rem;
+  margin-top: 1rem;
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+  border: 2px solid var(--text-muted);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  text-align: center;
+}
+
+.load-more-button:hover:not(:disabled) {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+  background: var(--surface-primary);
+}
+
+.load-more-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+/* End of timeline message */
+.timeline-end {
+  column-span: all;
+  direction: ltr;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}

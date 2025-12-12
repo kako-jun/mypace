@@ -11,9 +11,15 @@ export async function publishEvent(event: Event): Promise<void> {
   }
 }
 
-export async function fetchEvents(limit = 50, since = 0, mypaceOnly = true, language = ''): Promise<Event[]> {
+export async function fetchEvents(
+  limit = 50,
+  since = 0,
+  mypaceOnly = true,
+  language = '',
+  until = 0
+): Promise<Event[]> {
   try {
-    const result = await api.fetchTimeline(limit, since, mypaceOnly, language)
+    const result = await api.fetchTimeline(limit, since, mypaceOnly, language, until)
     return result.events
   } catch (e) {
     console.error('Failed to fetch events:', e)
@@ -41,9 +47,9 @@ export async function fetchProfiles(pubkeys: string[]): Promise<Record<string, P
   }
 }
 
-export async function fetchUserPosts(pubkey: string, limit = 50): Promise<Event[]> {
+export async function fetchUserPosts(pubkey: string, limit = 50, since = 0, until = 0): Promise<Event[]> {
   try {
-    const result = await api.fetchUserEvents(pubkey, limit)
+    const result = await api.fetchUserEvents(pubkey, limit, since, until)
     return result.events
   } catch (e) {
     console.error('Failed to fetch user posts:', e)

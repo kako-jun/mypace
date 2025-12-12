@@ -48,6 +48,30 @@
 
 .post-card.clickable {
   cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+/* Solid shadow on hover for clickable cards */
+.post-card.clickable::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.post-card.clickable:hover {
+  transform: translate(-2px, -2px);
+}
+
+.post-card.clickable:hover::after {
+  opacity: 1;
 }
 
 /* Post header */

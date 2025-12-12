@@ -382,3 +382,50 @@
 }
 
 /* post-button styles are in buttons.css */
+
+/* Minimized post form: small square with avatar */
+.post-form-minimized {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 56px;
+  height: 56px;
+  background: var(--surface-primary);
+  border: 2px solid #333;
+  border-bottom: none;
+  border-left: none;
+  z-index: 100;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, opacity 0.2s ease;
+  opacity: 0.7;
+}
+
+.post-form-minimized:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+/* Minimize button in post form top actions */
+.minimize-button {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--text-muted);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.minimize-button:hover {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}

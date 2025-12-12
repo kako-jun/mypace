@@ -190,6 +190,22 @@ src/
 | POST | /api/publish | 署名済みイベントをリレーに投稿 |
 | GET | /health | ヘルスチェック |
 
+### Timeline Pagination
+
+`/api/timeline` と `/api/user/:pubkey/events` は以下のクエリパラメータでページネーションをサポート:
+
+| Parameter | Description |
+|-----------|-------------|
+| limit | 取得件数（最大100、デフォルト50） |
+| since | この時刻より新しい投稿を取得（Unix timestamp） |
+| until | この時刻より古い投稿を取得（Unix timestamp） |
+
+**使用例:**
+- 初回読み込み: `?limit=50`
+- 新着取得: `?limit=50&since=1234567890`
+- 過去読み込み: `?limit=50&until=1234567890`
+- ギャップ埋め: `?limit=50&since=1234567800&until=1234567890`
+
 ## Cloudflare Services
 
 | Service | Package | Purpose |
