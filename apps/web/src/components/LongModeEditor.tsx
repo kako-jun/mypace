@@ -56,7 +56,8 @@ export function LongModeEditor({
         { markdown },
         { languages },
         { defaultKeymap, history, historyKeymap, indentWithTab },
-        { syntaxHighlighting, defaultHighlightStyle, bracketMatching, foldGutter, foldKeymap, indentOnInput },
+        { syntaxHighlighting, HighlightStyle, bracketMatching, foldGutter, foldKeymap, indentOnInput },
+        { tags },
         { closeBrackets, closeBracketsKeymap, autocompletion, completionKeymap },
         { searchKeymap, highlightSelectionMatches },
       ] = await Promise.all([
@@ -66,6 +67,7 @@ export function LongModeEditor({
         import('@codemirror/language-data'),
         import('@codemirror/commands'),
         import('@codemirror/language'),
+        import('@lezer/highlight'),
         import('@codemirror/autocomplete'),
         import('@codemirror/search'),
       ])
@@ -125,6 +127,40 @@ export function LongModeEditor({
         { dark: darkTheme }
       )
 
+      // Custom syntax highlighting for markdown - readable colors for both themes
+      const markdownHighlightStyle = HighlightStyle.define([
+        // Headers - bright and prominent
+        { tag: tags.heading1, color: darkTheme ? '#79c0ff' : '#0550ae', fontWeight: 'bold', fontSize: '1.4em' },
+        { tag: tags.heading2, color: darkTheme ? '#79c0ff' : '#0550ae', fontWeight: 'bold', fontSize: '1.2em' },
+        { tag: tags.heading3, color: darkTheme ? '#79c0ff' : '#0550ae', fontWeight: 'bold', fontSize: '1.1em' },
+        { tag: tags.heading, color: darkTheme ? '#79c0ff' : '#0550ae', fontWeight: 'bold' },
+        // Links - bright and visible
+        { tag: tags.link, color: darkTheme ? '#58a6ff' : '#0969da', textDecoration: 'underline' },
+        { tag: tags.url, color: darkTheme ? '#58a6ff' : '#0969da', textDecoration: 'underline' },
+        // Emphasis
+        { tag: tags.emphasis, fontStyle: 'italic', color: darkTheme ? '#e6edf3' : '#24292e' },
+        { tag: tags.strong, fontWeight: 'bold', color: darkTheme ? '#e6edf3' : '#24292e' },
+        // Code
+        {
+          tag: tags.monospace,
+          color: darkTheme ? '#ff7b72' : '#cf222e',
+          backgroundColor: darkTheme ? 'rgba(110,118,129,0.3)' : 'rgba(175,184,193,0.2)',
+        },
+        // Quote
+        { tag: tags.quote, color: darkTheme ? '#8b949e' : '#57606a', fontStyle: 'italic' },
+        // Lists
+        { tag: tags.list, color: darkTheme ? '#79c0ff' : '#0550ae' },
+        // Meta/formatting chars
+        { tag: tags.meta, color: darkTheme ? '#6e7681' : '#8c959f' },
+        { tag: tags.processingInstruction, color: darkTheme ? '#6e7681' : '#8c959f' },
+        // Content
+        { tag: tags.content, color: darkTheme ? '#e6edf3' : '#24292e' },
+        // Comment (code blocks)
+        { tag: tags.comment, color: darkTheme ? '#8b949e' : '#6e7781' },
+        // Strikethrough
+        { tag: tags.strikethrough, textDecoration: 'line-through', color: darkTheme ? '#8b949e' : '#6e7781' },
+      ])
+
       const extensions = [
         lineNumbers(),
         highlightActiveLineGutter(),
@@ -151,7 +187,7 @@ export function LongModeEditor({
           indentWithTab,
         ]),
         markdown({ codeLanguages: languages }),
-        syntaxHighlighting(defaultHighlightStyle),
+        syntaxHighlighting(markdownHighlightStyle),
         theme,
         cmPlaceholder(placeholder),
         EditorView.lineWrapping,
