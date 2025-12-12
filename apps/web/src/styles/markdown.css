@@ -155,13 +155,13 @@
   background: linear-gradient(
     90deg,
     #4a9 0%,
-    #4a9 40%,
+    #4a9 45%,
     #fff 50%,
-    #4a9 60%,
+    #4a9 55%,
     #4a9 100%
   );
-  background-size: 200% 100%;
-  background-position: 100% 0;
+  background-size: 400% 100%;
+  background-position: 0% 0;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -174,14 +174,14 @@
 }
 
 @keyframes link-shimmer {
-  0%, 95% {
+  0%, 92% {
+    background-position: 0% 0;
+  }
+  96% {
     background-position: 100% 0;
   }
-  98% {
-    background-position: -100% 0;
-  }
   100% {
-    background-position: -100% 0;
+    background-position: 100% 0;
   }
 }
 
