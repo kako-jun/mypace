@@ -94,6 +94,7 @@
 .post-modal-content {
   width: calc(100% - 2rem);
   max-width: 800px;
+  min-height: 300px;
   max-height: calc(100vh - 4rem);
   overflow-y: auto;
   border-radius: 12px;
@@ -103,7 +104,7 @@
 
 .post-view-modal {
   padding: 1rem;
-  min-height: 200px;
+  min-height: 280px;
   display: flex;
   flex-direction: column;
 }
