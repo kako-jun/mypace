@@ -100,10 +100,13 @@ src/
 │   ├── PostForm.tsx
 │   ├── Timeline.tsx
 │   ├── PostView.tsx
+│   ├── PostModal.tsx       # モーダル投稿詳細
 │   ├── UserView.tsx
 │   ├── Settings.tsx
 │   ├── ProfileSetup.tsx
 │   ├── LongModeEditor.tsx
+│   ├── Layout.tsx
+│   ├── FilterPanel.tsx
 │   └── LightBox.tsx
 │
 ├── hooks/               # カスタムフック
@@ -125,7 +128,8 @@ src/
 │   │   ├── format.ts    # npub/nsec変換
 │   │   └── constants.ts # Nostr定数
 │   ├── utils/           # ユーティリティ
-│   │   ├── navigation.ts
+│   │   ├── navigation.ts       # URL遷移
+│   │   ├── router-navigation.ts # React Router統合
 │   │   ├── image.ts
 │   │   ├── content.ts
 │   │   ├── clipboard.ts
@@ -261,6 +265,31 @@ App.tsx (react-router)
 ├── PostView (/:postId)
 │   └── ...
 │
+├── PostModal (モーダル表示時)
+│   └── PostView
+│
 └── UserView (/user/:pubkey)
     └── ...
 ```
+
+## PWA Support
+
+vite-plugin-pwaによるPWA対応:
+
+- **manifest.webmanifest**: アプリメタデータ（名前、アイコン、display: standalone）
+- **Service Worker**: Workbox によるプリキャッシュ・ランタイムキャッシュ
+  - 静的アセット（JS、CSS、HTML、画像）をプリキャッシュ
+  - Google Fontsを1年間キャッシュ
+- **インストール**: ホーム画面追加でネイティブアプリ風に起動
+
+## Modal Navigation
+
+タイムラインからの投稿詳細表示にはモーダルパターンを採用:
+
+1. タイムラインで投稿クリック → `navigateToPostModal(eventId)`
+2. URLは `/post/:id` に変更（共有可能）
+3. `location.state.backgroundLocation` にタイムラインの位置を保存
+4. PostModal がオーバーレイ表示、背景にタイムラインが残る
+5. 戻る/閉じる → タイムラインのスクロール位置が保持される
+
+直接 `/post/:id` にアクセスした場合は通常のフルページ表示。

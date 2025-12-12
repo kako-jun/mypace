@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Icon, parseEmojiTags } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies, PostContent } from '../post'
-import { cachePost, cacheProfile, navigateToPost } from '../../lib/utils'
+import { cachePost, cacheProfile, navigateToPostModal } from '../../lib/utils'
 import { useDeleteConfirm } from '../../hooks'
 import type { Event, ReactionData, ReplyData, RepostData, ProfileCache } from '../../types'
 
@@ -64,7 +64,7 @@ export default function TimelinePostCard({
     cachePost(event)
     const profile = profiles[event.pubkey]
     if (profile) cacheProfile(event.pubkey, profile)
-    navigateToPost(event.id)
+    navigateToPostModal(event.id)
   }
 
   const handleDeleteConfirmClick = () => {
