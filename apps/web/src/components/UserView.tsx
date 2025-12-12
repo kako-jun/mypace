@@ -347,11 +347,11 @@ export function UserView({ pubkey }: UserViewProps) {
             {editSaved && <p className="success">Saved!</p>}
 
             <div className="edit-actions">
-              <Button onClick={handleSaveProfile} disabled={saving || !editName.trim()}>
-                {saving ? 'Saving...' : 'Save'}
-              </Button>
               <Button onClick={cancelEditMode} disabled={saving}>
                 Cancel
+              </Button>
+              <Button onClick={handleSaveProfile} disabled={saving || !editName.trim()}>
+                {saving ? 'Saving...' : 'Save'}
               </Button>
             </div>
           </div>
@@ -378,7 +378,10 @@ export function UserView({ pubkey }: UserViewProps) {
                 )}
               </div>
               {isOwnProfile && (
-                <button className="edit-profile-btn text-outlined text-outlined-button" onClick={enterEditMode}>
+                <button
+                  className="edit-button text-outlined text-outlined-button text-outlined-primary"
+                  onClick={enterEditMode}
+                >
                   EDIT
                 </button>
               )}
