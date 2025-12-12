@@ -128,6 +128,7 @@ export default function TimelinePostCard({
           replies={replies.replies}
           expanded={expandedThread}
           onToggle={() => setExpandedThread(!expandedThread)}
+          profiles={profiles}
           getDisplayName={getDisplayName}
           getAvatarUrl={getAvatarUrl}
         />
