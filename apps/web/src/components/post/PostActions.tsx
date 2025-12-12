@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Icon } from '../ui'
 
 interface PostActionsProps {
@@ -29,6 +30,9 @@ export default function PostActions({
   onRepost,
   onShare,
 }: PostActionsProps) {
+  // Random delay for star spin animation (0-42 seconds)
+  const starDelay = useMemo(() => Math.random() * 42, [])
+
   return (
     <>
       {!isMyPost && (
@@ -38,13 +42,21 @@ export default function PostActions({
           disabled={likingId === eventId || reactions?.myReaction}
           aria-label={reactions?.myReaction ? 'Liked' : 'Like this post'}
         >
-          {reactions?.myReaction ? <Icon name="Star" size={20} fill="currentColor" /> : <Icon name="Star" size={20} />}
+          <span className="action-star" style={{ animationDelay: `${starDelay}s` }}>
+            {reactions?.myReaction ? (
+              <Icon name="Star" size={20} fill="currentColor" />
+            ) : (
+              <Icon name="Star" size={20} />
+            )}
+          </span>
           {reactions?.count ? <span className="action-count">{reactions.count}</span> : null}
         </button>
       )}
       {isMyPost && (
         <span className="like-count">
-          <Icon name="Star" size={20} />
+          <span className="action-star" style={{ animationDelay: `${starDelay}s` }}>
+            <Icon name="Star" size={20} />
+          </span>
           {reactions?.count ? <span className="action-count">{reactions.count}</span> : null}
         </span>
       )}
