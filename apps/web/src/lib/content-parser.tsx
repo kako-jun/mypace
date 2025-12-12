@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Marked } from 'marked'
 import Prism from 'prismjs'
 import { nip19 } from 'nostr-tools'
@@ -97,9 +98,7 @@ function processImageUrls(html: string): string {
     if (YOUTUBE_THUMBNAIL_REGEX.test(url)) {
       return _match
     }
-    // Add onerror handler to show 404 placeholder when image fails to load
-    const errorHandler = `this.onerror=null;this.style.display='none';this.parentNode.insertAdjacentHTML('beforeend','<div class=\\"content-image-error\\">404</div>')`
-    return `${before}<span class="content-image-wrapper"><img src="${url}" alt="" class="content-image" data-lightbox="${url}" loading="lazy" onerror="${errorHandler}" /></span>${after}`
+    return `${before}<span class="content-image-wrapper"><img src="${url}" alt="" class="content-image" data-lightbox="${url}" loading="lazy" /></span>${after}`
   })
 }
 
@@ -189,6 +188,25 @@ export function renderContent(
   html = processLinks(html)
   html = processCustomEmojis(html, emojis)
 
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  // Handle image errors after render
+  useEffect(() => {
+    if (!contentRef.current) return
+
+    const images = contentRef.current.querySelectorAll('.content-image')
+    images.forEach((img) => {
+      const imgEl = img as HTMLImageElement
+      imgEl.onerror = () => {
+        imgEl.style.display = 'none'
+        const errorDiv = document.createElement('div')
+        errorDiv.className = 'content-image-error'
+        errorDiv.textContent = '404'
+        imgEl.parentNode?.appendChild(errorDiv)
+      }
+    })
+  }, [html])
+
   // Handle clicks via event delegation
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement
@@ -208,7 +226,14 @@ export function renderContent(
     }
   }
 
-  return <div className="markdown-content" onClick={handleClick} dangerouslySetInnerHTML={{ __html: html }} />
+  return (
+    <div
+      ref={contentRef}
+      className="markdown-content"
+      onClick={handleClick}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  )
 }
 
 // Simple text render (for previews, etc.)
