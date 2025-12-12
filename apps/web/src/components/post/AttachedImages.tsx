@@ -15,7 +15,6 @@ export default function AttachedImages({ imageUrls, onRemove }: AttachedImagesPr
             type="button"
             className="remove-image-button"
             onClick={() => onRemove(url)}
-            title="Remove image"
             aria-label="Remove attached image"
           >
             ×

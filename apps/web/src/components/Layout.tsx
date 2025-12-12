@@ -87,7 +87,7 @@ export function Layout() {
               ref={filterButtonRef}
               className={`icon-button filter-toggle ${showFilterPanel ? 'active' : ''} ${hasActiveFilters ? 'has-filters' : ''}`}
               onClick={() => setShowFilterPanel(!showFilterPanel)}
-              title="Filter posts"
+              aria-label="Filter posts"
             >
               <Icon name="Filter" size={18} />
             </button>
