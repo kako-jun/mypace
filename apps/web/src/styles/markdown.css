@@ -262,3 +262,16 @@
 .content-image:hover {
   opacity: 0.9;
 }
+
+.content-image-error {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+  height: 150px;
+  background: var(--surface-secondary);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
