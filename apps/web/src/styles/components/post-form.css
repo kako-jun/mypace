@@ -349,11 +349,11 @@
   opacity: 0.9;
 }
 
-/* Avatar on the left */
-.post-form-avatar {
+/* Avatar on the left - higher specificity to override .avatar-small */
+.post-form-avatar.avatar-small {
   display: block;
-  width: 40px !important;
-  height: 40px !important;
+  width: 40px;
+  height: 40px;
 }
 
 /* Vim mode toggle in long mode */
