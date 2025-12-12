@@ -185,7 +185,7 @@ export function PostForm({
           className="long-mode-exit-button text-outlined text-outlined-button text-outlined-primary"
           onClick={handleLongModeToggle}
         >
-          SHORT
+          ↙ SHORT
         </button>
 
         <div className="long-mode-editor-pane">
@@ -277,7 +277,7 @@ export function PostForm({
           className="mode-toggle-corner text-outlined text-outlined-button text-outlined-primary"
           onClick={handleLongModeToggle}
         >
-          LONG
+          LONG ↗
         </button>
       </div>
 
