@@ -451,7 +451,11 @@ linear-gradient(135deg, color1 0%, color4 100%)
 | タイプ | 対応URL | 表示方法 |
 |--------|---------|----------|
 | YouTube | youtube.com, youtu.be | サムネイル → クリックで動画再生 |
-| Twitter/X | twitter.com, x.com | クリックでツイート読み込み |
+| YouTube Shorts | youtube.com/shorts/ | 縦型レイアウトで動画再生 |
+| Twitter/X | twitter.com, x.com | react-tweetでリッチ表示 |
+| Instagram | instagram.com/p/, /reel/ | 投稿・リール埋め込み |
+| TikTok | tiktok.com/@user/video/ | 動画埋め込み |
+| Spotify | open.spotify.com/track等 | 曲・アルバム・プレイリスト・ポッドキャスト |
 | 動画 | .mp4, .webm, .ogg, .mov | HTML5 videoプレイヤー |
 | ゲーム/デモ | github.io, itch.io等 | クリックでiframe読み込み |
 | OGP | その他URL | タイトル・説明・画像のカード |
@@ -461,10 +465,33 @@ linear-gradient(135deg, color1 0%, color4 100%)
 - 中央に再生ボタン（赤いYouTubeスタイル）
 - クリックでプライバシー強化モード埋め込み（`youtube-nocookie.com`）
 
+### YouTube Shorts埋め込み
+- 縦型アスペクト比（9:16）で表示
+- 最大幅320px、中央配置
+- サムネイル + 「Shorts」バッジ表示
+- クリックで動画再生
+
 ### Twitter/X埋め込み
-- クリックで公式ウィジェット読み込み（遅延読み込み）
+- react-tweetライブラリを使用したリッチ表示
+- API経由でツイートデータを取得（Syndication API）
 - ダーク/ライトテーマ自動切り替え
 - 読み込み失敗時はリンクフォールバック
+
+### Instagram埋め込み
+- 投稿（/p/）とリール（/reel/）に対応
+- ストーリーはリンク表示のみ（24時間で消えるため）
+- 公式埋め込みiframeを使用
+- リールは縦型レイアウト
+
+### TikTok埋め込み
+- 公式embed.jsを使用
+- 短縮URL（vm.tiktok.com）にも対応
+- クリックで読み込み開始
+
+### Spotify埋め込み
+- 対応コンテンツ: track, album, playlist, episode, show
+- コンテンツタイプに応じた高さ調整（単曲152px、アルバム等352px）
+- Spotifyブランドカラーのプレースホルダー
 
 ### ゲーム/デモ埋め込み（iFrame）
 - セキュリティのため許可ドメインのみ対応:

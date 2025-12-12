@@ -75,6 +75,16 @@ src/
 │   │   ├── EditorSection.tsx
 │   │   ├── KeysSection.tsx
 │   │   └── ShareSection.tsx
+│   ├── embed/           # 外部埋め込みコンポーネント
+│   │   ├── YouTubeEmbed.tsx
+│   │   ├── YouTubeShortsEmbed.tsx
+│   │   ├── TwitterEmbed.tsx
+│   │   ├── InstagramEmbed.tsx
+│   │   ├── TikTokEmbed.tsx
+│   │   ├── SpotifyEmbed.tsx
+│   │   ├── VideoEmbed.tsx
+│   │   ├── IframeEmbed.tsx
+│   │   └── LinkPreview.tsx
 │   ├── timeline/        # タイムライン関連
 │   │   ├── TimelinePostCard.tsx
 │   │   ├── FilterBar.tsx
@@ -188,6 +198,7 @@ src/
 | GET | /api/reposts/:eventId | リポスト数・自分のリポスト |
 | GET | /api/user/:pubkey/events | ユーザーの投稿一覧 |
 | GET | /api/ogp | OGPメタデータ取得（リンクプレビュー用） |
+| GET | /api/tweet/:id | ツイートデータ取得（react-tweet用） |
 | POST | /api/publish | 署名済みイベントをリレーに投稿 |
 | GET | /health | ヘルスチェック |
 
