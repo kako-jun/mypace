@@ -1,5 +1,4 @@
 import type { Event, ProfileCache } from '../../types'
-import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import PostHeader from './PostHeader'
 import { PostContent } from './PostContent'
 
@@ -30,26 +29,23 @@ export default function ThreadReplies({
 
       {expanded && (
         <div className="thread-replies">
-          {replies.map((reply) => {
-            const themeProps = getThemeCardProps(getEventThemeColors(reply))
-
-            return (
-              <div key={reply.id} className={`reply-card ${themeProps.className}`} style={themeProps.style}>
-                <PostHeader
-                  pubkey={reply.pubkey}
-                  createdAt={reply.created_at}
-                  displayName={getDisplayName(reply.pubkey)}
-                  avatarUrl={getAvatarUrl(reply.pubkey)}
-                  avatarSize="small"
-                  clickable={false}
-                  isProfileLoading={profiles[reply.pubkey] === undefined}
-                />
-                <div className="reply-content">
-                  <PostContent content={reply.content} />
-                </div>
+          {replies.map((reply) => (
+            // Reply cards don't apply theme styling - they inherit from parent post-card's light theme
+            <div key={reply.id} className="reply-card">
+              <PostHeader
+                pubkey={reply.pubkey}
+                createdAt={reply.created_at}
+                displayName={getDisplayName(reply.pubkey)}
+                avatarUrl={getAvatarUrl(reply.pubkey)}
+                avatarSize="small"
+                clickable={false}
+                isProfileLoading={profiles[reply.pubkey] === undefined}
+              />
+              <div className="reply-content">
+                <PostContent content={reply.content} />
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
       )}
     </div>

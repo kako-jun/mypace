@@ -1,4 +1,3 @@
-import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import PostHeader from './PostHeader'
 import { PostContent } from './PostContent'
 import type { Event } from '../../types'
@@ -12,11 +11,9 @@ interface ReplyCardProps {
 }
 
 export default function ReplyCard({ reply, displayName, avatarUrl, isProfileLoading, onClick }: ReplyCardProps) {
-  const themeColors = getEventThemeColors(reply)
-  const themeProps = getThemeCardProps(themeColors)
-
+  // Reply cards don't apply theme styling - they inherit from parent post-card's light theme
   return (
-    <article className={`post-card reply-card ${themeProps.className}`} style={themeProps.style} onClick={onClick}>
+    <article className="reply-card" onClick={onClick}>
       <PostHeader
         pubkey={reply.pubkey}
         createdAt={reply.created_at}
