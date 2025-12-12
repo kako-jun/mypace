@@ -77,6 +77,8 @@ apps/
 - ライト/ダークテーマ対応（投稿カードもテーマに従う、mypace投稿は独自グラデーション）
 - カスタム絵文字表示（NIP-30、ユーザー名・投稿本文・プレビュー）
 - NIP-05検証（プロフィールにチェックマーク表示）
+- NIP-19メンション（nostr:npub, nostr:nprofile → @ユーザー名リンク）
+- NIP-19投稿参照（nostr:note, nostr:nevent → 📝 noteリンク）
 - SEO対応（OGP、Twitter Card、robots.txt、sitemap.xml）
 
 ## Nostr Events

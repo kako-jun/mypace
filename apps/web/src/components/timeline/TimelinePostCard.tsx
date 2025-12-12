@@ -94,7 +94,7 @@ export default function TimelinePostCard({
       />
 
       <div className="post-content">
-        <PostContent content={event.content} truncate emojis={parseEmojiTags(event.tags)} />
+        <PostContent content={event.content} truncate emojis={parseEmojiTags(event.tags)} profiles={profiles} />
       </div>
 
       <div className="post-footer">

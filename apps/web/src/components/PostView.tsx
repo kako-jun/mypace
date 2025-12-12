@@ -220,7 +220,11 @@ export function PostView({ eventId }: PostViewProps) {
         />
 
         <div className="post-content post-content-full">
-          <PostContent content={event.content} emojis={parseEmojiTags(event.tags)} />
+          <PostContent
+            content={event.content}
+            emojis={parseEmojiTags(event.tags)}
+            profiles={{ ...(profile ? { [event.pubkey]: profile } : {}), ...replyProfiles }}
+          />
         </div>
 
         {deletedId === event.id && <p className="success">Deleted!</p>}
@@ -266,6 +270,7 @@ export function PostView({ eventId }: PostViewProps) {
                 avatarUrl={getProfileAvatarUrl(replyProfiles[reply.pubkey])}
                 isProfileLoading={replyProfiles[reply.pubkey] === undefined}
                 emojis={replyProfiles[reply.pubkey]?.emojis}
+                profiles={replyProfiles}
                 onClick={() => navigateToPost(reply.id)}
               />
             ))}

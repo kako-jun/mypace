@@ -1,7 +1,7 @@
 import PostHeader from './PostHeader'
 import { PostContent } from './PostContent'
 import { parseEmojiTags } from '../ui'
-import type { Event, EmojiTag } from '../../types'
+import type { Event, EmojiTag, Profile } from '../../types'
 
 interface ReplyCardProps {
   reply: Event
@@ -9,6 +9,7 @@ interface ReplyCardProps {
   avatarUrl: string | null
   isProfileLoading?: boolean
   emojis?: EmojiTag[]
+  profiles?: Record<string, Profile | null | undefined>
   onClick?: () => void
 }
 
@@ -18,6 +19,7 @@ export default function ReplyCard({
   avatarUrl,
   isProfileLoading,
   emojis,
+  profiles = {},
   onClick,
 }: ReplyCardProps) {
   // Reply cards don't apply theme styling - they inherit from parent post-card's light theme
@@ -32,7 +34,7 @@ export default function ReplyCard({
         emojis={emojis}
       />
       <div className="post-content">
-        <PostContent content={reply.content} emojis={parseEmojiTags(reply.tags)} />
+        <PostContent content={reply.content} emojis={parseEmojiTags(reply.tags)} profiles={profiles} />
       </div>
     </article>
   )

@@ -44,7 +44,7 @@ export default function ThreadReplies({
                 emojis={profiles[reply.pubkey]?.emojis}
               />
               <div className="reply-content">
-                <PostContent content={reply.content} emojis={parseEmojiTags(reply.tags)} />
+                <PostContent content={reply.content} emojis={parseEmojiTags(reply.tags)} profiles={profiles} />
               </div>
             </div>
           ))}
