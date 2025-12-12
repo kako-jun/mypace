@@ -7,6 +7,7 @@ interface IframeEmbedProps {
 
 export default function IframeEmbed({ url }: IframeEmbedProps) {
   const [loaded, setLoaded] = useState(false)
+  const [expanded, setExpanded] = useState(false)
 
   // Extract domain for display
   let displayDomain = ''
@@ -18,7 +19,7 @@ export default function IframeEmbed({ url }: IframeEmbedProps) {
 
   if (loaded) {
     return (
-      <div className="embed-container embed-iframe">
+      <div className={`embed-container embed-iframe ${expanded ? 'embed-iframe-expanded' : ''}`}>
         <iframe
           src={url}
           title="Embedded content"
@@ -26,9 +27,18 @@ export default function IframeEmbed({ url }: IframeEmbedProps) {
           allow="fullscreen"
           loading="lazy"
         />
-        <a href={url} target="_blank" rel="noopener noreferrer" className="embed-external-link">
-          <Icon name="ExternalLink" size={14} /> Open in new tab
-        </a>
+        <div className="embed-iframe-controls">
+          <button
+            className="embed-expand-btn"
+            onClick={() => setExpanded(!expanded)}
+            aria-label={expanded ? 'Collapse' : 'Expand'}
+          >
+            <Icon name={expanded ? 'Minimize2' : 'Maximize2'} size={14} />
+          </button>
+          <a href={url} target="_blank" rel="noopener noreferrer" className="embed-external-link">
+            <Icon name="ExternalLink" size={14} />
+          </a>
+        </div>
       </div>
     )
   }
