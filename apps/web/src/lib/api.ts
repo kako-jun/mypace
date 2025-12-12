@@ -1,44 +1,11 @@
 // API client for mypace backend
+import type { Event, Profile, ReactionData, ReplyData, RepostData } from '../types'
 
 export const API_BASE =
   import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://api.mypace.llll-ll.com' : 'http://localhost:8787')
 
-// Types
-export interface Event {
-  id: string
-  pubkey: string
-  created_at: number
-  kind: number
-  tags: string[][]
-  content: string
-  sig: string
-}
-
-export interface Profile {
-  name?: string
-  display_name?: string
-  picture?: string
-  about?: string
-  nip05?: string
-  banner?: string
-  website?: string
-  lud16?: string
-}
-
-export interface ReactionData {
-  count: number
-  myReaction: boolean
-}
-
-export interface ReplyData {
-  count: number
-  replies: Event[]
-}
-
-export interface RepostData {
-  count: number
-  myRepost: boolean
-}
+// Re-export types for convenience
+export type { Event, Profile, ReactionData, ReplyData, RepostData }
 
 // Timeline
 export async function fetchTimeline(
