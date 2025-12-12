@@ -11,6 +11,17 @@
   margin-bottom: 0.75rem;
 }
 
+.profile-form {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.profile-form input {
+  flex: 1;
+  min-width: 0;
+}
+
 .profile-form input:focus {
   background: var(--surface-tertiary);
 }

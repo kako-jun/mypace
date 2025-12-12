@@ -21,16 +21,20 @@ export function Layout() {
     const checkFilters = () => {
       const mypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
       const languageFilter = getString(STORAGE_KEYS.LANGUAGE_FILTER) || ''
-      // Consider filter "active" when mypace filter is ON or language filter is set
-      setHasActiveFilters(mypaceOnly || !!languageFilter)
+      const ngWordsStr = localStorage.getItem(STORAGE_KEYS.NG_WORDS)
+      const ngWords = ngWordsStr ? JSON.parse(ngWordsStr) : []
+      // Filter is active when any filtering is happening
+      setHasActiveFilters(mypaceOnly || !!languageFilter || ngWords.length > 0)
     }
     checkFilters()
 
     window.addEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, checkFilters)
     window.addEventListener(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED, checkFilters)
+    window.addEventListener(CUSTOM_EVENTS.NG_WORDS_CHANGED, checkFilters)
     return () => {
       window.removeEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, checkFilters)
       window.removeEventListener(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED, checkFilters)
+      window.removeEventListener(CUSTOM_EVENTS.NG_WORDS_CHANGED, checkFilters)
     }
   }, [])
 

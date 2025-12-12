@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, Fragment } from 'react'
-import { TIMEOUTS } from '../lib/constants'
+import { TIMEOUTS, STORAGE_KEYS, CUSTOM_EVENTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { FilterBar, TimelinePostCard } from '../components/timeline'
 import { FilterPanel } from './FilterPanel'
@@ -17,6 +17,16 @@ import {
   contentHasTag,
 } from '../lib/utils'
 import type { Event, FilterMode } from '../types'
+
+// Helper to get NG words from storage
+function getNgWords(): string[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.NG_WORDS)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
 
 interface TimelineProps {
   onEditStart?: (event: Event) => void
@@ -39,7 +49,15 @@ export function Timeline({
   const [filterMode] = useState<FilterMode>(initialFilterMode || 'and')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
+  const [ngWords, setNgWords] = useState<string[]>(getNgWords)
   const { copied: filterCopied, share: shareFilter } = useShare()
+
+  // Listen for NG words changes
+  useEffect(() => {
+    const handleNgWordsChange = () => setNgWords(getNgWords())
+    window.addEventListener(CUSTOM_EVENTS.NG_WORDS_CHANGED, handleNgWordsChange)
+    return () => window.removeEventListener(CUSTOM_EVENTS.NG_WORDS_CHANGED, handleNgWordsChange)
+  }, [])
 
   const {
     items,
@@ -138,6 +156,14 @@ export function Timeline({
   if (currentSearchQuery) {
     const lowerQuery = currentSearchQuery.toLowerCase()
     filteredItems = filteredItems.filter((item) => item.event.content.toLowerCase().includes(lowerQuery))
+  }
+
+  // Filter by NG words (exclude posts containing any NG word)
+  if (ngWords.length > 0) {
+    filteredItems = filteredItems.filter((item) => {
+      const lowerContent = item.event.content.toLowerCase()
+      return !ngWords.some((ngWord) => lowerContent.includes(ngWord.toLowerCase()))
+    })
   }
 
   // Determine if we're on search page (has query or tags via search)
