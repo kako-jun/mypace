@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Icon, parseEmojiTags } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies, PostContent } from '../post'
-import { cachePost, cacheProfile, navigateToPostModal } from '../../lib/utils'
+import { cachePost, cacheProfile, navigateToPostModal, navigateToUser } from '../../lib/utils'
 import { useDeleteConfirm } from '../../hooks'
 import type { Event, ReactionData, ReplyData, RepostData, ProfileCache } from '../../types'
 
@@ -10,6 +10,7 @@ interface TimelinePostCardProps {
   event: Event
   repostedBy?: { pubkey: string; timestamp: number }
   isMyPost: boolean
+  myPubkey: string | null
   profiles: ProfileCache
   reactions: ReactionData | undefined
   replies: ReplyData | undefined
@@ -20,6 +21,7 @@ interface TimelinePostCardProps {
   onEdit: (event: Event) => void
   onDeleteConfirm: (event: Event) => void
   onLike: (event: Event) => void
+  onUnlike: (event: Event) => void
   onReply: (event: Event) => void
   onRepost: (event: Event) => void
   onShare: (eventId: string) => void
@@ -31,6 +33,7 @@ export default function TimelinePostCard({
   event,
   repostedBy,
   isMyPost,
+  myPubkey,
   profiles,
   reactions,
   replies,
@@ -41,6 +44,7 @@ export default function TimelinePostCard({
   onEdit,
   onDeleteConfirm,
   onLike,
+  onUnlike,
   onReply,
   onRepost,
   onShare,
@@ -107,10 +111,14 @@ export default function TimelinePostCard({
           repostingId={repostingId}
           eventId={event.id}
           copied={copiedId === event.id}
+          myPubkey={myPubkey}
+          getDisplayName={getDisplayName}
           onLike={() => onLike(event)}
+          onUnlike={() => onUnlike(event)}
           onReply={() => onReply(event)}
           onRepost={() => onRepost(event)}
           onShare={() => onShare(event.id)}
+          onNavigateToProfile={navigateToUser}
         />
 
         {isMyPost && (

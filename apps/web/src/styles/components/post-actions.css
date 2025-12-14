@@ -18,6 +18,39 @@
   display: inline-block;
 }
 
+/* Loading state - subtle muted dot */
+.action-count-loading {
+  opacity: 0.4;
+}
+
+/* Buttons with loading count should appear muted */
+.icon-button:has(.action-count-loading) {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Zero state - muted gray */
+.action-count-zero {
+  color: #999;
+  -webkit-text-stroke: 1px #666;
+  text-shadow:
+    1px 1px 0 #666,
+    -1px 1px 0 #666,
+    1px -1px 0 #666,
+    -1px -1px 0 #666;
+  opacity: 0.5;
+}
+
+[data-theme="dark"] .action-count-zero {
+  color: #666;
+  -webkit-text-stroke: 1px #444;
+  text-shadow:
+    1px 1px 0 #444,
+    -1px 1px 0 #444,
+    1px -1px 0 #444,
+    -1px -1px 0 #444;
+}
+
 [data-theme="dark"] .action-count {
   -webkit-text-stroke: 1px #222;
   text-shadow:
@@ -27,7 +60,12 @@
     -1px -1px 0 #222;
 }
 
-/* Like button - extends .icon-button */
+/* Like button - extends .icon-button, vertical layout */
+.like-button {
+  flex-direction: column;
+  gap: 0;
+}
+
 .like-button svg {
   stroke: #333;
   fill: #f1c40f;
@@ -39,6 +77,160 @@
 
 .like-button.liked {
   color: #f1c40f;
+}
+
+.like-button .action-count {
+  line-height: 1;
+}
+
+/* Clickable count - for PC users to click instead of long press */
+.action-count-clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.action-count-clickable:hover {
+  transform: scale(1.5);
+}
+
+/* Like button wrapper - for positioning confirm dialog */
+.like-button-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Overlay to close popup on click outside */
+.reactors-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+/* Reactors popup - speech bubble style (rendered via portal, below star) */
+.reactors-popup {
+  position: absolute;
+  transform: translateX(-50%);
+  margin-top: 12px;
+  background: var(--surface-primary);
+  border: 2px solid var(--border-card);
+  padding: 1rem;
+  z-index: 10000;
+  min-width: 240px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Speech bubble arrow pointing up */
+.reactors-popup::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 8px 10px 8px;
+  border-style: solid;
+  border-color: transparent transparent var(--border-card) transparent;
+}
+
+/* Inner arrow for background color */
+.reactors-popup::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 6px 8px 6px;
+  border-style: solid;
+  border-color: transparent transparent var(--surface-primary) transparent;
+  z-index: 1;
+}
+
+.reactors-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--border-card);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.reactors-popup-title {
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.reactors-popup-close {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-muted);
+  outline: none;
+}
+
+.reactors-popup-close:hover {
+  color: var(--text-primary);
+}
+
+.reactors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reactor-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  padding: 0.25rem 0;
+}
+
+.reactor-name {
+  flex: 1;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.reactor-name:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.reactor-stars {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  color: #f1c40f;
+  font-weight: bold;
+}
+
+.reactor-stars svg {
+  stroke: #333;
+}
+
+.reactor-remove {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  border: none;
+  background: #e74c3c;
+  color: #fff;
+  cursor: pointer;
+  outline: none;
+}
+
+.reactor-remove:hover {
+  background: #c0392b;
 }
 
 /* Like count (for own posts) */
@@ -60,7 +252,12 @@
   transform: scale(1.3);
 }
 
-/* Reply button - extends .icon-button */
+/* Reply button - extends .icon-button, vertical layout */
+.reply-button {
+  flex-direction: column;
+  gap: 0;
+}
+
 .reply-button svg {
   stroke: #333;
   fill: #fff;
@@ -70,7 +267,16 @@
   color: #3498db;
 }
 
-/* Repost button - extends .icon-button */
+.reply-button .action-count {
+  line-height: 1;
+}
+
+/* Repost button - extends .icon-button, vertical layout */
+.repost-button {
+  flex-direction: column;
+  gap: 0;
+}
+
 .repost-button svg {
   stroke: #333;
   fill: none;
@@ -82,6 +288,10 @@
 
 .repost-button.reposted {
   color: #2ecc71;
+}
+
+.repost-button .action-count {
+  line-height: 1;
 }
 
 /* Share button - extends .icon-button */

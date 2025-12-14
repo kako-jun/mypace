@@ -1,3 +1,4 @@
+import { nip19 } from 'nostr-tools'
 import type { Profile, ProfileCache } from '../../types'
 import { getItem, setItem, removeItem } from './storage'
 import { STORAGE_KEYS } from '../constants'
@@ -20,10 +21,19 @@ export function hasLocalProfile(): boolean {
   return !!(profile?.name || profile?.display_name)
 }
 
-// Get display name from profile or fallback to anonymous name
-export function getDisplayName(profile: Profile | null | undefined, _pubkey: string): string {
+// Get display name from profile
+// - undefined: still loading, show short npub
+// - null: confirmed no profile, show anonymous name
+// - Profile: show display_name or name
+export function getDisplayName(profile: Profile | null | undefined, pubkey: string): string {
   if (profile?.display_name) return profile.display_name
   if (profile?.name) return profile.name
+  // Still loading - show short npub
+  if (profile === undefined) {
+    const npub = nip19.npubEncode(pubkey)
+    return npub.slice(0, 12) + '...'
+  }
+  // Confirmed no profile - show anonymous name
   return t('anonymousName')
 }
 

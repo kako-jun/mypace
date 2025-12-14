@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   fetchEventById,
   fetchUserProfile,
@@ -14,6 +14,7 @@ import {
   createRepostEvent,
   getEventThemeColors,
   getThemeCardProps,
+  MAX_STARS_PER_USER,
 } from '../lib/nostr/events'
 import {
   getDisplayName,
@@ -25,6 +26,7 @@ import {
   navigateToEdit,
   navigateToReply,
   navigateToPost,
+  navigateToUser,
   getErrorMessage,
   getUIThemeColors,
   applyThemeColors,
@@ -35,7 +37,7 @@ import { LightBox, triggerLightBox } from './LightBox'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent } from '../components/post'
 import { parseEmojiTags, Loading } from '../components/ui'
 import { useShare, useDeleteConfirm } from '../hooks'
-import type { Event, Profile } from '../types'
+import type { Event, Profile, ReactionData } from '../types'
 
 interface PostViewProps {
   eventId: string
@@ -50,7 +52,13 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
   const [myPubkey, setMyPubkey] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [reactions, setReactions] = useState({ count: 0, myReaction: false })
+  const [reactions, setReactions] = useState<ReactionData>({
+    count: 0,
+    myReaction: false,
+    myStars: 0,
+    myReactionId: null,
+    reactors: [],
+  })
   const [replies, setReplies] = useState<{ count: number; replies: Event[] }>({ count: 0, replies: [] })
   const [reposts, setReposts] = useState({ count: 0, myRepost: false })
   const [replyProfiles, setReplyProfiles] = useState<{ [pubkey: string]: Profile | null }>({})
@@ -59,6 +67,10 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const { copied, share } = useShare()
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
+
+  // Debounce refs for star clicks
+  const starDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingStars = useRef(0)
 
   const loadPost = async () => {
     setError('')
@@ -147,19 +159,126 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
   }
 
   const getProfileDisplayName = (pubkey: string, profileData?: Profile | null): string => {
-    return getDisplayName(profileData || profile, pubkey)
+    // Don't fallback to post author's profile - use undefined to show npub
+    return getDisplayName(profileData, pubkey)
   }
 
   const getProfileAvatarUrl = (profileData?: Profile | null): string | null => {
     return getAvatarUrl(profileData || profile)
   }
 
-  const handleLike = async () => {
-    if (!event || likingId || !myPubkey || reactions.myReaction || event.pubkey === myPubkey) return
+  // Send accumulated stars to the network
+  const flushStars = async () => {
+    if (!event) return
+    const starsToSend = pendingStars.current
+    if (starsToSend <= 0) return
+
+    pendingStars.current = 0
+
+    // Save previous state for rollback on error
+    const previousReactions = { ...reactions }
+    const oldReactionId = reactions.myReactionId
+    const currentMyStars = reactions.myStars
+
     setLikingId(event.id)
     try {
-      await publishEvent(await createReactionEvent(event, '+'))
-      setReactions((prev) => ({ count: prev.count + 1, myReaction: true }))
+      const newTotalStars = Math.min(currentMyStars + starsToSend, MAX_STARS_PER_USER)
+
+      // Create new reaction FIRST (before deleting old one)
+      const newReaction = await createReactionEvent(event, '+', newTotalStars)
+      await publishEvent(newReaction)
+
+      // Delete old reaction AFTER new one is successfully published
+      if (oldReactionId) {
+        try {
+          await publishEvent(await createDeleteEvent([oldReactionId]))
+        } catch {
+          // Ignore delete errors - old reaction will eventually be overridden
+        }
+      }
+
+      setReactions((prev) => {
+        const myIndex = prev.reactors.findIndex((r) => r.pubkey === myPubkey)
+        const updatedReactors =
+          myIndex >= 0
+            ? prev.reactors.map((r, i) =>
+                i === myIndex
+                  ? { ...r, stars: newTotalStars, reactionId: newReaction.id, createdAt: newReaction.created_at }
+                  : r
+              )
+            : [
+                {
+                  pubkey: myPubkey!,
+                  stars: newTotalStars,
+                  reactionId: newReaction.id,
+                  createdAt: newReaction.created_at,
+                },
+                ...prev.reactors,
+              ]
+
+        return {
+          count: prev.count - currentMyStars + newTotalStars,
+          myReaction: true,
+          myStars: newTotalStars,
+          myReactionId: newReaction.id,
+          reactors: updatedReactors,
+        }
+      })
+    } catch (error) {
+      console.error('Failed to publish reaction:', error)
+      // Rollback UI state to previous state
+      setReactions(previousReactions)
+    } finally {
+      setLikingId(null)
+    }
+  }
+
+  const handleLike = () => {
+    if (!event || !myPubkey || event.pubkey === myPubkey) return
+
+    const currentMyStars = reactions.myStars
+    const pending = pendingStars.current
+
+    if (currentMyStars + pending >= MAX_STARS_PER_USER) return
+
+    pendingStars.current = pending + 1
+
+    setReactions((prev) => ({
+      count: prev.count + 1,
+      myReaction: true,
+      myStars: currentMyStars + pending + 1,
+      myReactionId: prev.myReactionId,
+      reactors: prev.reactors,
+    }))
+
+    if (starDebounceTimer.current) {
+      clearTimeout(starDebounceTimer.current)
+    }
+    starDebounceTimer.current = setTimeout(() => {
+      flushStars()
+    }, 300)
+  }
+
+  const handleUnlike = async () => {
+    if (!event || !myPubkey || !reactions.myReactionId) return
+
+    if (starDebounceTimer.current) {
+      clearTimeout(starDebounceTimer.current)
+      starDebounceTimer.current = null
+    }
+    pendingStars.current = 0
+
+    setLikingId(event.id)
+    try {
+      await publishEvent(await createDeleteEvent([reactions.myReactionId]))
+
+      setReactions((prev) => ({
+        count: Math.max(0, prev.count - prev.myStars),
+        myReaction: false,
+        myStars: 0,
+        myReactionId: null,
+        reactors: prev.reactors.filter((r) => r.pubkey !== myPubkey),
+      }))
     } finally {
       setLikingId(null)
     }
@@ -253,10 +372,14 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
               repostingId={repostingId}
               eventId={event.id}
               copied={copied}
+              myPubkey={myPubkey}
+              getDisplayName={(pk) => getProfileDisplayName(pk, replyProfiles[pk])}
               onLike={handleLike}
+              onUnlike={handleUnlike}
               onReply={() => navigateToReply(eventId)}
               onRepost={handleRepost}
               onShare={handleShare}
+              onNavigateToProfile={navigateToUser}
             />
             {isMyPost && (
               <EditDeleteButtons

@@ -33,9 +33,19 @@ export interface ProfileCache {
 }
 
 // Reaction types
+export interface Reactor {
+  pubkey: string
+  stars: number
+  reactionId: string
+  createdAt: number
+}
+
 export interface ReactionData {
   count: number
   myReaction: boolean
+  myStars: number // Number of stars I've given (1-100)
+  myReactionId: string | null // ID of my reaction event (for deletion)
+  reactors: Reactor[] // List of who gave stars
 }
 
 // Reply types

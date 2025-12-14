@@ -101,13 +101,23 @@ export async function createNip98AuthEvent(url: string, method: string): Promise
   return finalizeEvent(template, getOrCreateSecretKey())
 }
 
-export async function createReactionEvent(targetEvent: Event, content: string = '+'): Promise<Event> {
+// Max stars per user per post
+export const MAX_STARS_PER_USER = 10
+// Custom tag for mypace star count
+export const MYPACE_STARS_TAG = 'mypace_stars'
+
+export async function createReactionEvent(
+  targetEvent: Event,
+  content: string = '+',
+  starCount: number = 1
+): Promise<Event> {
   const template: EventTemplate = {
     kind: 7,
     created_at: unixNow(),
     tags: [
       ['e', targetEvent.id],
       ['p', targetEvent.pubkey],
+      [MYPACE_STARS_TAG, String(Math.min(starCount, MAX_STARS_PER_USER))],
     ],
     content,
   }

@@ -81,6 +81,7 @@ export function Timeline({
     loadOlderEvents,
     fillGap,
     handleLike,
+    handleUnlike,
     handleRepost,
     handleDelete,
     getDisplayName,
@@ -243,6 +244,7 @@ export function Timeline({
               event={event}
               repostedBy={item.repostedBy}
               isMyPost={isMyPost}
+              myPubkey={myPubkey}
               profiles={profiles}
               reactions={reactions[event.id]}
               replies={replies[event.id]}
@@ -253,6 +255,7 @@ export function Timeline({
               onEdit={handleEdit}
               onDeleteConfirm={handleDeleteConfirm}
               onLike={handleLike}
+              onUnlike={handleUnlike}
               onReply={handleReplyClick}
               onRepost={handleRepost}
               onShare={handleShare}

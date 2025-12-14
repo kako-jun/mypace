@@ -1,6 +1,6 @@
 // API経由でリレーと通信する（直接リレーには接続しない）
 import * as api from '../api'
-import type { Event, Profile } from '../../types'
+import type { Event, Profile, ReactionData } from '../../types'
 
 export async function publishEvent(event: Event): Promise<void> {
   try {
@@ -67,15 +67,12 @@ export async function fetchEventById(eventId: string): Promise<Event | null> {
   }
 }
 
-export async function fetchReactions(
-  eventId: string,
-  myPubkey?: string
-): Promise<{ count: number; myReaction: boolean }> {
+export async function fetchReactions(eventId: string, myPubkey?: string): Promise<ReactionData> {
   try {
     return await api.fetchReactions(eventId, myPubkey)
   } catch (e) {
     console.error('Failed to fetch reactions:', e)
-    return { count: 0, myReaction: false }
+    return { count: 0, myReaction: false, myStars: 0, myReactionId: null, reactors: [] }
   }
 }
 

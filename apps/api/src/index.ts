@@ -371,6 +371,19 @@ app.get('/api/profiles', async (c) => {
   return c.json({ profiles })
 })
 
+// Custom tag for mypace star count
+const MYPACE_STARS_TAG = 'mypace_stars'
+
+// Get star count from reaction event tags
+function getStarCount(event: Event): number {
+  const starsTag = event.tags.find((t) => t[0] === MYPACE_STARS_TAG)
+  if (starsTag && starsTag[1]) {
+    const count = parseInt(starsTag[1], 10)
+    return isNaN(count) ? 1 : count
+  }
+  return 1 // Default to 1 for reactions without mypace_stars tag
+}
+
 // GET /api/reactions/:eventId - リアクション取得
 app.get('/api/reactions/:eventId', async (c) => {
   const eventId = c.req.param('eventId')
@@ -380,10 +393,40 @@ app.get('/api/reactions/:eventId', async (c) => {
 
   try {
     const events = await pool.querySync(RELAYS, { kinds: [7], '#e': [eventId] })
-    const count = events.length
-    const myReaction = pubkey ? events.some((e) => e.pubkey === pubkey) : false
 
-    return c.json({ count, myReaction })
+    // Group reactions by pubkey, keeping only the newest one per user
+    const reactorMap = new Map<string, { pubkey: string; stars: number; reactionId: string; createdAt: number }>()
+    for (const e of events) {
+      const existing = reactorMap.get(e.pubkey)
+      // Keep the newest reaction for each user
+      if (!existing || e.created_at > existing.createdAt) {
+        reactorMap.set(e.pubkey, {
+          pubkey: e.pubkey,
+          stars: getStarCount(e),
+          reactionId: e.id,
+          createdAt: e.created_at,
+        })
+      }
+    }
+
+    // Build list of reactors (sorted by newest first)
+    const reactors = Array.from(reactorMap.values()).sort((a, b) => b.createdAt - a.createdAt)
+
+    // Sum stars from deduplicated reactors
+    const count = reactors.reduce((sum, r) => sum + r.stars, 0)
+
+    // Find user's reaction
+    let myStars = 0
+    let myReactionId: string | null = null
+    if (pubkey) {
+      const myReaction = reactorMap.get(pubkey)
+      if (myReaction) {
+        myStars = myReaction.stars
+        myReactionId = myReaction.reactionId
+      }
+    }
+
+    return c.json({ count, myReaction: myStars > 0, myStars, myReactionId, reactors })
   } finally {
     pool.close(RELAYS)
   }

@@ -81,6 +81,7 @@ export function UserView({ pubkey }: UserViewProps) {
     loadOlderEvents,
     fillGap,
     handleLike,
+    handleUnlike,
     handleRepost,
     handleDelete,
   } = useTimeline({ authorPubkey: pubkey })
@@ -504,6 +505,7 @@ export function UserView({ pubkey }: UserViewProps) {
               <TimelinePostCard
                 event={event}
                 isMyPost={isMyPost}
+                myPubkey={myPubkey}
                 profiles={{ ...profiles, [pubkey]: profile }}
                 reactions={reactions[event.id]}
                 replies={replies[event.id]}
@@ -514,6 +516,7 @@ export function UserView({ pubkey }: UserViewProps) {
                 onEdit={() => handleEdit(event)}
                 onDeleteConfirm={() => handleDeleteConfirm(event)}
                 onLike={() => handleLike(event)}
+                onUnlike={() => handleUnlike(event)}
                 onReply={() => handleReplyClick(event)}
                 onRepost={() => handleRepost(event)}
                 onShare={() => handleShare(event.id)}
