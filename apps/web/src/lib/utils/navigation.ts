@@ -55,6 +55,7 @@ export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
   query: '',
   ngWords: [],
   tags: [],
+  ngTags: [],
   mode: 'and',
   mypace: true,
   lang: '',
@@ -95,11 +96,14 @@ export function buildSearchUrl(filters: Partial<SearchFilters>): string {
     const separator = f.mode === 'and' ? '+' : ','
     params.set('tags', f.tags.map((t) => encodeURIComponent(t)).join(separator))
   }
-  if (!f.mypace) params.set('mypace', '0')
+  if (f.ngTags.length > 0) {
+    params.set('ngtags', f.ngTags.map((t) => encodeURIComponent(t)).join(','))
+  }
+  if (!f.mypace) params.set('mypace', 'off')
   if (f.lang) params.set('lang', f.lang)
 
   const queryString = params.toString()
-  return queryString ? `/search?${queryString}` : '/search'
+  return queryString ? `/?${queryString}` : '/'
 }
 
 // Parse search URL parameters to filters
@@ -108,11 +112,12 @@ export function parseSearchParams(searchParams: URLSearchParams): SearchFilters 
   const ngParam = searchParams.get('ng') || ''
   const ngWords = ngParam
     ? ngParam
-        .split(',')
+        .split(/[\s,]+/)
         .map((w) => w.trim())
         .filter(Boolean)
     : []
   const tagsParam = searchParams.get('tags') || ''
+  const ngTagsParam = searchParams.get('ngtags') || ''
   const mypaceParam = searchParams.get('mypace')
   const lang = searchParams.get('lang') || ''
 
@@ -137,12 +142,21 @@ export function parseSearchParams(searchParams: URLSearchParams): SearchFilters 
     }
   }
 
+  // Parse NG tags (whitespace or comma separated)
+  const ngTags = ngTagsParam
+    ? ngTagsParam
+        .split(/[\s,]+/)
+        .map((t) => decodeURIComponent(t.trim()))
+        .filter(Boolean)
+    : []
+
   return {
     query,
     ngWords,
     tags,
+    ngTags,
     mode,
-    mypace: mypaceParam !== '0',
+    mypace: mypaceParam !== 'off',
     lang,
   }
 }

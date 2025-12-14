@@ -1,41 +1,23 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { PostForm } from '../components/PostForm'
 import { Timeline } from '../components/Timeline'
 import { LightBox, triggerLightBox } from '../components/LightBox'
 import { setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
-import {
-  getString,
-  setString,
-  removeItem,
-  getUIThemeColors,
-  applyThemeColors,
-  DEFAULT_SEARCH_FILTERS,
-  loadFiltersFromStorage,
-  buildSearchUrl,
-} from '../lib/utils'
+import { getString, setString, removeItem, getUIThemeColors, applyThemeColors, parseSearchParams } from '../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS, TIMEOUTS } from '../lib/constants'
 import type { Event, SearchFilters } from '../types'
 
 interface HomePageProps {
+  // Optional filters from parent (e.g., TagPage)
   filters?: SearchFilters
-  showSearchBox?: boolean
 }
 
-export function HomePage({ filters, showSearchBox }: HomePageProps) {
-  const navigate = useNavigate()
+export function HomePage({ filters: propFilters }: HomePageProps = {}) {
+  const [searchParams] = useSearchParams()
 
-  // Redirect from home to /search with stored filters
-  useEffect(() => {
-    if (!showSearchBox && filters === undefined) {
-      const storedFilters = loadFiltersFromStorage()
-      const url = buildSearchUrl(storedFilters)
-      navigate(url, { replace: true })
-    }
-  }, [showSearchBox, filters, navigate])
-
-  // Use provided filters or defaults
-  const activeFilters = filters ?? DEFAULT_SEARCH_FILTERS
+  // Use prop filters if provided, otherwise parse from URL
+  const activeFilters = propFilters || parseSearchParams(searchParams)
   const [longMode, setLongMode] = useState(false)
   const [content, setContent] = useState(() => getString(STORAGE_KEYS.DRAFT))
   const [showPreview, setShowPreview] = useState(false)
@@ -172,12 +154,7 @@ export function HomePage({ filters, showSearchBox }: HomePageProps) {
         onReplyComplete={handleReplyComplete}
       />
       <div className="container">
-        <Timeline
-          onEditStart={handleEditStart}
-          onReplyStart={handleReplyStart}
-          filters={activeFilters}
-          showSearchBox={showSearchBox}
-        />
+        <Timeline onEditStart={handleEditStart} onReplyStart={handleReplyStart} filters={activeFilters} />
       </div>
       <LightBox />
     </>

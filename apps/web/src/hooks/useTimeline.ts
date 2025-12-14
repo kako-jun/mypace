@@ -31,6 +31,7 @@ interface GapInfo {
 
 interface UseTimelineOptions {
   authorPubkey?: string // 特定ユーザーの投稿のみ取得
+  mypaceOnly?: boolean // mypaceタグでフィルタリング（デフォルト: true）
 }
 
 interface UseTimelineResult {
@@ -63,7 +64,7 @@ interface UseTimelineResult {
 }
 
 export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult {
-  const { authorPubkey } = options
+  const { authorPubkey, mypaceOnly = true } = options
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [profiles, setProfiles] = useState<ProfileCache>({})
@@ -172,6 +173,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   }
 
   const loadTimeline = useCallback(async () => {
+    // Clear existing data and show loading state
+    setTimelineItems([])
+    setEvents([])
     setLoading(true)
     setError('')
     try {
@@ -184,7 +188,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         notes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT)
       } else {
         // mypace投稿を取得（タグ/キーワードはクライアント側でフィルタリング）
-        notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, true, '')
+        notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, mypaceOnly, '')
       }
 
       const initialItems: TimelineItem[] = notes.map((note) => ({ event: note }))
@@ -461,7 +465,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         newNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime)
       } else {
         // mypace投稿の新着をチェック
-        newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime, true, '')
+        newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime, mypaceOnly, '')
       }
 
       // 既存のイベントIDを除外
@@ -515,7 +519,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     return () => {
       window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
     }
-  }, [authorPubkey])
+  }, [authorPubkey, mypaceOnly])
 
   // 1分ごとのポーリング
   useEffect(() => {
@@ -549,7 +553,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         olderNotes = await fetchEvents(
           LIMITS.TIMELINE_FETCH_LIMIT,
           0,
-          true,
+          mypaceOnly,
           '',
           oldestEventTime // until: この時刻より古いものを取得
         )
@@ -624,7 +628,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
           gapNotes = await fetchEvents(
             LIMITS.TIMELINE_FETCH_LIMIT,
             gap.since, // since: この時刻より新しいもの
-            true,
+            mypaceOnly,
             '',
             gap.until // until: この時刻より古いもの
           )

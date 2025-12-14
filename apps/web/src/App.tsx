@@ -4,7 +4,6 @@ import { Layout } from './components/Layout'
 import { HomePage } from './pages/HomePage'
 import { PostPage } from './pages/PostPage'
 import { ProfilePage } from './pages/ProfilePage'
-import { SearchPage } from './pages/SearchPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { TagPage } from './pages/TagPage'
 import { PostModal } from './components/PostModal'
@@ -32,7 +31,6 @@ export default function App() {
           <Route path="/user/:pubkey" element={<ProfilePage />} />
           <Route path="/profile/:pubkey" element={<ProfilePage />} />
           <Route path="/tag/:tags" element={<TagPage />} />
-          <Route path="/search" element={<SearchPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Routes>

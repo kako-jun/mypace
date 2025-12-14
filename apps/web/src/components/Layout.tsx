@@ -17,21 +17,22 @@ export function Layout() {
   const filterButtonRef = useRef<HTMLButtonElement>(null)
   const filterPanelRef = useRef<HTMLDivElement>(null)
 
-  // Parse current URL filters
+  // Parse current URL filters (home page uses query params for filters)
   const currentFilters = useMemo(() => {
-    if (location.pathname === '/search') {
+    if (location.pathname === '/') {
       return parseSearchParams(searchParams)
     }
     return DEFAULT_SEARCH_FILTERS
   }, [location.pathname, searchParams])
 
-  // Check if any filters are active (different from defaults)
+  // Check if any filters are active (any filtering is happening)
   const hasActiveFilters = useMemo(() => {
     return (
       currentFilters.query !== '' ||
       currentFilters.ngWords.length > 0 ||
       currentFilters.tags.length > 0 ||
-      !currentFilters.mypace ||
+      (currentFilters.ngTags?.length ?? 0) > 0 ||
+      currentFilters.mypace || // mypace ON means filtering to mypace posts only
       currentFilters.lang !== ''
     )
   }, [currentFilters])

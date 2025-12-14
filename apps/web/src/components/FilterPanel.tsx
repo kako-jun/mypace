@@ -13,40 +13,37 @@ interface FilterPanelProps {
   onClose?: () => void
   // Current filter state
   filters?: SearchFilters
-  // Callbacks for embedded mode
-  onRemoveTag?: (tag: string) => void
-  onToggleMode?: () => void
 }
 
-export function FilterPanel({
-  isPopup = false,
-  onClose,
-  filters = DEFAULT_SEARCH_FILTERS,
-  onRemoveTag,
-  onToggleMode,
-}: FilterPanelProps) {
+export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH_FILTERS }: FilterPanelProps) {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Local state initialized from filters
+  const [mypaceOnly, setMypaceOnly] = useState(filters.mypace)
+  const [okTagsInput, setOkTagsInput] = useState(filters.tags.join(', '))
+  const [ngTagsInput, setNgTagsInput] = useState(filters.ngTags?.join(', ') || '')
   const [searchQuery, setSearchQuery] = useState(filters.query)
   const [ngWordsInput, setNgWordsInput] = useState(filters.ngWords.join(', '))
-  const [mypaceOnly, setMypaceOnly] = useState(filters.mypace)
   const [languageFilter, setLanguageFilter] = useState(filters.lang)
 
   // Update local state when filters change (URL change)
   useEffect(() => {
+    setMypaceOnly(filters.mypace)
+    setOkTagsInput(filters.tags.join(', '))
+    setNgTagsInput(filters.ngTags?.join(', ') || '')
     setSearchQuery(filters.query)
     setNgWordsInput(filters.ngWords.join(', '))
-    setMypaceOnly(filters.mypace)
     setLanguageFilter(filters.lang)
   }, [filters])
 
   // Track if form is dirty
   const isDirty =
+    mypaceOnly !== filters.mypace ||
+    okTagsInput !== filters.tags.join(', ') ||
+    ngTagsInput !== (filters.ngTags?.join(', ') || '') ||
     searchQuery !== filters.query ||
     ngWordsInput !== filters.ngWords.join(', ') ||
-    mypaceOnly !== filters.mypace ||
     languageFilter !== filters.lang
 
   useEffect(() => {
@@ -55,10 +52,10 @@ export function FilterPanel({
     }
   }, [isPopup])
 
-  // Parse NG words input to array
-  const parseNgWords = (input: string): string[] => {
+  // Parse input to array (split by whitespace or comma)
+  const parseInput = (input: string): string[] => {
     return input
-      .split(',')
+      .split(/[\s,]+/)
       .map((w) => w.trim())
       .filter((w) => w.length > 0)
   }
@@ -66,11 +63,12 @@ export function FilterPanel({
   // Apply filters - save to localStorage and navigate to URL
   const handleApply = () => {
     const newFilters: SearchFilters = {
-      query: searchQuery,
-      ngWords: parseNgWords(ngWordsInput),
-      tags: filters.tags,
-      mode: filters.mode,
       mypace: mypaceOnly,
+      tags: parseInput(okTagsInput),
+      ngTags: parseInput(ngTagsInput),
+      query: searchQuery,
+      ngWords: parseInput(ngWordsInput),
+      mode: filters.mode,
       lang: languageFilter,
     }
 
@@ -83,19 +81,21 @@ export function FilterPanel({
     onClose?.()
   }
 
-  // Clear all filters - save defaults and navigate to /search
+  // Clear all filters - save defaults and navigate to home
   const handleClear = () => {
     // Reset local state
+    setMypaceOnly(true)
+    setOkTagsInput('')
+    setNgTagsInput('')
     setSearchQuery('')
     setNgWordsInput('')
-    setMypaceOnly(true)
     setLanguageFilter('')
 
     // Save defaults to localStorage
     saveFiltersToStorage(DEFAULT_SEARCH_FILTERS)
 
-    // Navigate to clean search page
-    navigate('/search')
+    // Navigate to clean home page
+    navigate('/')
     onClose?.()
   }
 
@@ -108,66 +108,120 @@ export function FilterPanel({
     }
   }
 
-  const currentLanguageLabel = LANGUAGES.find((l) => l.code === languageFilter)?.label || 'All'
-  const currentNgWords = parseNgWords(ngWordsInput)
-
   return (
     <div className={`filter-panel ${isPopup ? 'filter-panel-popup' : 'filter-panel-embedded'}`}>
-      {/* OK word input (include) */}
-      <div className="filter-search-row">
-        <Icon name="Search" size={16} className="filter-search-icon" />
-        <input
-          ref={inputRef}
-          type="text"
-          className="filter-search-input"
-          value={searchQuery}
-          placeholder="OK word..."
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-        {searchQuery && (
-          <button
-            type="button"
-            className="filter-input-clear"
-            onClick={() => setSearchQuery('')}
-            aria-label="Clear search"
-          >
-            ×
-          </button>
-        )}
+      {/* mypace toggle */}
+      <div className="filter-mypace-row">
+        <Toggle checked={mypaceOnly} onChange={setMypaceOnly} label="MY PACE" />
       </div>
 
-      {/* NG word input (exclude) */}
-      <div className="filter-search-row filter-ng-row">
-        <Icon name="Ban" size={16} className="filter-search-icon filter-ng-icon" />
-        <input
-          type="text"
-          className="filter-search-input"
-          value={ngWordsInput}
-          placeholder="NG word..."
-          onChange={(e) => setNgWordsInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-        {ngWordsInput && (
-          <button
-            type="button"
-            className="filter-input-clear"
-            onClick={() => setNgWordsInput('')}
-            aria-label="Clear NG words"
-          >
-            ×
-          </button>
-        )}
-      </div>
+      {/* OK group */}
+      <div className="filter-group filter-group-ok">
+        <span className="filter-group-label">OK</span>
+        <div className="filter-group-inputs">
+          {/* OK word input */}
+          <div className="filter-search-row">
+            <Icon name="Search" size={16} className="filter-search-icon" />
+            <input
+              ref={inputRef}
+              type="text"
+              className="filter-search-input"
+              value={searchQuery}
+              placeholder="Keyword..."
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="filter-input-clear"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            )}
+          </div>
 
-      {/* Filter options row */}
-      <div className="filter-options-row">
-        {/* mypace toggle */}
-        <div className="filter-option mypace-option">
-          <Toggle checked={mypaceOnly} onChange={setMypaceOnly} label="MY PACE" />
+          {/* OK tags input */}
+          <div className="filter-search-row">
+            <Icon name="Hash" size={16} className="filter-search-icon" />
+            <input
+              type="text"
+              className="filter-search-input"
+              value={okTagsInput}
+              placeholder="Tags..."
+              onChange={(e) => setOkTagsInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            {okTagsInput && (
+              <button
+                type="button"
+                className="filter-input-clear"
+                onClick={() => setOkTagsInput('')}
+                aria-label="Clear OK tags"
+              >
+                ×
+              </button>
+            )}
+          </div>
         </div>
+      </div>
 
-        {/* Language selector */}
+      {/* NG group */}
+      <div className="filter-group filter-group-ng">
+        <span className="filter-group-label filter-group-label-ng">NG</span>
+        <div className="filter-group-inputs">
+          {/* NG word input */}
+          <div className="filter-search-row">
+            <Icon name="Ban" size={16} className="filter-search-icon filter-ng-icon" />
+            <input
+              type="text"
+              className="filter-search-input"
+              value={ngWordsInput}
+              placeholder="Keywords..."
+              onChange={(e) => setNgWordsInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            {ngWordsInput && (
+              <button
+                type="button"
+                className="filter-input-clear"
+                onClick={() => setNgWordsInput('')}
+                aria-label="Clear NG words"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          {/* NG tags input */}
+          <div className="filter-search-row">
+            <Icon name="Hash" size={16} className="filter-search-icon filter-ng-icon" />
+            <input
+              type="text"
+              className="filter-search-input"
+              value={ngTagsInput}
+              placeholder="Tags..."
+              onChange={(e) => setNgTagsInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            {ngTagsInput && (
+              <button
+                type="button"
+                className="filter-input-clear"
+                onClick={() => setNgTagsInput('')}
+                aria-label="Clear NG tags"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Language selector */}
+      <div className="filter-options-row">
         <div className="filter-option language-option">
           <Icon name="Globe" size={14} />
           <select
@@ -183,42 +237,6 @@ export function FilterPanel({
           </select>
         </div>
       </div>
-
-      {/* Tag filters (if any) */}
-      {filters.tags.length > 0 && (
-        <div className="filter-tags-row">
-          {filters.tags.map((tag, index) => (
-            <span key={tag} className="filter-tag-item">
-              {index > 0 && onToggleMode && (
-                <button className="filter-mode-btn" onClick={onToggleMode}>
-                  {filters.mode === 'and' ? 'AND' : 'OR'}
-                </button>
-              )}
-              <span className="filter-tag">
-                #{tag}
-                {onRemoveTag && (
-                  <button
-                    className="filter-tag-remove"
-                    onClick={() => onRemoveTag(tag)}
-                    aria-label={`Remove tag ${tag}`}
-                  >
-                    ×
-                  </button>
-                )}
-              </span>
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Active filters summary (for popup) */}
-      {isPopup && (mypaceOnly || languageFilter || currentNgWords.length > 0) && (
-        <div className="filter-summary">
-          {mypaceOnly && <span className="filter-chip">mypace</span>}
-          {languageFilter && <span className="filter-chip">{currentLanguageLabel}</span>}
-          {currentNgWords.length > 0 && <span className="filter-chip filter-chip-ng">NG: {currentNgWords.length}</span>}
-        </div>
-      )}
 
       {/* Action buttons */}
       <div className="filter-actions">

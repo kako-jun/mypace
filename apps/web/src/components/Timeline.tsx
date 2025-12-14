@@ -1,15 +1,13 @@
 import { useState, useCallback, Fragment, useMemo } from 'react'
 import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
-import { FilterBar, TimelinePostCard } from '../components/timeline'
+import { TimelinePostCard } from '../components/timeline'
 import { Loading } from './ui'
-import { useTimeline, useShare } from '../hooks'
+import { useTimeline } from '../hooks'
 import {
   shareOrCopy,
-  navigateToHome,
   navigateToEdit,
   navigateTo,
-  buildTagUrl,
   buildSearchUrl,
   contentHasTag,
   DEFAULT_SEARCH_FILTERS,
@@ -20,22 +18,23 @@ interface TimelineProps {
   onEditStart?: (event: Event) => void
   onReplyStart?: (event: Event) => void
   filters?: SearchFilters
-  showSearchBox?: boolean
 }
 
-export function Timeline({
-  onEditStart,
-  onReplyStart,
-  filters = DEFAULT_SEARCH_FILTERS,
-  showSearchBox,
-}: TimelineProps) {
+export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_FILTERS }: TimelineProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
-  const { copied: filterCopied, share: shareFilter } = useShare()
 
   // Extract filter values for easier access
   // Note: mypace filtering is done server-side, langFilter is reserved for future
-  const { query, ngWords, tags: filterTags, mode: filterMode, mypace: _mypaceOnly, lang: _langFilter } = filters
+  const {
+    query,
+    ngWords,
+    tags: filterTags,
+    ngTags: filterNgTags,
+    mode: filterMode,
+    mypace: mypaceOnly,
+    lang: _langFilter,
+  } = filters
 
   const {
     items,
@@ -64,7 +63,7 @@ export function Timeline({
     handleDelete,
     getDisplayName,
     getAvatarUrl,
-  } = useTimeline()
+  } = useTimeline({ mypaceOnly })
 
   const handleEdit = useCallback(
     (event: Event) => {
@@ -88,8 +87,6 @@ export function Timeline({
     }
   }, [])
 
-  const handleShareFilter = useCallback(() => shareFilter(window.location.href), [shareFilter])
-
   const handleDeleteConfirm = useCallback(
     async (event: Event) => {
       await handleDelete(event)
@@ -102,17 +99,12 @@ export function Timeline({
   // Handle hashtag clicks - add tag to filter
   const handleHashtagClick = useCallback(
     (tag: string) => {
-      if (filterTags.length === 0 && !showSearchBox) {
-        // Simple tag filter via /tag/xxx
-        navigateTo(`/tag/${encodeURIComponent(tag)}`)
-      } else {
-        // Add to existing search filters
-        if (!filterTags.includes(tag)) {
-          navigateTo(buildSearchUrl({ ...filters, tags: [...filterTags, tag] }))
-        }
+      // Add tag to current search filters
+      if (!filterTags.includes(tag)) {
+        navigateTo(buildSearchUrl({ ...filters, tags: [...filterTags, tag] }))
       }
     },
-    [filters, filterTags, showSearchBox]
+    [filters, filterTags]
   )
 
   // Set up hashtag click handler
@@ -135,6 +127,12 @@ export function Timeline({
   // Note: mypace filtering is done server-side, so we skip it here
   let filteredItems = items
 
+  // Helper to get searchable text (content + display name)
+  const getSearchableText = (item: (typeof items)[0]): string => {
+    const displayName = getDisplayName(item.event.pubkey)
+    return `${item.event.content} ${displayName}`.toLowerCase()
+  }
+
   // Filter by hashtags
   if (filterTags.length > 0) {
     filteredItems = filteredItems.filter((item) =>
@@ -144,47 +142,23 @@ export function Timeline({
     )
   }
 
-  // Filter by OK word (case-insensitive)
+  // Filter by OK word (case-insensitive, searches content + username)
   if (query) {
     const lowerQuery = query.toLowerCase()
-    filteredItems = filteredItems.filter((item) => item.event.content.toLowerCase().includes(lowerQuery))
+    filteredItems = filteredItems.filter((item) => getSearchableText(item).includes(lowerQuery))
   }
 
-  // Filter by NG words (exclude posts containing any NG word)
+  // Filter by NG words (exclude posts containing any NG word in content or username)
   if (ngWords.length > 0) {
     filteredItems = filteredItems.filter((item) => {
-      const lowerContent = item.event.content.toLowerCase()
-      return !ngWords.some((ngWord) => lowerContent.includes(ngWord.toLowerCase()))
+      const searchableText = getSearchableText(item)
+      return !ngWords.some((ngWord) => searchableText.includes(ngWord.toLowerCase()))
     })
   }
 
-  // Determine if we're on search page
-  const isSearchPage = showSearchBox
-
-  const clearFilter = () => {
-    if (isSearchPage) {
-      navigateTo(buildSearchUrl({}))
-    } else {
-      navigateToHome()
-    }
-  }
-
-  const removeTag = (tagToRemove: string) => {
-    const newTags = filterTags.filter((t) => t !== tagToRemove)
-    if (isSearchPage) {
-      navigateTo(buildSearchUrl({ ...filters, tags: newTags }))
-    } else {
-      navigateTo(buildTagUrl(newTags, filterMode))
-    }
-  }
-
-  const toggleFilterMode = () => {
-    const newMode = filterMode === 'and' ? 'or' : 'and'
-    if (isSearchPage) {
-      navigateTo(buildSearchUrl({ ...filters, mode: newMode }))
-    } else {
-      navigateTo(buildTagUrl(filterTags, newMode))
-    }
+  // Filter by NG tags (exclude posts containing any NG tag)
+  if (filterNgTags && filterNgTags.length > 0) {
+    filteredItems = filteredItems.filter((item) => !filterNgTags.some((tag) => contentHasTag(item.event.content, tag)))
   }
 
   return (
@@ -193,17 +167,6 @@ export function Timeline({
         <button className="new-posts-banner" onClick={loadNewEvents}>
           {newEventCount}件の新着投稿があります
         </button>
-      )}
-      {!showSearchBox && filterTags.length > 0 && (
-        <FilterBar
-          filterTags={filterTags}
-          filterMode={filterMode}
-          filterCopied={filterCopied}
-          onRemoveTag={removeTag}
-          onToggleMode={toggleFilterMode}
-          onClearAll={clearFilter}
-          onShare={handleShareFilter}
-        />
       )}
       {filteredItems.map((item) => {
         const event = item.event

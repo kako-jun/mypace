@@ -37,6 +37,47 @@
   max-width: calc(100vw - 2rem);
 }
 
+/* mypace row at top */
+.filter-mypace-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+/* Filter groups (OK/NG) */
+.filter-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.filter-group-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--btn-primary-bg);
+  min-width: 24px;
+  padding-top: 0.6rem;
+  text-align: right;
+}
+
+.filter-group-label-ng {
+  color: var(--action-delete);
+}
+
+.filter-group-inputs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* OK icon for tags */
+.filter-ok-icon {
+  stroke: var(--btn-primary-bg) !important;
+}
+
 .filter-panel-popup {
   animation: filter-panel-slide 0.15s ease;
   width: 400px;
@@ -183,15 +224,22 @@
 
 .language-select {
   border: none;
-  background: transparent;
+  background: var(--surface-primary);
   font-size: 0.8rem;
   color: var(--text-secondary);
   cursor: pointer;
   outline: none;
-  padding: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
 }
 
 .language-select:hover {
+  color: var(--text-primary);
+  background: var(--surface-secondary);
+}
+
+.language-select option {
+  background: var(--surface-primary);
   color: var(--text-primary);
 }
 

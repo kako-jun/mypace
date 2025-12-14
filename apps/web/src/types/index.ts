@@ -83,7 +83,8 @@ export type FilterMode = 'and' | 'or'
 export interface SearchFilters {
   query: string // OK word
   ngWords: string[] // NG words
-  tags: string[] // Hashtags
+  tags: string[] // OK tags (include posts with these hashtags)
+  ngTags: string[] // NG tags (exclude posts with these hashtags)
   mode: FilterMode // AND/OR for tags
   mypace: boolean // mypace filter
   lang: string // Language code (empty = all)
