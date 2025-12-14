@@ -123,9 +123,12 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
       setReplies(replyData)
       setReposts(repostData)
 
-      // Load reply profiles
+      // Load reply and reactor profiles
       const profiles: { [pubkey: string]: Profile | null } = {}
-      for (const pk of [...new Set(replyData.replies.map((r) => r.pubkey))]) {
+      const replyPubkeys = replyData.replies.map((r) => r.pubkey)
+      const reactorPubkeys = reactionData.reactors.map((r) => r.pubkey)
+      const allPubkeys = [...new Set([...replyPubkeys, ...reactorPubkeys])]
+      for (const pk of allPubkeys) {
         try {
           const userProfile = await fetchUserProfile(pk)
           if (userProfile) profiles[pk] = userProfile
@@ -159,8 +162,9 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
   }
 
   const getProfileDisplayName = (pubkey: string, profileData?: Profile | null): string => {
-    // Don't fallback to post author's profile - use undefined to show npub
-    return getDisplayName(profileData, pubkey)
+    // Use post author's profile if pubkey matches and no specific profile provided
+    const effectiveProfile = profileData ?? (pubkey === event?.pubkey ? profile : null)
+    return getDisplayName(effectiveProfile, pubkey)
   }
 
   const getProfileAvatarUrl = (profileData?: Profile | null): string | null => {
