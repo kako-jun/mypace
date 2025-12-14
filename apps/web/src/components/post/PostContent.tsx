@@ -8,9 +8,10 @@ interface PostContentProps {
   truncate?: boolean
   emojis?: EmojiTag[]
   profiles?: Record<string, Profile | null | undefined>
+  onReadMore?: () => void
 }
 
-export function PostContent({ content, truncate = false, emojis = [], profiles = {} }: PostContentProps) {
+export function PostContent({ content, truncate = false, emojis = [], profiles = {}, onReadMore }: PostContentProps) {
   const shouldTruncate =
     truncate &&
     (content.length > LIMITS.PREVIEW_TRUNCATE_LENGTH || content.split('\n').length > LIMITS.PREVIEW_LINE_THRESHOLD)
@@ -19,8 +20,13 @@ export function PostContent({ content, truncate = false, emojis = [], profiles =
     <>
       {shouldTruncate ? (
         <>
-          {renderContent(content.slice(0, LIMITS.PREVIEW_TRUNCATE_LENGTH) + '...', emojis, profiles)}
-          <span className="read-more-text">続きを読む</span>
+          {renderContent(content.slice(0, LIMITS.PREVIEW_TRUNCATE_LENGTH), emojis, profiles)}
+          <button
+            className="read-more-btn text-outlined text-outlined-button text-outlined-primary"
+            onClick={onReadMore}
+          >
+            … READ MORE
+          </button>
         </>
       ) : (
         renderContent(content, emojis, profiles)

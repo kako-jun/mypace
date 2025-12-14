@@ -80,10 +80,12 @@
   font-family: var(--font-mono);
 }
 
-.read-more-text {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-left: 0.25rem;
+/* READ MORE button - uses same classes as EDIT button */
+/* Override .post-content inherited styles */
+.read-more-btn {
+  margin-top: 0.5rem;
+  font-family: var(--font-sans) !important;
+  color: #8df !important;
 }
 
 /* Post footer */

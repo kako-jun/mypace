@@ -98,7 +98,13 @@ export default function TimelinePostCard({
       />
 
       <div className="post-content">
-        <PostContent content={event.content} truncate emojis={parseEmojiTags(event.tags)} profiles={profiles} />
+        <PostContent
+          content={event.content}
+          truncate
+          emojis={parseEmojiTags(event.tags)}
+          profiles={profiles}
+          onReadMore={() => navigateToPostModal(event.id)}
+        />
       </div>
 
       <div className="post-footer">
