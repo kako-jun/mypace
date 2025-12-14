@@ -183,8 +183,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         // 特定ユーザーの投稿を取得
         notes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT)
       } else {
-        // 全体タイムラインを取得（フィルタなしで全データ取得、クライアント側でフィルタリング）
-        notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, false, '')
+        // mypace投稿を取得（タグ/キーワードはクライアント側でフィルタリング）
+        notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, true, '')
       }
 
       const initialItems: TimelineItem[] = notes.map((note) => ({ event: note }))
@@ -460,8 +460,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       if (authorPubkey) {
         newNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime)
       } else {
-        // フィルタなしで全データ取得
-        newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime, false, '')
+        // mypace投稿の新着をチェック
+        newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime, true, '')
       }
 
       // 既存のイベントIDを除外
@@ -545,11 +545,11 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       if (authorPubkey) {
         olderNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, 0, oldestEventTime)
       } else {
-        // フィルタなしで全データ取得
+        // mypace投稿の過去分を取得
         olderNotes = await fetchEvents(
           LIMITS.TIMELINE_FETCH_LIMIT,
           0,
-          false,
+          true,
           '',
           oldestEventTime // until: この時刻より古いものを取得
         )
@@ -620,11 +620,11 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         if (authorPubkey) {
           gapNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, gap.since, gap.until)
         } else {
-          // フィルタなしで全データ取得
+          // mypace投稿のギャップを埋める
           gapNotes = await fetchEvents(
             LIMITS.TIMELINE_FETCH_LIMIT,
             gap.since, // since: この時刻より新しいもの
-            false,
+            true,
             '',
             gap.until // until: この時刻より古いもの
           )

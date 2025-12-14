@@ -2,7 +2,6 @@ import { useState, useCallback, Fragment, useMemo } from 'react'
 import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { FilterBar, TimelinePostCard } from '../components/timeline'
-import { FilterPanel } from './FilterPanel'
 import { Loading } from './ui'
 import { useTimeline, useShare } from '../hooks'
 import {
@@ -35,8 +34,8 @@ export function Timeline({
   const { copied: filterCopied, share: shareFilter } = useShare()
 
   // Extract filter values for easier access
-  // Note: langFilter is reserved for future language detection feature
-  const { query, ngWords, tags: filterTags, mode: filterMode, mypace: mypaceOnly, lang: _langFilter } = filters
+  // Note: mypace filtering is done server-side, langFilter is reserved for future
+  const { query, ngWords, tags: filterTags, mode: filterMode, mypace: _mypaceOnly, lang: _langFilter } = filters
 
   const {
     items,
@@ -133,12 +132,8 @@ export function Timeline({
   }
 
   // Client-side filtering (fast, no server request)
+  // Note: mypace filtering is done server-side, so we skip it here
   let filteredItems = items
-
-  // Filter by mypace tag
-  if (mypaceOnly) {
-    filteredItems = filteredItems.filter((item) => contentHasTag(item.event.content, 'mypace'))
-  }
 
   // Filter by hashtags
   if (filterTags.length > 0) {
@@ -194,9 +189,6 @@ export function Timeline({
 
   return (
     <div className="timeline">
-      {showSearchBox && (
-        <FilterPanel isPopup={false} filters={filters} onRemoveTag={removeTag} onToggleMode={toggleFilterMode} />
-      )}
       {newEventCount > 0 && (
         <button className="new-posts-banner" onClick={loadNewEvents}>
           {newEventCount}件の新着投稿があります

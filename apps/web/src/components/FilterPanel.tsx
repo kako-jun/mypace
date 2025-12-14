@@ -125,6 +125,16 @@ export function FilterPanel({
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyDown}
         />
+        {searchQuery && (
+          <button
+            type="button"
+            className="filter-input-clear"
+            onClick={() => setSearchQuery('')}
+            aria-label="Clear search"
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {/* NG word input (exclude) */}
@@ -138,6 +148,16 @@ export function FilterPanel({
           onChange={(e) => setNgWordsInput(e.target.value)}
           onKeyDown={handleKeyDown}
         />
+        {ngWordsInput && (
+          <button
+            type="button"
+            className="filter-input-clear"
+            onClick={() => setNgWordsInput('')}
+            aria-label="Clear NG words"
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {/* Filter options row */}

@@ -39,6 +39,8 @@
 
 .filter-panel-popup {
   animation: filter-panel-slide 0.15s ease;
+  width: 400px;
+  max-width: calc(100vw - 2rem);
 }
 
 @keyframes filter-panel-slide {
@@ -55,10 +57,14 @@
 .filter-panel-embedded {
   border: none;
   box-shadow: none;
-  padding: 0;
+  padding: 0.75rem;
   margin-bottom: 1rem;
   direction: ltr;
   column-span: all;
+  max-width: 600px;
+  margin-left: auto;
+  background: var(--surface-primary);
+  border: 2px solid #333;
 }
 
 /* Search Row */
@@ -88,6 +94,28 @@
 
 .filter-search-input::placeholder {
   color: var(--text-placeholder);
+}
+
+.filter-input-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--surface-tertiary);
+  border: none;
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+  outline: none;
+}
+
+.filter-input-clear:hover {
+  background: var(--text-muted);
+  color: var(--surface-primary);
 }
 
 /* NG word row styling */
