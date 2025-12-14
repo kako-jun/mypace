@@ -1,6 +1,7 @@
 // Navigation utilities
 import type { FilterMode, SearchFilters } from '../../types'
 import { getNavigateFunction } from './router-navigation'
+import { STORAGE_KEYS } from '../constants'
 
 // Navigate to a URL using React Router
 export function navigateTo(href: string): void {
@@ -57,6 +58,30 @@ export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
   mode: 'and',
   mypace: true,
   lang: '',
+}
+
+// Save filters to localStorage
+export function saveFiltersToStorage(filters: SearchFilters): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.SEARCH_FILTERS, JSON.stringify(filters))
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+// Load filters from localStorage
+export function loadFiltersFromStorage(): SearchFilters {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.SEARCH_FILTERS)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      // Merge with defaults to ensure all fields exist
+      return { ...DEFAULT_SEARCH_FILTERS, ...parsed }
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return DEFAULT_SEARCH_FILTERS
 }
 
 // Build search URL with all filter parameters

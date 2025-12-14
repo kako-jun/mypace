@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Icon } from './ui/Icon'
 import Button from './ui/Button'
 import Toggle from './ui/Toggle'
-import { buildSearchUrl, DEFAULT_SEARCH_FILTERS } from '../lib/utils'
+import { buildSearchUrl, DEFAULT_SEARCH_FILTERS, saveFiltersToStorage } from '../lib/utils'
 import { LANGUAGES } from '../lib/constants'
 import type { SearchFilters } from '../types'
 
@@ -63,7 +63,7 @@ export function FilterPanel({
       .filter((w) => w.length > 0)
   }
 
-  // Apply filters - navigate to new URL
+  // Apply filters - save to localStorage and navigate to URL
   const handleApply = () => {
     const newFilters: SearchFilters = {
       query: searchQuery,
@@ -74,19 +74,25 @@ export function FilterPanel({
       lang: languageFilter,
     }
 
+    // Save to localStorage for next visit
+    saveFiltersToStorage(newFilters)
+
     // Navigate to search URL with new filters
     const url = buildSearchUrl(newFilters)
     navigate(url)
     onClose?.()
   }
 
-  // Clear all filters - navigate to /search with defaults
+  // Clear all filters - save defaults and navigate to /search
   const handleClear = () => {
     // Reset local state
     setSearchQuery('')
     setNgWordsInput('')
     setMypaceOnly(true)
     setLanguageFilter('')
+
+    // Save defaults to localStorage
+    saveFiltersToStorage(DEFAULT_SEARCH_FILTERS)
 
     // Navigate to clean search page
     navigate('/search')

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { PostForm } from '../components/PostForm'
 import { Timeline } from '../components/Timeline'
 import { LightBox, triggerLightBox } from '../components/LightBox'
@@ -10,6 +11,8 @@ import {
   getUIThemeColors,
   applyThemeColors,
   DEFAULT_SEARCH_FILTERS,
+  loadFiltersFromStorage,
+  buildSearchUrl,
 } from '../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS, TIMEOUTS } from '../lib/constants'
 import type { Event, SearchFilters } from '../types'
@@ -19,7 +22,20 @@ interface HomePageProps {
   showSearchBox?: boolean
 }
 
-export function HomePage({ filters = DEFAULT_SEARCH_FILTERS, showSearchBox }: HomePageProps) {
+export function HomePage({ filters, showSearchBox }: HomePageProps) {
+  const navigate = useNavigate()
+
+  // Redirect from home to /search with stored filters
+  useEffect(() => {
+    if (!showSearchBox && filters === undefined) {
+      const storedFilters = loadFiltersFromStorage()
+      const url = buildSearchUrl(storedFilters)
+      navigate(url, { replace: true })
+    }
+  }, [showSearchBox, filters, navigate])
+
+  // Use provided filters or defaults
+  const activeFilters = filters ?? DEFAULT_SEARCH_FILTERS
   const [longMode, setLongMode] = useState(false)
   const [content, setContent] = useState(() => getString(STORAGE_KEYS.DRAFT))
   const [showPreview, setShowPreview] = useState(false)
@@ -159,7 +175,7 @@ export function HomePage({ filters = DEFAULT_SEARCH_FILTERS, showSearchBox }: Ho
         <Timeline
           onEditStart={handleEditStart}
           onReplyStart={handleReplyStart}
-          filters={filters}
+          filters={activeFilters}
           showSearchBox={showSearchBox}
         />
       </div>
