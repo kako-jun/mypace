@@ -86,9 +86,7 @@ src/
 │   │   ├── IframeEmbed.tsx
 │   │   └── LinkPreview.tsx
 │   ├── timeline/        # タイムライン関連
-│   │   ├── TimelinePostCard.tsx
-│   │   ├── FilterBar.tsx
-│   │   └── SearchBox.tsx
+│   │   └── TimelinePostCard.tsx
 │   ├── ui/              # 汎用UIコンポーネント
 │   │   ├── Button.tsx
 │   │   ├── Input.tsx
