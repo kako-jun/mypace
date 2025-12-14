@@ -101,9 +101,8 @@
   margin-left: 0.5rem;
 }
 
-/* Reply card */
+/* Reply card - background is set via inline style from theme colors */
 .reply-card {
-  background: var(--surface-secondary);
   padding: 0.75rem;
   border-radius: 8px;
   margin-bottom: 0.5rem;

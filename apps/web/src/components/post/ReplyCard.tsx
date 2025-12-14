@@ -1,6 +1,7 @@
 import PostHeader from './PostHeader'
 import { PostContent } from './PostContent'
 import { parseEmojiTags } from '../ui'
+import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import type { Event, EmojiTag, Profile } from '../../types'
 
 interface ReplyCardProps {
@@ -22,9 +23,10 @@ export default function ReplyCard({
   profiles = {},
   onClick,
 }: ReplyCardProps) {
-  // Reply cards don't apply theme styling - they inherit from parent post-card's light theme
+  const themeProps = getThemeCardProps(getEventThemeColors(reply))
+
   return (
-    <article className="reply-card" onClick={onClick}>
+    <article className={`reply-card ${themeProps.className}`} style={themeProps.style} onClick={onClick}>
       <PostHeader
         pubkey={reply.pubkey}
         createdAt={reply.created_at}
