@@ -68,6 +68,7 @@
   color: var(--text-muted);
   transition: background 0.15s ease, color 0.15s ease;
   flex-shrink: 0;
+  outline: none;
 }
 
 .npub-copy-btn:hover {
@@ -144,6 +145,7 @@
   padding: 0;
   cursor: pointer;
   text-align: left;
+  outline: none;
 }
 
 .post-header-user .avatar {

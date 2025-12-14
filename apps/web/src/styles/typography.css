@@ -27,6 +27,7 @@
   border: none;
   cursor: pointer;
   padding: 0.25rem 0.5rem;
+  outline: none;
 }
 
 [data-theme="dark"] .text-outlined {

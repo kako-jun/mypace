@@ -109,6 +109,7 @@
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease;
   flex-shrink: 0;
+  outline: none;
 }
 
 .filter-search-submit svg {
@@ -191,6 +192,7 @@
   color: var(--text-muted);
   cursor: pointer;
   transition: background 0.15s ease;
+  outline: none;
 }
 
 .filter-mode-btn:hover {
@@ -224,6 +226,7 @@
   color: var(--btn-primary-text);
   line-height: 1;
   transition: background 0.15s ease;
+  outline: none;
 }
 
 .filter-panel .filter-tag-remove:hover {

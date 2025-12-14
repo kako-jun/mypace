@@ -41,6 +41,7 @@
   padding: 0.4rem 0.75rem;
   border: none;
   transition: transform 0.15s ease;
+  outline: none;
   clip-path: polygon(
     var(--btn-corner) 0,
     calc(100% - var(--btn-corner)) 0,
@@ -90,6 +91,7 @@
   cursor: pointer;
   padding: 0.25rem 0;
   transition: color 0.2s ease;
+  outline: none;
 }
 
 .thread-toggle:hover {

@@ -15,6 +15,7 @@
   cursor: pointer;
   padding: 0.25rem 0;
   transition: color 0.2s ease, transform 0.15s ease;
+  outline: none;
 }
 
 .icon-button:hover:not(:disabled) {
@@ -40,6 +41,7 @@
   font-size: 0.85rem;
   cursor: pointer;
   transition: transform 0.15s ease;
+  outline: none;
   clip-path: polygon(
     var(--btn-corner) 0,
     calc(100% - var(--btn-corner)) 0,
@@ -140,6 +142,7 @@
   font-size: 0.85rem;
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease;
+  outline: none;
   clip-path: polygon(
     var(--btn-corner) 0,
     calc(100% - var(--btn-corner)) 0,
