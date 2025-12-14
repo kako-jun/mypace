@@ -73,7 +73,7 @@
 /* Repost button - extends .icon-button */
 .repost-button svg {
   stroke: #333;
-  fill: #fff;
+  fill: none;
 }
 
 .repost-button:hover:not(:disabled) {
