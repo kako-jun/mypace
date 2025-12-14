@@ -3,18 +3,23 @@ import { PostForm } from '../components/PostForm'
 import { Timeline } from '../components/Timeline'
 import { LightBox, triggerLightBox } from '../components/LightBox'
 import { setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
-import { getString, setString, removeItem, getUIThemeColors, applyThemeColors } from '../lib/utils'
+import {
+  getString,
+  setString,
+  removeItem,
+  getUIThemeColors,
+  applyThemeColors,
+  DEFAULT_SEARCH_FILTERS,
+} from '../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS, TIMEOUTS } from '../lib/constants'
-import type { Event, FilterMode } from '../types'
+import type { Event, SearchFilters } from '../types'
 
 interface HomePageProps {
-  initialFilterTags?: string[]
-  initialFilterMode?: FilterMode
-  initialSearchQuery?: string
+  filters?: SearchFilters
   showSearchBox?: boolean
 }
 
-export function HomePage({ initialFilterTags, initialFilterMode, initialSearchQuery, showSearchBox }: HomePageProps) {
+export function HomePage({ filters = DEFAULT_SEARCH_FILTERS, showSearchBox }: HomePageProps) {
   const [longMode, setLongMode] = useState(false)
   const [content, setContent] = useState(() => getString(STORAGE_KEYS.DRAFT))
   const [showPreview, setShowPreview] = useState(false)
@@ -154,9 +159,7 @@ export function HomePage({ initialFilterTags, initialFilterMode, initialSearchQu
         <Timeline
           onEditStart={handleEditStart}
           onReplyStart={handleReplyStart}
-          initialFilterTags={initialFilterTags}
-          initialFilterMode={initialFilterMode}
-          initialSearchQuery={initialSearchQuery}
+          filters={filters}
           showSearchBox={showSearchBox}
         />
       </div>

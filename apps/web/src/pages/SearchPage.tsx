@@ -1,12 +1,10 @@
 import { useSearchParams } from 'react-router-dom'
 import { HomePage } from './HomePage'
-import type { FilterMode } from '../types'
+import { parseSearchParams } from '../lib/utils'
 
 export function SearchPage() {
   const [searchParams] = useSearchParams()
-  const query = searchParams.get('q') || ''
-  const tags = searchParams.get('tags')?.split(',').filter(Boolean) || []
-  const mode = (searchParams.get('mode') || 'and') as FilterMode
+  const filters = parseSearchParams(searchParams)
 
-  return <HomePage initialSearchQuery={query} initialFilterTags={tags} initialFilterMode={mode} showSearchBox={true} />
+  return <HomePage filters={filters} showSearchBox={true} />
 }

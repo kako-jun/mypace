@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, Fragment } from 'react'
-import { TIMEOUTS, STORAGE_KEYS, CUSTOM_EVENTS } from '../lib/constants'
+import { useState, useCallback, Fragment, useMemo } from 'react'
+import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { FilterBar, TimelinePostCard } from '../components/timeline'
 import { FilterPanel } from './FilterPanel'
@@ -9,55 +9,34 @@ import {
   shareOrCopy,
   navigateToHome,
   navigateToEdit,
-  navigateToTag,
-  navigateToAddTag,
   navigateTo,
   buildTagUrl,
   buildSearchUrl,
   contentHasTag,
+  DEFAULT_SEARCH_FILTERS,
 } from '../lib/utils'
-import type { Event, FilterMode } from '../types'
-
-// Helper to get NG words from storage
-function getNgWords(): string[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEYS.NG_WORDS)
-    return stored ? JSON.parse(stored) : []
-  } catch {
-    return []
-  }
-}
+import type { Event, SearchFilters } from '../types'
 
 interface TimelineProps {
   onEditStart?: (event: Event) => void
   onReplyStart?: (event: Event) => void
-  initialFilterTags?: string[]
-  initialFilterMode?: FilterMode
-  initialSearchQuery?: string
+  filters?: SearchFilters
   showSearchBox?: boolean
 }
 
 export function Timeline({
   onEditStart,
   onReplyStart,
-  initialFilterTags,
-  initialFilterMode,
-  initialSearchQuery,
+  filters = DEFAULT_SEARCH_FILTERS,
   showSearchBox,
 }: TimelineProps) {
-  const [filterTags] = useState<string[]>(initialFilterTags || [])
-  const [filterMode] = useState<FilterMode>(initialFilterMode || 'and')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
-  const [ngWords, setNgWords] = useState<string[]>(getNgWords)
   const { copied: filterCopied, share: shareFilter } = useShare()
 
-  // Listen for NG words changes
-  useEffect(() => {
-    const handleNgWordsChange = () => setNgWords(getNgWords())
-    window.addEventListener(CUSTOM_EVENTS.NG_WORDS_CHANGED, handleNgWordsChange)
-    return () => window.removeEventListener(CUSTOM_EVENTS.NG_WORDS_CHANGED, handleNgWordsChange)
-  }, [])
+  // Extract filter values for easier access
+  // Note: langFilter is reserved for future language detection feature
+  const { query, ngWords, tags: filterTags, mode: filterMode, mypace: mypaceOnly, lang: _langFilter } = filters
 
   const {
     items,
@@ -121,15 +100,26 @@ export function Timeline({
     [handleDelete]
   )
 
-  useEffect(() => {
-    setHashtagClickHandler((tag) => {
-      if (filterTags.length === 0) {
-        navigateToTag(tag)
-      } else if (!filterTags.includes(tag)) {
-        navigateToAddTag(filterTags, tag, filterMode)
+  // Handle hashtag clicks - add tag to filter
+  const handleHashtagClick = useCallback(
+    (tag: string) => {
+      if (filterTags.length === 0 && !showSearchBox) {
+        // Simple tag filter via /tag/xxx
+        navigateTo(`/tag/${encodeURIComponent(tag)}`)
+      } else {
+        // Add to existing search filters
+        if (!filterTags.includes(tag)) {
+          navigateTo(buildSearchUrl({ ...filters, tags: [...filterTags, tag] }))
+        }
       }
-    })
-  }, [filterTags, filterMode])
+    },
+    [filters, filterTags, showSearchBox]
+  )
+
+  // Set up hashtag click handler
+  useMemo(() => {
+    setHashtagClickHandler(handleHashtagClick)
+  }, [handleHashtagClick])
 
   if (loading && events.length === 0) return <Loading />
 
@@ -142,20 +132,26 @@ export function Timeline({
     )
   }
 
-  // Filter by tags
-  let filteredItems =
-    filterTags.length > 0
-      ? items.filter((item) =>
-          filterMode === 'and'
-            ? filterTags.every((tag) => contentHasTag(item.event.content, tag))
-            : filterTags.some((tag) => contentHasTag(item.event.content, tag))
-        )
-      : items
+  // Client-side filtering (fast, no server request)
+  let filteredItems = items
 
-  // Filter by search query (case-insensitive)
-  const currentSearchQuery = initialSearchQuery || ''
-  if (currentSearchQuery) {
-    const lowerQuery = currentSearchQuery.toLowerCase()
+  // Filter by mypace tag
+  if (mypaceOnly) {
+    filteredItems = filteredItems.filter((item) => contentHasTag(item.event.content, 'mypace'))
+  }
+
+  // Filter by hashtags
+  if (filterTags.length > 0) {
+    filteredItems = filteredItems.filter((item) =>
+      filterMode === 'and'
+        ? filterTags.every((tag) => contentHasTag(item.event.content, tag))
+        : filterTags.some((tag) => contentHasTag(item.event.content, tag))
+    )
+  }
+
+  // Filter by OK word (case-insensitive)
+  if (query) {
+    const lowerQuery = query.toLowerCase()
     filteredItems = filteredItems.filter((item) => item.event.content.toLowerCase().includes(lowerQuery))
   }
 
@@ -167,28 +163,30 @@ export function Timeline({
     })
   }
 
-  // Determine if we're on search page (has query or tags via search)
+  // Determine if we're on search page
   const isSearchPage = showSearchBox
 
   const clearFilter = () => {
     if (isSearchPage) {
-      navigateTo(buildSearchUrl('', [], 'and'))
+      navigateTo(buildSearchUrl({}))
     } else {
       navigateToHome()
     }
   }
+
   const removeTag = (tagToRemove: string) => {
     const newTags = filterTags.filter((t) => t !== tagToRemove)
     if (isSearchPage) {
-      navigateTo(buildSearchUrl(currentSearchQuery, newTags, filterMode))
+      navigateTo(buildSearchUrl({ ...filters, tags: newTags }))
     } else {
       navigateTo(buildTagUrl(newTags, filterMode))
     }
   }
+
   const toggleFilterMode = () => {
     const newMode = filterMode === 'and' ? 'or' : 'and'
     if (isSearchPage) {
-      navigateTo(buildSearchUrl(currentSearchQuery, filterTags, newMode))
+      navigateTo(buildSearchUrl({ ...filters, mode: newMode }))
     } else {
       navigateTo(buildTagUrl(filterTags, newMode))
     }
@@ -197,15 +195,7 @@ export function Timeline({
   return (
     <div className="timeline">
       {showSearchBox && (
-        <FilterPanel
-          isPopup={false}
-          initialSearchQuery={initialSearchQuery}
-          filterTags={filterTags}
-          filterMode={filterMode}
-          onRemoveTag={removeTag}
-          onToggleMode={toggleFilterMode}
-          onClearTags={clearFilter}
-        />
+        <FilterPanel isPopup={false} filters={filters} onRemoveTag={removeTag} onToggleMode={toggleFilterMode} />
       )}
       {newEventCount > 0 && (
         <button className="new-posts-banner" onClick={loadNewEvents}>
@@ -276,7 +266,7 @@ export function Timeline({
       })}
       {filteredItems.length === 0 && (
         <p className="empty">
-          {currentSearchQuery || filterTags.length > 0 ? 'No posts matching filter' : 'No posts yet'}
+          {query || filterTags.length > 0 || ngWords.length > 0 ? 'No posts matching filter' : 'No posts yet'}
         </p>
       )}
       {filteredItems.length > 0 && hasMore && (

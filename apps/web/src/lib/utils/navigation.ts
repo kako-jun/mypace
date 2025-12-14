@@ -1,5 +1,5 @@
 // Navigation utilities
-import type { FilterMode } from '../../types'
+import type { FilterMode, SearchFilters } from '../../types'
 import { getNavigateFunction } from './router-navigation'
 
 // Navigate to a URL using React Router
@@ -49,19 +49,79 @@ export function navigateToAddTag(currentTags: string[], newTag: string, mode: Fi
   navigateToTagFilter([...currentTags, newTag], mode)
 }
 
-// Build search URL with query, tags, and mode
-export function buildSearchUrl(query: string, tags: string[], mode: FilterMode): string {
+// Default search filters
+export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
+  query: '',
+  ngWords: [],
+  tags: [],
+  mode: 'and',
+  mypace: true,
+  lang: '',
+}
+
+// Build search URL with all filter parameters
+export function buildSearchUrl(filters: Partial<SearchFilters>): string {
   const params = new URLSearchParams()
-  if (query) params.set('q', query)
-  if (tags.length > 0) {
-    const separator = mode === 'and' ? '+' : ','
-    params.set('tags', tags.map((t) => encodeURIComponent(t)).join(separator))
+  const f = { ...DEFAULT_SEARCH_FILTERS, ...filters }
+
+  if (f.query) params.set('q', f.query)
+  if (f.ngWords.length > 0) params.set('ng', f.ngWords.join(','))
+  if (f.tags.length > 0) {
+    const separator = f.mode === 'and' ? '+' : ','
+    params.set('tags', f.tags.map((t) => encodeURIComponent(t)).join(separator))
   }
-  if (mode === 'or') params.set('mode', 'or')
+  if (!f.mypace) params.set('mypace', '0')
+  if (f.lang) params.set('lang', f.lang)
+
   const queryString = params.toString()
   return queryString ? `/search?${queryString}` : '/search'
 }
 
-export function navigateToSearch(query: string, tags: string[], mode: FilterMode): void {
-  navigateTo(buildSearchUrl(query, tags, mode))
+// Parse search URL parameters to filters
+export function parseSearchParams(searchParams: URLSearchParams): SearchFilters {
+  const query = searchParams.get('q') || ''
+  const ngParam = searchParams.get('ng') || ''
+  const ngWords = ngParam
+    ? ngParam
+        .split(',')
+        .map((w) => w.trim())
+        .filter(Boolean)
+    : []
+  const tagsParam = searchParams.get('tags') || ''
+  const mypaceParam = searchParams.get('mypace')
+  const lang = searchParams.get('lang') || ''
+
+  // Determine mode and parse tags based on separator
+  let tags: string[] = []
+  let mode: FilterMode = 'and'
+  if (tagsParam) {
+    if (tagsParam.includes('+')) {
+      tags = tagsParam
+        .split('+')
+        .map((t) => decodeURIComponent(t.trim()))
+        .filter(Boolean)
+      mode = 'and'
+    } else if (tagsParam.includes(',')) {
+      tags = tagsParam
+        .split(',')
+        .map((t) => decodeURIComponent(t.trim()))
+        .filter(Boolean)
+      mode = 'or'
+    } else {
+      tags = [decodeURIComponent(tagsParam)]
+    }
+  }
+
+  return {
+    query,
+    ngWords,
+    tags,
+    mode,
+    mypace: mypaceParam !== '0',
+    lang,
+  }
+}
+
+export function navigateToSearch(filters: Partial<SearchFilters>): void {
+  navigateTo(buildSearchUrl(filters))
 }

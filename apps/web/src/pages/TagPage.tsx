@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { HomePage } from './HomePage'
-import type { FilterMode } from '../types'
+import { DEFAULT_SEARCH_FILTERS } from '../lib/utils'
+import type { FilterMode, SearchFilters } from '../types'
 
 export function TagPage() {
   const { tags } = useParams<{ tags: string }>()
@@ -27,5 +28,11 @@ export function TagPage() {
     filterMode = 'and'
   }
 
-  return <HomePage initialFilterTags={filterTags} initialFilterMode={filterMode} />
+  const filters: SearchFilters = {
+    ...DEFAULT_SEARCH_FILTERS,
+    tags: filterTags,
+    mode: filterMode,
+  }
+
+  return <HomePage filters={filters} />
 }

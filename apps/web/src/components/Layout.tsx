@@ -1,42 +1,40 @@
-import { useState, useEffect, useRef } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { Icon } from './ui/Icon'
 import { Settings } from './Settings'
 import { FilterPanel } from './FilterPanel'
-import { getBoolean, getString } from '../lib/utils'
-import { STORAGE_KEYS, CUSTOM_EVENTS } from '../lib/constants'
+import { parseSearchParams, DEFAULT_SEARCH_FILTERS } from '../lib/utils'
+import { CUSTOM_EVENTS } from '../lib/constants'
 import { getStoredThemeColors, isDarkColor } from '../lib/nostr/theme'
 
 export function Layout() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
   const [showFilterPanel, setShowFilterPanel] = useState(false)
-  const [hasActiveFilters, setHasActiveFilters] = useState(false)
   const [headerCornerClass, setHeaderCornerClass] = useState('')
   const [starAnimationPhase, setStarAnimationPhase] = useState<'initial' | 'normal'>('initial')
   const filterButtonRef = useRef<HTMLButtonElement>(null)
   const filterPanelRef = useRef<HTMLDivElement>(null)
 
-  // Check for active filters
-  useEffect(() => {
-    const checkFilters = () => {
-      const mypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
-      const languageFilter = getString(STORAGE_KEYS.LANGUAGE_FILTER) || ''
-      const ngWordsStr = localStorage.getItem(STORAGE_KEYS.NG_WORDS)
-      const ngWords = ngWordsStr ? JSON.parse(ngWordsStr) : []
-      // Filter is active when any filtering is happening
-      setHasActiveFilters(mypaceOnly || !!languageFilter || ngWords.length > 0)
+  // Parse current URL filters
+  const currentFilters = useMemo(() => {
+    if (location.pathname === '/search') {
+      return parseSearchParams(searchParams)
     }
-    checkFilters()
+    return DEFAULT_SEARCH_FILTERS
+  }, [location.pathname, searchParams])
 
-    window.addEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, checkFilters)
-    window.addEventListener(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED, checkFilters)
-    window.addEventListener(CUSTOM_EVENTS.NG_WORDS_CHANGED, checkFilters)
-    return () => {
-      window.removeEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, checkFilters)
-      window.removeEventListener(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED, checkFilters)
-      window.removeEventListener(CUSTOM_EVENTS.NG_WORDS_CHANGED, checkFilters)
-    }
-  }, [])
+  // Check if any filters are active (different from defaults)
+  const hasActiveFilters = useMemo(() => {
+    return (
+      currentFilters.query !== '' ||
+      currentFilters.ngWords.length > 0 ||
+      currentFilters.tags.length > 0 ||
+      !currentFilters.mypace ||
+      currentFilters.lang !== ''
+    )
+  }, [currentFilters])
 
   // Check theme colors for top-right corner
   useEffect(() => {
@@ -111,7 +109,7 @@ export function Layout() {
             </button>
             {showFilterPanel && (
               <div ref={filterPanelRef} className="filter-panel-wrapper">
-                <FilterPanel isPopup={true} onClose={() => setShowFilterPanel(false)} />
+                <FilterPanel isPopup={true} filters={currentFilters} onClose={() => setShowFilterPanel(false)} />
               </div>
             )}
           </div>

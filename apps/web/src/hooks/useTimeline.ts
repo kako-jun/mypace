@@ -15,8 +15,8 @@ import {
   createRepostEvent,
   MAX_STARS_PER_USER,
 } from '../lib/nostr/events'
-import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage, getBoolean, getString } from '../lib/utils'
-import { TIMEOUTS, CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../lib/constants'
+import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage } from '../lib/utils'
+import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../lib/constants'
 import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../types'
 
 const POLLING_INTERVAL = 60 * 1000 // 1分
@@ -183,10 +183,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         // 特定ユーザーの投稿を取得
         notes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT)
       } else {
-        // 全体タイムラインを取得
-        const mypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
-        const language = getString(STORAGE_KEYS.LANGUAGE_FILTER) || ''
-        notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, mypaceOnly, language)
+        // 全体タイムラインを取得（フィルタなしで全データ取得、クライアント側でフィルタリング）
+        notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, false, '')
       }
 
       const initialItems: TimelineItem[] = notes.map((note) => ({ event: note }))
@@ -462,9 +460,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       if (authorPubkey) {
         newNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime)
       } else {
-        const mypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
-        const language = getString(STORAGE_KEYS.LANGUAGE_FILTER) || ''
-        newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime, mypaceOnly, language)
+        // フィルタなしで全データ取得
+        newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime, false, '')
       }
 
       // 既存のイベントIDを除外
@@ -514,17 +511,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   useEffect(() => {
     loadTimelineRef.current()
     const handleNewPost = () => setTimeout(() => loadTimelineRef.current(), TIMEOUTS.NEW_POST_RELOAD)
-    const handleFilterChanged = () => {
-      setPendingNewEvents([])
-      loadTimelineRef.current()
-    }
     window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
-    window.addEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, handleFilterChanged)
-    window.addEventListener(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED, handleFilterChanged)
     return () => {
       window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
-      window.removeEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, handleFilterChanged)
-      window.removeEventListener(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED, handleFilterChanged)
     }
   }, [authorPubkey])
 
@@ -556,13 +545,12 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       if (authorPubkey) {
         olderNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, 0, oldestEventTime)
       } else {
-        const mypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
-        const language = getString(STORAGE_KEYS.LANGUAGE_FILTER) || ''
+        // フィルタなしで全データ取得
         olderNotes = await fetchEvents(
           LIMITS.TIMELINE_FETCH_LIMIT,
           0,
-          mypaceOnly,
-          language,
+          false,
+          '',
           oldestEventTime // until: この時刻より古いものを取得
         )
       }
@@ -632,13 +620,12 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         if (authorPubkey) {
           gapNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, gap.since, gap.until)
         } else {
-          const mypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
-          const language = getString(STORAGE_KEYS.LANGUAGE_FILTER) || ''
+          // フィルタなしで全データ取得
           gapNotes = await fetchEvents(
             LIMITS.TIMELINE_FETCH_LIMIT,
             gap.since, // since: この時刻より新しいもの
-            mypaceOnly,
-            language,
+            false,
+            '',
             gap.until // until: この時刻より古いもの
           )
         }

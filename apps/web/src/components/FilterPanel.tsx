@@ -3,67 +3,51 @@ import { useNavigate } from 'react-router-dom'
 import { Icon } from './ui/Icon'
 import Button from './ui/Button'
 import Toggle from './ui/Toggle'
-import { getBoolean, setBoolean, getString, setString, buildSearchUrl } from '../lib/utils'
-import { STORAGE_KEYS, CUSTOM_EVENTS, LANGUAGES } from '../lib/constants'
-import type { FilterMode } from '../types'
-
-// Helper to get/set NG words array
-function getNgWords(): string[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEYS.NG_WORDS)
-    return stored ? JSON.parse(stored) : []
-  } catch {
-    return []
-  }
-}
-
-function setNgWords(words: string[]): void {
-  localStorage.setItem(STORAGE_KEYS.NG_WORDS, JSON.stringify(words))
-}
+import { buildSearchUrl, DEFAULT_SEARCH_FILTERS } from '../lib/utils'
+import { LANGUAGES } from '../lib/constants'
+import type { SearchFilters } from '../types'
 
 interface FilterPanelProps {
   // Popup mode
   isPopup?: boolean
   onClose?: () => void
-  // Current filter state (for embedded mode)
-  initialSearchQuery?: string
-  filterTags?: string[]
-  filterMode?: FilterMode
+  // Current filter state
+  filters?: SearchFilters
   // Callbacks for embedded mode
-  onSearchQueryChange?: (query: string) => void
   onRemoveTag?: (tag: string) => void
   onToggleMode?: () => void
-  onClearTags?: () => void
 }
 
 export function FilterPanel({
   isPopup = false,
   onClose,
-  initialSearchQuery = '',
-  filterTags = [],
-  filterMode = 'and',
-  onSearchQueryChange,
+  filters = DEFAULT_SEARCH_FILTERS,
   onRemoveTag,
   onToggleMode,
-  onClearTags,
 }: FilterPanelProps) {
   const navigate = useNavigate()
-  // Local state (not saved until Apply)
-  const [searchQuery, setSearchQuery] = useState(initialSearchQuery)
-  const [mypaceOnly, setMypaceOnly] = useState(() => getBoolean(STORAGE_KEYS.MYPACE_ONLY, true))
-  const [languageFilter, setLanguageFilter] = useState(() => getString(STORAGE_KEYS.LANGUAGE_FILTER) || '')
-  const [ngWordsInput, setNgWordsInput] = useState(() => getNgWords().join(', '))
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Track initial values for dirty detection
-  const initialMypaceOnly = getBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
-  const initialLanguageFilter = getString(STORAGE_KEYS.LANGUAGE_FILTER) || ''
-  const initialNgWords = getNgWords().join(', ')
+  // Local state initialized from filters
+  const [searchQuery, setSearchQuery] = useState(filters.query)
+  const [ngWordsInput, setNgWordsInput] = useState(filters.ngWords.join(', '))
+  const [mypaceOnly, setMypaceOnly] = useState(filters.mypace)
+  const [languageFilter, setLanguageFilter] = useState(filters.lang)
+
+  // Update local state when filters change (URL change)
+  useEffect(() => {
+    setSearchQuery(filters.query)
+    setNgWordsInput(filters.ngWords.join(', '))
+    setMypaceOnly(filters.mypace)
+    setLanguageFilter(filters.lang)
+  }, [filters])
+
+  // Track if form is dirty
   const isDirty =
-    searchQuery !== initialSearchQuery ||
-    mypaceOnly !== initialMypaceOnly ||
-    languageFilter !== initialLanguageFilter ||
-    ngWordsInput !== initialNgWords
+    searchQuery !== filters.query ||
+    ngWordsInput !== filters.ngWords.join(', ') ||
+    mypaceOnly !== filters.mypace ||
+    languageFilter !== filters.lang
 
   useEffect(() => {
     if (isPopup && inputRef.current) {
@@ -79,56 +63,33 @@ export function FilterPanel({
       .filter((w) => w.length > 0)
   }
 
-  // Apply filters - save to storage and navigate
+  // Apply filters - navigate to new URL
   const handleApply = () => {
-    // Save settings to storage
-    setBoolean(STORAGE_KEYS.MYPACE_ONLY, mypaceOnly)
-    setString(STORAGE_KEYS.LANGUAGE_FILTER, languageFilter)
-    setNgWords(parseNgWords(ngWordsInput))
-
-    // Notify filter changes
-    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED))
-    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED))
-    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NG_WORDS_CHANGED))
-
-    if (onSearchQueryChange) {
-      onSearchQueryChange(searchQuery)
+    const newFilters: SearchFilters = {
+      query: searchQuery,
+      ngWords: parseNgWords(ngWordsInput),
+      tags: filters.tags,
+      mode: filters.mode,
+      mypace: mypaceOnly,
+      lang: languageFilter,
     }
 
-    // Navigate to search URL or home
-    if (searchQuery || filterTags.length > 0) {
-      const url = buildSearchUrl(searchQuery, filterTags, filterMode)
-      navigate(url)
-    } else {
-      navigate('/')
-    }
-
+    // Navigate to search URL with new filters
+    const url = buildSearchUrl(newFilters)
+    navigate(url)
     onClose?.()
   }
 
-  // Clear all filters - reset to defaults
+  // Clear all filters - navigate to /search with defaults
   const handleClear = () => {
-    // Reset to defaults
-    setMypaceOnly(true)
-    setLanguageFilter('')
+    // Reset local state
     setSearchQuery('')
     setNgWordsInput('')
+    setMypaceOnly(true)
+    setLanguageFilter('')
 
-    // Save defaults to storage
-    setBoolean(STORAGE_KEYS.MYPACE_ONLY, true)
-    setString(STORAGE_KEYS.LANGUAGE_FILTER, '')
-    setNgWords([])
-
-    // Clear tags if callback exists
-    onClearTags?.()
-
-    // Notify filter changes
-    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED))
-    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED))
-    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NG_WORDS_CHANGED))
-
-    // Navigate to home
-    navigate('/')
+    // Navigate to clean search page
+    navigate('/search')
     onClose?.()
   }
 
@@ -198,13 +159,13 @@ export function FilterPanel({
       </div>
 
       {/* Tag filters (if any) */}
-      {filterTags.length > 0 && (
+      {filters.tags.length > 0 && (
         <div className="filter-tags-row">
-          {filterTags.map((tag, index) => (
+          {filters.tags.map((tag, index) => (
             <span key={tag} className="filter-tag-item">
               {index > 0 && onToggleMode && (
                 <button className="filter-mode-btn" onClick={onToggleMode}>
-                  {filterMode === 'and' ? 'AND' : 'OR'}
+                  {filters.mode === 'and' ? 'AND' : 'OR'}
                 </button>
               )}
               <span className="filter-tag">
