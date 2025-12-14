@@ -1,7 +1,25 @@
 import type { ThemeColors, Event } from '../../types'
-import { getItem } from '../utils/storage'
+import { getItem, getString } from '../utils/storage'
 import { STORAGE_KEYS } from '../constants'
 import { THEME_TAG } from './constants'
+
+// Theme background colors
+const THEME_BG_COLORS = {
+  light: '#f8f8f8',
+  dark: '#282828',
+}
+
+// Get current app theme
+function getCurrentTheme(): 'light' | 'dark' {
+  if (typeof localStorage === 'undefined') return 'light'
+  return (getString(STORAGE_KEYS.APP_THEME) as 'light' | 'dark') || 'light'
+}
+
+// Get fallback colors based on current theme
+export function getThemeFallbackColors(): ThemeColors {
+  const bg = THEME_BG_COLORS[getCurrentTheme()]
+  return { topLeft: bg, topRight: bg, bottomLeft: bg, bottomRight: bg }
+}
 
 // Get stored theme colors from localStorage
 export function getStoredThemeColors(): ThemeColors | null {
@@ -37,32 +55,32 @@ export function isDarkColor(hex: string): boolean {
 }
 
 // Get theme card props (style and classes)
+// When colors is null, uses current theme's background color as fallback
 export function getThemeCardProps(colors: ThemeColors | null): {
   style: Record<string, string>
   className: string
 } {
-  if (!colors) {
-    return { style: {}, className: '' }
-  }
+  // Use fallback colors if not provided
+  const effectiveColors = colors || getThemeFallbackColors()
 
   const darkCount =
-    (isDarkColor(colors.topLeft) ? 1 : 0) +
-    (isDarkColor(colors.topRight) ? 1 : 0) +
-    (isDarkColor(colors.bottomLeft) ? 1 : 0) +
-    (isDarkColor(colors.bottomRight) ? 1 : 0)
+    (isDarkColor(effectiveColors.topLeft) ? 1 : 0) +
+    (isDarkColor(effectiveColors.topRight) ? 1 : 0) +
+    (isDarkColor(effectiveColors.bottomLeft) ? 1 : 0) +
+    (isDarkColor(effectiveColors.bottomRight) ? 1 : 0)
 
   const avgDark = darkCount >= 2
   const textClass = avgDark ? 'light-text' : 'dark-text'
-  const topLeftClass = isDarkColor(colors.topLeft) ? 'corner-tl-dark' : 'corner-tl-light'
+  const topLeftClass = isDarkColor(effectiveColors.topLeft) ? 'corner-tl-dark' : 'corner-tl-light'
 
   return {
     style: {
       background: `
-        radial-gradient(ellipse at 0 0, ${colors.topLeft}cc 0%, transparent 50%),
-        radial-gradient(ellipse at 100% 0, ${colors.topRight}cc 0%, transparent 50%),
-        radial-gradient(ellipse at 0 100%, ${colors.bottomLeft}cc 0%, transparent 50%),
-        radial-gradient(ellipse at 100% 100%, ${colors.bottomRight}cc 0%, transparent 50%),
-        linear-gradient(135deg, ${colors.topLeft} 0%, ${colors.bottomRight} 100%)
+        radial-gradient(ellipse at 0 0, ${effectiveColors.topLeft}cc 0%, transparent 50%),
+        radial-gradient(ellipse at 100% 0, ${effectiveColors.topRight}cc 0%, transparent 50%),
+        radial-gradient(ellipse at 0 100%, ${effectiveColors.bottomLeft}cc 0%, transparent 50%),
+        radial-gradient(ellipse at 100% 100%, ${effectiveColors.bottomRight}cc 0%, transparent 50%),
+        linear-gradient(135deg, ${effectiveColors.topLeft} 0%, ${effectiveColors.bottomRight} 100%)
       `.trim(),
     },
     className: `themed-card ${textClass} ${topLeftClass}`,
