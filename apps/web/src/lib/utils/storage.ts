@@ -32,7 +32,9 @@ export function setString(key: string, value: string): void {
 
 export function getBoolean(key: string, defaultValue: boolean = false): boolean {
   if (typeof localStorage === 'undefined') return defaultValue
-  return localStorage.getItem(key) === 'true'
+  const value = localStorage.getItem(key)
+  if (value === null) return defaultValue
+  return value === 'true'
 }
 
 export function setBoolean(key: string, value: boolean): void {

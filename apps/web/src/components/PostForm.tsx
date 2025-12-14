@@ -144,6 +144,11 @@ export function PostForm({
       }
 
       window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NEW_POST))
+
+      // Exit long mode after successful post
+      if (longMode) {
+        onLongModeChange(false)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to post')
     } finally {
