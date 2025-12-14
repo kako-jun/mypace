@@ -1,7 +1,7 @@
 import type { Profile, ProfileCache } from '../../types'
 import { getItem, setItem, removeItem } from './storage'
-import { exportNpub } from '../nostr/keys'
 import { STORAGE_KEYS } from '../constants'
+import { t } from '../i18n'
 
 export function getLocalProfile(): Profile | null {
   return getItem<Profile | null>(STORAGE_KEYS.PROFILE, null)
@@ -20,12 +20,11 @@ export function hasLocalProfile(): boolean {
   return !!(profile?.name || profile?.display_name)
 }
 
-// Get display name from profile or fallback to short npub
-export function getDisplayName(profile: Profile | null | undefined, pubkey: string): string {
+// Get display name from profile or fallback to anonymous name
+export function getDisplayName(profile: Profile | null | undefined, _pubkey: string): string {
   if (profile?.display_name) return profile.display_name
   if (profile?.name) return profile.name
-  const npub = exportNpub(pubkey)
-  return `${npub.slice(0, 8)}...${npub.slice(-4)}`
+  return t('anonymousName')
 }
 
 // Get avatar URL from profile
