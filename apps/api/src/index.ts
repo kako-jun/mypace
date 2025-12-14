@@ -20,7 +20,13 @@ app.use(
 )
 
 const MYPACE_TAG = 'mypace'
-const RELAYS = ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.band']
+const RELAYS = [
+  'wss://relay.damus.io',
+  'wss://nos.lol',
+  'wss://relay.nostr.band',
+  'wss://nostr.wine',
+  'wss://relay.snort.social',
+]
 const CACHE_TTL_MS = 10 * 1000 // 10秒
 
 // 言語判定（簡易版）
@@ -471,11 +477,18 @@ app.post('/api/publish', async (c) => {
     const publishResults = pool.publish(RELAYS, event)
     const results = await Promise.allSettled(publishResults)
 
-    // Check if at least one relay accepted the event
-    const successCount = results.filter((r) => r.status === 'fulfilled').length
-    const failedRelays = results
-      .map((r, i) => (r.status === 'rejected' ? `${RELAYS[i]}: ${r.reason}` : null))
-      .filter(Boolean)
+    // Check results for each relay
+    const relayResults = results.map((r, i) => ({
+      relay: RELAYS[i],
+      success: r.status === 'fulfilled',
+      error: r.status === 'rejected' ? String(r.reason) : null,
+    }))
+
+    const successCount = relayResults.filter((r) => r.success).length
+    const failedRelays = relayResults.filter((r) => !r.success)
+
+    // Log all results for debugging
+    console.log('Publish results:', JSON.stringify(relayResults))
 
     if (successCount === 0) {
       console.error('All relays rejected:', failedRelays)
@@ -508,7 +521,15 @@ app.post('/api/publish', async (c) => {
       console.error('Cache write error:', e)
     }
 
-    return c.json({ success: true, id: event.id, relays: successCount })
+    return c.json({
+      success: true,
+      id: event.id,
+      relays: {
+        total: RELAYS.length,
+        success: successCount,
+        details: relayResults,
+      },
+    })
   } catch (e) {
     console.error('Publish error:', e)
     return c.json({ error: `Failed to publish: ${e instanceof Error ? e.message : 'Unknown error'}` }, 500)
