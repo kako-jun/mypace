@@ -294,6 +294,8 @@ body.long-mode-active .main-content {
   text-align: center;
   padding: 3rem;
   color: var(--text-placeholder);
+  column-span: all;
+  direction: ltr;
 }
 
 /* Error */

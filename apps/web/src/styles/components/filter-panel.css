@@ -57,6 +57,8 @@
   box-shadow: none;
   padding: 0;
   margin-bottom: 1rem;
+  direction: ltr;
+  column-span: all;
 }
 
 /* Search Row */
