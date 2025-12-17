@@ -173,6 +173,8 @@ function restoreAlignments(html: string, alignments: Map<string, AlignmentData>)
 
 // Font tag processing (color and size only)
 const FONT_TAG_REGEX = /<font(\s+[^>]*)>([\s\S]*?)<\/font>/gi
+// Unclosed font tags - match to end of line or next tag
+const UNCLOSED_FONT_TAG_REGEX = /<font(\s+[^>]*)>([^<]*)/gi
 const COLOR_ATTR_REGEX = /color=(?:["']([^"']+)["']|([^\s>]+))/i
 const SIZE_ATTR_REGEX = /size=(?:["']([1-7])["']|([1-7]))/i
 
@@ -214,31 +216,46 @@ function isValidColor(color: string): boolean {
 }
 
 function processFontTags(html: string): string {
+  // Helper to extract styles from attributes
+  const extractStyles = (attrs: string): string[] => {
+    const styles: string[] = []
+
+    const colorMatch = attrs.match(COLOR_ATTR_REGEX)
+    const colorValue = colorMatch ? colorMatch[1] || colorMatch[2] : null
+    if (colorValue && isValidColor(colorValue)) {
+      styles.push(`color: ${colorValue}`)
+    }
+
+    const sizeMatch = attrs.match(SIZE_ATTR_REGEX)
+    const sizeValue = sizeMatch ? sizeMatch[1] || sizeMatch[2] : null
+    if (sizeValue && SIZE_MAP[sizeValue]) {
+      styles.push(`font-size: ${SIZE_MAP[sizeValue]}`)
+    }
+
+    return styles
+  }
+
   // Process repeatedly to handle nested font tags
   let result = html
   let prevResult = ''
+
+  // First pass: process closed font tags
   while (result !== prevResult) {
     prevResult = result
     result = result.replace(FONT_TAG_REGEX, (_match, attrs: string, content: string) => {
-      const styles: string[] = []
-
-      const colorMatch = attrs.match(COLOR_ATTR_REGEX)
-      const colorValue = colorMatch ? colorMatch[1] || colorMatch[2] : null
-      if (colorValue && isValidColor(colorValue)) {
-        styles.push(`color: ${colorValue}`)
-      }
-
-      const sizeMatch = attrs.match(SIZE_ATTR_REGEX)
-      const sizeValue = sizeMatch ? sizeMatch[1] || sizeMatch[2] : null
-      if (sizeValue && SIZE_MAP[sizeValue]) {
-        styles.push(`font-size: ${SIZE_MAP[sizeValue]}`)
-      }
-
+      const styles = extractStyles(attrs)
       if (styles.length === 0) return content
-
       return `<span style="${styles.join('; ')}">${content}</span>`
     })
   }
+
+  // Second pass: process unclosed font tags
+  result = result.replace(UNCLOSED_FONT_TAG_REGEX, (_match, attrs: string, content: string) => {
+    const styles = extractStyles(attrs)
+    if (styles.length === 0) return content
+    return `<span style="${styles.join('; ')}">${content}</span>`
+  })
+
   return result
 }
 
@@ -340,13 +357,37 @@ function processNostrMentions(html: string, profiles: Record<string, Profile | n
   })
 }
 
+// Escape all HTML tags except font-like syntax (which we process ourselves)
+// This is NOT HTML support - we just use <font> as a custom syntax that gets converted to <span>
+function sanitizeHtmlPreserveFontSyntax(content: string): string {
+  // Temporarily replace <font> and </font> syntax with placeholders
+  const fontPlaceholders: string[] = []
+  let sanitized = content.replace(/<\/?font[^>]*>/gi, (match) => {
+    fontPlaceholders.push(match)
+    return `___FONTPLACEHOLDER${fontPlaceholders.length - 1}___`
+  })
+
+  // Escape all remaining < and > (block all other HTML)
+  sanitized = sanitized.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+  // Restore font syntax (will be processed by processFontTags into <span>)
+  sanitized = sanitized.replace(/___FONTPLACEHOLDER(\d+)___/g, (_match, index) => {
+    return fontPlaceholders[parseInt(index, 10)]
+  })
+
+  return sanitized
+}
+
 export function renderContent(
   content: string,
   emojis: EmojiTag[] = [],
   profiles: Record<string, Profile | null | undefined> = {}
 ) {
+  // Escape all HTML, preserve font-like syntax for custom processing
+  const sanitizedContent = sanitizeHtmlPreserveFontSyntax(content)
+
   // Extract alignment markers and replace with placeholders
-  const { text: textWithPlaceholders, alignments } = extractAlignments(content)
+  const { text: textWithPlaceholders, alignments } = extractAlignments(sanitizedContent)
 
   // Parse markdown
   let html = marked.parse(textWithPlaceholders) as string
