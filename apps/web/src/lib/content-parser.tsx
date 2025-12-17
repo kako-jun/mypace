@@ -76,8 +76,9 @@ function escapeHtml(text: string): string {
 
 // Alignment syntax processing
 // Uses placeholder approach to avoid Markdown interference
-const ALIGN_PLACEHOLDER_PREFIX = '___ALIGN_'
-const ALIGN_PLACEHOLDER_SUFFIX = '___'
+// Using unlikely character sequence that won't be interpreted by Markdown
+const ALIGN_PLACEHOLDER_PREFIX = 'MYPACEALIGN'
+const ALIGN_PLACEHOLDER_SUFFIX = 'ENDMYPACE'
 
 interface AlignmentData {
   type: 'left' | 'right' | 'center' | 'split'
