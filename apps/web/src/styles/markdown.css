@@ -282,3 +282,38 @@
   font-size: 0.9rem;
   font-weight: 500;
 }
+
+/* Alignment syntax */
+.align-left {
+  text-align: left;
+}
+
+.align-right {
+  text-align: right;
+}
+
+.align-center {
+  text-align: center;
+}
+
+.align-split {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Image alignment */
+.align-left img {
+  display: block;
+  margin-right: auto;
+}
+
+.align-right img {
+  display: block;
+  margin-left: auto;
+}
+
+.align-center img {
+  display: block;
+  margin: 0 auto;
+}

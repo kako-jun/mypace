@@ -74,6 +74,49 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;')
 }
 
+// Alignment syntax processing (before Markdown parsing)
+function processAlignment(content: string): string {
+  const lines = content.split('\n')
+  return lines
+    .map((line) => {
+      // Left-right split: <> left | right
+      if (line.startsWith('<> ')) {
+        const rest = line.slice(3)
+        const parts = rest.split('|').map((p) => p.trim())
+        if (parts.length >= 2) {
+          return `<div class="align-split"><span>${parts[0]}</span><span>${parts[1]}</span></div>`
+        }
+        return `<div class="align-split"><span>${rest}</span></div>`
+      }
+      // Left align: <<
+      if (line.startsWith('<< ')) {
+        return `<div class="align-left">${line.slice(3)}</div>`
+      }
+      // Empty left align marker
+      if (line === '<<') {
+        return '<div class="align-left"></div>'
+      }
+      // Right align: >>
+      if (line.startsWith('>> ')) {
+        return `<div class="align-right">${line.slice(3)}</div>`
+      }
+      // Empty right align marker
+      if (line === '>>') {
+        return '<div class="align-right"></div>'
+      }
+      // Center align: ><
+      if (line.startsWith('>< ')) {
+        return `<div class="align-center">${line.slice(3)}</div>`
+      }
+      // Empty center align marker
+      if (line === '><') {
+        return '<div class="align-center"></div>'
+      }
+      return line
+    })
+    .join('\n')
+}
+
 // Font tag processing (color and size only)
 const FONT_TAG_REGEX = /<font(\s+[^>]*)>([\s\S]*?)<\/font>/gi
 const COLOR_ATTR_REGEX = /color=["']([^"']+)["']/i
@@ -246,8 +289,11 @@ export function renderContent(
   emojis: EmojiTag[] = [],
   profiles: Record<string, Profile | null | undefined> = {}
 ) {
+  // Process alignment markers (before Markdown parsing)
+  const alignedContent = processAlignment(content)
+
   // Parse markdown
-  let html = marked.parse(content) as string
+  let html = marked.parse(alignedContent) as string
 
   // Process font tags (before other processing to preserve structure)
   html = processFontTags(html)
