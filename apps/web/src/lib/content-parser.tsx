@@ -164,9 +164,9 @@ function restoreAlignments(html: string, alignments: Map<string, AlignmentData>)
   }
 
   // Remove <br> between consecutive alignment divs
-  result = result.replace(/<\/div><br>\s*<div class="align-/g, '</div><div class="align-')
-  // Remove empty <p></p> tags that may be left over
-  result = result.replace(/<p>\s*<\/p>/g, '')
+  result = result.replace(/<\/div><br>[ \t\n\r]*<div class="align-/g, '</div><div class="align-')
+  // Remove truly empty <p></p> tags (only ASCII whitespace, not full-width spaces)
+  result = result.replace(/<p>[ \t\n\r]*<\/p>/g, '')
 
   return result
 }
