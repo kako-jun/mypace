@@ -47,7 +47,7 @@ export default function ImageDropZone({ onImageUploaded, onError }: ImageDropZon
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         onChange={handleFileChange}
         style={{ display: 'none' }}
         aria-hidden="true"

@@ -14,6 +14,7 @@ export const LIMITS = {
   PREVIEW_LINE_THRESHOLD: 42,
   TIMELINE_FETCH_LIMIT: 50,
   MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5MB
+  MAX_VIDEO_SIZE: 10 * 1024 * 1024, // 10MB
 } as const
 
 // Custom window events
