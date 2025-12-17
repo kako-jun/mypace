@@ -74,6 +74,75 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;')
 }
 
+// Font tag processing (color and size only)
+const FONT_TAG_REGEX = /<font(\s+[^>]*)>([\s\S]*?)<\/font>/gi
+const COLOR_ATTR_REGEX = /color=["']([^"']+)["']/i
+const SIZE_ATTR_REGEX = /size=["']([1-7])["']/i
+
+const ALLOWED_COLORS = new Set([
+  'red',
+  'blue',
+  'green',
+  'yellow',
+  'orange',
+  'purple',
+  'pink',
+  'cyan',
+  'magenta',
+  'lime',
+  'navy',
+  'teal',
+  'maroon',
+  'white',
+  'black',
+  'gray',
+  'grey',
+  'silver',
+])
+
+const SIZE_MAP: Record<string, string> = {
+  '1': '0.625em',
+  '2': '0.75em',
+  '3': '1em',
+  '4': '1.125em',
+  '5': '1.25em',
+  '6': '1.5em',
+  '7': '2em',
+}
+
+function isValidColor(color: string): boolean {
+  if (ALLOWED_COLORS.has(color.toLowerCase())) return true
+  if (/^#[0-9A-Fa-f]{3}$/.test(color) || /^#[0-9A-Fa-f]{6}$/.test(color)) return true
+  return false
+}
+
+function processFontTags(html: string): string {
+  // Process repeatedly to handle nested font tags
+  let result = html
+  let prevResult = ''
+  while (result !== prevResult) {
+    prevResult = result
+    result = result.replace(FONT_TAG_REGEX, (_match, attrs: string, content: string) => {
+      const styles: string[] = []
+
+      const colorMatch = attrs.match(COLOR_ATTR_REGEX)
+      if (colorMatch && isValidColor(colorMatch[1])) {
+        styles.push(`color: ${colorMatch[1]}`)
+      }
+
+      const sizeMatch = attrs.match(SIZE_ATTR_REGEX)
+      if (sizeMatch && SIZE_MAP[sizeMatch[1]]) {
+        styles.push(`font-size: ${SIZE_MAP[sizeMatch[1]]}`)
+      }
+
+      if (styles.length === 0) return content
+
+      return `<span style="${styles.join('; ')}">${content}</span>`
+    })
+  }
+  return result
+}
+
 // Hashtag regex (requires whitespace or start of string before #)
 const HASHTAG_REGEX = /(^|[\s>])#([a-zA-Z0-9_\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+)/g
 
@@ -179,6 +248,9 @@ export function renderContent(
 ) {
   // Parse markdown
   let html = marked.parse(content) as string
+
+  // Process font tags (before other processing to preserve structure)
+  html = processFontTags(html)
 
   // Process additional elements
   html = processImageUrls(html)
