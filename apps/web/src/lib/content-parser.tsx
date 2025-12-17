@@ -139,9 +139,11 @@ function restoreAlignments(html: string, alignments: Map<string, AlignmentData>)
   let result = html
   for (const [placeholder, data] of alignments) {
     let replacement: string
-    // Process content through Markdown inline parser for links, bold, etc.
-    const content = data.content ? (marked.parseInline(data.content) as string) : '&nbsp;'
-    const content2 = data.content2 ? (marked.parseInline(data.content2) as string) : ''
+    // Sanitize and process content through Markdown inline parser for links, bold, etc.
+    const sanitizedContent = data.content ? sanitizeHtmlPreserveFontSyntax(data.content) : ''
+    const sanitizedContent2 = data.content2 ? sanitizeHtmlPreserveFontSyntax(data.content2) : ''
+    const content = sanitizedContent ? (marked.parseInline(sanitizedContent) as string) : '&nbsp;'
+    const content2 = sanitizedContent2 ? (marked.parseInline(sanitizedContent2) as string) : ''
 
     switch (data.type) {
       case 'left':
@@ -383,14 +385,14 @@ export function renderContent(
   emojis: EmojiTag[] = [],
   profiles: Record<string, Profile | null | undefined> = {}
 ) {
-  // Escape all HTML, preserve font-like syntax for custom processing
-  const sanitizedContent = sanitizeHtmlPreserveFontSyntax(content)
+  // Extract alignment markers FIRST (before sanitizing, since they use < and >)
+  const { text: textWithPlaceholders, alignments } = extractAlignments(content)
 
-  // Extract alignment markers and replace with placeholders
-  const { text: textWithPlaceholders, alignments } = extractAlignments(sanitizedContent)
+  // Escape all HTML, preserve font-like syntax for custom processing
+  const sanitizedContent = sanitizeHtmlPreserveFontSyntax(textWithPlaceholders)
 
   // Parse markdown
-  let html = marked.parse(textWithPlaceholders) as string
+  let html = marked.parse(sanitizedContent) as string
 
   // Restore alignment markers (replace placeholders with actual HTML)
   html = restoreAlignments(html, alignments)
