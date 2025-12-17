@@ -162,6 +162,12 @@ function restoreAlignments(html: string, alignments: Map<string, AlignmentData>)
     result = result.replace(new RegExp(`<p>${placeholder}</p>`, 'g'), replacement)
     result = result.replace(new RegExp(placeholder, 'g'), replacement)
   }
+
+  // Remove <br> between consecutive alignment divs
+  result = result.replace(/<\/div><br>\s*<div class="align-/g, '</div><div class="align-')
+  // Remove empty <p></p> tags that may be left over
+  result = result.replace(/<p>\s*<\/p>/g, '')
+
   return result
 }
 

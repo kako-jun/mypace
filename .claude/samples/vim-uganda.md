@@ -1,41 +1,61 @@
 # Vim風ウガンダメッセージ（mypace用）
 
-以下をコピーして投稿:
+## Neovim そのまま再現
 
 ```
+>< <font size="5">NVIM v0.10.0</font>
 ><
->< <font color="green" size="6">VIM - Vi IMproved</font>
+>< Nvim はオープンソースであり 自由に配布可能です
+>< https://neovim.io/#chat
 ><
->< <font size="4">version 9.1</font>
->< <font size="2">by Bram Moolenaar et al.</font>
+<> 初めての人は | :help nvim<font color="gray"><Enter></font>
+<> Nvimを最適化するには | :checkhealth<font color="gray"><Enter></font>
+<> 終了するには | :q<font color="gray"><Enter></font>
+<> ヘルプを見るには | :help<font color="gray"><Enter></font>
 ><
->< Vim is open source and freely distributable
+<> v0.10の変更点は | :help news<font color="gray"><Enter></font>
 ><
->< <font color="yellow">Help poor children in Uganda!</font>
->< type  :help iccf<font color="gray"><Enter></font>       for information
+>< <font color="cyan">ウガンダの恵まれない子供たちに援助を！</font>
 ><
->< type  :q<font color="gray"><Enter></font>               to exit
->< type  :help<font color="gray"><Enter></font>  or  <font color="gray"><F1></font>   for on-line help
->< type  :help version9<font color="gray"><Enter></font>   for version info
-><
+<> 詳細な情報は | :help iccf<font color="gray"><Enter></font>
 ```
 
-## mypace版
+## mypace版（日本語）
 
 ```
+>< <font color="green" size="6">MYPACE v1.0.0</font>
 ><
->< <font color="#8ec07c" size="6">MYPACE</font>
+>< mypace はオープンソースであり 自由に配布可能です
+>< https://github.com/anthropics/claude-code
 ><
->< <font size="4">My Pace SNS on Nostr</font>
->< <font size="2" color="gray">by @mypace</font>
+<> 初めての人は | :help mypace<font color="gray"><Enter></font>
+<> 投稿するには | :post<font color="gray"><Enter></font>
+<> 終了するには | :q<font color="gray"><Enter></font>
+<> ヘルプを見るには | :help<font color="gray"><Enter></font>
+><
+<> v1.0の変更点は | :help news<font color="gray"><Enter></font>
+><
+>< <font color="yellow">Nostrの普及に協力を！</font>
+><
+<> 詳細な情報は | :help nostr<font color="gray"><Enter></font>
+```
+
+## 英語版
+
+```
+>< <font color="green" size="6">MYPACE v1.0.0</font>
 ><
 >< mypace is open source and freely distributable
+>< https://github.com/anthropics/claude-code
 ><
->< <font color="#fabd2f">Help mass adoption of Nostr!</font>
->< type  :zap<font color="gray"><Enter></font>       for lightning tips
+<> type :help mypace<font color="gray"><Enter></font> | for getting started
+<> type :post<font color="gray"><Enter></font> | to create a post
+<> type :q<font color="gray"><Enter></font> | to exit
+<> type :help<font color="gray"><Enter></font> | for on-line help
 ><
->< type  :q<font color="gray"><Enter></font>         to exit (but why would you?)
->< type  :help<font color="gray"><Enter></font>      for on-line help
->< type  :nostr<font color="gray"><Enter></font>     to learn about Nostr
+<> type :help news<font color="gray"><Enter></font> | for version info
 ><
+>< <font color="yellow">Help mass adoption of Nostr!</font>
+><
+<> type :help nostr<font color="gray"><Enter></font> | for information
 ```
