@@ -139,7 +139,9 @@ function restoreAlignments(html: string, alignments: Map<string, AlignmentData>)
   let result = html
   for (const [placeholder, data] of alignments) {
     let replacement: string
-    const content = data.content || '&nbsp;'
+    // Process content through Markdown inline parser for links, bold, etc.
+    const content = data.content ? (marked.parseInline(data.content) as string) : '&nbsp;'
+    const content2 = data.content2 ? (marked.parseInline(data.content2) as string) : ''
 
     switch (data.type) {
       case 'left':
@@ -152,7 +154,7 @@ function restoreAlignments(html: string, alignments: Map<string, AlignmentData>)
         replacement = `<div class="align-center">${content}</div>`
         break
       case 'split':
-        replacement = `<div class="align-split"><span>${content}</span><span>${data.content2 || ''}</span></div>`
+        replacement = `<div class="align-split"><span>${content}</span><span>${content2}</span></div>`
         break
     }
 
@@ -165,8 +167,8 @@ function restoreAlignments(html: string, alignments: Map<string, AlignmentData>)
 
 // Font tag processing (color and size only)
 const FONT_TAG_REGEX = /<font(\s+[^>]*)>([\s\S]*?)<\/font>/gi
-const COLOR_ATTR_REGEX = /color=["']([^"']+)["']/i
-const SIZE_ATTR_REGEX = /size=["']([1-7])["']/i
+const COLOR_ATTR_REGEX = /color=(?:["']([^"']+)["']|([^\s>]+))/i
+const SIZE_ATTR_REGEX = /size=(?:["']([1-7])["']|([1-7]))/i
 
 const ALLOWED_COLORS = new Set([
   'red',
@@ -215,13 +217,15 @@ function processFontTags(html: string): string {
       const styles: string[] = []
 
       const colorMatch = attrs.match(COLOR_ATTR_REGEX)
-      if (colorMatch && isValidColor(colorMatch[1])) {
-        styles.push(`color: ${colorMatch[1]}`)
+      const colorValue = colorMatch ? colorMatch[1] || colorMatch[2] : null
+      if (colorValue && isValidColor(colorValue)) {
+        styles.push(`color: ${colorValue}`)
       }
 
       const sizeMatch = attrs.match(SIZE_ATTR_REGEX)
-      if (sizeMatch && SIZE_MAP[sizeMatch[1]]) {
-        styles.push(`font-size: ${SIZE_MAP[sizeMatch[1]]}`)
+      const sizeValue = sizeMatch ? sizeMatch[1] || sizeMatch[2] : null
+      if (sizeValue && SIZE_MAP[sizeValue]) {
+        styles.push(`font-size: ${SIZE_MAP[sizeValue]}`)
       }
 
       if (styles.length === 0) return content
