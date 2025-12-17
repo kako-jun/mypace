@@ -74,47 +74,92 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;')
 }
 
-// Alignment syntax processing (before Markdown parsing)
-function processAlignment(content: string): string {
+// Alignment syntax processing
+// Uses placeholder approach to avoid Markdown interference
+const ALIGN_PLACEHOLDER_PREFIX = '___ALIGN_'
+const ALIGN_PLACEHOLDER_SUFFIX = '___'
+
+interface AlignmentData {
+  type: 'left' | 'right' | 'center' | 'split'
+  content: string
+  content2?: string
+}
+
+function extractAlignments(content: string): { text: string; alignments: Map<string, AlignmentData> } {
   const lines = content.split('\n')
-  return lines
-    .map((line) => {
-      // Left-right split: <> left | right
-      if (line.startsWith('<> ')) {
-        const rest = line.slice(3)
-        const parts = rest.split('|').map((p) => p.trim())
-        if (parts.length >= 2) {
-          return `<div class="align-split"><span>${parts[0]}</span><span>${parts[1]}</span></div>`
-        }
-        return `<div class="align-split"><span>${rest}</span></div>`
+  const alignments = new Map<string, AlignmentData>()
+  let placeholderIndex = 0
+
+  const result = lines.map((line) => {
+    let data: AlignmentData | null = null
+
+    // Left-right split: <> left | right
+    if (line.startsWith('<> ')) {
+      const rest = line.slice(3)
+      const parts = rest.split('|').map((p) => p.trim())
+      if (parts.length >= 2) {
+        data = { type: 'split', content: parts[0], content2: parts[1] }
+      } else {
+        data = { type: 'split', content: rest }
       }
-      // Left align: <<
-      if (line.startsWith('<< ')) {
-        return `<div class="align-left">${line.slice(3)}</div>`
-      }
-      // Empty left align marker
-      if (line === '<<') {
-        return '<div class="align-left"></div>'
-      }
-      // Right align: >>
-      if (line.startsWith('>> ')) {
-        return `<div class="align-right">${line.slice(3)}</div>`
-      }
-      // Empty right align marker
-      if (line === '>>') {
-        return '<div class="align-right"></div>'
-      }
-      // Center align: ><
-      if (line.startsWith('>< ')) {
-        return `<div class="align-center">${line.slice(3)}</div>`
-      }
-      // Empty center align marker
-      if (line === '><') {
-        return '<div class="align-center"></div>'
-      }
-      return line
-    })
-    .join('\n')
+    }
+    // Left align: <<
+    else if (line.startsWith('<< ')) {
+      data = { type: 'left', content: line.slice(3) }
+    } else if (line === '<<') {
+      data = { type: 'left', content: '' }
+    }
+    // Right align: >>
+    else if (line.startsWith('>> ')) {
+      data = { type: 'right', content: line.slice(3) }
+    } else if (line === '>>') {
+      data = { type: 'right', content: '' }
+    }
+    // Center align: ><
+    else if (line.startsWith('>< ')) {
+      data = { type: 'center', content: line.slice(3) }
+    } else if (line === '><') {
+      data = { type: 'center', content: '' }
+    }
+
+    if (data) {
+      const placeholder = `${ALIGN_PLACEHOLDER_PREFIX}${placeholderIndex}${ALIGN_PLACEHOLDER_SUFFIX}`
+      alignments.set(placeholder, data)
+      placeholderIndex++
+      return placeholder
+    }
+    return line
+  })
+
+  return { text: result.join('\n'), alignments }
+}
+
+function restoreAlignments(html: string, alignments: Map<string, AlignmentData>): string {
+  let result = html
+  for (const [placeholder, data] of alignments) {
+    let replacement: string
+    const content = data.content || '&nbsp;'
+
+    switch (data.type) {
+      case 'left':
+        replacement = `<div class="align-left">${content}</div>`
+        break
+      case 'right':
+        replacement = `<div class="align-right">${content}</div>`
+        break
+      case 'center':
+        replacement = `<div class="align-center">${content}</div>`
+        break
+      case 'split':
+        replacement = `<div class="align-split"><span>${content}</span><span>${data.content2 || ''}</span></div>`
+        break
+    }
+
+    // Replace placeholder (may be wrapped in <p> tags by marked)
+    result = result.replace(new RegExp(`<p>${placeholder}</p>`, 'g'), replacement)
+    result = result.replace(new RegExp(placeholder, 'g'), replacement)
+  }
+  return result
 }
 
 // Font tag processing (color and size only)
@@ -289,11 +334,14 @@ export function renderContent(
   emojis: EmojiTag[] = [],
   profiles: Record<string, Profile | null | undefined> = {}
 ) {
-  // Process alignment markers (before Markdown parsing)
-  const alignedContent = processAlignment(content)
+  // Extract alignment markers and replace with placeholders
+  const { text: textWithPlaceholders, alignments } = extractAlignments(content)
 
   // Parse markdown
-  let html = marked.parse(alignedContent) as string
+  let html = marked.parse(textWithPlaceholders) as string
+
+  // Restore alignment markers (replace placeholders with actual HTML)
+  html = restoreAlignments(html, alignments)
 
   // Process font tags (before other processing to preserve structure)
   html = processFontTags(html)
