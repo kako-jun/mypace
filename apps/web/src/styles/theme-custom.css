@@ -61,7 +61,8 @@ body.custom-theme .logo-pace {
   text-shadow: inherit;
 }
 
-.post-card.themed-card .post-content {
+.post-card.themed-card .post-content,
+.themed-card .preview-content {
   color: inherit;
   text-shadow: inherit;
 }

@@ -139,11 +139,15 @@ function restoreAlignments(html: string, alignments: Map<string, AlignmentData>)
   let result = html
   for (const [placeholder, data] of alignments) {
     let replacement: string
-    // Sanitize and process content through Markdown inline parser for links, bold, etc.
-    const sanitizedContent = data.content ? sanitizeHtmlPreserveFontSyntax(data.content) : ''
-    const sanitizedContent2 = data.content2 ? sanitizeHtmlPreserveFontSyntax(data.content2) : ''
-    const content = sanitizedContent ? (marked.parseInline(sanitizedContent) as string) : '&nbsp;'
-    const content2 = sanitizedContent2 ? (marked.parseInline(sanitizedContent2) as string) : ''
+    // Sanitize all HTML, parse markdown inline, then process font syntax
+    const processAlignContent = (text: string): string => {
+      if (!text) return '&nbsp;'
+      const sanitized = sanitizeHtml(text)
+      const parsed = marked.parseInline(sanitized) as string
+      return processFontSyntax(parsed)
+    }
+    const content = processAlignContent(data.content)
+    const content2 = data.content2 ? processAlignContent(data.content2) : ''
 
     switch (data.type) {
       case 'left':
@@ -173,12 +177,13 @@ function restoreAlignments(html: string, alignments: Map<string, AlignmentData>)
   return result
 }
 
-// Font tag processing (color and size only)
-const FONT_TAG_REGEX = /<font(\s+[^>]*)>([\s\S]*?)<\/font>/gi
-// Unclosed font tags - match to end of line or next tag
-const UNCLOSED_FONT_TAG_REGEX = /<font(\s+[^>]*)>([^<]*)/gi
-const COLOR_ATTR_REGEX = /color=(?:["']([^"']+)["']|([^\s>]+))/i
-const SIZE_ATTR_REGEX = /size=(?:["']([1-7])["']|([1-7]))/i
+// Font syntax processing (color and size only)
+// Matches escaped font syntax: &lt;font ...&gt;...&lt;/font&gt;
+const ESCAPED_FONT_TAG_REGEX = /&lt;font(\s+[^&]*)&gt;([\s\S]*?)&lt;\/font&gt;/gi
+// Unclosed font syntax - match to end of line or next tag
+const ESCAPED_UNCLOSED_FONT_TAG_REGEX = /&lt;font(\s+[^&]*)&gt;([^&]*)/gi
+const COLOR_ATTR_REGEX = /color=(?:["']([^"']+)["']|([^\s&]+))/i
+const SIZE_ATTR_REGEX = /size=(?:["']([1-5])["']|([1-5]))/i
 
 const ALLOWED_COLORS = new Set([
   'red',
@@ -202,13 +207,11 @@ const ALLOWED_COLORS = new Set([
 ])
 
 const SIZE_MAP: Record<string, string> = {
-  '1': '0.625em',
+  '1': '0.5em',
   '2': '0.75em',
   '3': '1em',
-  '4': '1.125em',
-  '5': '1.25em',
-  '6': '1.5em',
-  '7': '2em',
+  '4': '1.5em',
+  '5': '2em',
 }
 
 function isValidColor(color: string): boolean {
@@ -217,7 +220,7 @@ function isValidColor(color: string): boolean {
   return false
 }
 
-function processFontTags(html: string): string {
+function processFontSyntax(html: string): string {
   // Helper to extract styles from attributes
   const extractStyles = (attrs: string): string[] => {
     const styles: string[] = []
@@ -237,22 +240,22 @@ function processFontTags(html: string): string {
     return styles
   }
 
-  // Process repeatedly to handle nested font tags
+  // Process repeatedly to handle nested font syntax
   let result = html
   let prevResult = ''
 
-  // First pass: process closed font tags
+  // First pass: process closed font syntax (escaped form)
   while (result !== prevResult) {
     prevResult = result
-    result = result.replace(FONT_TAG_REGEX, (_match, attrs: string, content: string) => {
+    result = result.replace(ESCAPED_FONT_TAG_REGEX, (_match, attrs: string, content: string) => {
       const styles = extractStyles(attrs)
       if (styles.length === 0) return content
       return `<span style="${styles.join('; ')}">${content}</span>`
     })
   }
 
-  // Second pass: process unclosed font tags
-  result = result.replace(UNCLOSED_FONT_TAG_REGEX, (_match, attrs: string, content: string) => {
+  // Second pass: process unclosed font syntax (escaped form)
+  result = result.replace(ESCAPED_UNCLOSED_FONT_TAG_REGEX, (_match, attrs: string, content: string) => {
     const styles = extractStyles(attrs)
     if (styles.length === 0) return content
     return `<span style="${styles.join('; ')}">${content}</span>`
@@ -359,25 +362,75 @@ function processNostrMentions(html: string, profiles: Record<string, Profile | n
   })
 }
 
-// Escape all HTML tags except font-like syntax (which we process ourselves)
-// This is NOT HTML support - we just use <font> as a custom syntax that gets converted to <span>
-function sanitizeHtmlPreserveFontSyntax(content: string): string {
-  // Temporarily replace <font> and </font> syntax with placeholders
-  const fontPlaceholders: string[] = []
-  let sanitized = content.replace(/<\/?font[^>]*>/gi, (match) => {
-    fontPlaceholders.push(match)
-    return `___FONTPLACEHOLDER${fontPlaceholders.length - 1}___`
+// Escape all HTML tags (no exceptions - font syntax is processed after escaping)
+function sanitizeHtml(content: string): string {
+  return content.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+// Code block protection
+const CODE_BLOCK_PLACEHOLDER_PREFIX = 'MYPACECODEBLOCK'
+const CODE_BLOCK_PLACEHOLDER_SUFFIX = 'ENDCODEBLOCK'
+const INLINE_CODE_PLACEHOLDER_PREFIX = 'MYPACEINLINECODE'
+const INLINE_CODE_PLACEHOLDER_SUFFIX = 'ENDINLINECODE'
+
+interface CodeBlockData {
+  type: 'block' | 'inline'
+  lang?: string
+  content: string
+}
+
+// Extract code blocks and inline code before any processing
+function extractCodeBlocks(content: string): { text: string; codeBlocks: Map<string, CodeBlockData> } {
+  const codeBlocks = new Map<string, CodeBlockData>()
+  let placeholderIndex = 0
+  let result = content
+
+  // Extract fenced code blocks first (``` ... ```)
+  result = result.replace(/```(\w*)\n([\s\S]*?)```/g, (_match, lang: string, code: string) => {
+    const placeholder = `${CODE_BLOCK_PLACEHOLDER_PREFIX}${placeholderIndex}${CODE_BLOCK_PLACEHOLDER_SUFFIX}`
+    codeBlocks.set(placeholder, { type: 'block', lang: lang || '', content: code })
+    placeholderIndex++
+    return placeholder
   })
 
-  // Escape all remaining < and > (block all other HTML)
-  sanitized = sanitized.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-
-  // Restore font syntax (will be processed by processFontTags into <span>)
-  sanitized = sanitized.replace(/___FONTPLACEHOLDER(\d+)___/g, (_match, index) => {
-    return fontPlaceholders[parseInt(index, 10)]
+  // Extract inline code (` ... `)
+  // Use negative lookbehind/lookahead to avoid matching inside code blocks
+  result = result.replace(/`([^`\n]+)`/g, (_match, code: string) => {
+    const placeholder = `${INLINE_CODE_PLACEHOLDER_PREFIX}${placeholderIndex}${INLINE_CODE_PLACEHOLDER_SUFFIX}`
+    codeBlocks.set(placeholder, { type: 'inline', content: code })
+    placeholderIndex++
+    return placeholder
   })
 
-  return sanitized
+  return { text: result, codeBlocks }
+}
+
+// Restore code blocks after all processing
+function restoreCodeBlocks(html: string, codeBlocks: Map<string, CodeBlockData>): string {
+  let result = html
+
+  for (const [placeholder, data] of codeBlocks) {
+    let replacement: string
+
+    if (data.type === 'block') {
+      const lang = data.lang || ''
+      let highlighted: string
+      if (lang && Prism.languages[lang]) {
+        highlighted = Prism.highlight(data.content, Prism.languages[lang], lang)
+      } else {
+        highlighted = escapeHtml(data.content)
+      }
+      replacement = `<pre class="code-block${lang ? ` language-${lang}` : ''}"><code>${highlighted}</code></pre>`
+    } else {
+      replacement = `<code class="inline-code">${escapeHtml(data.content)}</code>`
+    }
+
+    // Replace placeholder (may be wrapped in <p> tags by marked)
+    result = result.replace(new RegExp(`<p>${placeholder}</p>`, 'g'), replacement)
+    result = result.replace(new RegExp(placeholder, 'g'), replacement)
+  }
+
+  return result
 }
 
 export function renderContent(
@@ -385,28 +438,34 @@ export function renderContent(
   emojis: EmojiTag[] = [],
   profiles: Record<string, Profile | null | undefined> = {}
 ) {
-  // Extract alignment markers FIRST (before sanitizing, since they use < and >)
-  const { text: textWithPlaceholders, alignments } = extractAlignments(content)
+  // 1. Extract code blocks FIRST (protect from all processing)
+  const { text: textWithCodePlaceholders, codeBlocks } = extractCodeBlocks(content)
 
-  // Escape all HTML, preserve font-like syntax for custom processing
-  const sanitizedContent = sanitizeHtmlPreserveFontSyntax(textWithPlaceholders)
+  // 2. Extract alignment markers (before sanitizing, since they use < and >)
+  const { text: textWithPlaceholders, alignments } = extractAlignments(textWithCodePlaceholders)
 
-  // Parse markdown
+  // 3. Escape ALL HTML (no exceptions - font syntax processed after escaping)
+  const sanitizedContent = sanitizeHtml(textWithPlaceholders)
+
+  // 4. Parse markdown
   let html = marked.parse(sanitizedContent) as string
 
-  // Restore alignment markers (replace placeholders with actual HTML)
+  // 5. Restore alignment markers (replace placeholders with actual HTML)
   html = restoreAlignments(html, alignments)
 
-  // Process font tags (before other processing to preserve structure)
-  html = processFontTags(html)
+  // 6. Process font syntax (works on escaped &lt;font&gt; form)
+  html = processFontSyntax(html)
 
-  // Process additional elements
+  // 7. Process additional elements
   html = processImageUrls(html)
   html = removeImageLinks(html)
   html = processNostrMentions(html, profiles)
   html = processHashtags(html)
   html = processLinks(html)
   html = processCustomEmojis(html, emojis)
+
+  // 8. Restore code blocks LAST (content was protected from all processing)
+  html = restoreCodeBlocks(html, codeBlocks)
 
   const contentRef = useRef<HTMLDivElement>(null)
 
