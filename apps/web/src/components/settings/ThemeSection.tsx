@@ -17,21 +17,11 @@ interface ColorMenuProps {
   copiedColor: string | null
   position: 'left' | 'right'
   onCopy: () => void
-  onPaste: () => void
-  onApplyToAll: () => void
+  onApplyToAll: (color: string) => void
   onColorChange: (color: string) => void
 }
 
-function ColorMenu({
-  corner,
-  color,
-  copiedColor,
-  position,
-  onCopy,
-  onPaste,
-  onApplyToAll,
-  onColorChange,
-}: ColorMenuProps) {
+function ColorMenu({ corner, color, copiedColor, position, onCopy, onApplyToAll, onColorChange }: ColorMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [hexInput, setHexInput] = useState(color.toUpperCase())
   const menuRef = useRef<HTMLDivElement>(null)
@@ -68,9 +58,9 @@ function ColorMenu({
     }
     setHexInput(hex)
 
-    // Validate and apply if valid hex
+    // Validate and apply if valid hex (convert to lowercase for consistency)
     if (/^#[0-9A-F]{6}$/i.test(hex)) {
-      onColorChange(hex)
+      onColorChange(hex.toLowerCase())
     }
   }
 
@@ -113,7 +103,9 @@ function ColorMenu({
           </button>
           <button
             onClick={() => {
-              onPaste()
+              if (copiedColor) {
+                onColorChange(copiedColor)
+              }
               setIsOpen(false)
             }}
             disabled={!copiedColor}
@@ -123,7 +115,7 @@ function ColorMenu({
           </button>
           <button
             onClick={() => {
-              onApplyToAll()
+              onApplyToAll(color)
               setIsOpen(false)
             }}
           >
@@ -142,14 +134,7 @@ export default function ThemeSection({ appTheme, themeColors, onAppThemeChange, 
     setCopiedColor(themeColors[corner])
   }
 
-  const handlePaste = (corner: CornerKey) => {
-    if (copiedColor) {
-      onColorChange(corner, copiedColor)
-    }
-  }
-
-  const handleApplyToAll = (corner: CornerKey) => {
-    const color = themeColors[corner]
+  const handleApplyToAll = (color: string) => {
     onColorChange('topLeft', color)
     onColorChange('topRight', color)
     onColorChange('bottomLeft', color)
@@ -167,8 +152,7 @@ export default function ThemeSection({ appTheme, themeColors, onAppThemeChange, 
             copiedColor={copiedColor}
             position={menuPosition}
             onCopy={() => handleCopy(corner)}
-            onPaste={() => handlePaste(corner)}
-            onApplyToAll={() => handleApplyToAll(corner)}
+            onApplyToAll={handleApplyToAll}
             onColorChange={(color) => onColorChange(corner, color)}
           />
         )}
@@ -180,8 +164,7 @@ export default function ThemeSection({ appTheme, themeColors, onAppThemeChange, 
             copiedColor={copiedColor}
             position={menuPosition}
             onCopy={() => handleCopy(corner)}
-            onPaste={() => handlePaste(corner)}
-            onApplyToAll={() => handleApplyToAll(corner)}
+            onApplyToAll={handleApplyToAll}
             onColorChange={(color) => onColorChange(corner, color)}
           />
         )}

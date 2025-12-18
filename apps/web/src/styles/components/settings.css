@@ -336,14 +336,14 @@
   width: 20px;
   height: 20px;
   padding: 0;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: bold;
   line-height: 1;
-  color: #333;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -351,8 +351,8 @@
 }
 
 .color-menu-trigger:hover {
-  background: rgba(255, 255, 255, 0.95);
-  transform: scale(1.1);
+  color: #fff;
+  transform: scale(1.2);
 }
 
 .color-menu-dropdown {
@@ -474,6 +474,11 @@
 .color-picker-corner.top-left {
   justify-content: flex-start;
   align-items: flex-start;
+}
+
+.color-picker-corner.top-left .color-menu,
+.color-picker-corner.top-left .color-picker {
+  margin-top: 0;
 }
 
 .color-picker-corner.top-right {

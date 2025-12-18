@@ -25,7 +25,7 @@ import type { ThemeColors } from '../types'
 
 export function Settings() {
   const [open, setOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<'settings' | 'about'>('settings')
+  const [activeTab, setActiveTab] = useState<'settings' | 'account' | 'about'>('settings')
   const [nsec, setNsec] = useState('')
   const [npub, setNpub] = useState('')
   const [usingNip07, setUsingNip07] = useState(false)
@@ -150,6 +150,12 @@ export function Settings() {
             SETTINGS
           </button>
           <button
+            className={`settings-tab ${activeTab === 'account' ? 'active' : ''}`}
+            onClick={() => setActiveTab('account')}
+          >
+            ACCOUNT
+          </button>
+          <button
             className={`settings-tab ${activeTab === 'about' ? 'active' : ''}`}
             onClick={() => setActiveTab('about')}
           >
@@ -158,8 +164,6 @@ export function Settings() {
         </div>
 
         <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
-          <ProfileSection displayName={displayName} pictureUrl={pictureUrl} onClose={() => setOpen(false)} />
-
           <ThemeSection
             appTheme={appTheme}
             themeColors={themeColors}
@@ -168,6 +172,10 @@ export function Settings() {
           />
 
           <ExportSection themeColors={themeColors} appTheme={appTheme} onImport={handleImportSettings} />
+        </div>
+
+        <div style={{ display: activeTab === 'account' ? 'block' : 'none' }}>
+          <ProfileSection displayName={displayName} pictureUrl={pictureUrl} onClose={() => setOpen(false)} />
 
           <KeysSection nsec={nsec} npub={npub} usingNip07={usingNip07} />
         </div>
