@@ -13,7 +13,10 @@ export default function ShareSection() {
         <h3>Notice</h3>
         <ul className="notice-list">
           <li>This app is provided as-is without warranty. Use at your own risk.</li>
-          <li>Images uploaded to Nostr cannot be deleted due to the protocol's design.</li>
+          <li>
+            Images are uploaded to nostr.build. Once uploaded, files cannot be deleted due to the decentralized nature
+            of Nostr. Please choose files carefully before uploading.
+          </li>
         </ul>
       </div>
 
