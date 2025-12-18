@@ -5,6 +5,8 @@ import { Timeline } from '../components/Timeline'
 import { LightBox, triggerLightBox } from '../components/LightBox'
 import { setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
 import { getString, setString, removeItem, getUIThemeColors, applyThemeColors, parseSearchParams } from '../lib/utils'
+import { fetchEventById } from '../lib/nostr/relay'
+import { getFullContentForEdit } from '../lib/nostr/tags'
 import { STORAGE_KEYS, CUSTOM_EVENTS, TIMEOUTS } from '../lib/constants'
 import type { Event, SearchFilters } from '../types'
 
@@ -57,6 +59,31 @@ export function HomePage({ filters: propFilters }: HomePageProps = {}) {
     applyThemeColors(getUIThemeColors())
   }, [])
 
+  // Handle edit/reply URL parameters
+  useEffect(() => {
+    const editId = searchParams.get('edit')
+    const replyId = searchParams.get('reply')
+
+    if (editId) {
+      fetchEventById(editId).then((event) => {
+        if (event) {
+          setEditingEvent(event)
+          setReplyingTo(null)
+          // Use full content for editing (expand teaser)
+          setContent(getFullContentForEdit(event))
+        }
+      })
+    } else if (replyId) {
+      fetchEventById(replyId).then((event) => {
+        if (event) {
+          setReplyingTo(event)
+          setEditingEvent(null)
+          setContent('')
+        }
+      })
+    }
+  }, [searchParams])
+
   // Set up image click handler for LightBox
   useEffect(() => {
     setImageClickHandler(triggerLightBox)
@@ -89,7 +116,8 @@ export function HomePage({ filters: propFilters }: HomePageProps = {}) {
   const handleEditStart = (event: Event) => {
     setEditingEvent(event)
     setReplyingTo(null)
-    setContent(event.content)
+    // Use full content for editing (expand teaser)
+    setContent(getFullContentForEdit(event))
   }
 
   const handleEditCancel = () => {

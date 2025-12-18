@@ -49,3 +49,14 @@ export function removeReadMoreLink(content: string): string {
   // Match pattern: "\n\n...READ MORE → https://..." at the end
   return content.replace(/\n\n\.\.\.READ MORE → https?:\/\/[^\s]+$/i, '')
 }
+
+// Get full content for editing (combine content + teaser, remove READ MORE link)
+export function getFullContentForEdit(event: Event): string {
+  if (!hasTeaserTag(event)) {
+    return event.content
+  }
+  // Remove READ MORE link and append teaser content
+  const baseContent = removeReadMoreLink(event.content)
+  const teaserContent = getTeaserContent(event.tags)
+  return teaserContent ? baseContent + teaserContent : baseContent
+}
