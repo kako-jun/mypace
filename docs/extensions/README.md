@@ -12,10 +12,24 @@ MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装し
 
 ## 拡張一覧
 
+### Nostrタグ拡張
+
 | 拡張 | ドキュメント | 概要 |
 |------|-------------|------|
 | テーマカラー | [theme-colors.md](./theme-colors.md) | 投稿カードの4隅グラデーション |
 | 長文フォールド | [long-post-fold.md](./long-post-fold.md) | 280文字超の投稿を折りたたみ |
+
+### コンテンツ構文拡張
+
+| 拡張 | ドキュメント | 概要 |
+|------|-------------|------|
+| アライメント構文 | [alignment-syntax.md](./alignment-syntax.md) | `<<` `>>` `><` `<>` で配置指定 |
+| Font構文 | [font-syntax.md](./font-syntax.md) | `<font>` 風の色・サイズ指定 |
+
+### API
+
+| 拡張 | ドキュメント | 概要 |
+|------|-------------|------|
 | Webhook API | [webhook-api.md](./webhook-api.md) | 外部からの投稿API |
 
 ## データフロー
