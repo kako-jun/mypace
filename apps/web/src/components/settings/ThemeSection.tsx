@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react'
 import { ColorPicker } from '../ui'
 import type { ThemeColors } from '../../types'
 
@@ -8,7 +9,186 @@ interface ThemeSectionProps {
   onColorChange: (corner: keyof ThemeColors, color: string) => void
 }
 
+type CornerKey = keyof ThemeColors
+
+interface ColorMenuProps {
+  corner: CornerKey
+  color: string
+  copiedColor: string | null
+  position: 'left' | 'right'
+  onCopy: () => void
+  onPaste: () => void
+  onApplyToAll: () => void
+  onColorChange: (color: string) => void
+}
+
+function ColorMenu({
+  corner,
+  color,
+  copiedColor,
+  position,
+  onCopy,
+  onPaste,
+  onApplyToAll,
+  onColorChange,
+}: ColorMenuProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [hexInput, setHexInput] = useState(color.toUpperCase())
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Sync hexInput when color changes externally
+  useEffect(() => {
+    setHexInput(color.toUpperCase())
+  }, [color])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isOpen])
+
+  const cornerLabels: Record<CornerKey, string> = {
+    topLeft: '左上',
+    topRight: '右上',
+    bottomLeft: '左下',
+    bottomRight: '右下',
+  }
+
+  const handleHexChange = (value: string) => {
+    // Allow typing with or without #
+    let hex = value.toUpperCase()
+    if (!hex.startsWith('#')) {
+      hex = '#' + hex
+    }
+    setHexInput(hex)
+
+    // Validate and apply if valid hex
+    if (/^#[0-9A-F]{6}$/i.test(hex)) {
+      onColorChange(hex)
+    }
+  }
+
+  const handleHexBlur = () => {
+    // Reset to current color if invalid
+    if (!/^#[0-9A-F]{6}$/i.test(hexInput)) {
+      setHexInput(color.toUpperCase())
+    }
+  }
+
+  return (
+    <div className={`color-menu ${position}`} ref={menuRef}>
+      <button
+        className="color-menu-trigger"
+        onClick={() => setIsOpen(!isOpen)}
+        title={`${cornerLabels[corner]}の色メニュー`}
+      >
+        ⋮
+      </button>
+      {isOpen && (
+        <div className={`color-menu-dropdown ${position}`}>
+          <div className="color-menu-hex">
+            <input
+              type="text"
+              value={hexInput}
+              onChange={(e) => handleHexChange(e.target.value)}
+              onBlur={handleHexBlur}
+              maxLength={7}
+              placeholder="#RRGGBB"
+            />
+            <div className="color-menu-preview" style={{ backgroundColor: color }} />
+          </div>
+          <button
+            onClick={() => {
+              onCopy()
+              setIsOpen(false)
+            }}
+          >
+            コピー
+          </button>
+          <button
+            onClick={() => {
+              onPaste()
+              setIsOpen(false)
+            }}
+            disabled={!copiedColor}
+            className={!copiedColor ? 'disabled' : ''}
+          >
+            ペースト
+          </button>
+          <button
+            onClick={() => {
+              onApplyToAll()
+              setIsOpen(false)
+            }}
+          >
+            全隅に適用
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ThemeSection({ appTheme, themeColors, onAppThemeChange, onColorChange }: ThemeSectionProps) {
+  const [copiedColor, setCopiedColor] = useState<string | null>(null)
+
+  const handleCopy = (corner: CornerKey) => {
+    setCopiedColor(themeColors[corner])
+  }
+
+  const handlePaste = (corner: CornerKey) => {
+    if (copiedColor) {
+      onColorChange(corner, copiedColor)
+    }
+  }
+
+  const handleApplyToAll = (corner: CornerKey) => {
+    const color = themeColors[corner]
+    onColorChange('topLeft', color)
+    onColorChange('topRight', color)
+    onColorChange('bottomLeft', color)
+    onColorChange('bottomRight', color)
+  }
+
+  const renderCorner = (corner: CornerKey, position: 'left' | 'right') => {
+    const menuPosition = position === 'left' ? 'left' : 'right'
+    return (
+      <div className={`color-picker-corner ${corner.replace(/([A-Z])/g, '-$1').toLowerCase()}`}>
+        {position === 'left' && (
+          <ColorMenu
+            corner={corner}
+            color={themeColors[corner]}
+            copiedColor={copiedColor}
+            position={menuPosition}
+            onCopy={() => handleCopy(corner)}
+            onPaste={() => handlePaste(corner)}
+            onApplyToAll={() => handleApplyToAll(corner)}
+            onColorChange={(color) => onColorChange(corner, color)}
+          />
+        )}
+        <ColorPicker value={themeColors[corner]} onChange={(color) => onColorChange(corner, color)} />
+        {position === 'right' && (
+          <ColorMenu
+            corner={corner}
+            color={themeColors[corner]}
+            copiedColor={copiedColor}
+            position={menuPosition}
+            onCopy={() => handleCopy(corner)}
+            onPaste={() => handlePaste(corner)}
+            onApplyToAll={() => handleApplyToAll(corner)}
+            onColorChange={(color) => onColorChange(corner, color)}
+          />
+        )}
+      </div>
+    )
+  }
+
   return (
     <>
       <div className="settings-section">
@@ -44,18 +224,10 @@ export default function ThemeSection({ appTheme, themeColors, onAppThemeChange, 
           }}
         >
           <div className="color-picker-grid">
-            <div className="color-picker-corner top-left">
-              <ColorPicker value={themeColors.topLeft} onChange={(color) => onColorChange('topLeft', color)} />
-            </div>
-            <div className="color-picker-corner top-right">
-              <ColorPicker value={themeColors.topRight} onChange={(color) => onColorChange('topRight', color)} />
-            </div>
-            <div className="color-picker-corner bottom-left">
-              <ColorPicker value={themeColors.bottomLeft} onChange={(color) => onColorChange('bottomLeft', color)} />
-            </div>
-            <div className="color-picker-corner bottom-right">
-              <ColorPicker value={themeColors.bottomRight} onChange={(color) => onColorChange('bottomRight', color)} />
-            </div>
+            {renderCorner('topLeft', 'left')}
+            {renderCorner('topRight', 'right')}
+            {renderCorner('bottomLeft', 'left')}
+            {renderCorner('bottomRight', 'right')}
           </div>
         </div>
       </div>
