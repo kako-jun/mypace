@@ -34,14 +34,14 @@ export function filterRepliesByRoot(replies: Event[], rootEventId: string): Even
   })
 }
 
-// Check if event has a fold tag (mypace long post)
-export function hasFoldTag(event: Event): boolean {
-  return event.tags?.some((t) => t[0] === 'mypace' && t[1] === 'fold') ?? false
+// Check if event has a teaser tag (long post with hidden content)
+export function hasTeaserTag(event: Event): boolean {
+  return event.tags?.some((t) => t[0] === 'teaser') ?? false
 }
 
-// Get the folded content from event tags
-export function getFoldContent(tags: string[][]): string | undefined {
-  return tags.find((t) => t[0] === 'mypace' && t[1] === 'fold')?.[2]
+// Get the teaser content from event tags
+export function getTeaserContent(tags: string[][]): string | undefined {
+  return tags.find((t) => t[0] === 'teaser')?.[1]
 }
 
 // Remove READ MORE link from content (for displaying full post)

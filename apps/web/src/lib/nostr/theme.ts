@@ -1,7 +1,7 @@
 import type { ThemeColors, Event } from '../../types'
 import { getItem, getString } from '../utils/storage'
 import { STORAGE_KEYS } from '../constants'
-import { THEME_TAG } from './constants'
+import { AURORA_TAG } from './constants'
 
 // Theme background colors
 const THEME_BG_COLORS = {
@@ -28,13 +28,13 @@ export function getStoredThemeColors(): ThemeColors | null {
 
 // Extract theme colors from event tags
 export function getEventThemeColors(event: Event): ThemeColors | null {
-  const themeTag = event.tags.find((tag) => tag[0] === THEME_TAG)
-  if (themeTag && themeTag.length >= 5) {
+  const auroraTag = event.tags.find((tag) => tag[0] === AURORA_TAG)
+  if (auroraTag && auroraTag.length >= 5) {
     return {
-      topLeft: themeTag[1],
-      topRight: themeTag[2],
-      bottomLeft: themeTag[3],
-      bottomRight: themeTag[4],
+      topLeft: auroraTag[1],
+      topRight: auroraTag[2],
+      bottomLeft: auroraTag[3],
+      bottomRight: auroraTag[4],
     }
   }
   return null

@@ -1,4 +1,4 @@
-# 長文フォールド拡張
+# teaser（長文フォールド）
 
 280文字を超える投稿を折りたたみ、他のNostrクライアントのタイムラインを圧迫しない仕組み。
 
@@ -15,7 +15,7 @@ Kind 1のまま、本文を分割してタグに格納する。
 ## タグ形式
 
 ```json
-["mypace", "fold", "<続きの本文>"]
+["teaser", "<続きの本文>"]
 ```
 
 ## 投稿時の処理
@@ -29,7 +29,7 @@ Kind 1のまま、本文を分割してタグに格納する。
   "tags": [
     ["t", "mypace"],
     ["client", "mypace"],
-    ["mypace", "fold", "281文字目以降の本文すべて"]
+    ["teaser", "281文字目以降の本文すべて"]
   ]
 }
 ```
@@ -39,7 +39,7 @@ Kind 1のまま、本文を分割してタグに格納する。
 **280文字**（Twitter/X基準）
 
 この値は以下で共通:
-1. 投稿時のfold分割
+1. 投稿時のteaser分割
 2. エディタの「折りたたまれます」警告
 3. 他クライアント投稿のGUI側切り詰め
 
@@ -48,7 +48,7 @@ Kind 1のまま、本文を分割してタグに格納する。
 ### タイムライン
 
 ```typescript
-if (hasFoldTag(event)) {
+if (hasTeaserTag(event)) {
   // contentをそのまま表示（既に280字+リンク）
 } else if (content.length > 280) {
   // GUI側で切り詰め + READ MORE
@@ -60,10 +60,10 @@ if (hasFoldTag(event)) {
 ### 個別ページ
 
 ```typescript
-if (hasFoldTag(event)) {
-  const foldContent = getFoldContent(event.tags)
+if (hasTeaserTag(event)) {
+  const teaserContent = getTeaserContent(event.tags)
   const baseContent = removeReadMoreLink(event.content)
-  return baseContent + foldContent  // 全文表示
+  return baseContent + teaserContent  // 全文表示
 } else {
   return event.content
 }
@@ -79,5 +79,5 @@ if (hasFoldTag(event)) {
 ## 他クライアントでの表示
 
 - `content` 部分（280字+リンク）のみ表示される
-- `mypace` タグは無視される
+- `teaser` タグは無視される
 - READ MOREリンクをクリックするとMyPaceで全文を読める

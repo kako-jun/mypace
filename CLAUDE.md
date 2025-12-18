@@ -96,7 +96,7 @@ apps/
 | 1 | 投稿（#mypaceタグ付き、NIP-30絵文字） |
 | 5 | 削除リクエスト |
 | 6 | リポスト（NIP-18） |
-| 7 | マルチスター反応（NIP-25、mypace_starsタグで数量管理） |
+| 7 | ステラ反応（NIP-25、stellaタグで数量管理） |
 | 27235 | HTTP認証（NIP-98） |
 
 ## Development

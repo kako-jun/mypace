@@ -51,7 +51,7 @@ HTMLの`<font>`タグ風の記法で文字色とサイズを指定する機能�
 <font size="2">小さい</font>
 <font size="3">普通</font>
 <font size="4">大きい</font>
-<font size="5">特大</font>
+<font size=5>特大（引用符なしも可）</font>
 ```
 
 **対応しない形式:**

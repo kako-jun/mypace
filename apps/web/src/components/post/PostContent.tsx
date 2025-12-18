@@ -1,7 +1,7 @@
 import { renderContent } from '../../lib/content-parser'
 import { PostEmbeds } from '../embed'
 import { LIMITS } from '../../lib/constants'
-import { hasFoldTag as checkFoldTag } from '../../lib/nostr/tags'
+import { hasTeaserTag as checkTeaserTag } from '../../lib/nostr/tags'
 import type { EmojiTag, Profile, Event } from '../../types'
 
 interface PostContentProps {
@@ -21,13 +21,13 @@ export function PostContent({
   onReadMore,
   tags,
 }: PostContentProps) {
-  // If event has fold tag, content is already properly sized (280 chars + READ MORE link)
-  // So we skip GUI truncation for mypace long posts
-  const hasFold = tags ? checkFoldTag({ tags } as Event) : false
+  // If event has teaser tag, content is already properly sized (280 chars + READ MORE link)
+  // So we skip GUI truncation for long posts with teaser
+  const hasTeaser = tags ? checkTeaserTag({ tags } as Event) : false
 
   const shouldTruncate =
     truncate &&
-    !hasFold &&
+    !hasTeaser &&
     (content.length > LIMITS.PREVIEW_TRUNCATE_LENGTH || content.split('\n').length > LIMITS.PREVIEW_LINE_THRESHOLD)
 
   return (

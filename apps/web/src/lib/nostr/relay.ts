@@ -72,7 +72,7 @@ export async function fetchReactions(eventId: string, myPubkey?: string): Promis
     return await api.fetchReactions(eventId, myPubkey)
   } catch (e) {
     console.error('Failed to fetch reactions:', e)
-    return { count: 0, myReaction: false, myStars: 0, myReactionId: null, reactors: [] }
+    return { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] }
   }
 }
 

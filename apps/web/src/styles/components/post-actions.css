@@ -206,7 +206,7 @@
   text-decoration: underline;
 }
 
-.reactor-stars {
+.reactor-stella {
   display: flex;
   align-items: center;
   gap: 0.15rem;
@@ -214,7 +214,7 @@
   font-weight: bold;
 }
 
-.reactor-stars svg {
+.reactor-stella svg {
   stroke: #333;
 }
 
@@ -308,13 +308,13 @@
   color: #2ecc71;
 }
 
-/* Action star spin animation */
-.action-star {
+/* Action stella spin animation */
+.action-stella {
   display: inline-flex;
-  animation: action-star-spin 42s ease-in-out infinite;
+  animation: action-stella-spin 42s ease-in-out infinite;
 }
 
-@keyframes action-star-spin {
+@keyframes action-stella-spin {
   0%, 90% {
     transform: rotate(0deg);
   }

@@ -13,7 +13,7 @@ import {
   createDeleteEvent,
   createReactionEvent,
   createRepostEvent,
-  MAX_STARS_PER_USER,
+  MAX_STELLA_PER_USER,
 } from '../lib/nostr/events'
 import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage } from '../lib/utils'
 import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../lib/constants'
@@ -84,9 +84,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const [loadingMore, setLoadingMore] = useState(false)
   const [loadingGap, setLoadingGap] = useState<string | null>(null)
 
-  // Debounce refs for star clicks
-  const starDebounceTimers = useRef<{ [eventId: string]: ReturnType<typeof setTimeout> }>({})
-  const pendingStars = useRef<{ [eventId: string]: number }>({})
+  // Debounce refs for stella clicks
+  const stellaDebounceTimers = useRef<{ [eventId: string]: ReturnType<typeof setTimeout> }>({})
+  const pendingStella = useRef<{ [eventId: string]: number }>({})
   // Track latest reactions to avoid stale closure in setTimeout
   const reactionsRef = useRef(reactions)
   reactionsRef.current = reactions
@@ -117,7 +117,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
           const result = await fetchReactions(event.id, myPubkey)
           reactionMap[event.id] = result
         } catch {
-          reactionMap[event.id] = { count: 0, myReaction: false, myStars: 0, myReactionId: null, reactors: [] }
+          reactionMap[event.id] = { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] }
         }
       })
     )
@@ -223,15 +223,15 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     }
   }, [authorPubkey])
 
-  // Send accumulated stars to the network
-  const flushStars = async (targetEvent: Event) => {
+  // Send accumulated stella to the network
+  const flushStella = async (targetEvent: Event) => {
     const eventId = targetEvent.id
-    const starsToSend = pendingStars.current[eventId] || 0
-    if (starsToSend <= 0) return
+    const stellaToSend = pendingStella.current[eventId] || 0
+    if (stellaToSend <= 0) return
 
-    // Clear pending stars
-    delete pendingStars.current[eventId]
-    delete starDebounceTimers.current[eventId]
+    // Clear pending stella
+    delete pendingStella.current[eventId]
+    delete stellaDebounceTimers.current[eventId]
 
     // Use reactionsRef to get latest state (avoid stale closure)
     const latestReaction = reactionsRef.current[eventId]
@@ -240,11 +240,11 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
 
     setLikingId(eventId)
     try {
-      // Use the optimistically updated myStars directly (already includes pending stars)
-      const newTotalStars = Math.min(latestReaction?.myStars || starsToSend, MAX_STARS_PER_USER)
+      // Use the optimistically updated myStella directly (already includes pending stella)
+      const newTotalStella = Math.min(latestReaction?.myStella || stellaToSend, MAX_STELLA_PER_USER)
 
-      // Create new reaction with accumulated stars FIRST (before deleting old one)
-      const newReaction = await createReactionEvent(targetEvent, '+', newTotalStars)
+      // Create new reaction with accumulated stella FIRST (before deleting old one)
+      const newReaction = await createReactionEvent(targetEvent, '+', newTotalStella)
       await publishEvent(newReaction)
 
       // Delete old reaction AFTER new one is successfully published
@@ -266,13 +266,13 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
           myIndex >= 0
             ? prevReactors.map((r, i) =>
                 i === myIndex
-                  ? { ...r, stars: newTotalStars, reactionId: newReaction.id, createdAt: newReaction.created_at }
+                  ? { ...r, stella: newTotalStella, reactionId: newReaction.id, createdAt: newReaction.created_at }
                   : r
               )
             : [
                 {
                   pubkey: myPubkey!,
-                  stars: newTotalStars,
+                  stella: newTotalStella,
                   reactionId: newReaction.id,
                   createdAt: newReaction.created_at,
                 },
@@ -282,9 +282,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         return {
           ...prev,
           [eventId]: {
-            count: prev[eventId]?.count || newTotalStars, // Keep optimistically updated count
+            count: prev[eventId]?.count || newTotalStella, // Keep optimistically updated count
             myReaction: true,
-            myStars: newTotalStars,
+            myStella: newTotalStella,
             myReactionId: newReaction.id,
             reactors: updatedReactors,
           },
@@ -298,7 +298,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         [eventId]: previousReaction || {
           count: 0,
           myReaction: false,
-          myStars: 0,
+          myStella: 0,
           myReactionId: null,
           reactors: [],
         },
@@ -308,20 +308,20 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     }
   }
 
-  // Debounced star click handler
+  // Debounced stella click handler
   const handleLike = (event: Event) => {
     if (!myPubkey) return
 
     const eventId = event.id
     const currentReaction = reactions[eventId]
-    const currentMyStars = currentReaction?.myStars || 0
-    const pendingCount = pendingStars.current[eventId] || 0
+    const currentMyStella = currentReaction?.myStella || 0
+    const pendingCount = pendingStella.current[eventId] || 0
 
     // Check if we've reached the limit
-    if (currentMyStars + pendingCount >= MAX_STARS_PER_USER) return
+    if (currentMyStella + pendingCount >= MAX_STELLA_PER_USER) return
 
-    // Increment pending stars
-    pendingStars.current[eventId] = pendingCount + 1
+    // Increment pending stella
+    pendingStella.current[eventId] = pendingCount + 1
 
     // Update local state immediately for visual feedback
     // Simply increment by 1 (don't double-count pendingCount)
@@ -330,22 +330,22 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       [eventId]: {
         count: (prev[eventId]?.count || 0) + 1,
         myReaction: true,
-        myStars: (prev[eventId]?.myStars || 0) + 1,
+        myStella: (prev[eventId]?.myStella || 0) + 1,
         myReactionId: prev[eventId]?.myReactionId || null,
         reactors: prev[eventId]?.reactors || [],
       },
     }))
 
     // Clear existing timer and set new one (debounce 500ms)
-    if (starDebounceTimers.current[eventId]) {
-      clearTimeout(starDebounceTimers.current[eventId])
+    if (stellaDebounceTimers.current[eventId]) {
+      clearTimeout(stellaDebounceTimers.current[eventId])
     }
-    starDebounceTimers.current[eventId] = setTimeout(() => {
-      flushStars(event)
+    stellaDebounceTimers.current[eventId] = setTimeout(() => {
+      flushStella(event)
     }, 500)
   }
 
-  // Cancel/remove stars (long press feature)
+  // Cancel/remove stella (long press feature)
   const handleUnlike = async (event: Event) => {
     if (!myPubkey) return
 
@@ -354,14 +354,14 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     if (!currentReaction?.myReactionId) return
 
     // Cancel any pending debounce
-    if (starDebounceTimers.current[eventId]) {
-      clearTimeout(starDebounceTimers.current[eventId])
-      delete starDebounceTimers.current[eventId]
+    if (stellaDebounceTimers.current[eventId]) {
+      clearTimeout(stellaDebounceTimers.current[eventId])
+      delete stellaDebounceTimers.current[eventId]
     }
-    delete pendingStars.current[eventId]
+    delete pendingStella.current[eventId]
 
-    // Save current stars for updating count
-    const starsToRemove = currentReaction.myStars || 0
+    // Save current stella for updating count
+    const stellaToRemove = currentReaction.myStella || 0
 
     setLikingId(eventId)
     try {
@@ -372,9 +372,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       setReactions((prev) => ({
         ...prev,
         [eventId]: {
-          count: Math.max(0, (prev[eventId]?.count || 0) - starsToRemove),
+          count: Math.max(0, (prev[eventId]?.count || 0) - stellaToRemove),
           myReaction: false,
-          myStars: 0,
+          myStella: 0,
           myReactionId: null,
           reactors: (prev[eventId]?.reactors || []).filter((r) => r.pubkey !== myPubkey),
         },

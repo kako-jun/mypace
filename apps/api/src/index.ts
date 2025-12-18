@@ -371,17 +371,17 @@ app.get('/api/profiles', async (c) => {
   return c.json({ profiles })
 })
 
-// Custom tag for mypace star count
-const MYPACE_STARS_TAG = 'mypace_stars'
+// Custom tag for stella count
+const STELLA_TAG = 'stella'
 
-// Get star count from reaction event tags
-function getStarCount(event: Event): number {
-  const starsTag = event.tags.find((t) => t[0] === MYPACE_STARS_TAG)
-  if (starsTag && starsTag[1]) {
-    const count = parseInt(starsTag[1], 10)
+// Get stella count from reaction event tags
+function getStellaCount(event: Event): number {
+  const stellaTag = event.tags.find((t) => t[0] === STELLA_TAG)
+  if (stellaTag && stellaTag[1]) {
+    const count = parseInt(stellaTag[1], 10)
     return isNaN(count) ? 1 : count
   }
-  return 1 // Default to 1 for reactions without mypace_stars tag
+  return 1 // Default to 1 for reactions without stella tag
 }
 
 // GET /api/reactions/:eventId - リアクション取得
@@ -395,14 +395,14 @@ app.get('/api/reactions/:eventId', async (c) => {
     const events = await pool.querySync(RELAYS, { kinds: [7], '#e': [eventId] })
 
     // Group reactions by pubkey, keeping only the newest one per user
-    const reactorMap = new Map<string, { pubkey: string; stars: number; reactionId: string; createdAt: number }>()
+    const reactorMap = new Map<string, { pubkey: string; stella: number; reactionId: string; createdAt: number }>()
     for (const e of events) {
       const existing = reactorMap.get(e.pubkey)
       // Keep the newest reaction for each user
       if (!existing || e.created_at > existing.createdAt) {
         reactorMap.set(e.pubkey, {
           pubkey: e.pubkey,
-          stars: getStarCount(e),
+          stella: getStellaCount(e),
           reactionId: e.id,
           createdAt: e.created_at,
         })
@@ -412,21 +412,21 @@ app.get('/api/reactions/:eventId', async (c) => {
     // Build list of reactors (sorted by newest first)
     const reactors = Array.from(reactorMap.values()).sort((a, b) => b.createdAt - a.createdAt)
 
-    // Sum stars from deduplicated reactors
-    const count = reactors.reduce((sum, r) => sum + r.stars, 0)
+    // Sum stella from deduplicated reactors
+    const count = reactors.reduce((sum, r) => sum + r.stella, 0)
 
     // Find user's reaction
-    let myStars = 0
+    let myStella = 0
     let myReactionId: string | null = null
     if (pubkey) {
       const myReaction = reactorMap.get(pubkey)
       if (myReaction) {
-        myStars = myReaction.stars
+        myStella = myReaction.stella
         myReactionId = myReaction.reactionId
       }
     }
 
-    return c.json({ count, myReaction: myStars > 0, myStars, myReactionId, reactors })
+    return c.json({ count, myReaction: myStella > 0, myStella, myReactionId, reactors })
   } finally {
     pool.close(RELAYS)
   }

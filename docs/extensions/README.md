@@ -14,11 +14,11 @@ MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装し
 
 ### Nostrタグ拡張
 
-| 拡張 | ドキュメント | 概要 |
-|------|-------------|------|
-| テーマカラー | [theme-colors.md](./theme-colors.md) | 投稿カードの4隅グラデーション |
-| 長文フォールド | [long-post-fold.md](./long-post-fold.md) | 280文字超の投稿を折りたたみ |
-| マルチスター反応 | [multi-star-reaction.md](./multi-star-reaction.md) | 1投稿に最大10スター（ステラ） |
+| タグ名 | ドキュメント | 概要 |
+|--------|-------------|------|
+| `aurora` | [aurora.md](./aurora.md) | 投稿カードの4隅グラデーション |
+| `teaser` | [teaser.md](./teaser.md) | 280文字超の投稿を折りたたみ |
+| `stella` | [stella.md](./stella.md) | 1投稿に最大10ステラ |
 
 ### コンテンツ構文拡張
 

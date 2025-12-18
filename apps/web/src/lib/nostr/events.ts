@@ -1,7 +1,7 @@
 import { finalizeEvent, type EventTemplate } from 'nostr-tools'
 import { nip19 } from 'nostr-tools'
 import { hasNip07, getOrCreateSecretKey, getPublicKeyFromSecret } from './keys'
-import { MYPACE_TAG, THEME_TAG, MYPACE_URL } from './constants'
+import { MYPACE_TAG, AURORA_TAG, MYPACE_URL } from './constants'
 import { getStoredThemeColors } from './theme'
 import { unixNow } from '../utils'
 import { LIMITS } from '../constants'
@@ -27,7 +27,7 @@ export async function createTextNote(content: string, preserveTags?: string[][])
 
   const themeColors = getStoredThemeColors()
   if (themeColors) {
-    tags.push([THEME_TAG, themeColors.topLeft, themeColors.topRight, themeColors.bottomLeft, themeColors.bottomRight])
+    tags.push([AURORA_TAG, themeColors.topLeft, themeColors.topRight, themeColors.bottomLeft, themeColors.bottomRight])
   }
 
   if (preserveTags) {
@@ -47,7 +47,7 @@ export async function createTextNote(content: string, preserveTags?: string[][])
     const folded = content.slice(LIMITS.FOLD_THRESHOLD)
 
     // Add fold tag with the rest of the content
-    tags.push(['mypace', 'fold', folded])
+    tags.push(['teaser', folded])
 
     // Create preview content with READ MORE link
     // Note: We use profile URL since event ID cannot be known before signing
@@ -127,15 +127,15 @@ export async function createNip98AuthEvent(url: string, method: string): Promise
   return finalizeEvent(template, getOrCreateSecretKey())
 }
 
-// Max stars per user per post
-export const MAX_STARS_PER_USER = 10
-// Custom tag for mypace star count
-export const MYPACE_STARS_TAG = 'mypace_stars'
+// Max stella per user per post
+export const MAX_STELLA_PER_USER = 10
+// Custom tag for stella count
+export const STELLA_TAG = 'stella'
 
 export async function createReactionEvent(
   targetEvent: Event,
   content: string = '+',
-  starCount: number = 1
+  stellaCount: number = 1
 ): Promise<Event> {
   const template: EventTemplate = {
     kind: 7,
@@ -143,7 +143,7 @@ export async function createReactionEvent(
     tags: [
       ['e', targetEvent.id],
       ['p', targetEvent.pubkey],
-      [MYPACE_STARS_TAG, String(Math.min(starCount, MAX_STARS_PER_USER))],
+      [STELLA_TAG, String(Math.min(stellaCount, MAX_STELLA_PER_USER))],
     ],
     content,
   }
@@ -181,7 +181,7 @@ export async function createReplyEvent(content: string, replyTo: Event, rootEven
 
   const themeColors = getStoredThemeColors()
   if (themeColors) {
-    tags.push([THEME_TAG, themeColors.topLeft, themeColors.topRight, themeColors.bottomLeft, themeColors.bottomRight])
+    tags.push([AURORA_TAG, themeColors.topLeft, themeColors.topRight, themeColors.bottomLeft, themeColors.bottomRight])
   }
 
   if (rootEvent && rootEvent.id !== replyTo.id) {

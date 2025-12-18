@@ -135,10 +135,10 @@ const event = finalizeEvent({
   tags: [
     ['t', 'mypace'],
     ['client', 'mypace'],
-    // テーマカラー（オプション）
-    ['mypace_theme', '#1a1a2e', '#16213e', '#0f3460', '#e94560'],
-    // 長文フォールド（オプション、280文字超の場合）
-    ['mypace', 'fold', '281文字目以降の本文']
+    // aurora: テーマカラー（オプション）
+    ['aurora', '#1a1a2e', '#16213e', '#0f3460', '#e94560'],
+    // teaser: 長文フォールド（オプション、280文字超の場合）
+    ['teaser', '281文字目以降の本文']
   ],
   content: '最初の280文字...\n\n...READ MORE → https://mypace.llll-ll.com/profile/npub...'
 }, sk)

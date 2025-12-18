@@ -1,4 +1,4 @@
-# テーマカラー拡張
+# aurora（テーマカラー）
 
 投稿カードの背景に4隅グラデーションを設定する機能。
 PS1 FF7のウィンドウカラーカスタマイズにインスパイアされた。
@@ -6,7 +6,7 @@ PS1 FF7のウィンドウカラーカスタマイズにインスパイアされ�
 ## タグ形式
 
 ```json
-["mypace_theme", "<topLeft>", "<topRight>", "<bottomLeft>", "<bottomRight>"]
+["aurora", "<topLeft>", "<topRight>", "<bottomLeft>", "<bottomRight>"]
 ```
 
 各値はCSSカラー形式（例: `#ff0000`, `rgb(255,0,0)`）。
@@ -20,7 +20,7 @@ PS1 FF7のウィンドウカラーカスタマイズにインスパイアされ�
   "tags": [
     ["t", "mypace"],
     ["client", "mypace"],
-    ["mypace_theme", "#1a1a2e", "#16213e", "#0f3460", "#e94560"]
+    ["aurora", "#1a1a2e", "#16213e", "#0f3460", "#e94560"]
   ]
 }
 ```
@@ -51,4 +51,4 @@ const textColor = avgLuminance < 0.5 ? '#ffffff' : '#000000'
 
 ## 他クライアントでの表示
 
-`mypace_theme` タグは無視され、通常のテキスト投稿として表示される。
+`aurora` タグは無視され、通常のテキスト投稿として表示される。

@@ -1,7 +1,7 @@
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from '../ui'
-import { MAX_STARS_PER_USER } from '../../lib/nostr/events'
+import { MAX_STELLA_PER_USER } from '../../lib/nostr/events'
 import type { ReactionData, ReplyData, RepostData } from '../../types'
 
 interface PostActionsProps {
@@ -43,8 +43,8 @@ export default function PostActions({
   onShare,
   onNavigateToProfile,
 }: PostActionsProps) {
-  // Random delay for star spin animation (0-42 seconds)
-  const starDelay = useMemo(() => Math.random() * 42, [])
+  // Random delay for stella spin animation (0-42 seconds)
+  const stellaDelay = useMemo(() => Math.random() * 42, [])
 
   // Long press handling - show reactors list
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -53,8 +53,8 @@ export default function PostActions({
   const buttonWrapperRef = useRef<HTMLDivElement>(null)
   const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null)
 
-  const myStars = reactions?.myStars || 0
-  const canAddMoreStars = myStars < MAX_STARS_PER_USER
+  const myStella = reactions?.myStella || 0
+  const canAddMoreStella = myStella < MAX_STELLA_PER_USER
   const isLiking = likingId === eventId
   const reactors = reactions?.reactors || []
 
@@ -111,11 +111,11 @@ export default function PostActions({
     // If popup is shown, don't handle as click
     if (showReactorsPopup) return
 
-    // Normal click - add a star (only for non-own posts)
-    if (!isMyPost && canAddMoreStars) {
+    // Normal click - add a stella (only for non-own posts)
+    if (!isMyPost && canAddMoreStella) {
       onLike()
     }
-  }, [isMyPost, canAddMoreStars, onLike, showReactorsPopup])
+  }, [isMyPost, canAddMoreStella, onLike, showReactorsPopup])
 
   const handleUnlikeConfirm = useCallback(() => {
     setShowReactorsPopup(false)
@@ -186,9 +186,9 @@ export default function PostActions({
                     <span className="reactor-name" onClick={() => onNavigateToProfile(reactor.pubkey)}>
                       {getDisplayName(reactor.pubkey)}
                     </span>
-                    <span className="reactor-stars">
+                    <span className="reactor-stella">
                       <Icon name="Star" size={14} fill="#f1c40f" />
-                      {reactor.stars}
+                      {reactor.stella}
                     </span>
                     {reactor.pubkey === myPubkey && (
                       <button className="reactor-remove" onClick={handleUnlikeConfirm}>
@@ -218,10 +218,10 @@ export default function PostActions({
             onMouseLeave={handleMouseUp}
             onTouchStart={handleMouseDown}
             onTouchEnd={handleMouseUp}
-            disabled={isLiking || !reactions || (!canAddMoreStars && !reactions.myReaction)}
-            aria-label={reactions?.myReaction ? `${myStars} stars given` : 'Give a star'}
+            disabled={isLiking || !reactions || (!canAddMoreStella && !reactions.myReaction)}
+            aria-label={reactions?.myReaction ? `${myStella} stella given` : 'Give a stella'}
           >
-            <span className="action-star" style={{ animationDelay: `${starDelay}s` }}>
+            <span className="action-stella" style={{ animationDelay: `${stellaDelay}s` }}>
               {reactions?.myReaction ? (
                 <Icon name="Star" size={20} fill="currentColor" />
               ) : (
@@ -244,9 +244,9 @@ export default function PostActions({
             onTouchStart={handleMouseDown}
             onTouchEnd={handleMouseUp}
             disabled={reactors.length === 0}
-            aria-label="View who gave stars"
+            aria-label="View who gave stella"
           >
-            <span className="action-star" style={{ animationDelay: `${starDelay}s` }}>
+            <span className="action-stella" style={{ animationDelay: `${stellaDelay}s` }}>
               <Icon name="Star" size={20} />
             </span>
             {renderCount(reactions)}

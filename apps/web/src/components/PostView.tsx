@@ -14,7 +14,7 @@ import {
   createRepostEvent,
   getEventThemeColors,
   getThemeCardProps,
-  MAX_STARS_PER_USER,
+  MAX_STELLA_PER_USER,
 } from '../lib/nostr/events'
 import {
   getDisplayName,
@@ -32,7 +32,7 @@ import {
   applyThemeColors,
 } from '../lib/utils'
 import { TIMEOUTS } from '../lib/constants'
-import { hasFoldTag, getFoldContent, removeReadMoreLink } from '../lib/nostr/tags'
+import { hasTeaserTag, getTeaserContent, removeReadMoreLink } from '../lib/nostr/tags'
 import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent } from '../components/post'
@@ -56,7 +56,7 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
   const [reactions, setReactions] = useState<ReactionData>({
     count: 0,
     myReaction: false,
-    myStars: 0,
+    myStella: 0,
     myReactionId: null,
     reactors: [],
   })
@@ -69,9 +69,9 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
   const { copied, share } = useShare()
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
 
-  // Debounce refs for star clicks
-  const starDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pendingStars = useRef(0)
+  // Debounce refs for stella clicks
+  const stellaDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingStella = useRef(0)
 
   const loadPost = async () => {
     setError('')
@@ -172,25 +172,25 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
     return getAvatarUrl(profileData || profile)
   }
 
-  // Send accumulated stars to the network
-  const flushStars = async () => {
+  // Send accumulated stella to the network
+  const flushStella = async () => {
     if (!event) return
-    const starsToSend = pendingStars.current
-    if (starsToSend <= 0) return
+    const stellaToSend = pendingStella.current
+    if (stellaToSend <= 0) return
 
-    pendingStars.current = 0
+    pendingStella.current = 0
 
     // Save previous state for rollback on error
     const previousReactions = { ...reactions }
     const oldReactionId = reactions.myReactionId
-    const currentMyStars = reactions.myStars
+    const currentMyStella = reactions.myStella
 
     setLikingId(event.id)
     try {
-      const newTotalStars = Math.min(currentMyStars + starsToSend, MAX_STARS_PER_USER)
+      const newTotalStella = Math.min(currentMyStella + stellaToSend, MAX_STELLA_PER_USER)
 
       // Create new reaction FIRST (before deleting old one)
-      const newReaction = await createReactionEvent(event, '+', newTotalStars)
+      const newReaction = await createReactionEvent(event, '+', newTotalStella)
       await publishEvent(newReaction)
 
       // Delete old reaction AFTER new one is successfully published
@@ -208,13 +208,13 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
           myIndex >= 0
             ? prev.reactors.map((r, i) =>
                 i === myIndex
-                  ? { ...r, stars: newTotalStars, reactionId: newReaction.id, createdAt: newReaction.created_at }
+                  ? { ...r, stella: newTotalStella, reactionId: newReaction.id, createdAt: newReaction.created_at }
                   : r
               )
             : [
                 {
                   pubkey: myPubkey!,
-                  stars: newTotalStars,
+                  stella: newTotalStella,
                   reactionId: newReaction.id,
                   createdAt: newReaction.created_at,
                 },
@@ -222,9 +222,9 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
               ]
 
         return {
-          count: prev.count - currentMyStars + newTotalStars,
+          count: prev.count - currentMyStella + newTotalStella,
           myReaction: true,
-          myStars: newTotalStars,
+          myStella: newTotalStella,
           myReactionId: newReaction.id,
           reactors: updatedReactors,
         }
@@ -241,46 +241,46 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
   const handleLike = () => {
     if (!event || !myPubkey || event.pubkey === myPubkey) return
 
-    const currentMyStars = reactions.myStars
-    const pending = pendingStars.current
+    const currentMyStella = reactions.myStella
+    const pending = pendingStella.current
 
-    if (currentMyStars + pending >= MAX_STARS_PER_USER) return
+    if (currentMyStella + pending >= MAX_STELLA_PER_USER) return
 
-    pendingStars.current = pending + 1
+    pendingStella.current = pending + 1
 
     setReactions((prev) => ({
       count: prev.count + 1,
       myReaction: true,
-      myStars: currentMyStars + pending + 1,
+      myStella: currentMyStella + pending + 1,
       myReactionId: prev.myReactionId,
       reactors: prev.reactors,
     }))
 
-    if (starDebounceTimer.current) {
-      clearTimeout(starDebounceTimer.current)
+    if (stellaDebounceTimer.current) {
+      clearTimeout(stellaDebounceTimer.current)
     }
-    starDebounceTimer.current = setTimeout(() => {
-      flushStars()
+    stellaDebounceTimer.current = setTimeout(() => {
+      flushStella()
     }, 300)
   }
 
   const handleUnlike = async () => {
     if (!event || !myPubkey || !reactions.myReactionId) return
 
-    if (starDebounceTimer.current) {
-      clearTimeout(starDebounceTimer.current)
-      starDebounceTimer.current = null
+    if (stellaDebounceTimer.current) {
+      clearTimeout(stellaDebounceTimer.current)
+      stellaDebounceTimer.current = null
     }
-    pendingStars.current = 0
+    pendingStella.current = 0
 
     setLikingId(event.id)
     try {
       await publishEvent(await createDeleteEvent([reactions.myReactionId]))
 
       setReactions((prev) => ({
-        count: Math.max(0, prev.count - prev.myStars),
+        count: Math.max(0, prev.count - prev.myStella),
         myReaction: false,
-        myStars: 0,
+        myStella: 0,
         myReactionId: null,
         reactors: prev.reactors.filter((r) => r.pubkey !== myPubkey),
       }))
@@ -339,8 +339,8 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
   const themeColors = getEventThemeColors(event)
 
   // Merge fold tag content for full display
-  const fullContent = hasFoldTag(event)
-    ? removeReadMoreLink(event.content) + (getFoldContent(event.tags) || '')
+  const fullContent = hasTeaserTag(event)
+    ? removeReadMoreLink(event.content) + (getTeaserContent(event.tags) || '')
     : event.content
   const themeProps = getThemeCardProps(themeColors)
 
