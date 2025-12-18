@@ -21,6 +21,11 @@ export function hasLocalProfile(): boolean {
   return !!(profile?.name || profile?.display_name)
 }
 
+// Validate hex string length (pubkeys should be 64 chars)
+function isValidPubkey(pubkey: string): boolean {
+  return typeof pubkey === 'string' && pubkey.length === 64 && /^[0-9a-f]+$/i.test(pubkey)
+}
+
 // Get display name from profile
 // - undefined: still loading, show short npub
 // - null: confirmed no profile, show anonymous name
@@ -30,8 +35,17 @@ export function getDisplayName(profile: Profile | null | undefined, pubkey: stri
   if (profile?.name) return profile.name
   // Still loading - show short npub
   if (profile === undefined) {
-    const npub = nip19.npubEncode(pubkey)
-    return npub.slice(0, 12) + '...'
+    // Validate pubkey before encoding
+    if (isValidPubkey(pubkey)) {
+      try {
+        const npub = nip19.npubEncode(pubkey)
+        return npub.slice(0, 12) + '...'
+      } catch {
+        // Fall through to anonymous name
+      }
+    }
+    // Invalid pubkey - show truncated hex
+    return pubkey.slice(0, 8) + '...'
   }
   // Confirmed no profile - show anonymous name
   return t('anonymousName')

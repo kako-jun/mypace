@@ -279,7 +279,13 @@ export function UserView({ pubkey }: UserViewProps) {
     e.target.value = ''
   }
 
-  const npub = nip19.npubEncode(pubkey)
+  // Safely encode pubkey to npub
+  let npub: string
+  try {
+    npub = pubkey.length === 64 ? nip19.npubEncode(pubkey) : pubkey
+  } catch {
+    npub = pubkey
+  }
 
   const handleCopyNpub = async () => {
     const success = await copyToClipboard(npub)

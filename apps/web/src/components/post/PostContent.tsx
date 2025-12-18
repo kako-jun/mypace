@@ -1,7 +1,7 @@
 import { renderContent } from '../../lib/content-parser'
 import { PostEmbeds } from '../embed'
 import { LIMITS } from '../../lib/constants'
-import { hasTeaserTag as checkTeaserTag } from '../../lib/nostr/tags'
+import { hasTeaserTag as checkTeaserTag, removeReadMoreLink } from '../../lib/nostr/tags'
 import type { EmojiTag, Profile, Event } from '../../types'
 
 interface PostContentProps {
@@ -30,6 +30,9 @@ export function PostContent({
     !hasTeaser &&
     (content.length > LIMITS.PREVIEW_TRUNCATE_LENGTH || content.split('\n').length > LIMITS.PREVIEW_LINE_THRESHOLD)
 
+  // For teaser posts in timeline, remove the READ MORE URL and show styled button instead
+  const displayContent = hasTeaser && truncate ? removeReadMoreLink(content) : content
+
   return (
     <>
       {shouldTruncate ? (
@@ -43,7 +46,17 @@ export function PostContent({
           </button>
         </>
       ) : (
-        renderContent(content, emojis, profiles)
+        <>
+          {renderContent(displayContent, emojis, profiles)}
+          {hasTeaser && truncate && (
+            <button
+              className="read-more-btn text-outlined text-outlined-button text-outlined-primary"
+              onClick={onReadMore}
+            >
+              … READ MORE
+            </button>
+          )}
+        </>
       )}
       <PostEmbeds content={content} />
     </>
