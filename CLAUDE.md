@@ -1,6 +1,6 @@
 # mypace
 
-Vite + React SPA + Hono API + Cloudflare のミディアムSNS。
+Vite + React SPA + Hono API + Cloudflare のミディアムレアSNS。
 
 ## Quick Reference
 
