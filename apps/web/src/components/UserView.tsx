@@ -32,7 +32,7 @@ interface UserViewProps {
 
 export function UserView({ pubkey }: UserViewProps) {
   const [mounted, setMounted] = useState(false)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const [profile, setProfile] = useState<Profile | null | undefined>(undefined)
   const [profileLoading, setProfileLoading] = useState(true)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)

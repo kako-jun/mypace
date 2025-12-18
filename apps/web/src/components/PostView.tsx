@@ -77,7 +77,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   const eventId = decodeEventId(rawEventId)
   const [mounted, setMounted] = useState(false)
   const [event, setEvent] = useState<Event | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const [profile, setProfile] = useState<Profile | null | undefined>(undefined)
   const [myPubkey, setMyPubkey] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
