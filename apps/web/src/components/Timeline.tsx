@@ -1,4 +1,4 @@
-import { useState, useCallback, Fragment, useMemo } from 'react'
+import { useState, useCallback, Fragment, useEffect } from 'react'
 import { TIMEOUTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { TimelinePostCard } from '../components/timeline'
@@ -108,7 +108,7 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
   )
 
   // Set up hashtag click handler
-  useMemo(() => {
+  useEffect(() => {
     setHashtagClickHandler(handleHashtagClick)
   }, [handleHashtagClick])
 

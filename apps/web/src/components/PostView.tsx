@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   fetchEventById,
   fetchUserProfile,
@@ -339,15 +339,9 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
   const themeColors = getEventThemeColors(event)
 
   // Merge fold tag content for full display
-  const fullContent = useMemo(() => {
-    if (!event) return ''
-    if (hasFoldTag(event)) {
-      const foldContent = getFoldContent(event.tags)
-      const baseContent = removeReadMoreLink(event.content)
-      return foldContent ? baseContent + foldContent : event.content
-    }
-    return event.content
-  }, [event])
+  const fullContent = hasFoldTag(event)
+    ? removeReadMoreLink(event.content) + (getFoldContent(event.tags) || '')
+    : event.content
   const themeProps = getThemeCardProps(themeColors)
 
   return (
