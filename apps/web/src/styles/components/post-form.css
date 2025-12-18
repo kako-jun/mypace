@@ -406,6 +406,7 @@
 }
 
 .preview-content {
+  font-family: var(--font-mono);
   font-size: 0.95rem;
   color: var(--text-secondary);
 }
