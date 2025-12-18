@@ -95,21 +95,20 @@ export function Settings() {
     if (open) init()
   }, [open])
 
-  const handleColorChange = (corner: keyof ThemeColors, color: string) => {
-    setThemeColors((prev) => {
-      const newColors = { ...prev, [corner]: color }
-      applyThemeColors(newColors)
-      setItem(STORAGE_KEYS.THEME_COLORS, newColors)
-      window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.THEME_COLORS_CHANGED))
-      return newColors
-    })
-  }
-
-  const handleColorsChange = (colors: ThemeColors) => {
+  const applyAndSaveColors = (colors: ThemeColors) => {
     setThemeColors(colors)
     applyThemeColors(colors)
     setItem(STORAGE_KEYS.THEME_COLORS, colors)
     window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.THEME_COLORS_CHANGED))
+  }
+
+  const handleColorChange = (corner: keyof ThemeColors, color: string) => {
+    const newColors = { ...themeColors, [corner]: color }
+    applyAndSaveColors(newColors)
+  }
+
+  const handleColorsChange = (colors: ThemeColors) => {
+    applyAndSaveColors(colors)
   }
 
   const handleAppThemeChange = (theme: 'light' | 'dark') => {

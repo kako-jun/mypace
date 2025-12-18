@@ -70,8 +70,6 @@ export default function ExportSection({ themeColors, appTheme, onImport }: Expor
     a.download = 'mypace-settings.json'
     a.click()
     URL.revokeObjectURL(url)
-    setMessage({ type: 'success', text: 'ダウンロードしました' })
-    setTimeout(() => setMessage(null), 2000)
   }
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {

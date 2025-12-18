@@ -471,6 +471,21 @@
   gap: 2px;
 }
 
+.color-picker-corner .color-picker,
+.color-picker-corner .color-menu {
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.color-picker-corner .color-picker {
+  height: 32px;
+}
+
+.color-picker-corner .color-menu {
+  height: 32px;
+}
+
 .color-picker-corner.top-left {
   justify-content: flex-start;
   align-self: flex-start;
