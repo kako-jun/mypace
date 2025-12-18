@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { nip19 } from 'nostr-tools'
 import {
   fetchEventById,
   fetchUserProfile,
@@ -46,7 +47,34 @@ interface PostViewProps {
   onClose?: () => void
 }
 
-export function PostView({ eventId, isModal, onClose }: PostViewProps) {
+// Decode bech32 event ID (note1... or nevent1...) to hex
+function decodeEventId(id: string): string {
+  try {
+    if (id.startsWith('note1')) {
+      const decoded = nip19.decode(id)
+      if (decoded.type === 'note') {
+        const hex = decoded.data as string
+        // Validate hex length (event IDs are 64 chars)
+        if (hex.length === 64) return hex
+      }
+    }
+    if (id.startsWith('nevent1')) {
+      const decoded = nip19.decode(id)
+      if (decoded.type === 'nevent') {
+        const hex = (decoded.data as { id: string }).id
+        // Validate hex length (event IDs are 64 chars)
+        if (hex.length === 64) return hex
+      }
+    }
+  } catch {
+    // Invalid bech32, return as-is (might be hex already)
+  }
+  return id
+}
+
+export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProps) {
+  // Decode bech32 to hex if needed
+  const eventId = decodeEventId(rawEventId)
   const [mounted, setMounted] = useState(false)
   const [event, setEvent] = useState<Event | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)

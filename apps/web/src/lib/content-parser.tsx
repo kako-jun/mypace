@@ -322,6 +322,11 @@ function processCustomEmojis(html: string, emojis: EmojiTag[]): string {
 // Nostr URI regex (NIP-19: npub, nprofile, note, nevent)
 const NOSTR_URI_REGEX = /nostr:(npub1[a-zA-Z0-9]+|nprofile1[a-zA-Z0-9]+|note1[a-zA-Z0-9]+|nevent1[a-zA-Z0-9]+)/g
 
+// Validate hex string length (pubkeys and event IDs should be 64 chars)
+function isValidHex(hex: string, expectedLength = 64): boolean {
+  return typeof hex === 'string' && hex.length === expectedLength && /^[0-9a-f]+$/i.test(hex)
+}
+
 // Process Nostr URIs (NIP-19 mentions and references)
 function processNostrMentions(html: string, profiles: Record<string, Profile | null | undefined>): string {
   return html.replace(NOSTR_URI_REGEX, (match, encoded: string) => {
@@ -331,6 +336,7 @@ function processNostrMentions(html: string, profiles: Record<string, Profile | n
 
       if (type === 'npub') {
         const pubkey = decoded.data as string
+        if (!isValidHex(pubkey)) return match
         const profile = profiles[pubkey]
         const displayName = profile?.name || profile?.display_name || `${encoded.slice(0, 12)}...`
         return `<a href="/profile/${pubkey}" class="nostr-mention" data-pubkey="${pubkey}">@${escapeHtml(displayName)}</a>`
@@ -339,6 +345,7 @@ function processNostrMentions(html: string, profiles: Record<string, Profile | n
       if (type === 'nprofile') {
         const data = decoded.data as { pubkey: string; relays?: string[] }
         const pubkey = data.pubkey
+        if (!isValidHex(pubkey)) return match
         const profile = profiles[pubkey]
         const displayName = profile?.name || profile?.display_name || `${encoded.slice(0, 12)}...`
         return `<a href="/profile/${pubkey}" class="nostr-mention" data-pubkey="${pubkey}">@${escapeHtml(displayName)}</a>`
@@ -346,11 +353,13 @@ function processNostrMentions(html: string, profiles: Record<string, Profile | n
 
       if (type === 'note') {
         const noteId = decoded.data as string
+        if (!isValidHex(noteId)) return match
         return `<a href="/post/${noteId}" class="nostr-note-ref">📝 note</a>`
       }
 
       if (type === 'nevent') {
         const data = decoded.data as { id: string; relays?: string[]; author?: string }
+        if (!isValidHex(data.id)) return match
         return `<a href="/post/${data.id}" class="nostr-note-ref">📝 note</a>`
       }
 
