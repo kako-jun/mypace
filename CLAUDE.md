@@ -1,6 +1,6 @@
 # mypace
 
-Vite + React SPA + Hono API + Cloudflare のマイクロブログサービス。
+Vite + React SPA + Hono API + Cloudflare のミディアムSNS。
 
 ## Quick Reference
 

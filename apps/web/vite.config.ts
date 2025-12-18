@@ -16,7 +16,7 @@ export default defineConfig({
       manifest: {
         name: 'MY PACE',
         short_name: 'MY PACE',
-        description: 'マイペースで発信するマイクロブログ',
+        description: 'マイペースでいいミディアムSNS',
         theme_color: '#000000',
         background_color: '#000000',
         display: 'standalone',
