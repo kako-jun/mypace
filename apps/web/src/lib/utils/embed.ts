@@ -257,8 +257,8 @@ export function extractEmbeds(content: string): EmbedInfo[] {
   const seenUrls = new Set<string>()
 
   for (const url of urls) {
-    // Clean URL (remove trailing punctuation)
-    const cleanUrl = url.replace(/[.,;:!?)]+$/, '')
+    // Clean URL: remove trailing punctuation, parentheses, and non-ASCII chars (e.g. Japanese)
+    const cleanUrl = url.replace(/[.,;:!?)\]}>）」』】\u3000-\u9FFF\uFF00-\uFFEF]+$/, '')
     if (seenUrls.has(cleanUrl)) continue
     seenUrls.add(cleanUrl)
 

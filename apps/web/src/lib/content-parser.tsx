@@ -339,7 +339,8 @@ function processNostrMentions(html: string, profiles: Record<string, Profile | n
         if (!isValidHex(pubkey)) return match
         const profile = profiles[pubkey]
         const displayName = profile?.name || profile?.display_name || `${encoded.slice(0, 12)}...`
-        return `<a href="/profile/${pubkey}" class="nostr-mention" data-pubkey="${pubkey}">@${escapeHtml(displayName)}</a>`
+        // Use original npub from the content
+        return `<a href="/user/${encoded}" class="nostr-mention" data-pubkey="${pubkey}">@${escapeHtml(displayName)}</a>`
       }
 
       if (type === 'nprofile') {
@@ -348,7 +349,9 @@ function processNostrMentions(html: string, profiles: Record<string, Profile | n
         if (!isValidHex(pubkey)) return match
         const profile = profiles[pubkey]
         const displayName = profile?.name || profile?.display_name || `${encoded.slice(0, 12)}...`
-        return `<a href="/profile/${pubkey}" class="nostr-mention" data-pubkey="${pubkey}">@${escapeHtml(displayName)}</a>`
+        // Convert to npub for URL
+        const npub = nip19.npubEncode(pubkey)
+        return `<a href="/user/${npub}" class="nostr-mention" data-pubkey="${pubkey}">@${escapeHtml(displayName)}</a>`
       }
 
       if (type === 'note') {

@@ -3,7 +3,7 @@ import { Routes, Route, useLocation, useNavigate, type Location } from 'react-ro
 import { Layout } from './components/Layout'
 import { HomePage } from './pages/HomePage'
 import { PostPage } from './pages/PostPage'
-import { ProfilePage } from './pages/ProfilePage'
+import { UserPage } from './pages/UserPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { TagPage } from './pages/TagPage'
 import { PostModal } from './components/PostModal'
@@ -28,8 +28,7 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/post/:id" element={<PostPage />} />
-          <Route path="/user/:pubkey" element={<ProfilePage />} />
-          <Route path="/profile/:pubkey" element={<ProfilePage />} />
+          <Route path="/user/:pubkey" element={<UserPage />} />
           <Route path="/tag/:tags" element={<TagPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>

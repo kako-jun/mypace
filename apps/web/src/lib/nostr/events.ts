@@ -11,15 +11,19 @@ export { MYPACE_TAG, APP_TITLE } from './constants'
 export { getEventThemeColors, getThemeCardProps, isDarkColor, getStoredThemeColors } from './theme'
 export { formatTimestamp } from './format'
 
-// Get current user's pubkey for READ MORE link
-async function getCurrentPubkeyForLink(): Promise<string> {
-  if (hasNip07() && window.nostr) {
-    return await window.nostr.getPublicKey()
-  }
-  return getPublicKeyFromSecret(getOrCreateSecretKey())
-}
-
 export async function createTextNote(content: string, preserveTags?: string[][]): Promise<Event> {
+  // Determine signing method and pubkey upfront to ensure consistency
+  const useNip07 = hasNip07() && window.nostr
+  let signerPubkey: string
+  let secretKey: Uint8Array | null = null
+
+  if (useNip07) {
+    signerPubkey = await window.nostr!.getPublicKey()
+  } else {
+    secretKey = getOrCreateSecretKey()
+    signerPubkey = getPublicKeyFromSecret(secretKey)
+  }
+
   const tags: string[][] = [
     ['t', MYPACE_TAG],
     ['client', 'mypace'],
@@ -41,8 +45,7 @@ export async function createTextNote(content: string, preserveTags?: string[][])
   // Handle long posts: split content and add fold tag
   let finalContent = content
   if (content.length > LIMITS.FOLD_THRESHOLD) {
-    const pubkey = await getCurrentPubkeyForLink()
-    const npub = nip19.npubEncode(pubkey)
+    const npub = nip19.npubEncode(signerPubkey)
     const preview = content.slice(0, LIMITS.FOLD_THRESHOLD)
     const folded = content.slice(LIMITS.FOLD_THRESHOLD)
 
@@ -51,7 +54,7 @@ export async function createTextNote(content: string, preserveTags?: string[][])
 
     // Create preview content with READ MORE link
     // Note: We use profile URL since event ID cannot be known before signing
-    finalContent = `${preview}\n\n...READ MORE → ${MYPACE_URL}/profile/${npub}`
+    finalContent = `${preview}\n\n...READ MORE → ${MYPACE_URL}/user/${npub}`
   }
 
   const template: EventTemplate = {
@@ -61,11 +64,11 @@ export async function createTextNote(content: string, preserveTags?: string[][])
     content: finalContent,
   }
 
-  if (hasNip07() && window.nostr) {
-    return (await window.nostr.signEvent(template)) as Event
+  if (useNip07) {
+    return (await window.nostr!.signEvent(template)) as Event
   }
 
-  return finalizeEvent(template, getOrCreateSecretKey())
+  return finalizeEvent(template, secretKey!)
 }
 
 export async function createProfileEvent(profile: Profile): Promise<Event> {

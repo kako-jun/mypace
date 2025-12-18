@@ -25,7 +25,7 @@ Kind 1のまま、本文を分割してタグに格納する。
 ```json
 {
   "kind": 1,
-  "content": "最初の280文字...\n\n...READ MORE → https://mypace.llll-ll.com/profile/{npub}",
+  "content": "最初の280文字...\n\n...READ MORE → https://mypace.llll-ll.com/user/{npub}",
   "tags": [
     ["t", "mypace"],
     ["client", "mypace"],
@@ -71,7 +71,7 @@ if (hasTeaserTag(event)) {
 
 ## READ MOREリンク
 
-リンク先はプロフィールページ（`/profile/{npub}`）。
+リンク先はユーザーページ（`/user/{npub}`）。
 
 **理由**: イベントIDは署名前に確定できない（ハッシュが内容に依存するため）。
 プロフィールページからなら該当投稿を見つけられる。

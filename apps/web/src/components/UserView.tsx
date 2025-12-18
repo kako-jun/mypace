@@ -30,7 +30,32 @@ interface UserViewProps {
   pubkey: string
 }
 
-export function UserView({ pubkey }: UserViewProps) {
+// Decode bech32 pubkey (npub1...) to hex
+function decodePubkey(id: string): string {
+  try {
+    if (id.startsWith('npub1')) {
+      const decoded = nip19.decode(id)
+      if (decoded.type === 'npub') {
+        const hex = decoded.data as string
+        if (hex.length === 64) return hex
+      }
+    }
+    if (id.startsWith('nprofile1')) {
+      const decoded = nip19.decode(id)
+      if (decoded.type === 'nprofile') {
+        const hex = (decoded.data as { pubkey: string }).pubkey
+        if (hex.length === 64) return hex
+      }
+    }
+  } catch {
+    // Invalid bech32, return as-is (might be hex already)
+  }
+  return id
+}
+
+export function UserView({ pubkey: rawPubkey }: UserViewProps) {
+  // Decode bech32 to hex if needed
+  const pubkey = decodePubkey(rawPubkey)
   const [mounted, setMounted] = useState(false)
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined)
   const [profileLoading, setProfileLoading] = useState(true)
@@ -512,7 +537,7 @@ export function UserView({ pubkey }: UserViewProps) {
                 event={event}
                 isMyPost={isMyPost}
                 myPubkey={myPubkey}
-                profiles={{ ...profiles, [pubkey]: profile }}
+                profiles={{ ...profiles, [pubkey]: profile ?? null }}
                 reactions={reactions[event.id]}
                 replies={replies[event.id]}
                 reposts={reposts[event.id]}

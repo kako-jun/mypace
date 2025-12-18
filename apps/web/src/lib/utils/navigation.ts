@@ -1,4 +1,5 @@
 // Navigation utilities
+import { nip19 } from 'nostr-tools'
 import type { FilterMode, SearchFilters } from '../../types'
 import { getNavigateFunction } from './router-navigation'
 import { STORAGE_KEYS } from '../constants'
@@ -18,7 +19,9 @@ export function navigateToPost(eventId: string): void {
 }
 
 export function navigateToUser(pubkey: string): void {
-  navigateTo(`/user/${pubkey}`)
+  // Convert hex to npub if needed
+  const id = pubkey.startsWith('npub1') ? pubkey : nip19.npubEncode(pubkey)
+  navigateTo(`/user/${id}`)
 }
 
 export function navigateToTag(tag: string): void {

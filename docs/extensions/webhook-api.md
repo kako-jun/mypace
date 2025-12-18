@@ -140,7 +140,7 @@ const event = finalizeEvent({
     // teaser: 長文フォールド（オプション、280文字超の場合）
     ['teaser', '281文字目以降の本文']
   ],
-  content: '最初の280文字...\n\n...READ MORE → https://mypace.llll-ll.com/profile/npub...'
+  content: '最初の280文字...\n\n...READ MORE → https://mypace.llll-ll.com/user/npub...'
 }, sk)
 ```
 
