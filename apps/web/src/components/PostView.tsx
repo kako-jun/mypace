@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import {
   fetchEventById,
   fetchUserProfile,
@@ -32,6 +32,7 @@ import {
   applyThemeColors,
 } from '../lib/utils'
 import { TIMEOUTS } from '../lib/constants'
+import { hasFoldTag, getFoldContent, removeReadMoreLink } from '../lib/nostr/tags'
 import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent } from '../components/post'
@@ -336,6 +337,17 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
 
   const isMyPost = myPubkey === event.pubkey
   const themeColors = getEventThemeColors(event)
+
+  // Merge fold tag content for full display
+  const fullContent = useMemo(() => {
+    if (!event) return ''
+    if (hasFoldTag(event)) {
+      const foldContent = getFoldContent(event.tags)
+      const baseContent = removeReadMoreLink(event.content)
+      return foldContent ? baseContent + foldContent : event.content
+    }
+    return event.content
+  }, [event])
   const themeProps = getThemeCardProps(themeColors)
 
   return (
@@ -357,7 +369,7 @@ export function PostView({ eventId, isModal, onClose }: PostViewProps) {
 
         <div className="post-content post-content-full">
           <PostContent
-            content={event.content}
+            content={fullContent}
             emojis={parseEmojiTags(event.tags)}
             profiles={{ ...(profile ? { [event.pubkey]: profile } : {}), ...replyProfiles }}
           />

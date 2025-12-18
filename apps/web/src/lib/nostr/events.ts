@@ -1,13 +1,23 @@
 import { finalizeEvent, type EventTemplate } from 'nostr-tools'
+import { nip19 } from 'nostr-tools'
 import { hasNip07, getOrCreateSecretKey, getPublicKeyFromSecret } from './keys'
-import { MYPACE_TAG, THEME_TAG } from './constants'
+import { MYPACE_TAG, THEME_TAG, MYPACE_URL } from './constants'
 import { getStoredThemeColors } from './theme'
 import { unixNow } from '../utils'
+import { LIMITS } from '../constants'
 import type { Event, Profile } from '../../types'
 
 export { MYPACE_TAG, APP_TITLE } from './constants'
 export { getEventThemeColors, getThemeCardProps, isDarkColor, getStoredThemeColors } from './theme'
 export { formatTimestamp } from './format'
+
+// Get current user's pubkey for READ MORE link
+async function getCurrentPubkeyForLink(): Promise<string> {
+  if (hasNip07() && window.nostr) {
+    return await window.nostr.getPublicKey()
+  }
+  return getPublicKeyFromSecret(getOrCreateSecretKey())
+}
 
 export async function createTextNote(content: string, preserveTags?: string[][]): Promise<Event> {
   const tags: string[][] = [
@@ -28,11 +38,27 @@ export async function createTextNote(content: string, preserveTags?: string[][])
     }
   }
 
+  // Handle long posts: split content and add fold tag
+  let finalContent = content
+  if (content.length > LIMITS.FOLD_THRESHOLD) {
+    const pubkey = await getCurrentPubkeyForLink()
+    const npub = nip19.npubEncode(pubkey)
+    const preview = content.slice(0, LIMITS.FOLD_THRESHOLD)
+    const folded = content.slice(LIMITS.FOLD_THRESHOLD)
+
+    // Add fold tag with the rest of the content
+    tags.push(['mypace', 'fold', folded])
+
+    // Create preview content with READ MORE link
+    // Note: We use profile URL since event ID cannot be known before signing
+    finalContent = `${preview}\n\n...READ MORE → ${MYPACE_URL}/profile/${npub}`
+  }
+
   const template: EventTemplate = {
     kind: 1,
     created_at: unixNow(),
     tags,
-    content,
+    content: finalContent,
   }
 
   if (hasNip07() && window.nostr) {

@@ -264,8 +264,9 @@ export function PostForm({
                 >
                   {showPreview ? 'HIDE' : 'PREVIEW'}
                 </button>
-                <span className="char-count">
+                <span className={`char-count ${content.length > LIMITS.FOLD_THRESHOLD ? 'char-count-fold' : ''}`}>
                   {content.length}/{LIMITS.MAX_POST_LENGTH}
+                  {content.length > LIMITS.FOLD_THRESHOLD && ' (folded)'}
                 </span>
               </div>
               <div className="post-actions-right">
@@ -383,8 +384,9 @@ export function PostForm({
           >
             {showPreview ? 'HIDE' : 'PREVIEW'}
           </button>
-          <span className="char-count">
+          <span className={`char-count ${content.length > LIMITS.FOLD_THRESHOLD ? 'char-count-fold' : ''}`}>
             {content.length}/{LIMITS.MAX_POST_LENGTH}
+            {content.length > LIMITS.FOLD_THRESHOLD && ' (folded)'}
           </span>
         </div>
         <div className="post-actions-right">

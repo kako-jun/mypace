@@ -122,7 +122,7 @@ app.get('/api/timeline', async (c) => {
     let query = `
       SELECT id, pubkey, created_at, kind, tags, content, sig
       FROM events
-      WHERE kind = 1 AND created_at > ? AND cached_at > ?
+      WHERE kind IN (1, 30023) AND created_at > ? AND cached_at > ?
     `
     const params: (number | string)[] = [since, cacheThreshold]
 
@@ -171,7 +171,7 @@ app.get('/api/timeline', async (c) => {
 
   try {
     const filter: Filter = {
-      kinds: [1],
+      kinds: [1, 30023], // Kind 1 (short notes) + Kind 30023 (long articles)
       limit,
     }
     if (!showAll) {
@@ -483,7 +483,7 @@ app.get('/api/user/:pubkey/events', async (c) => {
 
   try {
     const filter: Filter = {
-      kinds: [1],
+      kinds: [1, 30023], // Kind 1 (short notes) + Kind 30023 (long articles)
       authors: [pubkey],
       '#t': [MYPACE_TAG],
       limit,

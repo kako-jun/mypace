@@ -383,6 +383,12 @@
   color: var(--text-muted);
 }
 
+/* Warning style when content will be folded (>280 chars) */
+.char-count-fold {
+  color: var(--action-warning, #e6a700);
+  font-weight: 500;
+}
+
 /* Post preview */
 .post-preview {
   background: var(--surface-secondary);

@@ -33,3 +33,19 @@ export function filterRepliesByRoot(replies: Event[], rootEventId: string): Even
     return rootTag && rootTag[1] === rootEventId
   })
 }
+
+// Check if event has a fold tag (mypace long post)
+export function hasFoldTag(event: Event): boolean {
+  return event.tags?.some((t) => t[0] === 'mypace' && t[1] === 'fold') ?? false
+}
+
+// Get the folded content from event tags
+export function getFoldContent(tags: string[][]): string | undefined {
+  return tags.find((t) => t[0] === 'mypace' && t[1] === 'fold')?.[2]
+}
+
+// Remove READ MORE link from content (for displaying full post)
+export function removeReadMoreLink(content: string): string {
+  // Match pattern: "\n\n...READ MORE → https://..." at the end
+  return content.replace(/\n\n\.\.\.READ MORE → https?:\/\/[^\s]+$/i, '')
+}

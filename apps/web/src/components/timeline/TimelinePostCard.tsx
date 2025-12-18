@@ -104,6 +104,7 @@ export default function TimelinePostCard({
           emojis={parseEmojiTags(event.tags)}
           profiles={profiles}
           onReadMore={() => navigateToPostModal(event.id)}
+          tags={event.tags}
         />
       </div>
 
