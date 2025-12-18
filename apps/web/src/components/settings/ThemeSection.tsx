@@ -7,6 +7,7 @@ interface ThemeSectionProps {
   themeColors: ThemeColors
   onAppThemeChange: (theme: 'light' | 'dark') => void
   onColorChange: (corner: keyof ThemeColors, color: string) => void
+  onColorsChange: (colors: ThemeColors) => void
 }
 
 type CornerKey = keyof ThemeColors
@@ -127,7 +128,13 @@ function ColorMenu({ corner, color, copiedColor, position, onCopy, onApplyToAll,
   )
 }
 
-export default function ThemeSection({ appTheme, themeColors, onAppThemeChange, onColorChange }: ThemeSectionProps) {
+export default function ThemeSection({
+  appTheme,
+  themeColors,
+  onAppThemeChange,
+  onColorChange,
+  onColorsChange,
+}: ThemeSectionProps) {
   const [copiedColor, setCopiedColor] = useState<string | null>(null)
 
   const handleCopy = (corner: CornerKey) => {
@@ -135,10 +142,12 @@ export default function ThemeSection({ appTheme, themeColors, onAppThemeChange, 
   }
 
   const handleApplyToAll = (color: string) => {
-    onColorChange('topLeft', color)
-    onColorChange('topRight', color)
-    onColorChange('bottomLeft', color)
-    onColorChange('bottomRight', color)
+    onColorsChange({
+      topLeft: color,
+      topRight: color,
+      bottomLeft: color,
+      bottomRight: color,
+    })
   }
 
   const renderCorner = (corner: CornerKey, position: 'left' | 'right') => {

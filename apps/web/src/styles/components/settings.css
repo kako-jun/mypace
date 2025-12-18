@@ -468,32 +468,27 @@
 .color-picker-corner {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .color-picker-corner.top-left {
   justify-content: flex-start;
-  align-items: flex-start;
-}
-
-.color-picker-corner.top-left .color-menu,
-.color-picker-corner.top-left .color-picker {
-  margin-top: 0;
+  align-self: flex-start;
 }
 
 .color-picker-corner.top-right {
   justify-content: flex-end;
-  align-items: flex-start;
+  align-self: flex-start;
 }
 
 .color-picker-corner.bottom-left {
   justify-content: flex-start;
-  align-items: flex-end;
+  align-self: flex-end;
 }
 
 .color-picker-corner.bottom-right {
   justify-content: flex-end;
-  align-items: flex-end;
+  align-self: flex-end;
 }
 
 .theme-actions {

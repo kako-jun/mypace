@@ -96,12 +96,19 @@ export function Settings() {
   }, [open])
 
   const handleColorChange = (corner: keyof ThemeColors, color: string) => {
-    const newColors = { ...themeColors, [corner]: color }
-    setThemeColors(newColors)
-    // Apply and save immediately
-    applyThemeColors(newColors)
-    setItem(STORAGE_KEYS.THEME_COLORS, newColors)
-    // Notify other components
+    setThemeColors((prev) => {
+      const newColors = { ...prev, [corner]: color }
+      applyThemeColors(newColors)
+      setItem(STORAGE_KEYS.THEME_COLORS, newColors)
+      window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.THEME_COLORS_CHANGED))
+      return newColors
+    })
+  }
+
+  const handleColorsChange = (colors: ThemeColors) => {
+    setThemeColors(colors)
+    applyThemeColors(colors)
+    setItem(STORAGE_KEYS.THEME_COLORS, colors)
     window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.THEME_COLORS_CHANGED))
   }
 
@@ -169,6 +176,7 @@ export function Settings() {
             themeColors={themeColors}
             onAppThemeChange={handleAppThemeChange}
             onColorChange={handleColorChange}
+            onColorsChange={handleColorsChange}
           />
 
           <ExportSection themeColors={themeColors} appTheme={appTheme} onImport={handleImportSettings} />
