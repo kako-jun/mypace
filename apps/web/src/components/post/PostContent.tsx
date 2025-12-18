@@ -58,7 +58,7 @@ export function PostContent({
           )}
         </>
       )}
-      <PostEmbeds content={content} />
+      <PostEmbeds content={displayContent} />
     </>
   )
 }
