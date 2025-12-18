@@ -32,7 +32,7 @@ import {
   getUIThemeColors,
   applyThemeColors,
 } from '../lib/utils'
-import { TIMEOUTS } from '../lib/constants'
+import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
 import { hasTeaserTag, getTeaserContent, removeReadMoreLink } from '../lib/nostr/tags'
 import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
@@ -100,6 +100,14 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   // Debounce refs for stella clicks
   const stellaDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingStella = useRef(0)
+  const [, setThemeVersion] = useState(0)
+
+  // Re-render when app theme changes
+  useEffect(() => {
+    const handleAppThemeChange = () => setThemeVersion((v) => v + 1)
+    window.addEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
+    return () => window.removeEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
+  }, [])
 
   const loadPost = async () => {
     setError('')

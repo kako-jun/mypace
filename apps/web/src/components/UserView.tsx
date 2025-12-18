@@ -87,6 +87,14 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     nip05: '',
     lud16: '',
   })
+  const [, setThemeVersion] = useState(0)
+
+  // Re-render when app theme changes
+  useEffect(() => {
+    const handleAppThemeChange = () => setThemeVersion((v) => v + 1)
+    window.addEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
+    return () => window.removeEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
+  }, [])
 
   const {
     items,

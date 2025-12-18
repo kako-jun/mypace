@@ -1,5 +1,5 @@
 import { useState, useCallback, Fragment, useEffect } from 'react'
-import { TIMEOUTS } from '../lib/constants'
+import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { TimelinePostCard } from '../components/timeline'
 import { Loading } from './ui'
@@ -23,6 +23,14 @@ interface TimelineProps {
 export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_FILTERS }: TimelineProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
+  const [, setThemeVersion] = useState(0)
+
+  // Re-render when app theme changes
+  useEffect(() => {
+    const handleAppThemeChange = () => setThemeVersion((v) => v + 1)
+    window.addEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
+    return () => window.removeEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
+  }, [])
 
   // Extract filter values for easier access
   // Note: mypace filtering is done server-side, langFilter is reserved for future
