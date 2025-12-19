@@ -5,13 +5,62 @@ interface StickerPickerProps {
   onAddSticker: (sticker: { url: string }) => void
 }
 
-// サンプル画像
+// SVG data URL stickers (guaranteed to work)
 const SAMPLE_STICKERS = [
-  { id: 'new', url: 'https://via.placeholder.com/150/ff0000/ffffff?text=NEW', name: 'NEW' },
-  { id: 'sale', url: 'https://via.placeholder.com/150/ffff00/000000?text=SALE', name: 'SALE' },
-  { id: 'limited', url: 'https://via.placeholder.com/150/0000ff/ffffff?text=限定', name: '限定' },
-  { id: 'attention', url: 'https://via.placeholder.com/150/ff8800/ffffff?text=注目', name: '注目' },
-  { id: 'discount', url: 'https://via.placeholder.com/150/00ff00/000000?text=100円引き', name: '100円引き' },
+  {
+    id: 'new',
+    url:
+      'data:image/svg+xml,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#ff3333" width="100" height="100" rx="10"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="28" font-weight="bold">NEW</text></svg>'
+      ),
+    name: 'NEW',
+  },
+  {
+    id: 'sale',
+    url:
+      'data:image/svg+xml,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#ffcc00" width="100" height="100" rx="10"/><text x="50" y="60" text-anchor="middle" fill="#333" font-size="26" font-weight="bold">SALE</text></svg>'
+      ),
+    name: 'SALE',
+  },
+  {
+    id: 'limited',
+    url:
+      'data:image/svg+xml,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#3366ff" width="100" height="100" rx="10"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="28" font-weight="bold">限定</text></svg>'
+      ),
+    name: '限定',
+  },
+  {
+    id: 'hot',
+    url:
+      'data:image/svg+xml,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#ff6600" width="100" height="100" rx="10"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="28" font-weight="bold">HOT</text></svg>'
+      ),
+    name: 'HOT',
+  },
+  {
+    id: 'recommended',
+    url:
+      'data:image/svg+xml,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#22cc66" width="100" height="100" rx="10"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="24" font-weight="bold">おすすめ</text></svg>'
+      ),
+    name: 'おすすめ',
+  },
+  {
+    id: 'important',
+    url:
+      'data:image/svg+xml,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#cc33ff" width="100" height="100" rx="10"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="28" font-weight="bold">重要</text></svg>'
+      ),
+    name: '重要',
+  },
 ]
 
 export function StickerPicker({ onAddSticker }: StickerPickerProps) {
@@ -25,9 +74,15 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
     setCustomUrl('')
   }
 
-  const handleCustomSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleCustomAdd = () => {
     handleSelectSticker(customUrl)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && customUrl.trim()) {
+      e.preventDefault()
+      handleCustomAdd()
+    }
   }
 
   return (
@@ -48,18 +103,24 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
             </div>
 
             {/* カスタムURL入力 */}
-            <form className="sticker-picker-custom" onSubmit={handleCustomSubmit}>
+            <div className="sticker-picker-custom">
               <input
-                type="url"
+                type="text"
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="画像URLを入力..."
                 className="sticker-picker-input"
               />
-              <button type="submit" className="sticker-picker-add" disabled={!customUrl.trim()}>
+              <button
+                type="button"
+                className="sticker-picker-add"
+                onClick={handleCustomAdd}
+                disabled={!customUrl.trim()}
+              >
                 追加
               </button>
-            </form>
+            </div>
 
             <div className="sticker-picker-divider">または</div>
 
