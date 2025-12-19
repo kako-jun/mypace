@@ -33,6 +33,7 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [presetName, setPresetName] = useState('')
   const [presetError, setPresetError] = useState('')
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
 
   // Local state initialized from filters
   const [showSNS, setShowSNS] = useState(filters.showSNS)
@@ -173,8 +174,11 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
 
   // Open save modal
   const handleOpenSaveModal = () => {
-    setPresetName('')
+    // Pre-fill with current preset name if selected
+    const currentPreset = presets.find((p) => p.id === selectedPresetId)
+    setPresetName(currentPreset?.name || '')
     setPresetError('')
+    setDeleteConfirm(false)
     setShowSaveModal(true)
   }
 
@@ -196,14 +200,25 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     setShowSaveModal(false)
   }
 
-  // Delete preset
+  // Delete preset (two-click: first confirms, second deletes)
   const handleDeletePreset = () => {
     if (!selectedPresetId) return
-    if (!confirm('Delete this preset?')) return
+
+    if (!deleteConfirm) {
+      setDeleteConfirm(true)
+      return
+    }
 
     deletePreset(selectedPresetId)
     setPresets(loadPresets())
     setSelectedPresetId('')
+    setDeleteConfirm(false)
+  }
+
+  // Reset delete confirm when selection changes
+  const handlePresetSelectWithReset = (presetId: string) => {
+    setDeleteConfirm(false)
+    handlePresetSelect(presetId)
   }
 
   return (
@@ -213,9 +228,9 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
         <select
           className="filter-preset-select"
           value={selectedPresetId}
-          onChange={(e) => handlePresetSelect(e.target.value)}
+          onChange={(e) => handlePresetSelectWithReset(e.target.value)}
         >
-          <option value="">-- Preset --</option>
+          <option value="">Preset({presets.length})</option>
           {presets.map((preset) => (
             <option key={preset.id} value={preset.id}>
               {preset.name}
@@ -232,12 +247,12 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
         </button>
         <button
           type="button"
-          className="filter-preset-btn filter-preset-delete"
+          className={`filter-preset-btn filter-preset-delete ${deleteConfirm ? 'confirm' : ''}`}
           onClick={handleDeletePreset}
           disabled={!selectedPresetId}
-          title="Delete preset"
+          title={deleteConfirm ? 'Click again to delete' : 'Delete preset'}
         >
-          <Icon name="Trash2" size={14} />
+          {deleteConfirm ? <Icon name="Check" size={14} /> : <Icon name="Trash2" size={14} />}
         </button>
       </div>
 

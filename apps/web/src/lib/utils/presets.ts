@@ -34,18 +34,32 @@ function savePresets(presets: FilterPreset[]): void {
   }
 }
 
-// Save a new preset
+// Save a new preset (or update if same name exists)
 export function savePreset(name: string, filters: SearchFilters): FilterPreset | null {
   const presets = loadPresets()
+  const trimmedName = name.trim() || 'Untitled'
 
-  // Check max limit
+  // Check if preset with same name exists
+  const existingIndex = presets.findIndex((p) => p.name === trimmedName)
+
+  if (existingIndex !== -1) {
+    // Update existing preset
+    presets[existingIndex] = {
+      ...presets[existingIndex],
+      filters: { ...filters },
+    }
+    savePresets(presets)
+    return presets[existingIndex]
+  }
+
+  // Check max limit for new preset
   if (presets.length >= MAX_PRESETS) {
     return null
   }
 
   const newPreset: FilterPreset = {
     id: generateId(),
-    name: name.trim() || 'Untitled',
+    name: trimmedName,
     filters: { ...filters },
     createdAt: Date.now(),
   }
