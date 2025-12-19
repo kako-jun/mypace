@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   VIM_MODE: 'mypace_vim_mode',
   DRAFT: 'mypace_draft',
   SEARCH_FILTERS: 'mypace_search_filters',
+  FILTER_PRESETS: 'mypace_filter_presets',
   // Legacy keys (kept for migration)
   MYPACE_ONLY: 'mypace_only',
   LANGUAGE_FILTER: 'mypace_language_filter',

@@ -3,9 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import { Icon } from './ui/Icon'
 import Button from './ui/Button'
 import Toggle from './ui/Toggle'
-import { buildSearchUrl, DEFAULT_SEARCH_FILTERS, saveFiltersToStorage } from '../lib/utils'
+import {
+  buildSearchUrl,
+  DEFAULT_SEARCH_FILTERS,
+  saveFiltersToStorage,
+  loadPresets,
+  savePreset,
+  deletePreset,
+  MAX_PRESETS,
+} from '../lib/utils'
 import { LANGUAGES } from '../lib/constants'
-import type { SearchFilters } from '../types'
+import type { SearchFilters, FilterPreset } from '../types'
 
 interface FilterPanelProps {
   // Popup mode
@@ -19,6 +27,13 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Preset state
+  const [presets, setPresets] = useState<FilterPreset[]>([])
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('')
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [presetName, setPresetName] = useState('')
+  const [presetError, setPresetError] = useState('')
+
   // Local state initialized from filters
   const [showSNS, setShowSNS] = useState(filters.showSNS)
   const [showBlog, setShowBlog] = useState(filters.showBlog)
@@ -28,6 +43,11 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
   const [searchQuery, setSearchQuery] = useState(filters.query)
   const [ngWordsInput, setNgWordsInput] = useState(filters.ngWords.join(', '))
   const [languageFilter, setLanguageFilter] = useState(filters.lang)
+
+  // Load presets on mount
+  useEffect(() => {
+    setPresets(loadPresets())
+  }, [])
 
   // Update local state when filters change (URL change)
   useEffect(() => {
@@ -39,6 +59,7 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     setSearchQuery(filters.query)
     setNgWordsInput(filters.ngWords.join(', '))
     setLanguageFilter(filters.lang)
+    setSelectedPresetId('') // Clear selection when filters change externally
   }, [filters])
 
   // Track if form is dirty
@@ -118,8 +139,136 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     }
   }
 
+  // Get current form state as SearchFilters
+  const getCurrentFilters = (): SearchFilters => ({
+    showSNS,
+    showBlog,
+    mypace: mypaceOnly,
+    tags: parseInput(okTagsInput),
+    ngTags: parseInput(ngTagsInput),
+    query: searchQuery,
+    ngWords: parseInput(ngWordsInput),
+    mode: filters.mode,
+    lang: languageFilter,
+  })
+
+  // Apply preset to form
+  const handlePresetSelect = (presetId: string) => {
+    setSelectedPresetId(presetId)
+    if (!presetId) return
+
+    const preset = presets.find((p) => p.id === presetId)
+    if (!preset) return
+
+    const f = preset.filters
+    setShowSNS(f.showSNS)
+    setShowBlog(f.showBlog)
+    setMypaceOnly(f.mypace)
+    setOkTagsInput(f.tags.join(', '))
+    setNgTagsInput(f.ngTags?.join(', ') || '')
+    setSearchQuery(f.query)
+    setNgWordsInput(f.ngWords.join(', '))
+    setLanguageFilter(f.lang)
+  }
+
+  // Open save modal
+  const handleOpenSaveModal = () => {
+    setPresetName('')
+    setPresetError('')
+    setShowSaveModal(true)
+  }
+
+  // Save preset
+  const handleSavePreset = () => {
+    if (!presetName.trim()) {
+      setPresetError('Name is required')
+      return
+    }
+
+    const result = savePreset(presetName, getCurrentFilters())
+    if (!result) {
+      setPresetError(`Maximum ${MAX_PRESETS} presets allowed`)
+      return
+    }
+
+    setPresets(loadPresets())
+    setSelectedPresetId(result.id)
+    setShowSaveModal(false)
+  }
+
+  // Delete preset
+  const handleDeletePreset = () => {
+    if (!selectedPresetId) return
+    if (!confirm('Delete this preset?')) return
+
+    deletePreset(selectedPresetId)
+    setPresets(loadPresets())
+    setSelectedPresetId('')
+  }
+
   return (
     <div className={`filter-panel ${isPopup ? 'filter-panel-popup' : 'filter-panel-embedded'}`}>
+      {/* Preset section */}
+      <div className="filter-preset-section">
+        <select
+          className="filter-preset-select"
+          value={selectedPresetId}
+          onChange={(e) => handlePresetSelect(e.target.value)}
+        >
+          <option value="">-- Preset --</option>
+          {presets.map((preset) => (
+            <option key={preset.id} value={preset.id}>
+              {preset.name}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className="filter-preset-btn filter-preset-save"
+          onClick={handleOpenSaveModal}
+          title="Save as preset"
+        >
+          <Icon name="Save" size={14} />
+        </button>
+        <button
+          type="button"
+          className="filter-preset-btn filter-preset-delete"
+          onClick={handleDeletePreset}
+          disabled={!selectedPresetId}
+          title="Delete preset"
+        >
+          <Icon name="Trash2" size={14} />
+        </button>
+      </div>
+
+      {/* Save preset modal */}
+      {showSaveModal && (
+        <div className="filter-preset-modal-backdrop" onClick={() => setShowSaveModal(false)}>
+          <div className="filter-preset-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="filter-preset-modal-header">Save Preset</div>
+            <input
+              type="text"
+              className="filter-preset-modal-input"
+              value={presetName}
+              onChange={(e) => setPresetName(e.target.value)}
+              placeholder="Preset name..."
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSavePreset()
+                if (e.key === 'Escape') setShowSaveModal(false)
+              }}
+            />
+            {presetError && <div className="filter-preset-modal-error">{presetError}</div>}
+            <div className="filter-preset-modal-actions">
+              <Button onClick={() => setShowSaveModal(false)}>Cancel</Button>
+              <Button variant="primary" onClick={handleSavePreset}>
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Kind filter - circuit diagram style */}
       <div className="filter-circuit">
         <div className="filter-circuit-source">Nostr</div>

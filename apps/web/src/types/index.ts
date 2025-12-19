@@ -91,3 +91,11 @@ export interface SearchFilters {
   mypace: boolean // mypace filter (#mypace tag only)
   lang: string // Language code (empty = all)
 }
+
+// Filter preset types
+export interface FilterPreset {
+  id: string // UUID
+  name: string // User-specified name
+  filters: SearchFilters
+  createdAt: number // timestamp
+}

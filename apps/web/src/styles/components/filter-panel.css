@@ -473,6 +473,130 @@
   color: var(--action-delete);
 }
 
+/* Preset Section */
+.filter-preset-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.filter-preset-select {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.filter-preset-select:hover {
+  border-color: var(--btn-primary-bg);
+}
+
+.filter-preset-select:focus {
+  border-color: var(--btn-primary-bg);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--btn-primary-bg) 20%, transparent);
+}
+
+.filter-preset-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--surface-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.filter-preset-btn:hover:not(:disabled) {
+  border-color: var(--btn-primary-bg);
+  color: var(--btn-primary-bg);
+}
+
+.filter-preset-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.filter-preset-delete:hover:not(:disabled) {
+  border-color: var(--action-delete);
+  color: var(--action-delete);
+}
+
+/* Preset Save Modal */
+.filter-preset-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+
+.filter-preset-modal {
+  background: var(--surface-primary);
+  border: 2px solid #333;
+  padding: 1rem;
+  min-width: 280px;
+  max-width: 90vw;
+}
+
+.filter-preset-modal-header {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.filter-preset-modal-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.filter-preset-modal-input:focus {
+  border-color: var(--btn-primary-bg);
+}
+
+.filter-preset-modal-error {
+  color: var(--action-delete);
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.filter-preset-modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
+}
+
+.filter-preset-modal-actions .btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
 /* Mobile adjustments */
 @media (max-width: 480px) {
   .filter-panel {
