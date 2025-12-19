@@ -44,21 +44,22 @@
 
 .sticker-list-remove {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 20px;
-  height: 20px;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--danger);
-  border: 2px solid var(--border-primary);
+  background: #e53935;
+  border: none;
   border-radius: 50%;
   color: white;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
   cursor: pointer;
   transition: transform 0.2s ease;
+  line-height: 1;
 }
 
 .sticker-list-remove:hover {

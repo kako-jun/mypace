@@ -7,14 +7,14 @@ interface StickerPickerProps {
 
 // Sample stickers using Twemoji CDN (short URLs for Nostr relay compatibility)
 const SAMPLE_STICKERS = [
-  { id: 'fire', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/1f525.svg', name: '🔥' },
-  { id: 'star', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/2b50.svg', name: '⭐' },
-  { id: 'heart', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/2764.svg', name: '❤️' },
-  { id: 'rocket', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/1f680.svg', name: '🚀' },
-  { id: 'sparkles', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/2728.svg', name: '✨' },
-  { id: 'party', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/1f389.svg', name: '🎉' },
-  { id: 'hundred', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/1f4af.svg', name: '💯' },
-  { id: 'eyes', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/1f440.svg', name: '👀' },
+  { id: 'fire', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f525.svg', name: '🔥' },
+  { id: 'star', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/2b50.svg', name: '⭐' },
+  { id: 'heart', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/2764.svg', name: '❤️' },
+  { id: 'rocket', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f680.svg', name: '🚀' },
+  { id: 'sparkles', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/2728.svg', name: '✨' },
+  { id: 'party', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f389.svg', name: '🎉' },
+  { id: 'hundred', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f4af.svg', name: '💯' },
+  { id: 'eyes', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f440.svg', name: '👀' },
 ]
 
 export function StickerPicker({ onAddSticker }: StickerPickerProps) {
