@@ -303,7 +303,8 @@ app.get('/api/replies/:eventId', async (c) => {
   const pool = await createPool(NOSTR_PROXY)
 
   try {
-    const events = await pool.querySync(RELAYS, { kinds: [1], '#e': [eventId] })
+    // Kind 1 (short notes) + Kind 30023 (long articles) as replies
+    const events = await pool.querySync(RELAYS, { kinds: [1, 30023], '#e': [eventId] })
     const replies = events.filter((e) => {
       const eTags = e.tags.filter((t) => t[0] === 'e')
       if (eTags.length === 0) return false

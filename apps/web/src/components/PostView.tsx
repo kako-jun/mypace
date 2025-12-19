@@ -395,6 +395,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
           avatarUrl={getProfileAvatarUrl()}
           isProfileLoading={!profile}
           emojis={profile?.emojis}
+          eventKind={event.kind}
         />
 
         <div className="post-content post-content-full">

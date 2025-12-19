@@ -44,6 +44,7 @@ export default function ThreadReplies({
                   clickable={false}
                   isProfileLoading={profiles[reply.pubkey] === undefined}
                   emojis={profiles[reply.pubkey]?.emojis}
+                  eventKind={reply.kind}
                 />
                 <div className="post-content">
                   <PostContent content={reply.content} emojis={parseEmojiTags(reply.tags)} profiles={profiles} />

@@ -15,6 +15,7 @@ interface PostHeaderProps {
   clickable?: boolean
   isProfileLoading?: boolean
   emojis?: EmojiTag[]
+  eventKind?: number
 }
 
 export default function PostHeader({
@@ -26,6 +27,7 @@ export default function PostHeader({
   clickable = true,
   isProfileLoading = false,
   emojis = [],
+  eventKind,
 }: PostHeaderProps) {
   const nameClass = `author-name${isProfileLoading ? ' loading-rainbow' : ''}`
 
@@ -46,6 +48,15 @@ export default function PostHeader({
 
   const nameContent = emojis.length > 0 ? <EmojiText text={displayName} emojis={emojis} /> : displayName
 
+  // Show "Blog" label for kind 30023 (long-form content)
+  const isBlogPost = eventKind === 30023
+  const timestampContent = (
+    <>
+      {formatTimestamp(createdAt)}
+      {isBlogPost && <span className="kind-label kind-label-blog"> · Blog</span>}
+    </>
+  )
+
   return (
     <header className="post-header">
       {clickable ? (
@@ -55,7 +66,7 @@ export default function PostHeader({
             <span className={nameClass} data-name={displayName}>
               {nameContent}
             </span>
-            <time className="timestamp">{formatTimestamp(createdAt)}</time>
+            <time className="timestamp">{timestampContent}</time>
           </div>
         </button>
       ) : (
@@ -65,7 +76,7 @@ export default function PostHeader({
             <span className={nameClass} data-name={displayName}>
               {nameContent}
             </span>
-            <time className="timestamp">{formatTimestamp(createdAt)}</time>
+            <time className="timestamp">{timestampContent}</time>
           </div>
         </>
       )}

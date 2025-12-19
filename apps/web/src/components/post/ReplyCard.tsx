@@ -34,6 +34,7 @@ export default function ReplyCard({
         avatarUrl={avatarUrl}
         isProfileLoading={isProfileLoading}
         emojis={emojis}
+        eventKind={reply.kind}
       />
       <div className="post-content">
         <PostContent content={reply.content} emojis={parseEmojiTags(reply.tags)} profiles={profiles} />

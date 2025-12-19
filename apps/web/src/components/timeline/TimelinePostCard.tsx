@@ -95,6 +95,7 @@ export default function TimelinePostCard({
         avatarUrl={getAvatarUrl(event.pubkey)}
         isProfileLoading={profiles[event.pubkey] === undefined}
         emojis={profiles[event.pubkey]?.emojis}
+        eventKind={event.kind}
       />
 
       <div className="post-content">

@@ -448,7 +448,8 @@ app.get('/api/replies/:eventId', async (c) => {
   const pool = new SimplePool()
 
   try {
-    const events = await pool.querySync(RELAYS, { kinds: [1], '#e': [eventId] })
+    // Kind 1 (short notes) + Kind 30023 (long articles) as replies
+    const events = await pool.querySync(RELAYS, { kinds: [1, 30023], '#e': [eventId] })
     // ルートへの返信のみフィルタ
     const replies = events.filter((e) => {
       const eTags = e.tags.filter((t) => t[0] === 'e')

@@ -73,6 +73,15 @@
   font-size: 0.75rem;
 }
 
+/* Kind labels (displayed after timestamp) */
+.kind-label {
+  font-weight: 500;
+}
+
+.kind-label-blog {
+  color: var(--btn-primary-bg);
+}
+
 /* Post content */
 .post-content {
   word-break: break-word;
