@@ -530,12 +530,11 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
             {editSaved && <p className="success">Saved!</p>}
 
             <div className="edit-actions">
-              <Button variant="secondary" size="lg" onClick={cancelEditMode} disabled={saving}>
+              <Button variant="secondary" onClick={cancelEditMode} disabled={saving}>
                 Cancel
               </Button>
               <Button
                 variant="primary"
-                size="lg"
                 className={`btn-save ${isProfileDirty ? 'is-dirty' : ''}`}
                 onClick={handleSaveProfile}
                 disabled={saving || !editName.trim()}

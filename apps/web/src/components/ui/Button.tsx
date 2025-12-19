@@ -14,10 +14,10 @@ export default function Button({
   disabled = false,
   type = 'button',
   variant = 'primary',
-  size = 'md',
+  size = 'lg',
   className = '',
 }: Props) {
-  const sizeClass = size !== 'md' ? `btn-${size}` : ''
+  const sizeClass = size !== 'lg' ? `btn-${size}` : 'btn-lg'
   return (
     <button
       type={type}
