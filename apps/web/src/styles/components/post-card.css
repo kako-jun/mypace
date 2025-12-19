@@ -151,7 +151,7 @@
   max-width: 100%;
   height: auto;
   object-fit: contain;
-  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.2));
   animation: sticker-appear 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   transition: filter 0.2s ease;
   user-select: none;
@@ -159,11 +159,11 @@
 }
 
 .sticker-selected .post-sticker {
-  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)) drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.5)) drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.2));
 }
 
 .sticker-dragging .post-sticker {
-  filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.8)) drop-shadow(4px 4px 8px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6)) drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.3));
   opacity: 0.9;
 }
 
