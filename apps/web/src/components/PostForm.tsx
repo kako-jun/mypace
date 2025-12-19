@@ -250,6 +250,10 @@ export function PostForm({
       rotation: 0,
     }
     setStickers([...stickers, newSticker])
+    // シール追加時にプレビューを自動表示
+    if (!showPreview) {
+      onShowPreviewChange(true)
+    }
   }
 
   const handleRemoveSticker = (index: number) => {
