@@ -167,8 +167,12 @@ function isAllowedIframeDomain(url: string): boolean {
  * Check if URL points to a video file
  */
 function isVideoUrl(url: string): boolean {
-  const pathname = new URL(url).pathname.toLowerCase()
-  return VIDEO_EXTENSIONS.some((ext) => pathname.endsWith(ext))
+  try {
+    const pathname = new URL(url).pathname.toLowerCase()
+    return VIDEO_EXTENSIONS.some((ext) => pathname.endsWith(ext))
+  } catch {
+    return false
+  }
 }
 
 /**
