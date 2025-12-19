@@ -76,8 +76,6 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
               </button>
             </div>
 
-            <div className="sticker-picker-divider">または</div>
-
             <div className="sticker-picker-grid">
               {SAMPLE_STICKERS.map((sticker) => (
                 <button
