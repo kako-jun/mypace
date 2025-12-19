@@ -310,7 +310,7 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
           value={selectedPresetId}
           onChange={(e) => handlePresetSelectWithReset(e.target.value)}
         >
-          <option value="">Preset({presets.length})</option>
+          <option value="">{presets.length} presets</option>
           {presets.map((preset) => (
             <option key={preset.id} value={preset.id}>
               {preset.name}

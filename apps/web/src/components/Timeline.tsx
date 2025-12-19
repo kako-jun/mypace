@@ -163,12 +163,6 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
   // Note: mypace filtering is done server-side, so we skip it here
   let filteredItems = items
 
-  // Helper to get searchable text (content + display name)
-  const getSearchableText = (item: (typeof items)[0]): string => {
-    const displayName = getDisplayName(item.event.pubkey)
-    return `${item.event.content} ${displayName}`.toLowerCase()
-  }
-
   // Filter by hashtags
   if (filterTags.length > 0) {
     filteredItems = filteredItems.filter((item) =>
@@ -178,17 +172,17 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
     )
   }
 
-  // Filter by OK word (case-insensitive, searches content + username)
+  // Filter by OK word (case-insensitive, searches content only)
   if (query) {
     const lowerQuery = query.toLowerCase()
-    filteredItems = filteredItems.filter((item) => getSearchableText(item).includes(lowerQuery))
+    filteredItems = filteredItems.filter((item) => item.event.content.toLowerCase().includes(lowerQuery))
   }
 
-  // Filter by NG words (exclude posts containing any NG word in content or username)
+  // Filter by NG words (exclude posts containing any NG word in content)
   if (ngWords.length > 0) {
     filteredItems = filteredItems.filter((item) => {
-      const searchableText = getSearchableText(item)
-      return !ngWords.some((ngWord) => searchableText.includes(ngWord.toLowerCase()))
+      const lowerContent = item.event.content.toLowerCase()
+      return !ngWords.some((ngWord) => lowerContent.includes(ngWord.toLowerCase()))
     })
   }
 

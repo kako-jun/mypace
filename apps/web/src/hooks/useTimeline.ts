@@ -122,19 +122,37 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     }
   }
 
-  const loadReactionsForEvents = async (events: Event[], myPubkey: string) => {
+  const loadReactionsForEvents = async (events: Event[], myPubkey: string, currentProfiles: ProfileCache) => {
     const reactionMap: { [eventId: string]: ReactionData } = {}
+    const allReactorPubkeys: string[] = []
+
     await Promise.all(
       events.map(async (event) => {
         try {
           const result = await fetchReactions(event.id, myPubkey)
           reactionMap[event.id] = result
+          result.reactors.forEach((r) => allReactorPubkeys.push(r.pubkey))
         } catch {
           reactionMap[event.id] = { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] }
         }
       })
     )
     setReactions(reactionMap)
+
+    // Load profiles for reactors
+    const missingPubkeys = [...new Set(allReactorPubkeys)].filter((pk) => currentProfiles[pk] === undefined)
+    if (missingPubkeys.length > 0) {
+      try {
+        const fetchedProfiles = await fetchProfiles(missingPubkeys)
+        setProfiles((prev) => {
+          const newProfiles = { ...prev }
+          for (const pk of missingPubkeys) {
+            newProfiles[pk] = fetchedProfiles[pk] || null
+          }
+          return newProfiles
+        })
+      } catch {}
+    }
   }
 
   const loadRepliesForEvents = async (events: Event[], currentProfiles: ProfileCache) => {
@@ -236,7 +254,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
 
       const loadedProfiles = await loadProfiles(notes, profiles)
       await Promise.all([
-        loadReactionsForEvents(notes, pubkey),
+        loadReactionsForEvents(notes, pubkey, loadedProfiles),
         loadRepliesForEvents(notes, loadedProfiles),
         loadRepostsForEvents(notes, pubkey),
       ])
