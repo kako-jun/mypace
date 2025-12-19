@@ -1,29 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Icon } from './ui/Icon'
 import Button from './ui/Button'
 import Toggle from './ui/Toggle'
-import {
-  buildSearchUrl,
-  DEFAULT_SEARCH_FILTERS,
-  saveFiltersToStorage,
-  loadPresets,
-  savePreset,
-  deletePreset,
-  MAX_PRESETS,
-  loadMuteList,
-  addToMuteList,
-  removeFromMuteList,
-  type MuteEntry,
-} from '../lib/utils'
-import { LANGUAGES } from '../lib/constants'
+import { buildSearchUrl, DEFAULT_SEARCH_FILTERS, saveFiltersToStorage, loadPresets } from '../lib/utils'
+import { FilterPresets } from './filter/FilterPresets'
+import { SmartFilter } from './filter/SmartFilter'
+import { MuteListManager } from './filter/MuteListManager'
+import { FilterFields } from './filter/FilterFields'
 import type { SearchFilters, FilterPreset } from '../types'
 
 interface FilterPanelProps {
-  // Popup mode
   isPopup?: boolean
   onClose?: () => void
-  // Current filter state
   filters?: SearchFilters
 }
 
@@ -34,10 +22,6 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
   // Preset state
   const [presets, setPresets] = useState<FilterPreset[]>([])
   const [selectedPresetId, setSelectedPresetId] = useState<string>('')
-  const [showSaveModal, setShowSaveModal] = useState(false)
-  const [presetName, setPresetName] = useState('')
-  const [presetError, setPresetError] = useState('')
-  const [deleteConfirm, setDeleteConfirm] = useState(false)
 
   // Local state initialized from filters
   const [showSNS, setShowSNS] = useState(filters.showSNS)
@@ -48,24 +32,12 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
   const [searchQuery, setSearchQuery] = useState(filters.query)
   const [ngWordsInput, setNgWordsInput] = useState(filters.ngWords.join(', '))
   const [languageFilter, setLanguageFilter] = useState(filters.lang)
-
-  // Smart filter state
-  const [showSmartPopup, setShowSmartPopup] = useState(false)
   const [hideAds, setHideAds] = useState(filters.hideAds ?? true)
   const [hideNSFW, setHideNSFW] = useState(filters.hideNSFW ?? true)
-  const smartPopupRef = useRef<HTMLDivElement>(null)
 
-  // Mute list state
-  const [showMutePopup, setShowMutePopup] = useState(false)
-  const [muteList, setMuteList] = useState<MuteEntry[]>([])
-  const [muteInput, setMuteInput] = useState('')
-  const [muteError, setMuteError] = useState('')
-  const mutePopupRef = useRef<HTMLDivElement>(null)
-
-  // Load presets and mute list on mount
+  // Load presets on mount
   useEffect(() => {
     setPresets(loadPresets())
-    setMuteList(loadMuteList())
   }, [])
 
   // Update local state when filters change (URL change)
@@ -80,34 +52,14 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     setLanguageFilter(filters.lang)
     setHideAds(filters.hideAds ?? true)
     setHideNSFW(filters.hideNSFW ?? true)
-    setSelectedPresetId('') // Clear selection when filters change externally
+    setSelectedPresetId('')
   }, [filters])
 
-  // Close smart popup when clicking outside
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (smartPopupRef.current && !smartPopupRef.current.contains(e.target as Node)) {
-        setShowSmartPopup(false)
-      }
+    if (isPopup && inputRef.current) {
+      inputRef.current.focus()
     }
-    if (showSmartPopup) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [showSmartPopup])
-
-  // Close mute popup when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (mutePopupRef.current && !mutePopupRef.current.contains(e.target as Node)) {
-        setShowMutePopup(false)
-      }
-    }
-    if (showMutePopup) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [showMutePopup])
+  }, [isPopup])
 
   // Track if form is dirty
   const isDirty =
@@ -122,77 +74,12 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     hideAds !== (filters.hideAds ?? true) ||
     hideNSFW !== (filters.hideNSFW ?? true)
 
-  // Count active smart filters
-  const smartFilterCount = [hideAds, hideNSFW, languageFilter !== ''].filter(Boolean).length
-
-  useEffect(() => {
-    if (isPopup && inputRef.current) {
-      inputRef.current.focus()
-    }
-  }, [isPopup])
-
-  // Parse input to array (split by whitespace or comma)
+  // Parse input to array
   const parseInput = (input: string): string[] => {
     return input
       .split(/[\s,]+/)
       .map((w) => w.trim())
       .filter((w) => w.length > 0)
-  }
-
-  // Apply filters - save to localStorage and navigate to URL
-  const handleApply = () => {
-    const newFilters: SearchFilters = {
-      showSNS,
-      showBlog,
-      mypace: mypaceOnly,
-      tags: parseInput(okTagsInput),
-      ngTags: parseInput(ngTagsInput),
-      query: searchQuery,
-      ngWords: parseInput(ngWordsInput),
-      mode: filters.mode,
-      lang: languageFilter,
-      hideAds,
-      hideNSFW,
-    }
-
-    // Save to localStorage for next visit
-    saveFiltersToStorage(newFilters)
-
-    // Navigate to search URL with new filters
-    const url = buildSearchUrl(newFilters)
-    navigate(url)
-    onClose?.()
-  }
-
-  // Clear all filters - save defaults and navigate to home
-  const handleClear = () => {
-    // Reset local state
-    setShowSNS(true)
-    setShowBlog(true)
-    setMypaceOnly(true)
-    setOkTagsInput('')
-    setNgTagsInput('')
-    setSearchQuery('')
-    setNgWordsInput('')
-    setLanguageFilter('')
-    setHideAds(true)
-    setHideNSFW(true)
-
-    // Save defaults to localStorage
-    saveFiltersToStorage(DEFAULT_SEARCH_FILTERS)
-
-    // Navigate to clean home page
-    navigate('/')
-    onClose?.()
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleApply()
-    }
-    if (e.key === 'Escape' && isPopup) {
-      onClose?.()
-    }
   }
 
   // Get current form state as SearchFilters
@@ -209,6 +96,36 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     hideAds,
     hideNSFW,
   })
+
+  // Apply filters
+  const handleApply = () => {
+    const newFilters = getCurrentFilters()
+    saveFiltersToStorage(newFilters)
+    navigate(buildSearchUrl(newFilters))
+    onClose?.()
+  }
+
+  // Clear all filters
+  const handleClear = () => {
+    setShowSNS(true)
+    setShowBlog(true)
+    setMypaceOnly(true)
+    setOkTagsInput('')
+    setNgTagsInput('')
+    setSearchQuery('')
+    setNgWordsInput('')
+    setLanguageFilter('')
+    setHideAds(true)
+    setHideNSFW(true)
+    saveFiltersToStorage(DEFAULT_SEARCH_FILTERS)
+    navigate('/')
+    onClose?.()
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleApply()
+    if (e.key === 'Escape' && isPopup) onClose?.()
+  }
 
   // Apply preset to form
   const handlePresetSelect = (presetId: string) => {
@@ -231,135 +148,15 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     setHideNSFW(f.hideNSFW ?? true)
   }
 
-  // Open save modal
-  const handleOpenSaveModal = () => {
-    // Pre-fill with current preset name if selected
-    const currentPreset = presets.find((p) => p.id === selectedPresetId)
-    setPresetName(currentPreset?.name || '')
-    setPresetError('')
-    setDeleteConfirm(false)
-    setShowSaveModal(true)
-  }
-
-  // Save preset
-  const handleSavePreset = () => {
-    if (!presetName.trim()) {
-      setPresetError('Name is required')
-      return
-    }
-
-    const result = savePreset(presetName, getCurrentFilters())
-    if (!result) {
-      setPresetError(`Maximum ${MAX_PRESETS} presets allowed`)
-      return
-    }
-
-    setPresets(loadPresets())
-    setSelectedPresetId(result.id)
-    setShowSaveModal(false)
-  }
-
-  // Delete preset (two-click: first confirms, second deletes)
-  const handleDeletePreset = () => {
-    if (!selectedPresetId) return
-
-    if (!deleteConfirm) {
-      setDeleteConfirm(true)
-      return
-    }
-
-    deletePreset(selectedPresetId)
-    setPresets(loadPresets())
-    setSelectedPresetId('')
-    setDeleteConfirm(false)
-  }
-
-  // Reset delete confirm when selection changes
-  const handlePresetSelectWithReset = (presetId: string) => {
-    setDeleteConfirm(false)
-    handlePresetSelect(presetId)
-  }
-
-  // Add to mute list
-  const handleAddToMuteList = () => {
-    if (!muteInput.trim()) return
-
-    const result = addToMuteList(muteInput)
-    if (result) {
-      setMuteList(loadMuteList())
-      setMuteInput('')
-      setMuteError('')
-    } else {
-      setMuteError('Invalid npub or already muted')
-      setTimeout(() => setMuteError(''), 2000)
-    }
-  }
-
-  // Remove from mute list
-  const handleRemoveFromMuteList = (pubkey: string) => {
-    removeFromMuteList(pubkey)
-    setMuteList(loadMuteList())
-  }
-
   return (
     <div className={`filter-panel ${isPopup ? 'filter-panel-popup' : 'filter-panel-embedded'}`}>
-      {/* Preset section */}
-      <div className="filter-preset-section">
-        <select
-          className="filter-preset-select"
-          value={selectedPresetId}
-          onChange={(e) => handlePresetSelectWithReset(e.target.value)}
-        >
-          <option value="">{presets.length} presets</option>
-          {presets.map((preset) => (
-            <option key={preset.id} value={preset.id}>
-              {preset.name}
-            </option>
-          ))}
-        </select>
-        <Button size="md" onClick={handleOpenSaveModal} title="Save as preset">
-          <Icon name="Save" size={14} />
-        </Button>
-        <Button
-          size="md"
-          variant={deleteConfirm ? 'danger' : 'secondary'}
-          onClick={handleDeletePreset}
-          disabled={!selectedPresetId}
-          title={deleteConfirm ? 'Click again to delete' : 'Delete preset'}
-        >
-          {deleteConfirm ? <Icon name="Check" size={14} /> : <Icon name="Trash2" size={14} />}
-        </Button>
-      </div>
-
-      {/* Save preset modal */}
-      {showSaveModal && (
-        <div className="filter-preset-modal-backdrop" onClick={() => setShowSaveModal(false)}>
-          <div className="filter-preset-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="filter-preset-modal-header">Save Preset</div>
-            <input
-              type="text"
-              className="filter-preset-modal-input"
-              value={presetName}
-              onChange={(e) => setPresetName(e.target.value)}
-              placeholder="Preset name..."
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSavePreset()
-                if (e.key === 'Escape') setShowSaveModal(false)
-              }}
-            />
-            {presetError && <div className="filter-preset-modal-error">{presetError}</div>}
-            <div className="filter-preset-modal-actions">
-              <Button size="md" onClick={() => setShowSaveModal(false)}>
-                Cancel
-              </Button>
-              <Button size="md" variant="primary" onClick={handleSavePreset}>
-                Save
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <FilterPresets
+        presets={presets}
+        selectedPresetId={selectedPresetId}
+        onPresetsChange={setPresets}
+        onPresetSelect={handlePresetSelect}
+        getCurrentFilters={getCurrentFilters}
+      />
 
       {/* Kind filter - circuit diagram style */}
       <div className="filter-circuit">
@@ -389,212 +186,30 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
         <div className="filter-circuit-output">TL</div>
       </div>
 
-      {/* Smart Filter section */}
-      <div className="smart-filter-section" ref={smartPopupRef}>
-        <button
-          type="button"
-          className={`smart-filter-btn ${smartFilterCount > 0 ? 'active' : ''}`}
-          onClick={() => setShowSmartPopup(!showSmartPopup)}
-        >
-          <Icon name="Sparkles" size={14} />
-          <span>Smart Filter</span>
-          {smartFilterCount > 0 && <span className="smart-filter-count">{smartFilterCount}</span>}
-          <Icon name={showSmartPopup ? 'ChevronUp' : 'ChevronDown'} size={14} />
-        </button>
+      <SmartFilter
+        hideAds={hideAds}
+        hideNSFW={hideNSFW}
+        languageFilter={languageFilter}
+        onHideAdsChange={setHideAds}
+        onHideNSFWChange={setHideNSFW}
+        onLanguageChange={setLanguageFilter}
+      />
 
-        {showSmartPopup && (
-          <div className="smart-filter-popup">
-            <div className="smart-filter-item" onClick={() => setHideAds(!hideAds)}>
-              <Toggle checked={hideAds} onChange={setHideAds} size="small" />
-              <Icon name="Banknote" size={14} />
-              <span className="smart-filter-label">Hide Ads</span>
-            </div>
-            <div className="smart-filter-item" onClick={() => setHideNSFW(!hideNSFW)}>
-              <Toggle checked={hideNSFW} onChange={setHideNSFW} size="small" />
-              <Icon name="EyeOff" size={14} />
-              <span className="smart-filter-label">Hide NSFW</span>
-            </div>
-            <div className="smart-filter-divider" />
-            <div className="smart-filter-item">
-              <Icon name="Globe" size={14} />
-              <select
-                value={languageFilter}
-                onChange={(e) => setLanguageFilter(e.target.value)}
-                className="smart-filter-select"
-              >
-                {LANGUAGES.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
-      </div>
+      <MuteListManager />
 
-      {/* Mute List section */}
-      <div className="mute-list-section" ref={mutePopupRef}>
-        <button
-          type="button"
-          className={`mute-list-btn ${muteList.length > 0 ? 'active' : ''}`}
-          onClick={() => setShowMutePopup(!showMutePopup)}
-        >
-          <Icon name="UserX" size={14} />
-          <span>Mute List</span>
-          {muteList.length > 0 && <span className="mute-list-count">{muteList.length}</span>}
-          <Icon name={showMutePopup ? 'ChevronUp' : 'ChevronDown'} size={14} />
-        </button>
+      <FilterFields
+        searchQuery={searchQuery}
+        okTagsInput={okTagsInput}
+        ngWordsInput={ngWordsInput}
+        ngTagsInput={ngTagsInput}
+        onSearchQueryChange={setSearchQuery}
+        onOkTagsChange={setOkTagsInput}
+        onNgWordsChange={setNgWordsInput}
+        onNgTagsChange={setNgTagsInput}
+        onKeyDown={handleKeyDown}
+        inputRef={inputRef}
+      />
 
-        {showMutePopup && (
-          <div className="mute-list-popup">
-            <div className="mute-list-input-row">
-              <input
-                type="text"
-                className="mute-list-input"
-                value={muteInput}
-                onChange={(e) => setMuteInput(e.target.value)}
-                placeholder="npub1..."
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleAddToMuteList()
-                }}
-              />
-              <Button size="md" onClick={handleAddToMuteList}>
-                <Icon name="Plus" size={14} />
-              </Button>
-            </div>
-            {muteError && <div className="mute-list-error">{muteError}</div>}
-            {muteList.length > 0 ? (
-              <div className="mute-list-entries">
-                {muteList.map((entry) => (
-                  <div key={entry.pubkey} className="mute-list-entry">
-                    <span className="mute-list-npub" title={entry.npub}>
-                      {entry.npub.slice(0, 12)}...{entry.npub.slice(-4)}
-                    </span>
-                    <button
-                      type="button"
-                      className="mute-list-remove-btn"
-                      onClick={() => handleRemoveFromMuteList(entry.pubkey)}
-                      title="Remove from mute list"
-                    >
-                      <Icon name="X" size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="mute-list-empty">No muted users</div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* OK group */}
-      <div className="filter-group filter-group-ok">
-        <span className="filter-group-label">OK</span>
-        <div className="filter-group-inputs">
-          {/* OK word input */}
-          <div className="filter-search-row">
-            <Icon name="Search" size={16} className="filter-search-icon" />
-            <input
-              ref={inputRef}
-              type="text"
-              className="filter-search-input"
-              value={searchQuery}
-              placeholder="Keyword..."
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                className="filter-input-clear"
-                onClick={() => setSearchQuery('')}
-                aria-label="Clear search"
-              >
-                ×
-              </button>
-            )}
-          </div>
-
-          {/* OK tags input */}
-          <div className="filter-search-row">
-            <Icon name="Hash" size={16} className="filter-search-icon" />
-            <input
-              type="text"
-              className="filter-search-input"
-              value={okTagsInput}
-              placeholder="Tags..."
-              onChange={(e) => setOkTagsInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            {okTagsInput && (
-              <button
-                type="button"
-                className="filter-input-clear"
-                onClick={() => setOkTagsInput('')}
-                aria-label="Clear OK tags"
-              >
-                ×
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* NG group */}
-      <div className="filter-group filter-group-ng">
-        <span className="filter-group-label filter-group-label-ng">NG</span>
-        <div className="filter-group-inputs">
-          {/* NG word input */}
-          <div className="filter-search-row">
-            <Icon name="Ban" size={16} className="filter-search-icon filter-ng-icon" />
-            <input
-              type="text"
-              className="filter-search-input"
-              value={ngWordsInput}
-              placeholder="Keywords..."
-              onChange={(e) => setNgWordsInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            {ngWordsInput && (
-              <button
-                type="button"
-                className="filter-input-clear"
-                onClick={() => setNgWordsInput('')}
-                aria-label="Clear NG words"
-              >
-                ×
-              </button>
-            )}
-          </div>
-
-          {/* NG tags input */}
-          <div className="filter-search-row">
-            <Icon name="Hash" size={16} className="filter-search-icon filter-ng-icon" />
-            <input
-              type="text"
-              className="filter-search-input"
-              value={ngTagsInput}
-              placeholder="Tags..."
-              onChange={(e) => setNgTagsInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            {ngTagsInput && (
-              <button
-                type="button"
-                className="filter-input-clear"
-                onClick={() => setNgTagsInput('')}
-                aria-label="Clear NG tags"
-              >
-                ×
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Action buttons */}
       <div className="filter-actions">
         <Button size="md" variant="secondary" onClick={handleClear}>
           Clear

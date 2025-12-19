@@ -1,13 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import {
-  fetchEvents,
-  fetchProfiles,
-  fetchReactions,
-  fetchReplies,
-  fetchReposts,
-  fetchUserPosts,
-  publishEvent,
-} from '../lib/nostr/relay'
+import { fetchEvents, fetchUserPosts, publishEvent } from '../lib/nostr/relay'
 import {
   getCurrentPubkey,
   createDeleteEvent,
@@ -18,55 +10,18 @@ import {
 import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage } from '../lib/utils'
 import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../lib/constants'
 import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../types'
+import type { GapInfo, UseTimelineOptions, UseTimelineResult } from './timeline/types'
+import {
+  loadProfiles,
+  loadReactionsForEvents,
+  loadRepliesForEvents,
+  loadRepostsForEvents,
+  mergeProfiles,
+} from './timeline/useTimelineData'
+import { useTimelinePolling } from './timeline/useTimelinePolling'
+import { useGapDetection } from './timeline/useGapDetection'
 
-const POLLING_INTERVAL = 60 * 1000 // 1分
-
-// ギャップ情報を表す型
-interface GapInfo {
-  id: string // ユニークID
-  afterEventId: string // このイベントの後にギャップがある
-  since: number // ギャップの開始時刻（古い側）
-  until: number // ギャップの終了時刻（新しい側）
-}
-
-interface UseTimelineOptions {
-  authorPubkey?: string // 特定ユーザーの投稿のみ取得
-  mypaceOnly?: boolean // mypaceタグでフィルタリング（デフォルト: true）
-  showSNS?: boolean // Show kind 1 (short notes) (デフォルト: true)
-  showBlog?: boolean // Show kind 30023 (long-form articles) (デフォルト: true)
-  hideAds?: boolean // Hide ad/spam content (デフォルト: true)
-  hideNSFW?: boolean // Hide NSFW content (デフォルト: true)
-  lang?: string // Language filter (デフォルト: '')
-}
-
-interface UseTimelineResult {
-  items: TimelineItem[]
-  events: Event[]
-  profiles: ProfileCache
-  reactions: { [eventId: string]: ReactionData }
-  replies: { [eventId: string]: ReplyData }
-  reposts: { [eventId: string]: RepostData }
-  myPubkey: string | null
-  loading: boolean
-  error: string
-  likingId: string | null
-  repostingId: string | null
-  newEventCount: number
-  gaps: GapInfo[]
-  hasMore: boolean
-  loadingMore: boolean
-  loadingGap: string | null
-  reload: () => void
-  loadNewEvents: () => void
-  loadOlderEvents: () => Promise<void>
-  fillGap: (gapId: string) => Promise<void>
-  handleLike: (event: Event) => void
-  handleUnlike: (event: Event) => Promise<void>
-  handleRepost: (event: Event) => Promise<void>
-  handleDelete: (event: Event) => Promise<void>
-  getDisplayName: (pubkey: string) => string
-  getAvatarUrl: (pubkey: string) => string | null
-}
+export type { GapInfo, UseTimelineOptions, UseTimelineResult }
 
 export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult {
   const {
@@ -78,6 +33,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     hideNSFW = true,
     lang = '',
   } = options
+
+  // State
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [profiles, setProfiles] = useState<ProfileCache>({})
@@ -100,111 +57,38 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   // Debounce refs for stella clicks
   const stellaDebounceTimers = useRef<{ [eventId: string]: ReturnType<typeof setTimeout> }>({})
   const pendingStella = useRef<{ [eventId: string]: number }>({})
-  // Track latest reactions to avoid stale closure in setTimeout
   const reactionsRef = useRef(reactions)
   reactionsRef.current = reactions
 
-  const loadProfiles = async (events: Event[], currentProfiles: ProfileCache) => {
-    const pubkeys = [...new Set(events.map((e) => e.pubkey))]
-    const missingPubkeys = pubkeys.filter((pk) => currentProfiles[pk] === undefined)
-    if (missingPubkeys.length === 0) return currentProfiles
+  // ポーリング機構
+  const { loadNewEvents } = useTimelinePolling({
+    options,
+    latestEventTime,
+    events,
+    setPendingNewEvents,
+    setGaps,
+    setProfiles,
+    setTimelineItems,
+    setEvents,
+    setLatestEventTime,
+    pendingNewEvents,
+  })
 
-    try {
-      const fetchedProfiles = await fetchProfiles(missingPubkeys)
-      const newProfiles: ProfileCache = { ...currentProfiles }
-      for (const pk of missingPubkeys) {
-        newProfiles[pk] = fetchedProfiles[pk] || null
-      }
-      setProfiles(newProfiles)
-      return newProfiles
-    } catch {
-      return currentProfiles
-    }
-  }
+  // ギャップ検出
+  const { fillGap } = useGapDetection({
+    options,
+    gaps,
+    loadingGap,
+    events,
+    setGaps,
+    setLoadingGap,
+    setTimelineItems,
+    setEvents,
+    setProfiles,
+  })
 
-  const loadReactionsForEvents = async (events: Event[], myPubkey: string, currentProfiles: ProfileCache) => {
-    const reactionMap: { [eventId: string]: ReactionData } = {}
-    const allReactorPubkeys: string[] = []
-
-    await Promise.all(
-      events.map(async (event) => {
-        try {
-          const result = await fetchReactions(event.id, myPubkey)
-          reactionMap[event.id] = result
-          result.reactors.forEach((r) => allReactorPubkeys.push(r.pubkey))
-        } catch {
-          reactionMap[event.id] = { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] }
-        }
-      })
-    )
-    setReactions(reactionMap)
-
-    // Load profiles for reactors
-    const missingPubkeys = [...new Set(allReactorPubkeys)].filter((pk) => currentProfiles[pk] === undefined)
-    if (missingPubkeys.length > 0) {
-      try {
-        const fetchedProfiles = await fetchProfiles(missingPubkeys)
-        setProfiles((prev) => {
-          const newProfiles = { ...prev }
-          for (const pk of missingPubkeys) {
-            newProfiles[pk] = fetchedProfiles[pk] || null
-          }
-          return newProfiles
-        })
-      } catch {}
-    }
-  }
-
-  const loadRepliesForEvents = async (events: Event[], currentProfiles: ProfileCache) => {
-    const replyMap: { [eventId: string]: ReplyData } = {}
-    const allReplyPubkeys: string[] = []
-
-    await Promise.all(
-      events.map(async (event) => {
-        try {
-          const result = await fetchReplies(event.id)
-          replyMap[event.id] = result
-          result.replies.forEach((r) => allReplyPubkeys.push(r.pubkey))
-        } catch {
-          replyMap[event.id] = { count: 0, replies: [] }
-        }
-      })
-    )
-    setReplies(replyMap)
-
-    // Load profiles for reply authors
-    const missingPubkeys = [...new Set(allReplyPubkeys)].filter((pk) => currentProfiles[pk] === undefined)
-    if (missingPubkeys.length > 0) {
-      try {
-        const fetchedProfiles = await fetchProfiles(missingPubkeys)
-        setProfiles((prev) => {
-          const newProfiles = { ...prev }
-          for (const pk of missingPubkeys) {
-            newProfiles[pk] = fetchedProfiles[pk] || null
-          }
-          return newProfiles
-        })
-      } catch {}
-    }
-  }
-
-  const loadRepostsForEvents = async (events: Event[], myPubkey: string) => {
-    const repostMap: { [eventId: string]: RepostData } = {}
-    await Promise.all(
-      events.map(async (event) => {
-        try {
-          const result = await fetchReposts(event.id, myPubkey)
-          repostMap[event.id] = result
-        } catch {
-          repostMap[event.id] = { count: 0, myRepost: false }
-        }
-      })
-    )
-    setReposts(repostMap)
-  }
-
+  // タイムライン読み込み
   const loadTimeline = useCallback(async () => {
-    // Clear existing data and show loading state
     setTimelineItems([])
     setEvents([])
     setLoading(true)
@@ -215,10 +99,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
 
       let notes: Event[]
       if (authorPubkey) {
-        // 特定ユーザーの投稿を取得
         notes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT)
       } else {
-        // mypace投稿を取得（タグ/キーワードはクライアント側でフィルタリング）
         notes = await fetchEvents(
           LIMITS.TIMELINE_FETCH_LIMIT,
           0,
@@ -238,7 +120,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       setEvents(notes)
       setLoading(false)
 
-      // リアルタイム購読用に最新/最古イベント時刻を記録
       if (notes.length > 0) {
         const maxTime = Math.max(...notes.map((n) => n.created_at))
         const minTime = Math.min(...notes.map((n) => n.created_at))
@@ -252,56 +133,45 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       }
       setGaps([])
 
-      const loadedProfiles = await loadProfiles(notes, profiles)
+      const loadedProfiles = await loadProfiles(notes, profiles, setProfiles)
       await Promise.all([
-        loadReactionsForEvents(notes, pubkey, loadedProfiles),
-        loadRepliesForEvents(notes, loadedProfiles),
-        loadRepostsForEvents(notes, pubkey),
+        loadReactionsForEvents(notes, pubkey, loadedProfiles, setReactions, setProfiles),
+        loadRepliesForEvents(notes, loadedProfiles, setReplies, setProfiles),
+        loadRepostsForEvents(notes, pubkey, setReposts),
       ])
     } catch (err) {
       setError(getErrorMessage(err, 'Failed to load timeline'))
       setLoading(false)
     }
-  }, [authorPubkey, mypaceOnly, showSNS, showBlog])
+  }, [authorPubkey, mypaceOnly, showSNS, showBlog, hideAds, hideNSFW, lang, profiles])
 
-  // Send accumulated stella to the network
+  // Stella送信
   const flushStella = async (targetEvent: Event) => {
     const eventId = targetEvent.id
     const stellaToSend = pendingStella.current[eventId] || 0
     if (stellaToSend <= 0) return
 
-    // Clear pending stella
     delete pendingStella.current[eventId]
     delete stellaDebounceTimers.current[eventId]
 
-    // Use reactionsRef to get latest state (avoid stale closure)
     const latestReaction = reactionsRef.current[eventId]
     const previousReaction = latestReaction
     const oldReactionId = latestReaction?.myReactionId
 
     setLikingId(eventId)
     try {
-      // Use the optimistically updated myStella directly (already includes pending stella)
       const newTotalStella = Math.min(latestReaction?.myStella || stellaToSend, MAX_STELLA_PER_USER)
-
-      // Create new reaction with accumulated stella FIRST (before deleting old one)
       const newReaction = await createReactionEvent(targetEvent, '+', newTotalStella)
       await publishEvent(newReaction)
 
-      // Delete old reaction AFTER new one is successfully published
       if (oldReactionId) {
         try {
           await publishEvent(await createDeleteEvent([oldReactionId]))
-        } catch {
-          // Ignore delete errors - old reaction will eventually be overridden
-        }
+        } catch {}
       }
 
-      // Update local state with new reaction info
-      // Note: count is already correct from optimistic update, just update reactionId and reactors
       setReactions((prev) => {
         const prevReactors = prev[eventId]?.reactors || []
-        // Update or add my entry in reactors
         const myIndex = prevReactors.findIndex((r) => r.pubkey === myPubkey)
         const updatedReactors =
           myIndex >= 0
@@ -323,7 +193,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         return {
           ...prev,
           [eventId]: {
-            count: prev[eventId]?.count || newTotalStella, // Keep optimistically updated count
+            count: prev[eventId]?.count || newTotalStella,
             myReaction: true,
             myStella: newTotalStella,
             myReactionId: newReaction.id,
@@ -333,39 +203,24 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       })
     } catch (error) {
       console.error('Failed to publish reaction:', error)
-      // Rollback UI state to previous state
       setReactions((prev) => ({
         ...prev,
-        [eventId]: previousReaction || {
-          count: 0,
-          myReaction: false,
-          myStella: 0,
-          myReactionId: null,
-          reactors: [],
-        },
+        [eventId]: previousReaction || { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] },
       }))
     } finally {
       setLikingId(null)
     }
   }
 
-  // Debounced stella click handler
   const handleLike = (event: Event) => {
     if (!myPubkey) return
-
     const eventId = event.id
     const currentReaction = reactions[eventId]
     const currentMyStella = currentReaction?.myStella || 0
     const pendingCount = pendingStella.current[eventId] || 0
-
-    // Check if we've reached the limit
     if (currentMyStella + pendingCount >= MAX_STELLA_PER_USER) return
 
-    // Increment pending stella
     pendingStella.current[eventId] = pendingCount + 1
-
-    // Update local state immediately for visual feedback
-    // Simply increment by 1 (don't double-count pendingCount)
     setReactions((prev) => ({
       ...prev,
       [eventId]: {
@@ -377,39 +232,28 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       },
     }))
 
-    // Clear existing timer and set new one (debounce 500ms)
     if (stellaDebounceTimers.current[eventId]) {
       clearTimeout(stellaDebounceTimers.current[eventId])
     }
-    stellaDebounceTimers.current[eventId] = setTimeout(() => {
-      flushStella(event)
-    }, 500)
+    stellaDebounceTimers.current[eventId] = setTimeout(() => flushStella(event), 500)
   }
 
-  // Cancel/remove stella (long press feature)
   const handleUnlike = async (event: Event) => {
     if (!myPubkey) return
-
     const eventId = event.id
     const currentReaction = reactions[eventId]
     if (!currentReaction?.myReactionId) return
 
-    // Cancel any pending debounce
     if (stellaDebounceTimers.current[eventId]) {
       clearTimeout(stellaDebounceTimers.current[eventId])
       delete stellaDebounceTimers.current[eventId]
     }
     delete pendingStella.current[eventId]
 
-    // Save current stella for updating count
     const stellaToRemove = currentReaction.myStella || 0
-
     setLikingId(eventId)
     try {
-      // Delete the reaction
       await publishEvent(await createDeleteEvent([currentReaction.myReactionId]))
-
-      // Update local state
       setReactions((prev) => ({
         ...prev,
         [eventId]: {
@@ -432,10 +276,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     setRepostingId(event.id)
     try {
       await publishEvent(await createRepostEvent(event))
-      setReposts((prev) => ({
-        ...prev,
-        [event.id]: { count: (prev[event.id]?.count || 0) + 1, myRepost: true },
-      }))
+      setReposts((prev) => ({ ...prev, [event.id]: { count: (prev[event.id]?.count || 0) + 1, myRepost: true } }))
     } finally {
       setRepostingId(null)
     }
@@ -454,159 +295,21 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     [profiles]
   )
 
-  // 新着イベントをタイムラインに反映
-  const loadNewEvents = useCallback(async () => {
-    if (pendingNewEvents.length === 0) return
-
-    const newItems: TimelineItem[] = pendingNewEvents.map((event) => ({ event }))
-    setTimelineItems((prev) => {
-      const existingIds = new Set(prev.map((item) => item.event.id))
-      const uniqueNewItems = newItems.filter((item) => !existingIds.has(item.event.id))
-      const merged = [...uniqueNewItems, ...prev]
-      merged.sort((a, b) => b.event.created_at - a.event.created_at)
-      return merged
-    })
-    setEvents((prev) => {
-      const existingIds = new Set(prev.map((e) => e.id))
-      const uniqueNew = pendingNewEvents.filter((e) => !existingIds.has(e.id))
-      return [...uniqueNew, ...prev].sort((a, b) => b.created_at - a.created_at)
-    })
-
-    // 新着イベントの最新時刻を記録
-    if (pendingNewEvents.length > 0) {
-      const maxTime = Math.max(...pendingNewEvents.map((e) => e.created_at))
-      setLatestEventTime((prev) => Math.max(prev, maxTime))
-    }
-
-    // プロフィール取得 - setProfilesのコールバック形式で最新状態を取得
-    const pubkeys = [...new Set(pendingNewEvents.map((e) => e.pubkey))]
-    try {
-      const fetchedProfiles = await fetchProfiles(pubkeys)
-      setProfiles((prev) => {
-        const newProfiles = { ...prev }
-        for (const pk of pubkeys) {
-          if (newProfiles[pk] === undefined) {
-            newProfiles[pk] = fetchedProfiles[pk] || null
-          }
-        }
-        return newProfiles
-      })
-    } catch {}
-
-    setPendingNewEvents([])
-  }, [pendingNewEvents])
-
-  // 新着チェック（ポーリング）- ギャップ検出付き
-  const checkNewEvents = useCallback(async () => {
-    if (latestEventTime === 0) return
-
-    try {
-      let newNotes: Event[]
-      if (authorPubkey) {
-        newNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime)
-      } else {
-        // mypace投稿の新着をチェック
-        newNotes = await fetchEvents(
-          LIMITS.TIMELINE_FETCH_LIMIT,
-          latestEventTime,
-          mypaceOnly,
-          lang,
-          0,
-          showSNS,
-          showBlog,
-          hideAds,
-          hideNSFW
-        )
-      }
-
-      // 既存のイベントIDを除外
-      const existingIds = new Set(events.map((e) => e.id))
-      const trulyNew = newNotes.filter((e) => !existingIds.has(e.id) && e.created_at > latestEventTime)
-
-      if (trulyNew.length > 0) {
-        // ギャップ検出: 取得した最古のイベントがlatestEventTimeより古い場合、間にギャップあり
-        const oldestNewTime = Math.min(...trulyNew.map((e) => e.created_at))
-        const hasGap = trulyNew.length >= LIMITS.TIMELINE_FETCH_LIMIT && oldestNewTime > latestEventTime + 1
-
-        if (hasGap) {
-          // 新着の最古イベントを特定
-          const oldestNewEvent = trulyNew.find((e) => e.created_at === oldestNewTime)
-          if (oldestNewEvent) {
-            const gapId = `gap-${latestEventTime}-${oldestNewTime}`
-            setGaps((prev) => {
-              if (prev.some((g) => g.id === gapId)) return prev
-              return [
-                ...prev,
-                {
-                  id: gapId,
-                  afterEventId: oldestNewEvent.id,
-                  since: latestEventTime,
-                  until: oldestNewTime,
-                },
-              ]
-            })
-          }
-        }
-
-        setPendingNewEvents((prev) => {
-          const prevIds = new Set(prev.map((e) => e.id))
-          const unique = trulyNew.filter((e) => !prevIds.has(e.id))
-          return [...prev, ...unique].sort((a, b) => b.created_at - a.created_at)
-        })
-      }
-    } catch (err) {
-      console.error('Failed to check new events:', err)
-    }
-  }, [latestEventTime, events, authorPubkey, mypaceOnly, showSNS, showBlog])
-
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const loadTimelineRef = useRef(loadTimeline)
-  loadTimelineRef.current = loadTimeline
-
-  useEffect(() => {
-    loadTimelineRef.current()
-    const handleNewPost = () => setTimeout(() => loadTimelineRef.current(), TIMEOUTS.NEW_POST_RELOAD)
-    window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
-    return () => {
-      window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
-    }
-  }, [authorPubkey, mypaceOnly, showSNS, showBlog])
-
-  // 1分ごとのポーリング
-  useEffect(() => {
-    if (latestEventTime === 0) return
-
-    // 既存のインターバルをクリア
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current)
-    }
-
-    pollingRef.current = setInterval(checkNewEvents, POLLING_INTERVAL)
-
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current)
-      }
-    }
-  }, [latestEventTime, checkNewEvents])
-
   // 古い投稿を読み込む（無限スクロール用）
   const loadOlderEvents = useCallback(async () => {
     if (loadingMore || !hasMore || oldestEventTime === 0) return
-
     setLoadingMore(true)
     try {
       let olderNotes: Event[]
       if (authorPubkey) {
         olderNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, 0, oldestEventTime)
       } else {
-        // mypace投稿の過去分を取得
         olderNotes = await fetchEvents(
           LIMITS.TIMELINE_FETCH_LIMIT,
           0,
           mypaceOnly,
           lang,
-          oldestEventTime, // until: この時刻より古いものを取得
+          oldestEventTime,
           showSNS,
           showBlog,
           hideAds,
@@ -619,7 +322,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         return
       }
 
-      // 既存のイベントIDを除外
       const existingIds = new Set(events.map((e) => e.id))
       const newOlderNotes = olderNotes.filter((e) => !existingIds.has(e.id))
 
@@ -636,26 +338,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
           return merged
         })
 
-        // 最古時刻を更新
         const minTime = Math.min(...newOlderNotes.map((e) => e.created_at))
         setOldestEventTime(minTime)
-
-        // プロフィール取得
-        const pubkeys = [...new Set(newOlderNotes.map((e) => e.pubkey))]
-        try {
-          const fetchedProfiles = await fetchProfiles(pubkeys)
-          setProfiles((prev) => {
-            const newProfiles = { ...prev }
-            for (const pk of pubkeys) {
-              if (newProfiles[pk] === undefined) {
-                newProfiles[pk] = fetchedProfiles[pk] || null
-              }
-            }
-            return newProfiles
-          })
-        } catch {}
-
-        // まだ続きがあるか判定
+        await mergeProfiles([...new Set(newOlderNotes.map((e) => e.pubkey))], setProfiles)
         setHasMore(olderNotes.length >= LIMITS.TIMELINE_FETCH_LIMIT)
       } else {
         setHasMore(false)
@@ -665,97 +350,29 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     } finally {
       setLoadingMore(false)
     }
-  }, [loadingMore, hasMore, oldestEventTime, events, authorPubkey, mypaceOnly, showSNS, showBlog])
+  }, [
+    loadingMore,
+    hasMore,
+    oldestEventTime,
+    events,
+    authorPubkey,
+    mypaceOnly,
+    showSNS,
+    showBlog,
+    hideAds,
+    hideNSFW,
+    lang,
+  ])
 
-  // ギャップを埋める
-  const fillGap = useCallback(
-    async (gapId: string) => {
-      const gap = gaps.find((g) => g.id === gapId)
-      if (!gap || loadingGap) return
+  const loadTimelineRef = useRef(loadTimeline)
+  loadTimelineRef.current = loadTimeline
 
-      setLoadingGap(gapId)
-      try {
-        let gapNotes: Event[]
-        if (authorPubkey) {
-          gapNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, gap.since, gap.until)
-        } else {
-          // mypace投稿のギャップを埋める
-          gapNotes = await fetchEvents(
-            LIMITS.TIMELINE_FETCH_LIMIT,
-            gap.since, // since: この時刻より新しいもの
-            mypaceOnly,
-            lang,
-            gap.until, // until: この時刻より古いもの
-            showSNS,
-            showBlog,
-            hideAds,
-            hideNSFW
-          )
-        }
-
-        // 既存のイベントIDを除外
-        const existingIds = new Set(events.map((e) => e.id))
-        const newGapNotes = gapNotes.filter((e) => !existingIds.has(e.id))
-
-        if (newGapNotes.length > 0) {
-          const newItems: TimelineItem[] = newGapNotes.map((event) => ({ event }))
-          setTimelineItems((prev) => {
-            const merged = [...prev, ...newItems]
-            merged.sort((a, b) => b.event.created_at - a.event.created_at)
-            return merged
-          })
-          setEvents((prev) => {
-            const merged = [...prev, ...newGapNotes]
-            merged.sort((a, b) => b.created_at - a.created_at)
-            return merged
-          })
-
-          // プロフィール取得
-          const pubkeys = [...new Set(newGapNotes.map((e) => e.pubkey))]
-          try {
-            const fetchedProfiles = await fetchProfiles(pubkeys)
-            setProfiles((prev) => {
-              const newProfiles = { ...prev }
-              for (const pk of pubkeys) {
-                if (newProfiles[pk] === undefined) {
-                  newProfiles[pk] = fetchedProfiles[pk] || null
-                }
-              }
-              return newProfiles
-            })
-          } catch {}
-
-          // まだギャップが残っているか確認
-          const oldestGapTime = Math.min(...newGapNotes.map((e) => e.created_at))
-          if (gapNotes.length >= LIMITS.TIMELINE_FETCH_LIMIT && oldestGapTime > gap.since + 1) {
-            // まだギャップが残っている - 新しいギャップに更新
-            setGaps((prev) =>
-              prev.map((g) =>
-                g.id === gapId
-                  ? {
-                      ...g,
-                      until: oldestGapTime,
-                      afterEventId: newGapNotes.find((e) => e.created_at === oldestGapTime)?.id || g.afterEventId,
-                    }
-                  : g
-              )
-            )
-          } else {
-            // ギャップを埋め切った - 削除
-            setGaps((prev) => prev.filter((g) => g.id !== gapId))
-          }
-        } else {
-          // 新しいイベントがなかった - ギャップを削除
-          setGaps((prev) => prev.filter((g) => g.id !== gapId))
-        }
-      } catch (err) {
-        console.error('Failed to fill gap:', err)
-      } finally {
-        setLoadingGap(null)
-      }
-    },
-    [gaps, loadingGap, events, authorPubkey, mypaceOnly, showSNS, showBlog]
-  )
+  useEffect(() => {
+    loadTimelineRef.current()
+    const handleNewPost = () => setTimeout(() => loadTimelineRef.current(), TIMEOUTS.NEW_POST_RELOAD)
+    window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
+    return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
+  }, [authorPubkey, mypaceOnly, showSNS, showBlog, hideAds, hideNSFW, lang])
 
   return {
     items: timelineItems,

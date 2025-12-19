@@ -20,12 +20,11 @@ import {
 } from '../lib/utils'
 import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../lib/constants'
 import { ImageDropZone, AttachedImages, PostPreview } from '../components/post'
-import { LongModeEditor } from './LongModeEditor'
-import { Toggle, Avatar, Icon } from './ui'
+import { Avatar, Icon } from './ui'
 import { setBoolean } from '../lib/utils/storage'
 import { StickerPicker } from './StickerPicker'
 import { StickerList } from './StickerList'
-import { SuperMentionSuggest } from './SuperMentionSuggest'
+import { FormActions, ShortTextEditor, PostFormLongMode } from './form'
 import type { Event } from '../types'
 
 interface PostFormProps {
@@ -68,10 +67,7 @@ export function PostForm({
   const [darkTheme, setDarkTheme] = useState(() => getStoredAppTheme() === 'dark')
   const [minimized, setMinimized] = useState(false)
   const [stickers, setStickers] = useState<Sticker[]>([])
-  const [cursorPosition, setCursorPosition] = useState(0)
-  const [showSuggest, setShowSuggest] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const longModeFormRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     const profile = getLocalProfile()
@@ -128,14 +124,11 @@ export function PostForm({
     setBoolean(STORAGE_KEYS.VIM_MODE, enabled)
   }
 
-  // Handle long mode toggle: auto-enable preview when entering, disable when leaving
   const handleLongModeToggle = () => {
     if (!longMode) {
-      // Entering long mode: turn preview on
       onShowPreviewChange(true)
       onLongModeChange(true)
     } else {
-      // Leaving long mode: turn preview off
       onShowPreviewChange(false)
       onLongModeChange(false)
     }
@@ -153,7 +146,6 @@ export function PostForm({
     setError('')
 
     try {
-      // シールタグを生成（値は整数に丸める）
       const stickerTags = stickers.map((s) => [
         'sticker',
         s.url,
@@ -172,7 +164,6 @@ export function PostForm({
       } else if (editingEvent) {
         const deleteEvent = await createDeleteEvent([editingEvent.id])
         await publishEvent(deleteEvent)
-        // 古いstickerタグを除外して保持
         const preserveTags = editingEvent.tags.filter((tag) => tag[0] !== 'sticker')
         const event = await createTextNote(content.trim(), preserveTags, stickerTags)
         await publishEvent(event)
@@ -188,7 +179,6 @@ export function PostForm({
 
       window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NEW_POST))
 
-      // Exit long mode after successful post
       if (longMode) {
         onLongModeChange(false)
       }
@@ -242,15 +232,8 @@ export function PostForm({
 
   const handleAddSticker = (sticker: Omit<Sticker, 'x' | 'y' | 'size' | 'rotation'>) => {
     if (stickers.length >= LIMITS.MAX_STICKERS) return
-    const newSticker: Sticker = {
-      ...sticker,
-      x: 50,
-      y: 50,
-      size: 15,
-      rotation: 0,
-    }
+    const newSticker: Sticker = { ...sticker, x: 50, y: 50, size: 15, rotation: 0 }
     setStickers([...stickers, newSticker])
-    // シール追加時にプレビューを自動表示
     if (!showPreview) {
       onShowPreviewChange(true)
     }
@@ -262,34 +245,23 @@ export function PostForm({
 
   const handleStickerMove = (index: number, x: number, y: number) => {
     const updatedStickers = [...stickers]
-    updatedStickers[index] = {
-      ...updatedStickers[index],
-      x: Math.round(x),
-      y: Math.round(y),
-    }
+    updatedStickers[index] = { ...updatedStickers[index], x: Math.round(x), y: Math.round(y) }
     setStickers(updatedStickers)
   }
 
   const handleStickerResize = (index: number, size: number) => {
     const updatedStickers = [...stickers]
-    updatedStickers[index] = {
-      ...updatedStickers[index],
-      size: Math.round(size),
-    }
+    updatedStickers[index] = { ...updatedStickers[index], size: Math.round(size) }
     setStickers(updatedStickers)
   }
 
   const handleStickerRotate = (index: number, rotation: number) => {
     const updatedStickers = [...stickers]
-    updatedStickers[index] = {
-      ...updatedStickers[index],
-      rotation,
-    }
+    updatedStickers[index] = { ...updatedStickers[index], rotation }
     setStickers(updatedStickers)
   }
 
   const imageUrls = getImageUrls(content)
-  const isSpecialMode = editingEvent || replyingTo
 
   if (checkingProfile) {
     return <div className="post-form loading">Loading...</div>
@@ -303,112 +275,43 @@ export function PostForm({
     )
   }
 
-  // Long mode: full-screen layout with preview
+  // Long mode
   if (longMode) {
     return (
-      <div className={`long-mode-container ${showPreview ? 'with-preview' : 'no-preview'}`}>
-        <button
-          type="button"
-          className="long-mode-exit-button text-outlined text-outlined-button text-outlined-primary"
-          onClick={handleLongModeToggle}
-        >
-          ↙ SHORT
-        </button>
-
-        <div className="long-mode-editor-pane">
-          <form
-            ref={longModeFormRef}
-            className={`post-form long-mode ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
-            onSubmit={handleSubmit}
-          >
-            {editingEvent && <div className="editing-label">Editing post...</div>}
-            {replyingTo && <div className="replying-label">Replying to post...</div>}
-
-            <div className="post-form-top-actions">
-              <button type="button" className="post-form-avatar-button" onClick={handleAvatarClick}>
-                <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
-              </button>
-              <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
-              <StickerPicker onAddSticker={handleAddSticker} />
-              <div className="vim-toggle">
-                <Toggle checked={vimMode} onChange={handleVimModeChange} label="Vim" />
-              </div>
-            </div>
-
-            <LongModeEditor
-              value={content}
-              onChange={onContentChange}
-              placeholder="マイペースで書こう"
-              vimMode={vimMode}
-              darkTheme={darkTheme}
-              onWrite={() => longModeFormRef.current?.requestSubmit()}
-              onQuit={handleLongModeToggle}
-            />
-
-            <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
-            <StickerList stickers={stickers} onRemove={handleRemoveSticker} />
-
-            <div className="post-actions">
-              <div className="post-actions-left">
-                <button
-                  type="button"
-                  className={`preview-toggle text-outlined text-outlined-button text-outlined-primary ${showPreview ? 'active' : ''}`}
-                  onClick={() => onShowPreviewChange(!showPreview)}
-                >
-                  {showPreview ? 'HIDE' : 'PREVIEW'}
-                </button>
-                <span className={`char-count ${content.length > LIMITS.FOLD_THRESHOLD ? 'char-count-fold' : ''}`}>
-                  {content.length}/{LIMITS.MAX_POST_LENGTH}
-                  {content.length > LIMITS.FOLD_THRESHOLD && ' (folded)'}
-                </span>
-              </div>
-              <div className="post-actions-right">
-                {isSpecialMode && (
-                  <button type="button" className="cancel-button" onClick={handleCancel}>
-                    Cancel
-                  </button>
-                )}
-                <button type="submit" className="post-button" disabled={posting || !content.trim()}>
-                  {posting
-                    ? editingEvent
-                      ? 'Saving...'
-                      : replyingTo
-                        ? 'Replying...'
-                        : 'Posting...'
-                    : editingEvent
-                      ? 'Save'
-                      : replyingTo
-                        ? 'Reply'
-                        : 'Post'}
-                </button>
-              </div>
-            </div>
-
-            {error && <p className="error">{error}</p>}
-          </form>
-        </div>
-
-        {showPreview && (
-          <div className="long-mode-preview-pane">
-            <PostPreview
-              content={content}
-              themeColors={themeColors}
-              transparentBackground
-              emojis={myEmojis}
-              stickers={stickers}
-              editableStickers
-              onStickerMove={handleStickerMove}
-              onStickerResize={handleStickerResize}
-              onStickerRotate={handleStickerRotate}
-            />
-          </div>
-        )}
-      </div>
+      <PostFormLongMode
+        content={content}
+        onContentChange={onContentChange}
+        showPreview={showPreview}
+        onShowPreviewChange={onShowPreviewChange}
+        editingEvent={editingEvent}
+        replyingTo={replyingTo}
+        posting={posting}
+        error={error}
+        vimMode={vimMode}
+        onVimModeChange={handleVimModeChange}
+        darkTheme={darkTheme}
+        themeColors={themeColors}
+        myAvatarUrl={myAvatarUrl}
+        myEmojis={myEmojis}
+        imageUrls={imageUrls}
+        stickers={stickers}
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        onLongModeToggle={handleLongModeToggle}
+        onAvatarClick={handleAvatarClick}
+        onInsertImageUrl={insertImageUrl}
+        onRemoveImage={handleRemoveImage}
+        onError={setError}
+        onAddSticker={handleAddSticker}
+        onRemoveSticker={handleRemoveSticker}
+        onStickerMove={handleStickerMove}
+        onStickerResize={handleStickerResize}
+        onStickerRotate={handleStickerRotate}
+      />
     )
   }
 
-  // Short mode: compact form at bottom-left
-  // Minimized view: just avatar in a small square
+  // Short mode: minimized
   if (minimized) {
     return (
       <button
@@ -422,6 +325,7 @@ export function PostForm({
     )
   }
 
+  // Short mode: full
   return (
     <form
       className={`post-form ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
@@ -453,61 +357,7 @@ export function PostForm({
         </button>
       </div>
 
-      <div className="post-input-wrapper" style={{ position: 'relative' }}>
-        <textarea
-          ref={textareaRef}
-          className="post-input"
-          placeholder="マイペースで書こう"
-          value={content}
-          onInput={(e) => {
-            const target = e.target as HTMLTextAreaElement
-            onContentChange(target.value)
-            setCursorPosition(target.selectionStart)
-            setShowSuggest(true)
-          }}
-          onSelect={(e) => {
-            const target = e.target as HTMLTextAreaElement
-            setCursorPosition(target.selectionStart)
-          }}
-          onBlur={() => {
-            // Delay to allow click on suggest item
-            setTimeout(() => setShowSuggest(false), 150)
-          }}
-          onFocus={() => setShowSuggest(true)}
-          rows={3}
-          maxLength={LIMITS.MAX_POST_LENGTH}
-        />
-        {showSuggest && (
-          <SuperMentionSuggest
-            content={content}
-            cursorPosition={cursorPosition}
-            onSelect={(text, start, end) => {
-              const newContent = content.slice(0, start) + text + content.slice(end)
-              onContentChange(newContent)
-              // Set cursor after inserted text
-              setTimeout(() => {
-                if (textareaRef.current) {
-                  const newPos = start + text.length
-                  textareaRef.current.setSelectionRange(newPos, newPos)
-                  textareaRef.current.focus()
-                  setCursorPosition(newPos)
-                }
-              }, 0)
-            }}
-            onClose={() => setShowSuggest(false)}
-          />
-        )}
-        {content && (
-          <button
-            type="button"
-            className="clear-content-button"
-            onClick={() => onContentChange('')}
-            aria-label="Clear content"
-          >
-            ×
-          </button>
-        )}
-      </div>
+      <ShortTextEditor content={content} onContentChange={onContentChange} />
 
       <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
       <StickerList stickers={stickers} onRemove={handleRemoveSticker} />
@@ -525,41 +375,15 @@ export function PostForm({
         />
       )}
 
-      <div className="post-actions">
-        <div className="post-actions-left">
-          <button
-            type="button"
-            className={`preview-toggle text-outlined text-outlined-button text-outlined-primary ${showPreview ? 'active' : ''}`}
-            onClick={() => onShowPreviewChange(!showPreview)}
-          >
-            {showPreview ? 'HIDE' : 'PREVIEW'}
-          </button>
-          <span className={`char-count ${content.length > LIMITS.FOLD_THRESHOLD ? 'char-count-fold' : ''}`}>
-            {content.length}/{LIMITS.MAX_POST_LENGTH}
-            {content.length > LIMITS.FOLD_THRESHOLD && ' (folded)'}
-          </span>
-        </div>
-        <div className="post-actions-right">
-          {isSpecialMode && (
-            <button type="button" className="cancel-button" onClick={handleCancel}>
-              Cancel
-            </button>
-          )}
-          <button type="submit" className="post-button" disabled={posting || !content.trim()}>
-            {posting
-              ? editingEvent
-                ? 'Saving...'
-                : replyingTo
-                  ? 'Replying...'
-                  : 'Posting...'
-              : editingEvent
-                ? 'Save'
-                : replyingTo
-                  ? 'Reply'
-                  : 'Post'}
-          </button>
-        </div>
-      </div>
+      <FormActions
+        content={content}
+        posting={posting}
+        showPreview={showPreview}
+        onShowPreviewChange={onShowPreviewChange}
+        editingEvent={editingEvent}
+        replyingTo={replyingTo}
+        onCancel={handleCancel}
+      />
 
       {error && <p className="error">{error}</p>}
     </form>
