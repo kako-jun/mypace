@@ -12,12 +12,12 @@
 
 「ファイルから読み込み」でJSONファイルを選択して設定を復元。
 
-## エクスポート形式
+## エクスポート形式（v2）
 
 ```json
 {
   "mypace_settings": {
-    "version": 1,
+    "version": 2,
     "theme": {
       "mode": "dark",
       "colors": {
@@ -26,6 +26,22 @@
         "bottomLeft": "#45b7d1",
         "bottomRight": "#96ceb4"
       }
+    },
+    "filters": {
+      "presets": [
+        {
+          "id": "preset-123",
+          "name": "Tech News",
+          "filters": { "query": "", "tags": ["tech"], ... }
+        }
+      ],
+      "muteList": [
+        {
+          "npub": "npub1...",
+          "pubkey": "hex...",
+          "addedAt": 1234567890
+        }
+      ]
     }
   }
 }
@@ -37,6 +53,15 @@
 |------|------|
 | theme.mode | アプリテーマ（light / dark） |
 | theme.colors | 4隅のグラデーション色 |
+| filters.presets | フィルタプリセット一覧 |
+| filters.muteList | ミュートリスト（npub/pubkey/追加日時） |
+
+## バージョン履歴
+
+| バージョン | 変更内容 |
+|------------|----------|
+| v1 | テーマ設定のみ |
+| v2 | フィルタプリセット、ミュートリストを追加 |
 
 ## 使用シナリオ
 

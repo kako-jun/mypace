@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import type { ThemeColors } from '../../types'
+import { loadPresets, loadMuteList, type MuteEntry } from '../../lib/utils'
+import type { ThemeColors, FilterPreset } from '../../types'
 
 interface ExportSectionProps {
   themeColors: ThemeColors
@@ -10,6 +11,8 @@ interface ExportSectionProps {
 export interface ImportedSettings {
   themeColors?: ThemeColors
   appTheme?: 'light' | 'dark'
+  filterPresets?: FilterPreset[]
+  muteList?: MuteEntry[]
 }
 
 interface SettingsJSON {
@@ -19,16 +22,24 @@ interface SettingsJSON {
       mode: 'light' | 'dark'
       colors: ThemeColors
     }
+    filters?: {
+      presets: FilterPreset[]
+      muteList: MuteEntry[]
+    }
   }
 }
 
 function exportSettings(themeColors: ThemeColors, appTheme: 'light' | 'dark'): string {
   const settings: SettingsJSON = {
     mypace_settings: {
-      version: 1,
+      version: 2, // Bumped to version 2 for filter support
       theme: {
         mode: appTheme,
         colors: themeColors,
+      },
+      filters: {
+        presets: loadPresets(),
+        muteList: loadMuteList(),
       },
     },
   }
@@ -49,6 +60,16 @@ function parseSettings(json: string): ImportedSettings | null {
       }
       if (settings.theme.mode === 'light' || settings.theme.mode === 'dark') {
         result.appTheme = settings.theme.mode
+      }
+    }
+
+    // Parse filter settings (version 2+)
+    if (settings.filters) {
+      if (Array.isArray(settings.filters.presets)) {
+        result.filterPresets = settings.filters.presets
+      }
+      if (Array.isArray(settings.filters.muteList)) {
+        result.muteList = settings.filters.muteList
       }
     }
 

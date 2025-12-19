@@ -28,6 +28,7 @@ export const CUSTOM_EVENTS = {
   THEME_COLORS_CHANGED: 'themecolorschanged',
   APP_THEME_CHANGED: 'appthemechanged',
   LOGO_CLICKED: 'logoclicked',
+  OPEN_FILTER_PANEL: 'openfilterpanel',
 } as const
 
 // Supported languages for filtering

@@ -17,9 +17,17 @@ import {
   getStoredAppTheme,
   applyThemeColors,
   DEFAULT_COLORS,
+  importMuteList,
 } from '../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS } from '../lib/constants'
-import { ProfileSection, ThemeSection, KeysSection, ShareSection, ExportSection } from '../components/settings'
+import {
+  ProfileSection,
+  ThemeSection,
+  KeysSection,
+  ShareSection,
+  ExportSection,
+  FilterSection,
+} from '../components/settings'
 import type { ImportedSettings } from '../components/settings'
 import type { ThemeColors } from '../types'
 
@@ -131,6 +139,14 @@ export function Settings() {
       document.documentElement.setAttribute('data-theme', settings.appTheme)
       window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.APP_THEME_CHANGED))
     }
+    // Import filter presets
+    if (settings.filterPresets && settings.filterPresets.length > 0) {
+      setItem(STORAGE_KEYS.FILTER_PRESETS, settings.filterPresets)
+    }
+    // Import mute list
+    if (settings.muteList && settings.muteList.length > 0) {
+      importMuteList(settings.muteList)
+    }
   }
 
   if (!open) {
@@ -177,6 +193,8 @@ export function Settings() {
             onColorChange={handleColorChange}
             onColorsChange={handleColorsChange}
           />
+
+          <FilterSection onClose={() => setOpen(false)} />
 
           <ExportSection themeColors={themeColors} appTheme={appTheme} onImport={handleImportSettings} />
         </div>

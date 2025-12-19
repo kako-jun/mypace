@@ -11,6 +11,10 @@ import {
   savePreset,
   deletePreset,
   MAX_PRESETS,
+  loadMuteList,
+  addToMuteList,
+  removeFromMuteList,
+  type MuteEntry,
 } from '../lib/utils'
 import { LANGUAGES } from '../lib/constants'
 import type { SearchFilters, FilterPreset } from '../types'
@@ -51,9 +55,17 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
   const [hideNSFW, setHideNSFW] = useState(filters.hideNSFW ?? true)
   const smartPopupRef = useRef<HTMLDivElement>(null)
 
-  // Load presets on mount
+  // Mute list state
+  const [showMutePopup, setShowMutePopup] = useState(false)
+  const [muteList, setMuteList] = useState<MuteEntry[]>([])
+  const [muteInput, setMuteInput] = useState('')
+  const [muteError, setMuteError] = useState('')
+  const mutePopupRef = useRef<HTMLDivElement>(null)
+
+  // Load presets and mute list on mount
   useEffect(() => {
     setPresets(loadPresets())
+    setMuteList(loadMuteList())
   }, [])
 
   // Update local state when filters change (URL change)
@@ -83,6 +95,19 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [showSmartPopup])
+
+  // Close mute popup when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (mutePopupRef.current && !mutePopupRef.current.contains(e.target as Node)) {
+        setShowMutePopup(false)
+      }
+    }
+    if (showMutePopup) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showMutePopup])
 
   // Track if form is dirty
   const isDirty =
@@ -255,6 +280,27 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     handlePresetSelect(presetId)
   }
 
+  // Add to mute list
+  const handleAddToMuteList = () => {
+    if (!muteInput.trim()) return
+
+    const result = addToMuteList(muteInput)
+    if (result) {
+      setMuteList(loadMuteList())
+      setMuteInput('')
+      setMuteError('')
+    } else {
+      setMuteError('Invalid npub or already muted')
+      setTimeout(() => setMuteError(''), 2000)
+    }
+  }
+
+  // Remove from mute list
+  const handleRemoveFromMuteList = (pubkey: string) => {
+    removeFromMuteList(pubkey)
+    setMuteList(loadMuteList())
+  }
+
   return (
     <div className={`filter-panel ${isPopup ? 'filter-panel-popup' : 'filter-panel-embedded'}`}>
       {/* Preset section */}
@@ -386,6 +432,62 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
                 ))}
               </select>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Mute List section */}
+      <div className="mute-list-section" ref={mutePopupRef}>
+        <button
+          type="button"
+          className={`mute-list-btn ${muteList.length > 0 ? 'active' : ''}`}
+          onClick={() => setShowMutePopup(!showMutePopup)}
+        >
+          <Icon name="UserX" size={14} />
+          <span>Mute List</span>
+          {muteList.length > 0 && <span className="mute-list-count">{muteList.length}</span>}
+          <Icon name={showMutePopup ? 'ChevronUp' : 'ChevronDown'} size={14} />
+        </button>
+
+        {showMutePopup && (
+          <div className="mute-list-popup">
+            <div className="mute-list-input-row">
+              <input
+                type="text"
+                className="mute-list-input"
+                value={muteInput}
+                onChange={(e) => setMuteInput(e.target.value)}
+                placeholder="npub1..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddToMuteList()
+                }}
+              />
+              <button type="button" className="mute-list-add-btn" onClick={handleAddToMuteList}>
+                <Icon name="Plus" size={14} />
+              </button>
+            </div>
+            {muteError && <div className="mute-list-error">{muteError}</div>}
+            {muteList.length > 0 ? (
+              <div className="mute-list-entries">
+                {muteList.map((entry) => (
+                  <div key={entry.pubkey} className="mute-list-entry">
+                    <span className="mute-list-npub" title={entry.npub}>
+                      {entry.npub.slice(0, 12)}...{entry.npub.slice(-4)}
+                    </span>
+                    <button
+                      type="button"
+                      className="mute-list-remove-btn"
+                      onClick={() => handleRemoveFromMuteList(entry.pubkey)}
+                      title="Remove from mute list"
+                    >
+                      <Icon name="X" size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mute-list-empty">No muted users</div>
+            )}
           </div>
         )}
       </div>

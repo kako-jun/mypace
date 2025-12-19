@@ -65,6 +65,13 @@ export function Layout() {
     return () => clearTimeout(timer)
   }, [])
 
+  // Listen for open filter panel event (from Settings)
+  useEffect(() => {
+    const handleOpenFilterPanel = () => setShowFilterPanel(true)
+    window.addEventListener(CUSTOM_EVENTS.OPEN_FILTER_PANEL, handleOpenFilterPanel)
+    return () => window.removeEventListener(CUSTOM_EVENTS.OPEN_FILTER_PANEL, handleOpenFilterPanel)
+  }, [])
+
   // Close panel when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

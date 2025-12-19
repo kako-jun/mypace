@@ -187,6 +187,25 @@
   cursor: not-allowed;
 }
 
+/* Filter summary row */
+.filter-summary-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.filter-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.filter-summary-item svg {
+  color: var(--text-muted);
+}
+
 /* Key display */
 .key-display {
   margin-bottom: 0.75rem;

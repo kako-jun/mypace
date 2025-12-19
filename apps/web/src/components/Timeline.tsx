@@ -11,6 +11,7 @@ import {
   buildSearchUrl,
   contentHasTag,
   DEFAULT_SEARCH_FILTERS,
+  getMutedPubkeys,
 } from '../lib/utils'
 import type { Event, SearchFilters } from '../types'
 
@@ -24,6 +25,29 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const [, setThemeVersion] = useState(0)
+  const [mutedPubkeys, setMutedPubkeys] = useState<string[]>([])
+
+  // Load muted pubkeys on mount and listen for storage changes
+  useEffect(() => {
+    setMutedPubkeys(getMutedPubkeys())
+
+    // Listen for storage changes (when mute list is updated in another tab or FilterPanel)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'mypace_mute_list') {
+        setMutedPubkeys(getMutedPubkeys())
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+
+    // Also listen for custom event from same-tab updates
+    const handleMuteListChange = () => setMutedPubkeys(getMutedPubkeys())
+    window.addEventListener('mypace:muteListChanged', handleMuteListChange)
+
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener('mypace:muteListChanged', handleMuteListChange)
+    }
+  }, [])
 
   // Re-render when app theme changes
   useEffect(() => {
@@ -171,6 +195,11 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
   // Filter by NG tags (exclude posts containing any NG tag)
   if (filterNgTags && filterNgTags.length > 0) {
     filteredItems = filteredItems.filter((item) => !filterNgTags.some((tag) => contentHasTag(item.event.content, tag)))
+  }
+
+  // Filter by mute list (exclude posts from muted users)
+  if (mutedPubkeys.length > 0) {
+    filteredItems = filteredItems.filter((item) => !mutedPubkeys.includes(item.event.pubkey))
   }
 
   return (
