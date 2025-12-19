@@ -475,6 +475,21 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
             </div>
             <div className="edit-field">
               <label>Websites</label>
+              {editWebsites.length < 10 && (
+                <div className="website-input-row">
+                  <Input
+                    value={newWebsiteUrl}
+                    onChange={setNewWebsiteUrl}
+                    placeholder="https://example.com"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') addWebsite()
+                    }}
+                  />
+                  <Button size="md" onClick={addWebsite} aria-label="Add URL">
+                    <Icon name="Plus" size={16} />
+                  </Button>
+                </div>
+              )}
               <div className="websites-editor">
                 {editWebsites.map((w, index) => (
                   <div key={index} className="website-entry">
@@ -515,21 +530,6 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
                   </div>
                 ))}
               </div>
-              {editWebsites.length < 10 && (
-                <div className="website-input-row">
-                  <Input
-                    value={newWebsiteUrl}
-                    onChange={setNewWebsiteUrl}
-                    placeholder="https://example.com"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') addWebsite()
-                    }}
-                  />
-                  <Button size="md" onClick={addWebsite} aria-label="Add URL">
-                    <Icon name="Plus" size={16} />
-                  </Button>
-                </div>
-              )}
             </div>
             <div className="edit-field">
               <label>NIP-05</label>
@@ -544,10 +544,11 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
             {editSaved && <p className="success">Saved!</p>}
 
             <div className="edit-actions">
-              <Button variant="secondary" onClick={cancelEditMode} disabled={saving}>
+              <Button size="md" variant="secondary" onClick={cancelEditMode} disabled={saving}>
                 Cancel
               </Button>
               <Button
+                size="md"
                 variant="primary"
                 className={`btn-save ${isProfileDirty ? 'is-dirty' : ''}`}
                 onClick={handleSaveProfile}

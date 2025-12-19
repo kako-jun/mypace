@@ -463,6 +463,12 @@
   background: color-mix(in srgb, var(--btn-primary-bg) 10%, var(--surface-secondary));
 }
 
+.website-input-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
 .website-reorder {
   display: flex;
   flex-direction: column;
