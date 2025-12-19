@@ -20,9 +20,11 @@ export function StickerList({ stickers, onRemove }: StickerListProps) {
             </button>
             <div className="sticker-list-info">
               <span>
-                {sticker.x}%, {sticker.y}%
+                {Math.round(sticker.x)}%, {Math.round(sticker.y)}%
               </span>
-              <span>{sticker.size}%</span>
+              <span>
+                {Math.round(sticker.size)}% / {Math.round(sticker.rotation)}°
+              </span>
             </div>
           </div>
         ))}
