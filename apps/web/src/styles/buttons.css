@@ -132,6 +132,14 @@
   font-size: 0.75rem;
 }
 
+/* Large button variant - for action buttons in panels */
+.btn-lg {
+  --btn-corner: 10px;
+  height: auto;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+}
+
 /* Post button - Octagonal */
 .post-button {
   --btn-corner: 10px;

@@ -4,6 +4,7 @@ interface Props {
   disabled?: boolean
   type?: 'button' | 'submit'
   variant?: 'primary' | 'danger' | 'secondary'
+  size?: 'sm' | 'md' | 'lg'
   className?: string
 }
 
@@ -13,10 +14,17 @@ export default function Button({
   disabled = false,
   type = 'button',
   variant = 'primary',
+  size = 'md',
   className = '',
 }: Props) {
+  const sizeClass = size !== 'md' ? `btn-${size}` : ''
   return (
-    <button type={type} className={`btn btn-${variant} ${className}`} onClick={onClick} disabled={disabled}>
+    <button
+      type={type}
+      className={`btn btn-${variant} ${sizeClass} ${className}`.trim()}
+      onClick={onClick}
+      disabled={disabled}
+    >
       {children}
     </button>
   )

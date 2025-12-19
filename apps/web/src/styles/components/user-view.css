@@ -333,36 +333,33 @@
 /* Edit mode should keep same width as view mode */
 
 .edit-field {
-  margin-bottom: 16px;
+  margin-bottom: 0.75rem;
 }
 
 .edit-field label {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-muted);
-  margin-bottom: 6px;
+  margin-bottom: 0.35rem;
 }
 
+/* Match mute-list-input / filter-search-input style */
 .edit-field input {
   width: 100%;
-  padding: 10px 12px;
-  font-size: 0.95rem;
-  font-family: var(--font-mono);
-  border: 2px solid var(--border);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+  font-family: monospace;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
   background: var(--surface-secondary);
   color: var(--text-primary);
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-
-.edit-field input:hover {
-  background: var(--surface-hover);
+  transition: border-color 0.15s ease;
+  outline: none;
 }
 
 .edit-field input:focus {
-  outline: none;
-  border-color: var(--accent);
-  background: var(--surface-primary);
+  border-color: var(--btn-primary-bg);
 }
 
 .edit-field input::placeholder {
@@ -371,31 +368,29 @@
 
 .edit-textarea {
   width: 100%;
-  padding: 10px 12px;
-  font-size: 0.95rem;
-  font-family: var(--font-mono);
-  border: 2px solid var(--border);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+  font-family: monospace;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
   background: var(--surface-secondary);
   color: var(--text-primary);
   resize: vertical;
-  min-height: 80px;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-
-.edit-textarea:hover {
-  background: var(--surface-hover);
+  min-height: 60px;
+  transition: border-color 0.15s ease;
+  outline: none;
 }
 
 .edit-textarea:focus {
-  outline: none;
-  border-color: var(--accent);
-  background: var(--surface-primary);
+  border-color: var(--btn-primary-bg);
 }
 
 .edit-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 24px;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-light);
 }
 
 .edit-actions .btn {
@@ -431,23 +426,9 @@
   align-items: center;
 }
 
+/* Input already styled by .edit-field input, just add flex */
 .website-entry input {
   flex: 1;
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
-  background: var(--surface-secondary);
-  color: var(--text-primary);
-  font-size: 0.85rem;
-  outline: none;
-}
-
-.website-entry input:focus {
-  border-color: var(--btn-primary-bg);
-}
-
-.website-entry input::placeholder {
-  color: var(--text-placeholder);
 }
 
 .website-detected-label {
@@ -460,18 +441,17 @@
   border-radius: 4px;
 }
 
+/* Match mute-list-add-btn exactly */
 .website-add-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  width: fit-content;
-  padding: 0.4rem 0.75rem;
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--border-light);
   border-radius: 6px;
   background: var(--surface-secondary);
   color: var(--text-muted);
-  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.15s ease;
   outline: none;
@@ -515,10 +495,23 @@
   cursor: not-allowed;
 }
 
-.website-entry .icon-button {
+/* Match mute-list-remove-btn */
+.website-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
   color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
 }
 
-.website-entry .icon-button:hover {
-  color: var(--action-delete);
+.website-remove-btn:hover {
+  background: var(--action-delete);
+  color: #fff;
 }

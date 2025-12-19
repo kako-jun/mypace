@@ -599,8 +599,10 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
 
       {/* Action buttons */}
       <div className="filter-actions">
-        <Button onClick={handleClear}>Clear</Button>
-        <Button variant="primary" className={`btn-save ${isDirty ? 'is-dirty' : ''}`} onClick={handleApply}>
+        <Button variant="secondary" size="lg" onClick={handleClear}>
+          Clear
+        </Button>
+        <Button variant="primary" size="lg" className={`btn-save ${isDirty ? 'is-dirty' : ''}`} onClick={handleApply}>
           Save
         </Button>
       </div>

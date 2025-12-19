@@ -502,17 +502,17 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
                     {w.url.trim() && <span className="website-detected-label">{detectServiceLabel(w.url)}</span>}
                     <button
                       type="button"
-                      className="icon-button"
+                      className="website-remove-btn"
                       onClick={() => removeWebsite(index)}
                       aria-label="Remove website"
                     >
-                      <Icon name="X" size={16} />
+                      <Icon name="X" size={14} />
                     </button>
                   </div>
                 ))}
                 {editWebsites.length < 10 && (
-                  <button type="button" className="website-add-btn" onClick={addWebsite}>
-                    <Icon name="Plus" size={14} /> Add URL
+                  <button type="button" className="website-add-btn" onClick={addWebsite} aria-label="Add URL">
+                    <Icon name="Plus" size={16} />
                   </button>
                 )}
               </div>
@@ -530,11 +530,12 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
             {editSaved && <p className="success">Saved!</p>}
 
             <div className="edit-actions">
-              <Button onClick={cancelEditMode} disabled={saving}>
+              <Button variant="secondary" size="lg" onClick={cancelEditMode} disabled={saving}>
                 Cancel
               </Button>
               <Button
                 variant="primary"
+                size="lg"
                 className={`btn-save ${isProfileDirty ? 'is-dirty' : ''}`}
                 onClick={handleSaveProfile}
                 disabled={saving || !editName.trim()}
