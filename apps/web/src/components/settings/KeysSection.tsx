@@ -64,7 +64,9 @@ export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps
           <div className="npub-row">
             <code>{npub}</code>
             <div className="npub-row-buttons">
-              <Button onClick={handleCopyNpub}>{npubCopied ? 'Copied!' : 'Copy'}</Button>
+              <Button size="md" onClick={handleCopyNpub}>
+                {npubCopied ? 'Copied!' : 'Copy'}
+              </Button>
             </div>
           </div>
         </div>
@@ -82,7 +84,9 @@ export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps
             <code>{npub || 'Not generated yet'}</code>
             {npub && (
               <div className="npub-row-buttons">
-                <Button onClick={handleCopyNpub}>{npubCopied ? 'Copied!' : 'Copy'}</Button>
+                <Button size="md" onClick={handleCopyNpub}>
+                  {npubCopied ? 'Copied!' : 'Copy'}
+                </Button>
               </div>
             )}
           </div>
@@ -93,8 +97,12 @@ export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps
             <div className="secret-row">
               <code className="secret">{showNsec ? nsec : '••••••••••••••••••••••••••••••••'}</code>
               <div className="secret-row-buttons">
-                <Button onClick={() => setShowNsec(!showNsec)}>{showNsec ? 'Hide' : 'Show'}</Button>
-                <Button onClick={handleCopy}>{copied ? 'Copied!' : 'Copy'}</Button>
+                <Button size="md" onClick={() => setShowNsec(!showNsec)}>
+                  {showNsec ? 'Hide' : 'Show'}
+                </Button>
+                <Button size="md" onClick={handleCopy}>
+                  {copied ? 'Copied!' : 'Copy'}
+                </Button>
               </div>
             </div>
           </div>
@@ -106,7 +114,7 @@ export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps
         <p className="hint">Paste your nsec to use an existing identity</p>
         <div className="input-row">
           <Input type="password" placeholder="nsec1..." value={importValue} onChange={setImportValue} />
-          <Button onClick={handleImport} disabled={!importValue.trim()}>
+          <Button size="md" onClick={handleImport} disabled={!importValue.trim()}>
             Import
           </Button>
         </div>
@@ -115,7 +123,7 @@ export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps
 
       <div className="settings-section danger">
         <h3>Danger Zone</h3>
-        <Button onClick={handleClear} variant="danger">
+        <Button size="md" onClick={handleClear} variant="danger">
           Clear key from browser
         </Button>
       </div>

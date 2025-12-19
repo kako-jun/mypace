@@ -355,8 +355,10 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
             />
             {presetError && <div className="filter-preset-modal-error">{presetError}</div>}
             <div className="filter-preset-modal-actions">
-              <Button onClick={() => setShowSaveModal(false)}>Cancel</Button>
-              <Button variant="primary" onClick={handleSavePreset}>
+              <Button size="md" onClick={() => setShowSaveModal(false)}>
+                Cancel
+              </Button>
+              <Button size="md" variant="primary" onClick={handleSavePreset}>
                 Save
               </Button>
             </div>
@@ -599,10 +601,10 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
 
       {/* Action buttons */}
       <div className="filter-actions">
-        <Button variant="secondary" onClick={handleClear}>
+        <Button size="md" variant="secondary" onClick={handleClear}>
           Clear
         </Button>
-        <Button variant="primary" className={`btn-save ${isDirty ? 'is-dirty' : ''}`} onClick={handleApply}>
+        <Button size="md" variant="primary" className={`btn-save ${isDirty ? 'is-dirty' : ''}`} onClick={handleApply}>
           Save
         </Button>
       </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { loadPresets, loadMuteList, type MuteEntry } from '../../lib/utils'
+import { Button } from '../ui'
 import type { ThemeColors, FilterPreset } from '../../types'
 
 interface ExportSectionProps {
@@ -123,13 +124,13 @@ export default function ExportSection({ themeColors, appTheme, onImport }: Expor
       <p className="hint">設定を他のデバイスに移行</p>
 
       <div className="export-buttons">
-        <button className="btn btn-small" onClick={handleDownload}>
+        <Button size="sm" onClick={handleDownload}>
           ファイルで保存
-        </button>
-        <label className="btn btn-small btn-secondary">
+        </Button>
+        <Button size="sm" variant="secondary" onClick={() => document.getElementById('settings-file-input')?.click()}>
           ファイルから読み込み
-          <input type="file" accept=".json" onChange={handleFileSelect} hidden />
-        </label>
+        </Button>
+        <input id="settings-file-input" type="file" accept=".json" onChange={handleFileSelect} hidden />
       </div>
 
       {message && <div className={`export-message ${message.type}`}>{message.text}</div>}

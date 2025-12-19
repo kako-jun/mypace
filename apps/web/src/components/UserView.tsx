@@ -387,7 +387,9 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     return (
       <div className="error-box">
         <p>{error}</p>
-        <button onClick={handleBack}>Back to Timeline</button>
+        <Button size="md" onClick={handleBack}>
+          Back to Timeline
+        </Button>
       </div>
     )
   }

@@ -2,7 +2,7 @@ import { useState, useCallback, Fragment, useEffect } from 'react'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
 import { setHashtagClickHandler } from '../lib/content-parser'
 import { TimelinePostCard } from '../components/timeline'
-import { Loading } from './ui'
+import { Loading, Button } from './ui'
 import { useTimeline } from '../hooks'
 import {
   shareOrCopy,
@@ -154,7 +154,9 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
     return (
       <div className="error-box">
         <p>{error}</p>
-        <button onClick={reload}>Retry</button>
+        <Button size="md" onClick={reload}>
+          Retry
+        </Button>
       </div>
     )
   }
@@ -199,9 +201,9 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
   return (
     <div className="timeline">
       {newEventCount > 0 && (
-        <button className="new-posts-banner" onClick={loadNewEvents}>
+        <Button size="md" className="new-posts-banner" onClick={loadNewEvents}>
           {newEventCount}件の新着投稿があります
-        </button>
+        </Button>
       )}
       {filteredItems.map((item) => {
         const event = item.event
@@ -243,13 +245,14 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
               getAvatarUrl={getAvatarUrl}
             />
             {gapAfterThis && (
-              <button
+              <Button
+                size="sm"
                 className="timeline-gap-button"
                 onClick={() => fillGap(gapAfterThis.id)}
                 disabled={loadingGap === gapAfterThis.id}
               >
                 {loadingGap === gapAfterThis.id ? '読み込み中...' : 'さらに表示'}
-              </button>
+              </Button>
             )}
           </Fragment>
         )
@@ -260,9 +263,9 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
         </p>
       )}
       {filteredItems.length > 0 && hasMore && (
-        <button className="load-more-button" onClick={loadOlderEvents} disabled={loadingMore}>
+        <Button size="md" className="load-more-button" onClick={loadOlderEvents} disabled={loadingMore}>
           {loadingMore ? '読み込み中...' : '過去の投稿を読み込む'}
-        </button>
+        </Button>
       )}
       {filteredItems.length > 0 && !hasMore && <p className="timeline-end">これ以上の投稿はありません</p>}
     </div>

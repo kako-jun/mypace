@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ColorPicker } from '../ui'
+import { ColorPicker, Button } from '../ui'
 import type { ThemeColors } from '../../types'
 
 interface ThemeSectionProps {
@@ -94,15 +94,17 @@ function ColorMenu({ corner, color, copiedColor, position, onCopy, onApplyToAll,
             />
             <div className="color-menu-preview" style={{ backgroundColor: color }} />
           </div>
-          <button
+          <Button
+            size="sm"
             onClick={() => {
               onCopy()
               setIsOpen(false)
             }}
           >
             コピー
-          </button>
-          <button
+          </Button>
+          <Button
+            size="sm"
             onClick={() => {
               if (copiedColor) {
                 onColorChange(copiedColor)
@@ -110,18 +112,18 @@ function ColorMenu({ corner, color, copiedColor, position, onCopy, onApplyToAll,
               setIsOpen(false)
             }}
             disabled={!copiedColor}
-            className={!copiedColor ? 'disabled' : ''}
           >
             ペースト
-          </button>
-          <button
+          </Button>
+          <Button
+            size="sm"
             onClick={() => {
               onApplyToAll(color)
               setIsOpen(false)
             }}
           >
             全隅に適用
-          </button>
+          </Button>
         </div>
       )}
     </div>
@@ -186,18 +188,20 @@ export default function ThemeSection({
       <div className="settings-section">
         <h3>App Theme</h3>
         <div className="theme-switcher">
-          <button
-            className={`theme-btn ${appTheme === 'light' ? 'active' : ''}`}
+          <Button
+            size="sm"
+            variant={appTheme === 'light' ? 'primary' : 'secondary'}
             onClick={() => onAppThemeChange('light')}
           >
             LIGHT
-          </button>
-          <button
-            className={`theme-btn ${appTheme === 'dark' ? 'active' : ''}`}
+          </Button>
+          <Button
+            size="sm"
+            variant={appTheme === 'dark' ? 'primary' : 'secondary'}
             onClick={() => onAppThemeChange('dark')}
           >
             DARK
-          </button>
+          </Button>
         </div>
       </div>
 

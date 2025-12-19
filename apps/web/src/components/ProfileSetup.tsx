@@ -102,7 +102,7 @@ export function ProfileSetup({ onProfileSet }: Props) {
       {!hasName && <p className="profile-notice">Set your name to start posting</p>}
       <div className="profile-form">
         <Input placeholder="Your name" value={name} onChange={setName} maxLength={50} />
-        <Button onClick={handleSave} disabled={saving || !name.trim()}>
+        <Button size="md" onClick={handleSave} disabled={saving || !name.trim()}>
           {saving ? 'Saving...' : hasName ? 'Update' : 'Set Name'}
         </Button>
       </div>
