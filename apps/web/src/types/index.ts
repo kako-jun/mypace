@@ -90,6 +90,9 @@ export interface SearchFilters {
   showBlog: boolean // Show kind 30023 (long-form articles)
   mypace: boolean // mypace filter (#mypace tag only)
   lang: string // Language code (empty = all)
+  // Smart filters (server-side)
+  hideAds: boolean // Hide advertisements/spam
+  hideNSFW: boolean // Hide adult content
 }
 
 // Filter preset types

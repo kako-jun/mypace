@@ -155,6 +155,124 @@
   margin: -4px;
 }
 
+/* Smart Filter section */
+.smart-filter-section {
+  position: relative;
+  margin-bottom: 0.75rem;
+}
+
+.smart-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.smart-filter-btn:hover {
+  border-color: var(--btn-primary-bg);
+  color: var(--text-primary);
+}
+
+.smart-filter-btn.active {
+  border-color: var(--btn-primary-bg);
+  color: var(--btn-primary-bg);
+}
+
+.smart-filter-btn svg:last-child {
+  margin-left: auto;
+}
+
+.smart-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border-radius: 9px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.smart-filter-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface-primary);
+  border: 2px solid #333;
+  border-radius: 8px;
+  padding: 0.5rem;
+  z-index: 10;
+  animation: smart-popup-slide 0.15s ease;
+}
+
+@keyframes smart-popup-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.smart-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.smart-filter-item:hover {
+  background: var(--surface-secondary);
+}
+
+.smart-filter-label {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.smart-filter-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 0.35rem 0;
+}
+
+.smart-filter-select {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  padding: 0.25rem 0;
+}
+
+.smart-filter-select:hover {
+  color: var(--btn-primary-bg);
+}
+
+.smart-filter-select option {
+  background: var(--surface-primary);
+  color: var(--text-primary);
+}
+
 /* Filter groups (OK/NG) */
 .filter-group {
   display: flex;

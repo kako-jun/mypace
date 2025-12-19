@@ -45,6 +45,12 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
   const [ngWordsInput, setNgWordsInput] = useState(filters.ngWords.join(', '))
   const [languageFilter, setLanguageFilter] = useState(filters.lang)
 
+  // Smart filter state
+  const [showSmartPopup, setShowSmartPopup] = useState(false)
+  const [hideAds, setHideAds] = useState(filters.hideAds ?? true)
+  const [hideNSFW, setHideNSFW] = useState(filters.hideNSFW ?? true)
+  const smartPopupRef = useRef<HTMLDivElement>(null)
+
   // Load presets on mount
   useEffect(() => {
     setPresets(loadPresets())
@@ -60,8 +66,23 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     setSearchQuery(filters.query)
     setNgWordsInput(filters.ngWords.join(', '))
     setLanguageFilter(filters.lang)
+    setHideAds(filters.hideAds ?? true)
+    setHideNSFW(filters.hideNSFW ?? true)
     setSelectedPresetId('') // Clear selection when filters change externally
   }, [filters])
+
+  // Close smart popup when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (smartPopupRef.current && !smartPopupRef.current.contains(e.target as Node)) {
+        setShowSmartPopup(false)
+      }
+    }
+    if (showSmartPopup) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showSmartPopup])
 
   // Track if form is dirty
   const isDirty =
@@ -72,7 +93,12 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     ngTagsInput !== (filters.ngTags?.join(', ') || '') ||
     searchQuery !== filters.query ||
     ngWordsInput !== filters.ngWords.join(', ') ||
-    languageFilter !== filters.lang
+    languageFilter !== filters.lang ||
+    hideAds !== (filters.hideAds ?? true) ||
+    hideNSFW !== (filters.hideNSFW ?? true)
+
+  // Count active smart filters
+  const smartFilterCount = [hideAds, hideNSFW, languageFilter !== ''].filter(Boolean).length
 
   useEffect(() => {
     if (isPopup && inputRef.current) {
@@ -100,6 +126,8 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
       ngWords: parseInput(ngWordsInput),
       mode: filters.mode,
       lang: languageFilter,
+      hideAds,
+      hideNSFW,
     }
 
     // Save to localStorage for next visit
@@ -122,6 +150,8 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     setSearchQuery('')
     setNgWordsInput('')
     setLanguageFilter('')
+    setHideAds(true)
+    setHideNSFW(true)
 
     // Save defaults to localStorage
     saveFiltersToStorage(DEFAULT_SEARCH_FILTERS)
@@ -151,6 +181,8 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     ngWords: parseInput(ngWordsInput),
     mode: filters.mode,
     lang: languageFilter,
+    hideAds,
+    hideNSFW,
   })
 
   // Apply preset to form
@@ -170,6 +202,8 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     setSearchQuery(f.query)
     setNgWordsInput(f.ngWords.join(', '))
     setLanguageFilter(f.lang)
+    setHideAds(f.hideAds ?? true)
+    setHideNSFW(f.hideNSFW ?? true)
   }
 
   // Open save modal
@@ -312,6 +346,50 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
         <div className="filter-circuit-output">TL</div>
       </div>
 
+      {/* Smart Filter section */}
+      <div className="smart-filter-section" ref={smartPopupRef}>
+        <button
+          type="button"
+          className={`smart-filter-btn ${smartFilterCount > 0 ? 'active' : ''}`}
+          onClick={() => setShowSmartPopup(!showSmartPopup)}
+        >
+          <Icon name="Sparkles" size={14} />
+          <span>Smart Filter</span>
+          {smartFilterCount > 0 && <span className="smart-filter-count">{smartFilterCount}</span>}
+          <Icon name={showSmartPopup ? 'ChevronUp' : 'ChevronDown'} size={14} />
+        </button>
+
+        {showSmartPopup && (
+          <div className="smart-filter-popup">
+            <div className="smart-filter-item">
+              <Toggle checked={hideAds} onChange={setHideAds} size="small" />
+              <Icon name="Banknote" size={14} />
+              <span className="smart-filter-label">Hide Ads</span>
+            </div>
+            <div className="smart-filter-item">
+              <Toggle checked={hideNSFW} onChange={setHideNSFW} size="small" />
+              <Icon name="EyeOff" size={14} />
+              <span className="smart-filter-label">Hide NSFW</span>
+            </div>
+            <div className="smart-filter-divider" />
+            <div className="smart-filter-item">
+              <Icon name="Globe" size={14} />
+              <select
+                value={languageFilter}
+                onChange={(e) => setLanguageFilter(e.target.value)}
+                className="smart-filter-select"
+              >
+                {LANGUAGES.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* OK group */}
       <div className="filter-group filter-group-ok">
         <span className="filter-group-label">OK</span>
@@ -414,24 +492,6 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
               </button>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Language selector */}
-      <div className="filter-options-row">
-        <div className="filter-option language-option">
-          <Icon name="Globe" size={14} />
-          <select
-            value={languageFilter}
-            onChange={(e) => setLanguageFilter(e.target.value)}
-            className="language-select"
-          >
-            {LANGUAGES.map((lang) => (
-              <option key={lang.code} value={lang.code}>
-                {lang.label}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
 

@@ -64,6 +64,9 @@ export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
   showBlog: true,
   mypace: true,
   lang: '',
+  // Smart filters default to ON (hide by default)
+  hideAds: true,
+  hideNSFW: true,
 }
 
 // Save filters to localStorage
@@ -108,6 +111,9 @@ export function buildSearchUrl(filters: Partial<SearchFilters>): string {
   if (!f.showBlog) params.set('blog', 'off')
   if (!f.mypace) params.set('mypace', 'off')
   if (f.lang) params.set('lang', f.lang)
+  // Smart filters: only add param when OFF (default is ON)
+  if (!f.hideAds) params.set('ads', 'show')
+  if (!f.hideNSFW) params.set('nsfw', 'show')
 
   const queryString = params.toString()
   return queryString ? `/?${queryString}` : '/'
@@ -129,6 +135,8 @@ export function parseSearchParams(searchParams: URLSearchParams): SearchFilters 
   const blogParam = searchParams.get('blog')
   const mypaceParam = searchParams.get('mypace')
   const lang = searchParams.get('lang') || ''
+  const adsParam = searchParams.get('ads')
+  const nsfwParam = searchParams.get('nsfw')
 
   // Determine mode and parse tags based on separator
   let tags: string[] = []
@@ -169,6 +177,9 @@ export function parseSearchParams(searchParams: URLSearchParams): SearchFilters 
     showBlog: blogParam !== 'off',
     mypace: mypaceParam !== 'off',
     lang,
+    // Smart filters: default ON, param 'show' means OFF
+    hideAds: adsParam !== 'show',
+    hideNSFW: nsfwParam !== 'show',
   }
 }
 
