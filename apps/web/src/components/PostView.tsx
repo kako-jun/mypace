@@ -439,7 +439,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
             )}
           </div>
         )}
-        <PostStickers stickers={stickers} />{' '}
+        <PostStickers stickers={stickers} />
       </article>
 
       {replies.count > 0 && (

@@ -67,15 +67,18 @@ export function hasStickers(event: Event): boolean {
 }
 
 // Parse sticker tags from event
-// Format: ["sticker", "<url>", "<x>", "<y>", "<size>"]
-export function parseStickers(tags: string[][]): Array<{ url: string; x: number; y: number; size: number }> {
+// Format: ["sticker", "<url>", "<x>", "<y>", "<size>", "<rotation>"]
+export function parseStickers(
+  tags: string[][]
+): Array<{ url: string; x: number; y: number; size: number; rotation: number }> {
   return tags
     .filter((t) => t[0] === 'sticker' && t.length >= 5)
     .map((t) => ({
       url: t[1],
       x: Math.max(0, Math.min(100, parseInt(t[2], 10) || 0)),
       y: Math.max(0, Math.min(100, parseInt(t[3], 10) || 0)),
-      size: Math.max(5, Math.min(50, parseInt(t[4], 10) || 15)),
+      size: Math.max(5, Math.min(100, parseInt(t[4], 10) || 15)),
+      rotation: t[5] ? Math.max(0, Math.min(360, parseInt(t[5], 10) || 0)) : 0,
     }))
-    .filter((s) => s.url) // URLが存在するもののみ
+    .filter((s) => s.url)
 }

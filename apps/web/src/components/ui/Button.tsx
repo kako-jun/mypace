@@ -1,11 +1,14 @@
+import type { ReactNode } from 'react'
+
 interface Props {
-  children: string
+  children: ReactNode
   onClick?: () => void
   disabled?: boolean
   type?: 'button' | 'submit'
   variant?: 'primary' | 'danger' | 'secondary'
   size?: 'sm' | 'md' | 'lg'
   className?: string
+  title?: string
 }
 
 export default function Button({
@@ -16,6 +19,7 @@ export default function Button({
   variant = 'primary',
   size = 'lg',
   className = '',
+  title,
 }: Props) {
   const sizeClass = size !== 'lg' ? `btn-${size}` : 'btn-lg'
   return (
@@ -24,6 +28,7 @@ export default function Button({
       className={`btn btn-${variant} ${sizeClass} ${className}`.trim()}
       onClick={onClick}
       disabled={disabled}
+      title={title}
     >
       {children}
     </button>

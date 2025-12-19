@@ -103,13 +103,14 @@ export function PostForm({
       const stickerTags = editingEvent.tags.filter((tag) => tag[0] === 'sticker')
       const restoredStickers: Sticker[] = stickerTags
         .map((tag) => {
-          const [, url, x, y, size] = tag
+          const [, url, x, y, size, rotation] = tag
           if (!url) return null
           return {
             url,
             x: parseFloat(x) || 50,
             y: parseFloat(y) || 50,
             size: parseFloat(size) || 15,
+            rotation: parseFloat(rotation) || 0,
           }
         })
         .filter((s): s is Sticker => s !== null)
@@ -150,7 +151,7 @@ export function PostForm({
 
     try {
       // シールタグを生成
-      const stickerTags = stickers.map((s) => ['sticker', s.url, `${s.x}`, `${s.y}`, `${s.size}`])
+      const stickerTags = stickers.map((s) => ['sticker', s.url, `${s.x}`, `${s.y}`, `${s.size}`, `${s.rotation}`])
 
       if (replyingTo) {
         const event = await createReplyEvent(content.trim(), replyingTo)
@@ -162,7 +163,8 @@ export function PostForm({
       } else if (editingEvent) {
         const deleteEvent = await createDeleteEvent([editingEvent.id])
         await publishEvent(deleteEvent)
-        const preserveTags = editingEvent.tags
+        // 古いstickerタグを除外して保持
+        const preserveTags = editingEvent.tags.filter((tag) => tag[0] !== 'sticker')
         const event = await createTextNote(content.trim(), preserveTags)
         event.tags.push(...stickerTags)
         await publishEvent(event)
@@ -231,13 +233,14 @@ export function PostForm({
     onContentChange(removeImageUrl(content, url))
   }
 
-  const handleAddSticker = (sticker: Omit<Sticker, 'x' | 'y' | 'size'>) => {
-    // デフォルト位置: ランダムに配置
+  const handleAddSticker = (sticker: Omit<Sticker, 'x' | 'y' | 'size' | 'rotation'>) => {
+    if (stickers.length >= LIMITS.MAX_STICKERS) return
     const newSticker: Sticker = {
       ...sticker,
-      x: Math.floor(Math.random() * 60) + 20, // 20-80%
-      y: Math.floor(Math.random() * 60) + 20, // 20-80%
-      size: 15, // 15%
+      x: 50,
+      y: 50,
+      size: 15,
+      rotation: 0,
     }
     setStickers([...stickers, newSticker])
   }
@@ -252,6 +255,24 @@ export function PostForm({
       ...updatedStickers[index],
       x: Math.round(x),
       y: Math.round(y),
+    }
+    setStickers(updatedStickers)
+  }
+
+  const handleStickerResize = (index: number, size: number) => {
+    const updatedStickers = [...stickers]
+    updatedStickers[index] = {
+      ...updatedStickers[index],
+      size: Math.round(size),
+    }
+    setStickers(updatedStickers)
+  }
+
+  const handleStickerRotate = (index: number, rotation: number) => {
+    const updatedStickers = [...stickers]
+    updatedStickers[index] = {
+      ...updatedStickers[index],
+      rotation,
     }
     setStickers(updatedStickers)
   }
@@ -366,6 +387,8 @@ export function PostForm({
               stickers={stickers}
               editableStickers
               onStickerMove={handleStickerMove}
+              onStickerResize={handleStickerResize}
+              onStickerRotate={handleStickerRotate}
             />
           </div>
         )}
@@ -452,6 +475,8 @@ export function PostForm({
           stickers={stickers}
           editableStickers
           onStickerMove={handleStickerMove}
+          onStickerResize={handleStickerResize}
+          onStickerRotate={handleStickerRotate}
         />
       )}
 

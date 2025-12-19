@@ -75,11 +75,55 @@
   transform: rotate(90deg);
 }
 
+/* Custom URL input */
+.sticker-picker-custom {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.sticker-picker-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--border-primary);
+  border-radius: 0.5rem;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.sticker-picker-input:focus {
+  outline: none;
+  border-color: var(--text-link);
+}
+
+.sticker-picker-add {
+  padding: 0.5rem 1rem;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.sticker-picker-add:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sticker-picker-divider {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-bottom: 1rem;
+}
+
 .sticker-picker-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 1rem;
-  margin-bottom: 1rem;
 }
 
 .sticker-picker-item {

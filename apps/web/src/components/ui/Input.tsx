@@ -1,3 +1,5 @@
+import type { KeyboardEvent } from 'react'
+
 interface InputProps {
   type?: 'text' | 'password' | 'email' | 'url'
   value: string
@@ -9,6 +11,7 @@ interface InputProps {
   maxLength?: number
   required?: boolean
   autoFocus?: boolean
+  onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void
 }
 
 export default function Input({
@@ -22,12 +25,14 @@ export default function Input({
   maxLength,
   required = false,
   autoFocus = false,
+  onKeyDown,
 }: InputProps) {
   return (
     <input
       type={type}
       value={value}
       onInput={(e) => onChange((e.target as HTMLInputElement).value)}
+      onKeyDown={onKeyDown}
       placeholder={placeholder}
       disabled={disabled}
       readOnly={readOnly}

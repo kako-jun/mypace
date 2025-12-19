@@ -11,6 +11,8 @@ interface PostPreviewProps {
   stickers?: Sticker[]
   editableStickers?: boolean
   onStickerMove?: (index: number, x: number, y: number) => void
+  onStickerResize?: (index: number, size: number) => void
+  onStickerRotate?: (index: number, rotation: number) => void
 }
 
 export default function PostPreview({
@@ -21,6 +23,8 @@ export default function PostPreview({
   stickers = [],
   editableStickers = false,
   onStickerMove,
+  onStickerResize,
+  onStickerRotate,
 }: PostPreviewProps) {
   if (!content.trim()) return null
 
@@ -32,7 +36,13 @@ export default function PostPreview({
       <div className="preview-content">
         <PostContent content={content} emojis={emojis} />
       </div>
-      <PostStickers stickers={stickers} editable={editableStickers} onStickerMove={onStickerMove} />
+      <PostStickers
+        stickers={stickers}
+        editable={editableStickers}
+        onStickerMove={onStickerMove}
+        onStickerResize={onStickerResize}
+        onStickerRotate={onStickerRotate}
+      />
     </div>
   )
 }
