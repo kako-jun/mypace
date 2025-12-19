@@ -1,12 +1,11 @@
 import { useState, useRef } from 'react'
 import { Avatar, Icon, Button, Input } from '../ui'
-import { useDragDrop, useTemporaryFlag } from '../../hooks'
-import { uploadImage } from '../../lib/upload'
+import { useImageUpload, useDragDrop, useTemporaryFlag, useWebsiteEditor } from '../../hooks'
 import { publishEvent } from '../../lib/nostr/relay'
 import { createProfileEvent } from '../../lib/nostr/events'
 import { setLocalProfile, getErrorMessage, detectServiceLabel, getWebsites } from '../../lib/utils'
 import { CUSTOM_EVENTS } from '../../lib/constants'
-import type { Profile, WebsiteEntry } from '../../types'
+import type { Profile } from '../../types'
 
 interface UserProfileEditorProps {
   profile: Profile | null | undefined
@@ -19,35 +18,68 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
   const [editAbout, setEditAbout] = useState(profile?.about || '')
   const [editPicture, setEditPicture] = useState(profile?.picture || '')
   const [editBanner, setEditBanner] = useState(profile?.banner || '')
-  const [editWebsites, setEditWebsites] = useState<WebsiteEntry[]>(() => {
-    const websites = getWebsites(profile)
-    return websites.length > 0 ? websites : [{ url: '', label: '' }]
-  })
-  const [newWebsiteUrl, setNewWebsiteUrl] = useState('')
   const [editNip05, setEditNip05] = useState(profile?.nip05 || '')
   const [editLud16, setEditLud16] = useState(profile?.lud16 || '')
   const [saving, setSaving] = useState(false)
-  const [uploadingAvatar, setUploadingAvatar] = useState(false)
-  const [uploadingBanner, setUploadingBanner] = useState(false)
   const [editError, setEditError] = useState('')
   const [editSaved, triggerEditSaved] = useTemporaryFlag()
+
+  const initialWebsites = getWebsites(profile)
+  const websiteEditor = useWebsiteEditor(initialWebsites)
 
   const editInitialRef = useRef({
     name: profile?.name || profile?.display_name || '',
     about: profile?.about || '',
     picture: profile?.picture || '',
     banner: profile?.banner || '',
-    websites: getWebsites(profile),
+    websites: initialWebsites,
     nip05: profile?.nip05 || '',
     lud16: profile?.lud16 || '',
   })
 
-  // Check if websites have been modified
-  const websitesChanged = () => {
-    const initial = editInitialRef.current.websites
-    const current = editWebsites.filter((w) => w.url.trim())
-    if (initial.length !== current.length) return true
-    return current.some((w, i) => w.url !== initial[i]?.url || w.label !== initial[i]?.label)
+  // Image upload hooks
+  const { uploading: uploadingAvatar, uploadFile: uploadAvatar } = useImageUpload()
+  const { uploading: uploadingBanner, uploadFile: uploadBanner } = useImageUpload()
+
+  const processAvatarUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setEditError('Please drop an image file')
+      return
+    }
+    const result = await uploadAvatar(file)
+    if (result.url) {
+      setEditPicture(result.url)
+    } else if (result.error) {
+      setEditError(result.error)
+    }
+  }
+
+  const processBannerUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setEditError('Please drop an image file')
+      return
+    }
+    const result = await uploadBanner(file)
+    if (result.url) {
+      setEditBanner(result.url)
+    } else if (result.error) {
+      setEditError(result.error)
+    }
+  }
+
+  const { dragging: avatarDragging, handlers: avatarHandlers } = useDragDrop(processAvatarUpload)
+  const { dragging: bannerDragging, handlers: bannerHandlers } = useDragDrop(processBannerUpload)
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) await processAvatarUpload(file)
+    e.target.value = ''
+  }
+
+  const handleBannerFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) await processBannerUpload(file)
+    e.target.value = ''
   }
 
   // Check if profile has been modified
@@ -56,7 +88,7 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
     editAbout !== editInitialRef.current.about ||
     editPicture !== editInitialRef.current.picture ||
     editBanner !== editInitialRef.current.banner ||
-    websitesChanged() ||
+    websiteEditor.hasChanged(editInitialRef.current.websites) ||
     editNip05 !== editInitialRef.current.nip05 ||
     editLud16 !== editInitialRef.current.lud16
 
@@ -71,7 +103,7 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
     setEditError('')
 
     try {
-      const validWebsites = editWebsites
+      const validWebsites = websiteEditor.websites
         .filter((w) => w.url.trim())
         .map((w) => ({
           url: w.url.trim(),
@@ -101,86 +133,6 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
     } finally {
       setSaving(false)
     }
-  }
-
-  // Website editing helpers
-  const handleWebsiteUrlChange = (index: number, url: string) => {
-    const updated = [...editWebsites]
-    updated[index] = { url, label: '' }
-    setEditWebsites(updated)
-  }
-
-  const addWebsite = () => {
-    if (editWebsites.length < 10 && newWebsiteUrl.trim()) {
-      setEditWebsites([...editWebsites, { url: newWebsiteUrl.trim(), label: '' }])
-      setNewWebsiteUrl('')
-    }
-  }
-
-  const removeWebsite = (index: number) => {
-    if (editWebsites.length > 1) {
-      setEditWebsites(editWebsites.filter((_, i) => i !== index))
-    } else {
-      setEditWebsites([{ url: '', label: '' }])
-    }
-  }
-
-  const moveWebsite = (index: number, direction: 'up' | 'down') => {
-    const newIndex = direction === 'up' ? index - 1 : index + 1
-    if (newIndex < 0 || newIndex >= editWebsites.length) return
-    const updated = [...editWebsites]
-    ;[updated[index], updated[newIndex]] = [updated[newIndex], updated[index]]
-    setEditWebsites(updated)
-  }
-
-  // Avatar upload
-  const processAvatarUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      setEditError('Please drop an image file')
-      return
-    }
-    setUploadingAvatar(true)
-    setEditError('')
-    const result = await uploadImage(file)
-    if (result.success && result.url) {
-      setEditPicture(result.url)
-    } else {
-      setEditError(result.error || 'Failed to upload avatar')
-    }
-    setUploadingAvatar(false)
-  }
-
-  const { dragging: avatarDragging, handlers: avatarHandlers } = useDragDrop(processAvatarUpload)
-
-  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) await processAvatarUpload(file)
-    e.target.value = ''
-  }
-
-  // Banner upload
-  const processBannerUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      setEditError('Please drop an image file')
-      return
-    }
-    setUploadingBanner(true)
-    setEditError('')
-    const result = await uploadImage(file)
-    if (result.success && result.url) {
-      setEditBanner(result.url)
-    } else {
-      setEditError(result.error || 'Failed to upload banner')
-    }
-    setUploadingBanner(false)
-  }
-
-  const { dragging: bannerDragging, handlers: bannerHandlers } = useDragDrop(processBannerUpload)
-
-  const handleBannerFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) await processBannerUpload(file)
-    e.target.value = ''
   }
 
   return (
@@ -236,29 +188,29 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
         </div>
         <div className="edit-field">
           <label>Websites</label>
-          {editWebsites.length < 10 && (
+          {websiteEditor.websites.length < 10 && (
             <div className="website-input-row">
               <Input
-                value={newWebsiteUrl}
-                onChange={setNewWebsiteUrl}
+                value={websiteEditor.newUrl}
+                onChange={websiteEditor.setNewUrl}
                 placeholder="https://example.com"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') addWebsite()
+                  if (e.key === 'Enter') websiteEditor.addWebsite()
                 }}
               />
-              <Button size="md" onClick={addWebsite} aria-label="Add URL">
+              <Button size="md" onClick={websiteEditor.addWebsite} aria-label="Add URL">
                 <Icon name="Plus" size={16} />
               </Button>
             </div>
           )}
           <div className="websites-editor">
-            {editWebsites.map((w, index) => (
+            {websiteEditor.websites.map((w, index) => (
               <div key={index} className="website-entry">
                 <div className="website-reorder">
                   <button
                     type="button"
                     className="website-move-btn"
-                    onClick={() => moveWebsite(index, 'up')}
+                    onClick={() => websiteEditor.moveWebsite(index, 'up')}
                     disabled={index === 0}
                     aria-label="Move up"
                   >
@@ -267,8 +219,8 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
                   <button
                     type="button"
                     className="website-move-btn"
-                    onClick={() => moveWebsite(index, 'down')}
-                    disabled={index === editWebsites.length - 1}
+                    onClick={() => websiteEditor.moveWebsite(index, 'down')}
+                    disabled={index === websiteEditor.websites.length - 1}
                     aria-label="Move down"
                   >
                     <Icon name="ChevronDown" size={14} />
@@ -276,14 +228,14 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
                 </div>
                 <Input
                   value={w.url}
-                  onChange={(val) => handleWebsiteUrlChange(index, val)}
+                  onChange={(val) => websiteEditor.handleUrlChange(index, val)}
                   placeholder="https://example.com"
                 />
                 {w.url.trim() && <span className="website-detected-label">{detectServiceLabel(w.url)}</span>}
                 <button
                   type="button"
                   className="website-remove-btn"
-                  onClick={() => removeWebsite(index)}
+                  onClick={() => websiteEditor.removeWebsite(index)}
                   aria-label="Remove website"
                 >
                   <Icon name="X" size={14} />

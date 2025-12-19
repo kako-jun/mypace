@@ -1,34 +1,23 @@
 import { useState, useEffect, useRef } from 'react'
 import { nip19 } from 'nostr-tools'
+import { publishEvent } from '../lib/nostr/relay'
 import {
-  fetchEventById,
-  fetchUserProfile,
-  fetchReactions,
-  fetchReplies,
-  fetchReposts,
-  publishEvent,
-} from '../lib/nostr/relay'
-import {
-  getCurrentPubkey,
   createDeleteEvent,
-  createReactionEvent,
   createRepostEvent,
   getEventThemeColors,
   getThemeCardProps,
   MAX_STELLA_PER_USER,
+  createReactionEvent,
 } from '../lib/nostr/events'
 import {
   getDisplayName,
   getAvatarUrl,
-  getCachedPost,
-  getCachedProfile,
   navigateToHome,
   navigateToTag,
   navigateToEdit,
   navigateToReply,
   navigateToPost,
   navigateToUser,
-  getErrorMessage,
   getUIThemeColors,
   applyThemeColors,
 } from '../lib/utils'
@@ -43,8 +32,8 @@ import {
 import { LightBox, triggerLightBox } from './LightBox'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers } from '../components/post'
 import { parseEmojiTags, Loading } from '../components/ui'
-import { useShare, useDeleteConfirm } from '../hooks'
-import type { Event, Profile, ReactionData } from '../types'
+import { useShare, useDeleteConfirm, usePostViewData } from '../hooks'
+import type { Profile, ReactionData } from '../types'
 
 interface PostViewProps {
   eventId: string
@@ -52,14 +41,12 @@ interface PostViewProps {
   onClose?: () => void
 }
 
-// Decode bech32 event ID (note1... or nevent1...) to hex
 function decodeEventId(id: string): string {
   try {
     if (id.startsWith('note1')) {
       const decoded = nip19.decode(id)
       if (decoded.type === 'note') {
         const hex = decoded.data as string
-        // Validate hex length (event IDs are 64 chars)
         if (hex.length === 64) return hex
       }
     }
@@ -67,124 +54,48 @@ function decodeEventId(id: string): string {
       const decoded = nip19.decode(id)
       if (decoded.type === 'nevent') {
         const hex = (decoded.data as { id: string }).id
-        // Validate hex length (event IDs are 64 chars)
         if (hex.length === 64) return hex
       }
     }
-  } catch {
-    // Invalid bech32, return as-is (might be hex already)
-  }
+  } catch {}
   return id
 }
 
 export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProps) {
-  // Decode bech32 to hex if needed
   const eventId = decodeEventId(rawEventId)
   const [mounted, setMounted] = useState(false)
-  const [event, setEvent] = useState<Event | null>(null)
-  const [profile, setProfile] = useState<Profile | null | undefined>(undefined)
-  const [myPubkey, setMyPubkey] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [reactions, setReactions] = useState<ReactionData>({
-    count: 0,
-    myReaction: false,
-    myStella: 0,
-    myReactionId: null,
-    reactors: [],
-  })
-  const [replies, setReplies] = useState<{ count: number; replies: Event[] }>({ count: 0, replies: [] })
-  const [reposts, setReposts] = useState({ count: 0, myRepost: false })
-  const [replyProfiles, setReplyProfiles] = useState<{ [pubkey: string]: Profile | null }>({})
-  const [likingId, setLikingId] = useState<string | null>(null)
-  const [repostingId, setRepostingId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
+  const [repostingId, setRepostingId] = useState<string | null>(null)
+  const [, setThemeVersion] = useState(0)
+
   const { copied, share } = useShare()
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
 
-  // Debounce refs for stella clicks
+  const {
+    event,
+    profile,
+    myPubkey,
+    loading,
+    error,
+    reactions,
+    replies,
+    reposts,
+    replyProfiles,
+    setReactions,
+    setReposts,
+  } = usePostViewData(eventId)
+
+  // Stella debounce
   const stellaDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingStella = useRef(0)
-  const [, setThemeVersion] = useState(0)
+  const [likingId, setLikingId] = useState<string | null>(null)
 
-  // Re-render when app theme changes
   useEffect(() => {
     const handleAppThemeChange = () => setThemeVersion((v) => v + 1)
     window.addEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
     return () => window.removeEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
   }, [])
 
-  const loadPost = async () => {
-    setError('')
-    try {
-      const pubkey = await getCurrentPubkey()
-      setMyPubkey(pubkey)
-
-      // Try cache first
-      let eventData: Event | null = getCachedPost(eventId)
-
-      if (eventData) {
-        setEvent(eventData)
-        setLoading(false)
-
-        const cachedProfileData = getCachedProfile(eventData.pubkey)
-        if (cachedProfileData) {
-          setProfile(cachedProfileData)
-        } else {
-          fetchUserProfile(eventData.pubkey).then((userProfile) => {
-            if (userProfile) setProfile(userProfile)
-          })
-        }
-      } else {
-        setLoading(true)
-        eventData = await fetchEventById(eventId)
-        if (!eventData) {
-          setError('Post not found')
-          setLoading(false)
-          return
-        }
-        setEvent(eventData)
-        setLoading(false)
-
-        const userProfile = await fetchUserProfile(eventData.pubkey)
-        if (userProfile) {
-          setProfile(userProfile)
-        }
-      }
-
-      if (!eventData) return
-
-      // Load reactions, replies, reposts (now API returns aggregated data)
-      const [reactionData, replyData, repostData] = await Promise.all([
-        fetchReactions(eventId, pubkey),
-        fetchReplies(eventId),
-        fetchReposts(eventId, pubkey),
-      ])
-
-      setReactions(reactionData)
-      setReplies(replyData)
-      setReposts(repostData)
-
-      // Load reply and reactor profiles
-      const profiles: { [pubkey: string]: Profile | null } = {}
-      const replyPubkeys = replyData.replies.map((r) => r.pubkey)
-      const reactorPubkeys = reactionData.reactors.map((r) => r.pubkey)
-      const allPubkeys = [...new Set([...replyPubkeys, ...reactorPubkeys])]
-      for (const pk of allPubkeys) {
-        try {
-          const userProfile = await fetchUserProfile(pk)
-          if (userProfile) profiles[pk] = userProfile
-        } catch {}
-      }
-      setReplyProfiles(profiles)
-    } catch (err) {
-      setError(getErrorMessage(err, 'Failed to load post'))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Set mounted to true on client (skip SSR rendering)
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -194,18 +105,12 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     setHashtagClickHandler((tag) => navigateToTag(tag))
     setSuperMentionClickHandler((path) => navigateToTag(path))
     setImageClickHandler(triggerLightBox)
-    loadPost()
-
     return () => clearImageClickHandler()
   }, [eventId])
 
-  // Skip rendering on server (SSR phase)
-  if (!mounted) {
-    return null
-  }
+  if (!mounted) return null
 
   const getProfileDisplayName = (pubkey: string, profileData?: Profile | null): string => {
-    // Use post author's profile if pubkey matches and no specific profile provided
     const effectiveProfile = profileData ?? (pubkey === event?.pubkey ? profile : null)
     return getDisplayName(effectiveProfile, pubkey)
   }
@@ -214,15 +119,12 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     return getAvatarUrl(profileData || profile)
   }
 
-  // Send accumulated stella to the network
   const flushStella = async () => {
     if (!event) return
     const stellaToSend = pendingStella.current
     if (stellaToSend <= 0) return
-
     pendingStella.current = 0
 
-    // Save previous state for rollback on error
     const previousReactions = { ...reactions }
     const oldReactionId = reactions.myReactionId
     const currentMyStella = reactions.myStella
@@ -230,21 +132,16 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     setLikingId(event.id)
     try {
       const newTotalStella = Math.min(currentMyStella + stellaToSend, MAX_STELLA_PER_USER)
-
-      // Create new reaction FIRST (before deleting old one)
       const newReaction = await createReactionEvent(event, '+', newTotalStella)
       await publishEvent(newReaction)
 
-      // Delete old reaction AFTER new one is successfully published
       if (oldReactionId) {
         try {
           await publishEvent(await createDeleteEvent([oldReactionId]))
-        } catch {
-          // Ignore delete errors - old reaction will eventually be overridden
-        }
+        } catch {}
       }
 
-      setReactions((prev) => {
+      setReactions((prev: ReactionData) => {
         const myIndex = prev.reactors.findIndex((r) => r.pubkey === myPubkey)
         const updatedReactors =
           myIndex >= 0
@@ -273,7 +170,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
       })
     } catch (error) {
       console.error('Failed to publish reaction:', error)
-      // Rollback UI state to previous state
       setReactions(previousReactions)
     } finally {
       setLikingId(null)
@@ -282,15 +178,12 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
   const handleLike = () => {
     if (!event || !myPubkey || event.pubkey === myPubkey) return
-
     const currentMyStella = reactions.myStella
     const pending = pendingStella.current
-
     if (currentMyStella + pending >= MAX_STELLA_PER_USER) return
 
     pendingStella.current = pending + 1
-
-    setReactions((prev) => ({
+    setReactions((prev: ReactionData) => ({
       count: prev.count + 1,
       myReaction: true,
       myStella: currentMyStella + pending + 1,
@@ -298,17 +191,12 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
       reactors: prev.reactors,
     }))
 
-    if (stellaDebounceTimer.current) {
-      clearTimeout(stellaDebounceTimer.current)
-    }
-    stellaDebounceTimer.current = setTimeout(() => {
-      flushStella()
-    }, 300)
+    if (stellaDebounceTimer.current) clearTimeout(stellaDebounceTimer.current)
+    stellaDebounceTimer.current = setTimeout(() => flushStella(), 300)
   }
 
   const handleUnlike = async () => {
     if (!event || !myPubkey || !reactions.myReactionId) return
-
     if (stellaDebounceTimer.current) {
       clearTimeout(stellaDebounceTimer.current)
       stellaDebounceTimer.current = null
@@ -318,8 +206,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     setLikingId(event.id)
     try {
       await publishEvent(await createDeleteEvent([reactions.myReactionId]))
-
-      setReactions((prev) => ({
+      setReactions((prev: ReactionData) => ({
         count: Math.max(0, prev.count - prev.myStella),
         myReaction: false,
         myStella: 0,
@@ -355,16 +242,11 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   }
 
   const handleBack = () => {
-    if (isModal && onClose) {
-      onClose()
-    } else {
-      navigateToHome()
-    }
+    if (isModal && onClose) onClose()
+    else navigateToHome()
   }
 
-  if (loading) {
-    return <Loading />
-  }
+  if (loading) return <Loading />
 
   if (error || !event) {
     return (
@@ -382,8 +264,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   const isMyPost = myPubkey === event.pubkey
   const themeColors = getEventThemeColors(event)
   const stickers = parseStickers(event.tags)
-
-  // Merge fold tag content for full display
   const fullContent = hasTeaserTag(event)
     ? removeReadMoreLink(event.content) + (getTeaserContent(event.tags) || '')
     : event.content
