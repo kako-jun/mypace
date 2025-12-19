@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { loadPresets, loadMuteList, type MuteEntry } from '../../lib/utils'
-import { Button } from '../ui'
+import { Button, SettingsSection } from '../ui'
 import type { ThemeColors, FilterPreset } from '../../types'
 
 interface ExportSectionProps {
@@ -119,8 +119,7 @@ export default function ExportSection({ themeColors, appTheme, onImport }: Expor
   }
 
   return (
-    <div className="settings-section">
-      <h3>Export / Import</h3>
+    <SettingsSection title="Export / Import">
       <p className="hint">Transfer settings to other devices</p>
 
       <div className="export-buttons">
@@ -134,6 +133,6 @@ export default function ExportSection({ themeColors, appTheme, onImport }: Expor
       </div>
 
       {message && <div className={`export-message ${message.type}`}>{message.text}</div>}
-    </div>
+    </SettingsSection>
   )
 }

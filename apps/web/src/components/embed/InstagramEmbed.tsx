@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Icon } from '../ui'
+import { Icon, ExternalLink } from '../ui'
 
 interface InstagramEmbedProps {
   instagramId: string
@@ -14,10 +14,10 @@ export default function InstagramEmbed({ instagramId, instagramType, url }: Inst
   if (instagramType === 'stories') {
     return (
       <div className="embed-container embed-instagram embed-simple-link">
-        <a href={url} target="_blank" rel="noopener noreferrer">
+        <ExternalLink href={url}>
           <Icon name="Instagram" size={16} />
           <span>View story on Instagram</span>
-        </a>
+        </ExternalLink>
       </div>
     )
   }
@@ -41,9 +41,9 @@ export default function InstagramEmbed({ instagramId, instagramType, url }: Inst
   return (
     <div className={`embed-container embed-instagram ${instagramType === 'reel' ? 'embed-vertical' : ''}`}>
       <iframe src={embedUrl} frameBorder="0" scrolling="no" allowTransparency allow="encrypted-media" loading="lazy" />
-      <a href={url} target="_blank" rel="noopener noreferrer" className="embed-external-link">
+      <ExternalLink href={url} className="embed-external-link">
         <Icon name="ExternalLink" size={12} /> Instagram
-      </a>
+      </ExternalLink>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Icon } from '../ui'
+import { Icon, ExternalLink } from '../ui'
 
 interface TikTokEmbedProps {
   tiktokId: string
@@ -70,9 +70,9 @@ export default function TikTokEmbed({ tiktokId, url }: TikTokEmbedProps) {
   if (error) {
     return (
       <div className="embed-container embed-tiktok embed-error">
-        <a href={url} target="_blank" rel="noopener noreferrer">
+        <ExternalLink href={url}>
           <Icon name="Video" size={16} /> View on TikTok
-        </a>
+        </ExternalLink>
       </div>
     )
   }
@@ -100,9 +100,7 @@ export default function TikTokEmbed({ tiktokId, url }: TikTokEmbedProps) {
           style={{ maxWidth: '605px', minWidth: '325px' }}
         >
           <section>
-            <a target="_blank" rel="noopener noreferrer" href={url}>
-              View on TikTok
-            </a>
+            <ExternalLink href={url}>View on TikTok</ExternalLink>
           </section>
         </blockquote>
       )}

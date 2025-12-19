@@ -1,16 +1,16 @@
+import { SettingsSection, ExternalLink } from '../ui'
+
 export default function ShareSection() {
   return (
     <>
-      <div className="settings-section">
-        <h3>Share App</h3>
+      <SettingsSection title="Share App">
         <div className="share-app-qr">
           <img src="/qr-mypace.webp" alt="QR Code" width="120" height="120" />
         </div>
         <p className="hint">Scan to open this app</p>
-      </div>
+      </SettingsSection>
 
-      <div className="settings-section" style={{ borderBottom: 'none', marginBottom: 0, paddingBottom: 0 }}>
-        <h3>Notice</h3>
+      <SettingsSection title="Notice" style={{ borderBottom: 'none', marginBottom: 0, paddingBottom: 0 }}>
         <ul className="notice-list">
           <li>This app is provided as-is without warranty. Use at your own risk.</li>
           <li>
@@ -18,12 +18,10 @@ export default function ShareSection() {
             of Nostr. Please choose files carefully before uploading.
           </li>
         </ul>
-      </div>
+      </SettingsSection>
 
       <div className="settings-footer">
-        <a href="https://github.com/kako-jun/mypace" target="_blank" rel="noopener noreferrer">
-          GitHub
-        </a>
+        <ExternalLink href="https://github.com/kako-jun/mypace">GitHub</ExternalLink>
       </div>
     </>
   )

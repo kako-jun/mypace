@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { importNsec, saveSecretKey, clearSecretKey } from '../../lib/nostr/keys'
-import { Button, Input, ErrorMessage } from '../ui'
+import { Button, Input, ErrorMessage, SettingsSection } from '../ui'
 import { copyToClipboard, removeItem, removeLocalProfile } from '../../lib/utils'
 import { STORAGE_KEYS } from '../../lib/constants'
 import { useTemporaryFlag } from '../../hooks'
@@ -57,7 +57,7 @@ export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps
 
   if (usingNip07) {
     return (
-      <div className="settings-section">
+      <SettingsSection>
         <p className="info">Using NIP-07 extension</p>
         <div className="key-display">
           <label>Your npub:</label>
@@ -70,14 +70,13 @@ export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps
             </div>
           </div>
         </div>
-      </div>
+      </SettingsSection>
     )
   }
 
   return (
     <>
-      <div className="settings-section">
-        <h3>Your Keys</h3>
+      <SettingsSection title="Your Keys">
         <div className="key-display">
           <label>npub (public):</label>
           <div className="npub-row">
@@ -107,10 +106,9 @@ export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps
             </div>
           </div>
         )}
-      </div>
+      </SettingsSection>
 
-      <div className="settings-section">
-        <h3>Import Key</h3>
+      <SettingsSection title="Import Key">
         <p className="hint">Paste your nsec to use an existing identity</p>
         <div className="input-row">
           <Input type="password" placeholder="nsec1..." value={importValue} onChange={setImportValue} />
@@ -119,14 +117,13 @@ export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps
           </Button>
         </div>
         <ErrorMessage>{error}</ErrorMessage>
-      </div>
+      </SettingsSection>
 
-      <div className="settings-section danger">
-        <h3>Danger Zone</h3>
+      <SettingsSection title="Danger Zone" variant="danger">
         <Button size="md" onClick={handleClear} variant="danger">
           Clear key from browser
         </Button>
-      </div>
+      </SettingsSection>
     </>
   )
 }

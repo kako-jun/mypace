@@ -1,4 +1,4 @@
-import { Icon, Avatar, TextButton } from '../ui'
+import { Icon, Avatar, TextButton, CopyButton, ExternalLink } from '../ui'
 import { getWebsites, getWebsiteIcon } from '../../lib/utils'
 import { nip19 } from 'nostr-tools'
 import type { Profile, ThemeColors } from '../../types'
@@ -81,16 +81,10 @@ export function UserProfile({
 
         <div className="user-links">
           {getWebsites(profile).map((w, i) => (
-            <a
-              key={i}
-              href={w.url.match(/^https?:\/\//) ? w.url : `https://${w.url}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="user-link"
-            >
+            <ExternalLink key={i} href={w.url.match(/^https?:\/\//) ? w.url : `https://${w.url}`} className="user-link">
               <Icon name={getWebsiteIcon(w.label)} size={14} />{' '}
               {w.label !== 'Website' ? w.label : w.url.replace(/^https?:\/\//, '')}
-            </a>
+            </ExternalLink>
           ))}
           {profile?.lud16 && (
             <span className="user-link user-lightning">
@@ -101,9 +95,7 @@ export function UserProfile({
 
         <div className="user-npub-row">
           <span className="user-npub">{npub}</span>
-          <button className="npub-copy-btn" onClick={onCopyNpub} aria-label="Copy npub">
-            {npubCopied ? <Icon name="Check" size={14} /> : <Icon name="Copy" size={14} />}
-          </button>
+          <CopyButton copied={npubCopied} onClick={onCopyNpub} className="npub-copy-btn" aria-label="Copy npub" />
         </div>
 
         <div className="user-stats">

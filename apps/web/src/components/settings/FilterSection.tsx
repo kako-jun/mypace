@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { loadPresets } from '../../lib/utils'
 import { CUSTOM_EVENTS } from '../../lib/constants'
+import { SettingsSection } from '../ui'
 
 interface FilterSectionProps {
   onClose?: () => void
@@ -22,12 +23,11 @@ export default function FilterSection({ onClose }: FilterSectionProps) {
   }
 
   return (
-    <div className="settings-section">
-      <h3>Filters</h3>
+    <SettingsSection title="Filters">
       <p className="filter-summary-text">{presetCount} presets</p>
       <button className="profile-edit-link" onClick={handleOpenFilter}>
         Edit Filters →
       </button>
-    </div>
+    </SettingsSection>
   )
 }

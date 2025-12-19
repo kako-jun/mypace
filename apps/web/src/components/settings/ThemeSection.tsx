@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ColorPicker, Button } from '../ui'
+import { ColorPicker, Button, SettingsSection } from '../ui'
 import type { ThemeColors } from '../../types'
 
 interface ThemeSectionProps {
@@ -185,8 +185,7 @@ export default function ThemeSection({
 
   return (
     <>
-      <div className="settings-section">
-        <h3>App Theme</h3>
+      <SettingsSection title="App Theme">
         <div className="theme-switcher">
           <Button
             size="md"
@@ -203,10 +202,9 @@ export default function ThemeSection({
             DARK
           </Button>
         </div>
-      </div>
+      </SettingsSection>
 
-      <div className="settings-section">
-        <h3>Window Color</h3>
+      <SettingsSection title="Window Color">
         <p className="hint">Customize background with 4-corner gradient</p>
 
         <div
@@ -226,7 +224,7 @@ export default function ThemeSection({
             {renderCorner('bottomRight', 'right')}
           </div>
         </div>
-      </div>
+      </SettingsSection>
     </>
   )
 }

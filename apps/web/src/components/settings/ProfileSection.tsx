@@ -1,4 +1,4 @@
-import { Avatar } from '../ui'
+import { Avatar, SettingsSection } from '../ui'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import { navigateToUser } from '../../lib/utils'
 import { useState, useEffect } from 'react'
@@ -26,8 +26,7 @@ export default function ProfileSection({ displayName, pictureUrl, onClose }: Pro
   }
 
   return (
-    <div className="settings-section">
-      <h3>Profile</h3>
+    <SettingsSection title="Profile">
       <div className="profile-display">
         <Avatar src={pictureUrl} />
         <div className="profile-display-info">
@@ -37,6 +36,6 @@ export default function ProfileSection({ displayName, pictureUrl, onClose }: Pro
           </button>
         </div>
       </div>
-    </div>
+    </SettingsSection>
   )
 }

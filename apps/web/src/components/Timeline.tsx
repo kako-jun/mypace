@@ -2,7 +2,7 @@ import { useState, useCallback, Fragment, useEffect } from 'react'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
 import { setHashtagClickHandler, setSuperMentionClickHandler } from '../lib/content-parser'
 import { TimelinePostCard } from '../components/timeline'
-import { Loading, Button, ErrorMessage } from './ui'
+import { Loading, Button, ErrorMessage, SuccessMessage } from './ui'
 import { useTimeline } from '../hooks'
 import {
   shareOrCopy,
@@ -227,7 +227,7 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
         if (deletedId === event.id) {
           return (
             <article key={event.id} className="post-card">
-              <p className="success">Deleted!</p>
+              <SuccessMessage>Deleted!</SuccessMessage>
             </article>
           )
         }

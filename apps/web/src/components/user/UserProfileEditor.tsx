@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Avatar, Icon, Button, Input, ErrorMessage } from '../ui'
+import { Avatar, Icon, Button, Input, ErrorMessage, SuccessMessage } from '../ui'
 import { useImageUpload, useDragDrop, useTemporaryFlag, useWebsiteEditor } from '../../hooks'
 import { publishEvent } from '../../lib/nostr/relay'
 import { createProfileEvent } from '../../lib/nostr/events'
@@ -254,7 +254,7 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
         </div>
 
         <ErrorMessage>{editError}</ErrorMessage>
-        {editSaved && <p className="success">Saved!</p>}
+        {editSaved && <SuccessMessage>Saved!</SuccessMessage>}
 
         <div className="edit-actions">
           <Button size="md" variant="secondary" onClick={onCancel} disabled={saving}>

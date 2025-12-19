@@ -31,7 +31,7 @@ import {
 } from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers } from '../components/post'
-import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton } from '../components/ui'
+import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage } from '../components/ui'
 import { useShare, useDeleteConfirm, usePostViewData } from '../hooks'
 import type { Profile, ReactionData } from '../types'
 
@@ -288,7 +288,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
             profiles={{ ...(profile ? { [event.pubkey]: profile } : {}), ...replyProfiles }}
           />
         </div>
-        {deletedId === event.id && <p className="success">Deleted!</p>}
+        {deletedId === event.id && <SuccessMessage>Deleted!</SuccessMessage>}
         {deletedId !== event.id && (
           <div className="post-footer">
             <PostActions

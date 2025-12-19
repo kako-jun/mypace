@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Icon } from '../ui'
+import { Icon, ExternalLink } from '../ui'
 
 interface IframeEmbedProps {
   url: string
@@ -35,9 +35,9 @@ export default function IframeEmbed({ url }: IframeEmbedProps) {
           >
             <Icon name={expanded ? 'Minimize2' : 'Maximize2'} size={14} />
           </button>
-          <a href={url} target="_blank" rel="noopener noreferrer" className="embed-external-link">
+          <ExternalLink href={url} className="embed-external-link">
             <Icon name="ExternalLink" size={14} />
-          </a>
+          </ExternalLink>
         </div>
       </div>
     )

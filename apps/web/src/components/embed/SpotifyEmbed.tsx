@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Icon } from '../ui'
+import { Icon, ExternalLink } from '../ui'
 import { getSpotifyEmbedUrl } from '../../lib/utils/embed'
 
 interface SpotifyEmbedProps {
@@ -67,9 +67,9 @@ export default function SpotifyEmbed({ spotifyId, spotifyType, url }: SpotifyEmb
         loading="lazy"
         style={{ borderRadius: '12px' }}
       />
-      <a href={url} target="_blank" rel="noopener noreferrer" className="embed-external-link">
+      <ExternalLink href={url} className="embed-external-link">
         <Icon name="ExternalLink" size={12} /> Spotify
-      </a>
+      </ExternalLink>
     </div>
   )
 }

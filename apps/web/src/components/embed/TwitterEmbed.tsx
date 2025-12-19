@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Tweet } from 'react-tweet'
-import { Icon } from '../ui'
+import { Icon, ExternalLink } from '../ui'
 import { API_BASE } from '../../lib/api'
 
 interface TwitterEmbedProps {
@@ -49,7 +49,7 @@ export default function TwitterEmbed({ tweetId, url }: TwitterEmbedProps) {
     return (
       <div className="embed-container embed-twitter embed-fallback">
         {tweetData?.text ? (
-          <a href={url} target="_blank" rel="noopener noreferrer" className="embed-twitter-fallback-content">
+          <ExternalLink href={url} className="embed-twitter-fallback-content">
             {tweetData.user?.profile_image_url_https && (
               <img src={tweetData.user.profile_image_url_https} alt="" className="embed-twitter-avatar" />
             )}
@@ -64,11 +64,11 @@ export default function TwitterEmbed({ tweetId, url }: TwitterEmbedProps) {
                 <span>View on X</span>
               </div>
             </div>
-          </a>
+          </ExternalLink>
         ) : (
-          <a href={url} target="_blank" rel="noopener noreferrer" className="embed-twitter-link">
+          <ExternalLink href={url} className="embed-twitter-link">
             <Icon name="Twitter" size={16} /> View tweet on X
-          </a>
+          </ExternalLink>
         )}
       </div>
     )

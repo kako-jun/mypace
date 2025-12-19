@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Icon } from '../ui'
+import { Icon, ExternalLink } from '../ui'
 import { API_BASE } from '../../lib/api'
 
 interface OgpData {
@@ -55,27 +55,27 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
 
   if (loading) {
     return (
-      <a href={url} target="_blank" rel="noopener noreferrer" className="embed-container embed-link embed-loading">
+      <ExternalLink href={url} className="embed-container embed-link embed-loading">
         <div className="embed-link-content">
           <Icon name="Link" size={16} className="embed-link-icon" />
           <span className="embed-link-url">{displayDomain}</span>
         </div>
-      </a>
+      </ExternalLink>
     )
   }
 
   if (error || !ogp?.title) {
     // Simple link fallback
     return (
-      <a href={url} target="_blank" rel="noopener noreferrer" className="embed-container embed-link embed-simple">
+      <ExternalLink href={url} className="embed-container embed-link embed-simple">
         <Icon name="ExternalLink" size={14} />
         <span>{displayDomain}</span>
-      </a>
+      </ExternalLink>
     )
   }
 
   return (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="embed-container embed-link">
+    <ExternalLink href={url} className="embed-container embed-link">
       {ogp.image && (
         <div className="embed-link-image">
           <img src={ogp.image} alt="" loading="lazy" />
@@ -89,6 +89,6 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
           {ogp.siteName || displayDomain}
         </span>
       </div>
-    </a>
+    </ExternalLink>
   )
 }

@@ -1,5 +1,6 @@
 import { Fragment, useCallback } from 'react'
 import { TimelinePostCard } from '../timeline'
+import { SuccessMessage } from '../ui'
 import { navigateToEdit, navigateToReply, getDisplayName, getAvatarUrl } from '../../lib/utils'
 import type { Event, Profile, ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../../types'
 import type { GapInfo } from '../../hooks/timeline/types'
@@ -84,7 +85,7 @@ export function UserPosts({
         if (deletedId === event.id) {
           return (
             <article key={event.id} className="post-card">
-              <p className="success">Deleted!</p>
+              <SuccessMessage>Deleted!</SuccessMessage>
             </article>
           )
         }
