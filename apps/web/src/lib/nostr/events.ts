@@ -11,7 +11,11 @@ export { MYPACE_TAG, APP_TITLE } from './constants'
 export { getEventThemeColors, getThemeCardProps, isDarkColor, getStoredThemeColors } from './theme'
 export { formatTimestamp } from './format'
 
-export async function createTextNote(content: string, preserveTags?: string[][]): Promise<Event> {
+export async function createTextNote(
+  content: string,
+  preserveTags?: string[][],
+  additionalTags?: string[][]
+): Promise<Event> {
   // Determine signing method and pubkey upfront to ensure consistency
   const useNip07 = hasNip07() && window.nostr
   let signerPubkey: string
@@ -40,6 +44,11 @@ export async function createTextNote(content: string, preserveTags?: string[][])
         tags.push(tag)
       }
     }
+  }
+
+  // Add additional tags (e.g., sticker tags)
+  if (additionalTags) {
+    tags.push(...additionalTags)
   }
 
   // Handle long posts: split content and add fold tag
@@ -176,7 +185,12 @@ export async function createRepostEvent(targetEvent: Event): Promise<Event> {
   return finalizeEvent(template, getOrCreateSecretKey())
 }
 
-export async function createReplyEvent(content: string, replyTo: Event, rootEvent?: Event): Promise<Event> {
+export async function createReplyEvent(
+  content: string,
+  replyTo: Event,
+  rootEvent?: Event,
+  additionalTags?: string[][]
+): Promise<Event> {
   const tags: string[][] = [
     ['t', MYPACE_TAG],
     ['client', 'mypace'],
@@ -197,6 +211,11 @@ export async function createReplyEvent(content: string, replyTo: Event, rootEven
   } else {
     tags.push(['e', replyTo.id, '', 'root'])
     tags.push(['p', replyTo.pubkey])
+  }
+
+  // Add additional tags (e.g., sticker tags)
+  if (additionalTags) {
+    tags.push(...additionalTags)
   }
 
   const template: EventTemplate = {

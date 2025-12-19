@@ -161,8 +161,7 @@ export function PostForm({
       ])
 
       if (replyingTo) {
-        const event = await createReplyEvent(content.trim(), replyingTo)
-        event.tags.push(...stickerTags)
+        const event = await createReplyEvent(content.trim(), replyingTo, undefined, stickerTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])
@@ -172,15 +171,13 @@ export function PostForm({
         await publishEvent(deleteEvent)
         // 古いstickerタグを除外して保持
         const preserveTags = editingEvent.tags.filter((tag) => tag[0] !== 'sticker')
-        const event = await createTextNote(content.trim(), preserveTags)
-        event.tags.push(...stickerTags)
+        const event = await createTextNote(content.trim(), preserveTags, stickerTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])
         onEditComplete?.()
       } else {
-        const event = await createTextNote(content.trim())
-        event.tags.push(...stickerTags)
+        const event = await createTextNote(content.trim(), undefined, stickerTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])
