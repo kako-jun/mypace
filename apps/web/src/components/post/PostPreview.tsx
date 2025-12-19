@@ -1,12 +1,16 @@
 import { getThemeCardProps } from '../../lib/nostr/events'
 import { PostContent } from './PostContent'
-import type { ThemeColors, EmojiTag } from '../../types'
+import { PostStickers } from './PostStickers'
+import type { ThemeColors, EmojiTag, Sticker } from '../../types'
 
 interface PostPreviewProps {
   content: string
   themeColors: ThemeColors | null
   transparentBackground?: boolean
   emojis?: EmojiTag[]
+  stickers?: Sticker[]
+  editableStickers?: boolean
+  onStickerMove?: (index: number, x: number, y: number) => void
 }
 
 export default function PostPreview({
@@ -14,6 +18,9 @@ export default function PostPreview({
   themeColors,
   transparentBackground = false,
   emojis = [],
+  stickers = [],
+  editableStickers = false,
+  onStickerMove,
 }: PostPreviewProps) {
   if (!content.trim()) return null
 
@@ -25,6 +32,7 @@ export default function PostPreview({
       <div className="preview-content">
         <PostContent content={content} emojis={emojis} />
       </div>
+      <PostStickers stickers={stickers} editable={editableStickers} onStickerMove={onStickerMove} />
     </div>
   )
 }

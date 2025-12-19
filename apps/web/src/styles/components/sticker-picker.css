@@ -1,0 +1,123 @@
+/* ===========================================
+   Sticker Picker
+   =========================================== */
+
+.sticker-picker {
+  position: relative;
+}
+
+.sticker-picker-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: var(--surface-secondary);
+  border: 2px solid var(--border-primary);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.2rem;
+}
+
+.sticker-picker-toggle:hover {
+  background: var(--surface-hover);
+  transform: scale(1.05);
+}
+
+.sticker-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.sticker-picker-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--surface-primary);
+  border: 3px solid var(--border-primary);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 1001;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.sticker-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-primary);
+}
+
+.sticker-picker-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.sticker-picker-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: var(--text-primary);
+  transition: transform 0.2s ease;
+}
+
+.sticker-picker-close:hover {
+  transform: rotate(90deg);
+}
+
+.sticker-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.sticker-picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--surface-secondary);
+  border: 2px solid var(--border-primary);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sticker-picker-item:hover {
+  background: var(--surface-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.sticker-picker-item img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+.sticker-picker-item span {
+  font-size: 0.875rem;
+  font-weight: bold;
+}
+
+.sticker-picker-hint {
+  padding: 0.5rem;
+  background: var(--surface-warning);
+  border: 1px solid var(--border-warning);
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--text-muted);
+}

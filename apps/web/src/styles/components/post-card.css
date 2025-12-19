@@ -143,6 +143,23 @@
   object-fit: contain;
   filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
   animation: sticker-appear 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition: filter 0.2s ease;
+}
+
+.post-sticker-editable {
+  pointer-events: auto;
+  cursor: move;
+}
+
+.post-sticker-editable:hover {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 0, 0.6)) drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.post-sticker-dragging {
+  cursor: grabbing !important;
+  filter: drop-shadow(0 0 12px rgba(255, 255, 0, 0.8)) drop-shadow(4px 4px 8px rgba(0, 0, 0, 0.5));
+  opacity: 0.9;
+  z-index: 100;
 }
 
 @keyframes sticker-appear {

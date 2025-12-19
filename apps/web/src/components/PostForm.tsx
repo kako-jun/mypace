@@ -7,7 +7,7 @@ import {
   getCurrentPubkey,
 } from '../lib/nostr/events'
 import { navigateToUser } from '../lib/utils'
-import type { ThemeColors, EmojiTag } from '../types'
+import type { ThemeColors, EmojiTag, Sticker } from '../types'
 import { publishEvent } from '../lib/nostr/relay'
 import { ProfileSetup } from './ProfileSetup'
 import {
@@ -23,6 +23,8 @@ import { ImageDropZone, AttachedImages, PostPreview } from '../components/post'
 import { LongModeEditor } from './LongModeEditor'
 import { Toggle, Avatar, Icon } from './ui'
 import { setBoolean } from '../lib/utils/storage'
+import { StickerPicker } from './StickerPicker'
+import { StickerList } from './StickerList'
 import type { Event } from '../types'
 
 interface PostFormProps {
@@ -64,6 +66,7 @@ export function PostForm({
   const [vimMode, setVimMode] = useState(() => getStoredVimMode())
   const [darkTheme, setDarkTheme] = useState(() => getStoredAppTheme() === 'dark')
   const [minimized, setMinimized] = useState(false)
+  const [stickers, setStickers] = useState<Sticker[]>([])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const longModeFormRef = useRef<HTMLFormElement>(null)
 
@@ -93,6 +96,28 @@ export function PostForm({
       window.removeEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
     }
   }, [])
+
+  // 編集モード時にシールを復元
+  useEffect(() => {
+    if (editingEvent && editingEvent.tags) {
+      const stickerTags = editingEvent.tags.filter((tag) => tag[0] === 'sticker')
+      const restoredStickers: Sticker[] = stickerTags
+        .map((tag) => {
+          const [, url, x, y, size] = tag
+          if (!url) return null
+          return {
+            url,
+            x: parseFloat(x) || 50,
+            y: parseFloat(y) || 50,
+            size: parseFloat(size) || 15,
+          }
+        })
+        .filter((s): s is Sticker => s !== null)
+      setStickers(restoredStickers)
+    } else {
+      setStickers([])
+    }
+  }, [editingEvent])
 
   const handleVimModeChange = (enabled: boolean) => {
     setVimMode(enabled)
@@ -124,23 +149,32 @@ export function PostForm({
     setError('')
 
     try {
+      // シールタグを生成
+      const stickerTags = stickers.map((s) => ['sticker', s.url, `${s.x}`, `${s.y}`, `${s.size}`])
+
       if (replyingTo) {
         const event = await createReplyEvent(content.trim(), replyingTo)
+        event.tags.push(...stickerTags)
         await publishEvent(event)
         onContentChange('')
+        setStickers([])
         onReplyComplete?.()
       } else if (editingEvent) {
         const deleteEvent = await createDeleteEvent([editingEvent.id])
         await publishEvent(deleteEvent)
         const preserveTags = editingEvent.tags
         const event = await createTextNote(content.trim(), preserveTags)
+        event.tags.push(...stickerTags)
         await publishEvent(event)
         onContentChange('')
+        setStickers([])
         onEditComplete?.()
       } else {
         const event = await createTextNote(content.trim())
+        event.tags.push(...stickerTags)
         await publishEvent(event)
         onContentChange('')
+        setStickers([])
       }
 
       window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NEW_POST))
@@ -197,6 +231,31 @@ export function PostForm({
     onContentChange(removeImageUrl(content, url))
   }
 
+  const handleAddSticker = (sticker: Omit<Sticker, 'x' | 'y' | 'size'>) => {
+    // デフォルト位置: ランダムに配置
+    const newSticker: Sticker = {
+      ...sticker,
+      x: Math.floor(Math.random() * 60) + 20, // 20-80%
+      y: Math.floor(Math.random() * 60) + 20, // 20-80%
+      size: 15, // 15%
+    }
+    setStickers([...stickers, newSticker])
+  }
+
+  const handleRemoveSticker = (index: number) => {
+    setStickers(stickers.filter((_, i) => i !== index))
+  }
+
+  const handleStickerMove = (index: number, x: number, y: number) => {
+    const updatedStickers = [...stickers]
+    updatedStickers[index] = {
+      ...updatedStickers[index],
+      x: Math.round(x),
+      y: Math.round(y),
+    }
+    setStickers(updatedStickers)
+  }
+
   const imageUrls = getImageUrls(content)
   const isSpecialMode = editingEvent || replyingTo
 
@@ -238,6 +297,7 @@ export function PostForm({
                 <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
               </button>
               <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
+              <StickerPicker onAddSticker={handleAddSticker} />
               <div className="vim-toggle">
                 <Toggle checked={vimMode} onChange={handleVimModeChange} label="Vim" />
               </div>
@@ -254,6 +314,7 @@ export function PostForm({
             />
 
             <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
+            <StickerList stickers={stickers} onRemove={handleRemoveSticker} />
 
             <div className="post-actions">
               <div className="post-actions-left">
@@ -297,7 +358,15 @@ export function PostForm({
 
         {showPreview && (
           <div className="long-mode-preview-pane">
-            <PostPreview content={content} themeColors={themeColors} transparentBackground emojis={myEmojis} />
+            <PostPreview
+              content={content}
+              themeColors={themeColors}
+              transparentBackground
+              emojis={myEmojis}
+              stickers={stickers}
+              editableStickers
+              onStickerMove={handleStickerMove}
+            />
           </div>
         )}
       </div>
@@ -332,6 +401,7 @@ export function PostForm({
           <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
         </button>
         <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
+        <StickerPicker onAddSticker={handleAddSticker} />
         <button
           type="button"
           className="mode-toggle-corner text-outlined text-outlined-button text-outlined-primary"
@@ -372,8 +442,18 @@ export function PostForm({
       </div>
 
       <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
+      <StickerList stickers={stickers} onRemove={handleRemoveSticker} />
 
-      {showPreview && <PostPreview content={content} themeColors={themeColors} emojis={myEmojis} />}
+      {showPreview && (
+        <PostPreview
+          content={content}
+          themeColors={themeColors}
+          emojis={myEmojis}
+          stickers={stickers}
+          editableStickers
+          onStickerMove={handleStickerMove}
+        />
+      )}
 
       <div className="post-actions">
         <div className="post-actions-left">
