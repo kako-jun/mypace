@@ -361,12 +361,12 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
 
         {showSmartPopup && (
           <div className="smart-filter-popup">
-            <div className="smart-filter-item">
+            <div className="smart-filter-item" onClick={() => setHideAds(!hideAds)}>
               <Toggle checked={hideAds} onChange={setHideAds} size="small" />
               <Icon name="Banknote" size={14} />
               <span className="smart-filter-label">Hide Ads</span>
             </div>
-            <div className="smart-filter-item">
+            <div className="smart-filter-item" onClick={() => setHideNSFW(!hideNSFW)}>
               <Toggle checked={hideNSFW} onChange={setHideNSFW} size="small" />
               <Icon name="EyeOff" size={14} />
               <span className="smart-filter-label">Hide NSFW</span>
