@@ -809,6 +809,174 @@ app.get('/.well-known/nostr.json', async (c) => {
   }
 })
 
+// GET /api/wikidata/search - Wikidata検索プロキシ
+app.get('/api/wikidata/search', async (c) => {
+  const query = c.req.query('q')
+  const language = c.req.query('lang') || 'ja'
+
+  if (!query || query.length < 1) {
+    return c.json({ error: 'Query parameter required' }, 400)
+  }
+
+  try {
+    const url = new URL('https://www.wikidata.org/w/api.php')
+    url.searchParams.set('action', 'wbsearchentities')
+    url.searchParams.set('search', query)
+    url.searchParams.set('language', language)
+    url.searchParams.set('uselang', language)
+    url.searchParams.set('format', 'json')
+    url.searchParams.set('limit', '10')
+    url.searchParams.set('origin', '*')
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'User-Agent': 'mypace-bot/1.0',
+      },
+    })
+
+    if (!response.ok) {
+      return c.json({ error: 'Wikidata API error' }, 502)
+    }
+
+    const data = (await response.json()) as {
+      search: Array<{
+        id: string
+        label: string
+        description?: string
+        aliases?: string[]
+      }>
+    }
+
+    // 結果を整形して返す
+    const results = data.search.map((item) => ({
+      id: item.id,
+      label: item.label,
+      description: item.description || '',
+      aliases: item.aliases || [],
+    }))
+
+    return c.json({ results })
+  } catch (e) {
+    console.error('Wikidata search error:', e)
+    return c.json({ error: 'Failed to search Wikidata' }, 500)
+  }
+})
+
+// POST /api/super-mention/paths - パス保存
+app.post('/api/super-mention/paths', async (c) => {
+  const db = c.env.DB
+
+  try {
+    const body = await c.req.json<{
+      path: string
+      category: string
+      wikidataId?: string
+      wikidataLabel?: string
+      wikidataDescription?: string
+    }>()
+
+    if (!body.path || !body.category) {
+      return c.json({ error: 'path and category required' }, 400)
+    }
+
+    const now = Math.floor(Date.now() / 1000)
+
+    // UPSERT: 存在すれば use_count を増加、なければ新規作成
+    await db
+      .prepare(
+        `
+        INSERT INTO super_mention_paths (path, category, wikidata_id, wikidata_label, wikidata_description, use_count, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, 1, ?, ?)
+        ON CONFLICT(path) DO UPDATE SET
+          use_count = use_count + 1,
+          wikidata_id = COALESCE(excluded.wikidata_id, wikidata_id),
+          wikidata_label = COALESCE(excluded.wikidata_label, wikidata_label),
+          wikidata_description = COALESCE(excluded.wikidata_description, wikidata_description),
+          updated_at = excluded.updated_at
+      `
+      )
+      .bind(
+        body.path,
+        body.category,
+        body.wikidataId || null,
+        body.wikidataLabel || null,
+        body.wikidataDescription || null,
+        now,
+        now
+      )
+      .run()
+
+    return c.json({ success: true })
+  } catch (e) {
+    console.error('Save path error:', e)
+    return c.json({ error: 'Failed to save path' }, 500)
+  }
+})
+
+// GET /api/super-mention/suggest - パスのサジェスト
+app.get('/api/super-mention/suggest', async (c) => {
+  const db = c.env.DB
+  const prefix = c.req.query('prefix') || ''
+  const category = c.req.query('category')
+  const limit = Math.min(parseInt(c.req.query('limit') || '10', 10), 50)
+
+  try {
+    let query: string
+    let params: (string | number)[]
+
+    if (category) {
+      // カテゴリ指定あり: そのカテゴリ内で検索
+      query = `
+        SELECT path, category, wikidata_id, wikidata_label, wikidata_description, use_count
+        FROM super_mention_paths
+        WHERE category = ? AND path LIKE ?
+        ORDER BY use_count DESC, updated_at DESC
+        LIMIT ?
+      `
+      params = [category, `/${category}/${prefix}%`, limit]
+    } else if (prefix) {
+      // プレフィックス検索
+      query = `
+        SELECT path, category, wikidata_id, wikidata_label, wikidata_description, use_count
+        FROM super_mention_paths
+        WHERE path LIKE ?
+        ORDER BY use_count DESC, updated_at DESC
+        LIMIT ?
+      `
+      params = [`${prefix}%`, limit]
+    } else {
+      // 人気のパスを返す
+      query = `
+        SELECT path, category, wikidata_id, wikidata_label, wikidata_description, use_count
+        FROM super_mention_paths
+        ORDER BY use_count DESC, updated_at DESC
+        LIMIT ?
+      `
+      params = [limit]
+    }
+
+    const result = await db
+      .prepare(query)
+      .bind(...params)
+      .all()
+
+    return c.json({
+      suggestions:
+        result.results?.map((row) => ({
+          path: row.path,
+          category: row.category,
+          wikidataId: row.wikidata_id,
+          wikidataLabel: row.wikidata_label,
+          wikidataDescription: row.wikidata_description,
+          useCount: row.use_count,
+        })) || [],
+    })
+  } catch (e) {
+    console.error('Suggest error:', e)
+    return c.json({ error: 'Failed to get suggestions' }, 500)
+  }
+})
+
 // Health check
 app.get('/health', (c) => c.json({ status: 'ok' }))
 

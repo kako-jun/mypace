@@ -1,6 +1,6 @@
 import { useState, useCallback, Fragment, useEffect } from 'react'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
-import { setHashtagClickHandler } from '../lib/content-parser'
+import { setHashtagClickHandler, setSuperMentionClickHandler } from '../lib/content-parser'
 import { TimelinePostCard } from '../components/timeline'
 import { Loading, Button } from './ui'
 import { useTimeline } from '../hooks'
@@ -143,10 +143,22 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
     [filters, filterTags]
   )
 
-  // Set up hashtag click handler
+  // Handle super mention clicks - add ref path to filter
+  const handleSuperMentionClick = useCallback(
+    (path: string) => {
+      // Add ref path to current search filters (use tags filter for now)
+      if (!filterTags.includes(path)) {
+        navigateTo(buildSearchUrl({ ...filters, tags: [...filterTags, path] }))
+      }
+    },
+    [filters, filterTags]
+  )
+
+  // Set up click handlers
   useEffect(() => {
     setHashtagClickHandler(handleHashtagClick)
-  }, [handleHashtagClick])
+    setSuperMentionClickHandler(handleSuperMentionClick)
+  }, [handleHashtagClick, handleSuperMentionClick])
 
   if (loading && events.length === 0) return <Loading />
 

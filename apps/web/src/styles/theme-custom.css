@@ -187,3 +187,112 @@ body.custom-theme .logo-pace {
   color: rgba(0, 0, 0, 0.5);
 }
 
+/* ===========================================
+   Super Mention Suggest
+   =========================================== */
+
+.super-mention-suggest {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  margin-bottom: 4px;
+}
+
+.super-mention-suggest-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  transition: background 0.1s ease;
+}
+
+.super-mention-suggest-item:hover,
+.super-mention-suggest-item.selected {
+  background: var(--hover-bg, #f5f5f5);
+}
+
+.super-mention-suggest-icon {
+  font-size: 16px;
+}
+
+.super-mention-suggest-path {
+  font-weight: 600;
+  color: #c85;
+}
+
+.super-mention-suggest-label {
+  color: var(--text-secondary, #666);
+  font-size: 12px;
+}
+
+/* Dark theme */
+[data-theme='dark'] .super-mention-suggest {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+[data-theme='dark'] .super-mention-suggest-item:hover,
+[data-theme='dark'] .super-mention-suggest-item.selected {
+  background: #3a3a3a;
+}
+
+[data-theme='dark'] .super-mention-suggest-label {
+  color: #999;
+}
+
+.super-mention-suggest-desc {
+  color: var(--text-secondary, #666);
+  font-size: 12px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-theme='dark'] .super-mention-suggest-desc {
+  color: #888;
+}
+
+.super-mention-suggest-loading,
+.super-mention-suggest-empty {
+  padding: 12px 16px;
+  text-align: center;
+  color: var(--text-secondary, #666);
+  font-size: 13px;
+}
+
+[data-theme='dark'] .super-mention-suggest-loading,
+[data-theme='dark'] .super-mention-suggest-empty {
+  color: #888;
+}
+
+.super-mention-q-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 4px;
+  font-size: 10px;
+  font-family: var(--font-mono, monospace);
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  color: #888;
+  vertical-align: middle;
+}
+
+[data-theme='dark'] .super-mention-q-badge {
+  background: rgba(255, 255, 255, 0.1);
+  color: #666;
+}

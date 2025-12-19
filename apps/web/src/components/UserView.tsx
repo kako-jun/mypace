@@ -21,7 +21,12 @@ import {
 } from '../lib/utils'
 import { Avatar, Icon, Button, Input, Loading } from '../components/ui'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
-import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
+import {
+  setHashtagClickHandler,
+  setSuperMentionClickHandler,
+  setImageClickHandler,
+  clearImageClickHandler,
+} from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
 import { TimelinePostCard } from '../components/timeline'
 import { useTimeline, useDragDrop, useTemporaryFlag } from '../hooks'
@@ -142,6 +147,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   useEffect(() => {
     applyThemeColors(getUIThemeColors())
     setHashtagClickHandler((tag) => navigateToTag(tag))
+    setSuperMentionClickHandler((path) => navigateToTag(path))
     setImageClickHandler(triggerLightBox)
     loadProfile()
 

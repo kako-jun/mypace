@@ -42,6 +42,17 @@ export function clearImageClickHandler() {
   onImageClick = null
 }
 
+// Callback for super mention clicks
+let onSuperMentionClick: ((path: string) => void) | null = null
+
+export function setSuperMentionClickHandler(handler: (path: string) => void) {
+  onSuperMentionClick = handler
+}
+
+export function clearSuperMentionClickHandler() {
+  onSuperMentionClick = null
+}
+
 // Configure marked with Prism highlighting
 const marked = new Marked({
   breaks: true, // Convert single line breaks to <br>
@@ -276,6 +287,18 @@ function processHashtags(html: string): string {
   })
 }
 
+// Super mention regex: @/ followed by path characters (Unicode allowed)
+// Path can contain: letters, numbers, hyphens, underscores, slashes, colons, dots, and Japanese characters
+const SUPER_MENTION_REGEX = /(^|[\s>])@(\/[\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\-/:.?=&%#,]+)/g
+
+// Process super mentions in HTML (after markdown parsing)
+function processSuperMentions(html: string): string {
+  return html.replace(SUPER_MENTION_REGEX, (_match, prefix, path) => {
+    const escapedPath = escapeHtml(path)
+    return `${prefix}<button class="content-super-mention" data-ref="${escapedPath}"><span class="super-mention-prefix">@/</span>${escapeHtml(path.slice(1))}</button>`
+  })
+}
+
 // YouTube thumbnail URL patterns to exclude from image processing
 const YOUTUBE_THUMBNAIL_REGEX = /^https?:\/\/(img\.youtube\.com|i\.ytimg\.com)\//i
 
@@ -473,6 +496,7 @@ export function renderContent(
   html = removeImageLinks(html)
   html = processNostrMentions(html, profiles)
   html = processHashtags(html)
+  html = processSuperMentions(html)
   html = processLinks(html)
   html = processCustomEmojis(html, emojis)
 
@@ -528,6 +552,13 @@ export function renderContent(
       const tag = target.getAttribute('data-tag')
       if (tag && onHashtagClick) {
         onHashtagClick(tag)
+      }
+    }
+    if (target.classList.contains('content-super-mention') || target.classList.contains('super-mention-prefix')) {
+      const button = target.classList.contains('super-mention-prefix') ? target.parentElement : target
+      const path = button?.getAttribute('data-ref')
+      if (path && onSuperMentionClick) {
+        onSuperMentionClick(path)
       }
     }
     if (target.classList.contains('content-image')) {

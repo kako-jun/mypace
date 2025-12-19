@@ -25,6 +25,7 @@ import { Toggle, Avatar, Icon } from './ui'
 import { setBoolean } from '../lib/utils/storage'
 import { StickerPicker } from './StickerPicker'
 import { StickerList } from './StickerList'
+import { SuperMentionSuggest } from './SuperMentionSuggest'
 import type { Event } from '../types'
 
 interface PostFormProps {
@@ -67,6 +68,8 @@ export function PostForm({
   const [darkTheme, setDarkTheme] = useState(() => getStoredAppTheme() === 'dark')
   const [minimized, setMinimized] = useState(false)
   const [stickers, setStickers] = useState<Sticker[]>([])
+  const [cursorPosition, setCursorPosition] = useState(0)
+  const [showSuggest, setShowSuggest] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const longModeFormRef = useRef<HTMLFormElement>(null)
 
@@ -450,16 +453,50 @@ export function PostForm({
         </button>
       </div>
 
-      <div className="post-input-wrapper">
+      <div className="post-input-wrapper" style={{ position: 'relative' }}>
         <textarea
           ref={textareaRef}
           className="post-input"
           placeholder="マイペースで書こう"
           value={content}
-          onInput={(e) => onContentChange((e.target as HTMLTextAreaElement).value)}
+          onInput={(e) => {
+            const target = e.target as HTMLTextAreaElement
+            onContentChange(target.value)
+            setCursorPosition(target.selectionStart)
+            setShowSuggest(true)
+          }}
+          onSelect={(e) => {
+            const target = e.target as HTMLTextAreaElement
+            setCursorPosition(target.selectionStart)
+          }}
+          onBlur={() => {
+            // Delay to allow click on suggest item
+            setTimeout(() => setShowSuggest(false), 150)
+          }}
+          onFocus={() => setShowSuggest(true)}
           rows={3}
           maxLength={LIMITS.MAX_POST_LENGTH}
         />
+        {showSuggest && (
+          <SuperMentionSuggest
+            content={content}
+            cursorPosition={cursorPosition}
+            onSelect={(text, start, end) => {
+              const newContent = content.slice(0, start) + text + content.slice(end)
+              onContentChange(newContent)
+              // Set cursor after inserted text
+              setTimeout(() => {
+                if (textareaRef.current) {
+                  const newPos = start + text.length
+                  textareaRef.current.setSelectionRange(newPos, newPos)
+                  textareaRef.current.focus()
+                  setCursorPosition(newPos)
+                }
+              }, 0)
+            }}
+            onClose={() => setShowSuggest(false)}
+          />
+        )}
         {content && (
           <button
             type="button"

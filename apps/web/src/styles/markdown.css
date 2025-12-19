@@ -224,6 +224,36 @@
   }
 }
 
+/* Super mentions (@/path) */
+.content-super-mention {
+  background: none;
+  border: none;
+  color: #c85;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.content-super-mention:hover {
+  color: #fc8;
+  text-decoration: underline;
+}
+
+.super-mention-prefix {
+  font-weight: 800;
+  color: #fa0;
+  letter-spacing: -0.05em;
+}
+
 /* Nostr mentions (@user) */
 .nostr-mention {
   color: #9a6;

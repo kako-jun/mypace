@@ -109,3 +109,68 @@ export async function publishEvent(event: Event): Promise<{ success: boolean; id
   }
   return res.json()
 }
+
+// Wikidata search
+export interface WikidataResult {
+  id: string
+  label: string
+  description: string
+  aliases: string[]
+}
+
+export async function searchWikidata(query: string, lang = 'ja'): Promise<WikidataResult[]> {
+  if (!query || query.length < 1) return []
+
+  const params = new URLSearchParams({ q: query, lang })
+  const res = await fetch(`${API_BASE}/api/wikidata/search?${params}`)
+  if (!res.ok) throw new Error('Failed to search Wikidata')
+  const data = await res.json()
+  return data.results || []
+}
+
+// Super mention path suggestion
+export interface SuperMentionSuggestion {
+  path: string
+  category: string
+  wikidataId: string | null
+  wikidataLabel: string | null
+  wikidataDescription: string | null
+  useCount: number
+}
+
+export async function getSuperMentionSuggestions(
+  prefix?: string,
+  category?: string,
+  limit = 10
+): Promise<SuperMentionSuggestion[]> {
+  const params = new URLSearchParams({ limit: String(limit) })
+  if (prefix) params.set('prefix', prefix)
+  if (category) params.set('category', category)
+
+  const res = await fetch(`${API_BASE}/api/super-mention/suggest?${params}`)
+  if (!res.ok) throw new Error('Failed to get suggestions')
+  const data = await res.json()
+  return data.suggestions || []
+}
+
+// Save super mention path
+export async function saveSuperMentionPath(
+  path: string,
+  category: string,
+  wikidataId?: string,
+  wikidataLabel?: string,
+  wikidataDescription?: string
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/super-mention/paths`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      path,
+      category,
+      wikidataId,
+      wikidataLabel,
+      wikidataDescription,
+    }),
+  })
+  if (!res.ok) throw new Error('Failed to save path')
+}

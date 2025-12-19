@@ -34,7 +34,12 @@ import {
 } from '../lib/utils'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
 import { hasTeaserTag, getTeaserContent, removeReadMoreLink, parseStickers } from '../lib/nostr/tags'
-import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
+import {
+  setHashtagClickHandler,
+  setSuperMentionClickHandler,
+  setImageClickHandler,
+  clearImageClickHandler,
+} from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers } from '../components/post'
 import { parseEmojiTags, Loading } from '../components/ui'
@@ -187,6 +192,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   useEffect(() => {
     applyThemeColors(getUIThemeColors())
     setHashtagClickHandler((tag) => navigateToTag(tag))
+    setSuperMentionClickHandler((path) => navigateToTag(path))
     setImageClickHandler(triggerLightBox)
     loadPost()
 

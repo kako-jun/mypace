@@ -36,3 +36,19 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- ALTER TABLE profiles ADD COLUMN websites TEXT;
 -- ALTER TABLE profiles ADD COLUMN lud16 TEXT;
 -- ALTER TABLE profiles ADD COLUMN emojis TEXT;
+
+-- Super mention paths table (for Wikidata mapping)
+CREATE TABLE IF NOT EXISTS super_mention_paths (
+  path TEXT PRIMARY KEY,              -- "/manga/ハンチョウ"
+  category TEXT NOT NULL,             -- "manga"
+  wikidata_id TEXT,                   -- "Q123456789" (nullable)
+  wikidata_label TEXT,                -- "1日外出録ハンチョウ"
+  wikidata_description TEXT,          -- "日本の漫画作品"
+  use_count INTEGER DEFAULT 1,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_super_mention_category ON super_mention_paths(category);
+CREATE INDEX IF NOT EXISTS idx_super_mention_wikidata ON super_mention_paths(wikidata_id);
+CREATE INDEX IF NOT EXISTS idx_super_mention_use_count ON super_mention_paths(use_count DESC);
