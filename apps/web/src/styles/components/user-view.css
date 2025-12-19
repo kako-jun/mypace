@@ -422,61 +422,65 @@
 .websites-editor {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .website-entry {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   align-items: center;
 }
 
-.website-entry input:first-child {
-  flex: 2;
-}
-
-.website-entry .website-label-input {
+.website-entry input {
   flex: 1;
-  min-width: 80px;
-}
-
-.website-remove-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
   background: var(--surface-secondary);
-  border: 2px solid var(--border);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-  flex-shrink: 0;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  outline: none;
 }
 
-.website-remove-btn:hover {
-  background: var(--error, #ff4444);
-  border-color: var(--error, #ff4444);
-  color: white;
+.website-entry input:focus {
+  border-color: var(--btn-primary-bg);
+}
+
+.website-entry input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.website-detected-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 50px;
+  padding: 0.25rem 0.5rem;
+  background: var(--surface-tertiary);
+  border-radius: 4px;
 }
 
 .website-add-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  background: var(--surface-secondary);
-  border: 2px dashed var(--border);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  justify-content: center;
+  gap: 0.35rem;
   width: fit-content;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--surface-secondary);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
 }
 
 .website-add-btn:hover {
-  background: var(--surface-hover);
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--btn-primary-bg);
+  color: var(--btn-primary-bg);
+  background: color-mix(in srgb, var(--btn-primary-bg) 10%, var(--surface-secondary));
 }
 
 .website-reorder {
@@ -490,20 +494,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
+  width: 20px;
+  height: 14px;
   background: var(--surface-secondary);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-light);
+  border-radius: 3px;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: all 0.15s ease;
+  outline: none;
 }
 
 .website-move-btn:hover:not(:disabled) {
-  background: var(--surface-hover);
-  color: var(--text-primary);
+  border-color: var(--btn-primary-bg);
+  color: var(--btn-primary-bg);
 }
 
 .website-move-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+.website-entry .icon-button {
+  color: var(--text-muted);
+}
+
+.website-entry .icon-button:hover {
+  color: var(--action-delete);
 }

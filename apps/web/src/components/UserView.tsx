@@ -285,17 +285,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   // Website editing helpers
   const handleWebsiteUrlChange = (index: number, url: string) => {
     const updated = [...editWebsites]
-    updated[index] = {
-      ...updated[index],
-      url,
-      label: updated[index].label || (url.trim() ? detectServiceLabel(url) : ''),
-    }
-    setEditWebsites(updated)
-  }
-
-  const handleWebsiteLabelChange = (index: number, label: string) => {
-    const updated = [...editWebsites]
-    updated[index] = { ...updated[index], label }
+    updated[index] = { url, label: '' }
     setEditWebsites(updated)
   }
 
@@ -509,15 +499,10 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
                       onChange={(val) => handleWebsiteUrlChange(index, val)}
                       placeholder="https://example.com"
                     />
-                    <Input
-                      value={w.label || ''}
-                      onChange={(val) => handleWebsiteLabelChange(index, val)}
-                      placeholder={w.url ? detectServiceLabel(w.url) : 'Label'}
-                      className="website-label-input"
-                    />
+                    {w.url.trim() && <span className="website-detected-label">{detectServiceLabel(w.url)}</span>}
                     <button
                       type="button"
-                      className="website-remove-btn"
+                      className="icon-button"
                       onClick={() => removeWebsite(index)}
                       aria-label="Remove website"
                     >
