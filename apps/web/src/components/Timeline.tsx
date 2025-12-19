@@ -33,7 +33,7 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
   }, [])
 
   // Extract filter values for easier access
-  // Note: mypace/showSNS/showBlog filtering is done server-side, langFilter is reserved for future
+  // Note: mypace/showSNS/showBlog/hideAds/hideNSFW/lang filtering is done server-side
   const {
     query,
     ngWords,
@@ -43,7 +43,9 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
     showSNS,
     showBlog,
     mypace: mypaceOnly,
-    lang: _langFilter,
+    lang = '',
+    hideAds = true,
+    hideNSFW = true,
   } = filters
 
   const {
@@ -73,7 +75,7 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
     handleDelete,
     getDisplayName,
     getAvatarUrl,
-  } = useTimeline({ mypaceOnly, showSNS, showBlog })
+  } = useTimeline({ mypaceOnly, showSNS, showBlog, hideAds, hideNSFW, lang })
 
   const handleEdit = useCallback(
     (event: Event) => {

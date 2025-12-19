@@ -15,7 +15,9 @@ export async function fetchTimeline(
   language = '',
   until = 0,
   showSNS = true,
-  showBlog = true
+  showBlog = true,
+  hideAds = true,
+  hideNSFW = true
 ): Promise<{ events: Event[]; source: string }> {
   const params = new URLSearchParams({ limit: String(limit) })
   if (since > 0) params.set('since', String(since))
@@ -29,6 +31,9 @@ export async function fetchTimeline(
   if (kindsList.length > 0) {
     params.set('kinds', kindsList.join(','))
   }
+  // Smart filters: send 0 when OFF (default is ON on server)
+  if (!hideAds) params.set('hideAds', '0')
+  if (!hideNSFW) params.set('hideNSFW', '0')
 
   const res = await fetch(`${API_BASE}/api/timeline?${params}`)
   if (!res.ok) throw new Error('Failed to fetch timeline')

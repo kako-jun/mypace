@@ -23,6 +23,83 @@ app.use(
 )
 
 const MYPACE_TAG = 'mypace'
+
+// Smart filter: Ad-related tags (スパマーは自らこれらのタグを付ける傾向がある)
+const AD_TAGS = [
+  'bitcoin',
+  'btc',
+  'crypto',
+  'eth',
+  'ethereum',
+  'airdrop',
+  'nft',
+  'ad',
+  'sponsored',
+  'giveaway',
+  'promo',
+]
+// キーワードは控えめに（誤検出を避ける）- 明らかなスパムフレーズのみ
+const AD_KEYWORDS = ['airdrop', 'giveaway', 'free btc', 'free bitcoin']
+
+// Smart filter: NSFW-related tags (NIP-36準拠の投稿者が自己申告で使うタグ)
+const NSFW_TAGS = ['nsfw', 'r18', 'r-18', 'adult', 'sensitive', 'nude', 'porn', 'xxx', 'hentai', 'content-warning']
+// キーワードは使わない - 責任ある投稿者が警告として書く言葉であり、実際のスパマーは使わない
+const NSFW_KEYWORDS: string[] = []
+
+// URLの数をカウント
+function countUrls(text: string): number {
+  const urlPattern = /https?:\/\/[^\s]+/g
+  const matches = text.match(urlPattern)
+  return matches ? matches.length : 0
+}
+
+// スマートフィルタ: 広告/NSFWコンテンツをフィルタ
+function filterBySmartFilters<T extends { content: string; tags: string[][] }>(
+  events: T[],
+  hideAds: boolean,
+  hideNSFW: boolean
+): T[] {
+  if (!hideAds && !hideNSFW) return events
+
+  return events.filter((e) => {
+    const contentLower = e.content.toLowerCase()
+    const eventTags = e.tags
+      .filter((t) => t[0] === 't')
+      .map((t) => t[1]?.toLowerCase())
+      .filter(Boolean)
+
+    // 広告フィルタ
+    if (hideAds) {
+      // タグチェック
+      if (eventTags.some((tag) => AD_TAGS.includes(tag))) {
+        return false
+      }
+      // キーワードチェック（本文）
+      if (AD_KEYWORDS.some((kw) => contentLower.includes(kw.toLowerCase()))) {
+        return false
+      }
+      // リンクが多すぎる（11個以上）はスパム判定
+      if (countUrls(e.content) > 10) {
+        return false
+      }
+    }
+
+    // NSFWフィルタ
+    if (hideNSFW) {
+      // タグチェック
+      if (eventTags.some((tag) => NSFW_TAGS.includes(tag))) {
+        return false
+      }
+      // キーワードチェック（本文）
+      if (NSFW_KEYWORDS.some((kw) => contentLower.includes(kw.toLowerCase()))) {
+        return false
+      }
+    }
+
+    return true
+  })
+}
+
 const RELAYS = ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.band']
 
 // 言語判定（簡易版）
@@ -140,6 +217,9 @@ app.get('/api/timeline', async (c) => {
   const until = Number(c.req.query('until')) || 0
   const showAll = c.req.query('all') === '1'
   const langFilter = c.req.query('lang') || ''
+  // Smart filters: default to hide (hideAds=1, hideNSFW=1)
+  const hideAds = c.req.query('hideAds') !== '0'
+  const hideNSFW = c.req.query('hideNSFW') !== '0'
   // Parse kinds parameter (default: 1 and 30023)
   const kindsParam = c.req.query('kinds')
   const kinds = kindsParam
@@ -172,11 +252,15 @@ app.get('/api/timeline', async (c) => {
     console.log('Got events from relay:', events.length)
     events.sort((a, b) => b.created_at - a.created_at)
 
+    // スマートフィルタ（広告/NSFW）
+    events = filterBySmartFilters(events, hideAds, hideNSFW)
+
     // 言語フィルタ（ユーザーの主要言語も考慮）
     if (langFilter) {
       events = filterByLanguage(events, langFilter)
-      events = events.slice(0, limit)
     }
+
+    events = events.slice(0, limit)
 
     return c.json({ events, source: 'relay' })
   } catch (e) {

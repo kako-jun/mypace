@@ -34,6 +34,9 @@ interface UseTimelineOptions {
   mypaceOnly?: boolean // mypaceタグでフィルタリング（デフォルト: true）
   showSNS?: boolean // Show kind 1 (short notes) (デフォルト: true)
   showBlog?: boolean // Show kind 30023 (long-form articles) (デフォルト: true)
+  hideAds?: boolean // Hide ad/spam content (デフォルト: true)
+  hideNSFW?: boolean // Hide NSFW content (デフォルト: true)
+  lang?: string // Language filter (デフォルト: '')
 }
 
 interface UseTimelineResult {
@@ -66,7 +69,15 @@ interface UseTimelineResult {
 }
 
 export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult {
-  const { authorPubkey, mypaceOnly = true, showSNS = true, showBlog = true } = options
+  const {
+    authorPubkey,
+    mypaceOnly = true,
+    showSNS = true,
+    showBlog = true,
+    hideAds = true,
+    hideNSFW = true,
+    lang = '',
+  } = options
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [profiles, setProfiles] = useState<ProfileCache>({})
@@ -190,7 +201,17 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         notes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT)
       } else {
         // mypace投稿を取得（タグ/キーワードはクライアント側でフィルタリング）
-        notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, mypaceOnly, '', 0, showSNS, showBlog)
+        notes = await fetchEvents(
+          LIMITS.TIMELINE_FETCH_LIMIT,
+          0,
+          mypaceOnly,
+          lang,
+          0,
+          showSNS,
+          showBlog,
+          hideAds,
+          hideNSFW
+        )
       }
 
       const initialItems: TimelineItem[] = notes.map((note) => ({ event: note }))
@@ -467,7 +488,17 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         newNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime)
       } else {
         // mypace投稿の新着をチェック
-        newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime, mypaceOnly, '', 0, showSNS, showBlog)
+        newNotes = await fetchEvents(
+          LIMITS.TIMELINE_FETCH_LIMIT,
+          latestEventTime,
+          mypaceOnly,
+          lang,
+          0,
+          showSNS,
+          showBlog,
+          hideAds,
+          hideNSFW
+        )
       }
 
       // 既存のイベントIDを除外
@@ -556,10 +587,12 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
           LIMITS.TIMELINE_FETCH_LIMIT,
           0,
           mypaceOnly,
-          '',
+          lang,
           oldestEventTime, // until: この時刻より古いものを取得
           showSNS,
-          showBlog
+          showBlog,
+          hideAds,
+          hideNSFW
         )
       }
 
@@ -633,10 +666,12 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
             LIMITS.TIMELINE_FETCH_LIMIT,
             gap.since, // since: この時刻より新しいもの
             mypaceOnly,
-            '',
+            lang,
             gap.until, // until: この時刻より古いもの
             showSNS,
-            showBlog
+            showBlog,
+            hideAds,
+            hideNSFW
           )
         }
 
