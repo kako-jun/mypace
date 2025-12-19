@@ -1,5 +1,6 @@
 import { renderContent } from '../../lib/content-parser'
 import { PostEmbeds } from '../embed'
+import { TextButton } from '../ui'
 import { LIMITS } from '../../lib/constants'
 import { hasTeaserTag as checkTeaserTag, removeReadMoreLink } from '../../lib/nostr/tags'
 import type { EmojiTag, Profile, Event } from '../../types'
@@ -38,23 +39,17 @@ export function PostContent({
       {shouldTruncate ? (
         <>
           {renderContent(content.slice(0, LIMITS.PREVIEW_TRUNCATE_LENGTH), emojis, profiles)}
-          <button
-            className="read-more-btn text-outlined text-outlined-button text-outlined-primary"
-            onClick={onReadMore}
-          >
+          <TextButton variant="primary" className="read-more-btn" onClick={onReadMore}>
             … READ MORE
-          </button>
+          </TextButton>
         </>
       ) : (
         <>
           {renderContent(displayContent, emojis, profiles)}
           {hasTeaser && truncate && (
-            <button
-              className="read-more-btn text-outlined text-outlined-button text-outlined-primary"
-              onClick={onReadMore}
-            >
+            <TextButton variant="primary" className="read-more-btn" onClick={onReadMore}>
               … READ MORE
-            </button>
+            </TextButton>
           )}
         </>
       )}

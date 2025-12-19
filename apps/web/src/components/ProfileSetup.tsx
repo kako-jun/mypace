@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getCurrentPubkey, createProfileEvent } from '../lib/nostr/events'
 import type { Profile } from '../types'
 import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
-import { Button, Input } from '../components/ui'
+import { Button, Input, ErrorMessage } from '../components/ui'
 import { getLocalProfile, setLocalProfile, getErrorMessage } from '../lib/utils'
 
 interface Props {
@@ -106,7 +106,7 @@ export function ProfileSetup({ onProfileSet }: Props) {
           {saving ? 'Saving...' : hasName ? 'Update' : 'Set Name'}
         </Button>
       </div>
-      {error && <p className="error">{error}</p>}
+      <ErrorMessage>{error}</ErrorMessage>
     </div>
   )
 }

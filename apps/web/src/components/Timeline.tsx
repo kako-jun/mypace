@@ -2,7 +2,7 @@ import { useState, useCallback, Fragment, useEffect } from 'react'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
 import { setHashtagClickHandler, setSuperMentionClickHandler } from '../lib/content-parser'
 import { TimelinePostCard } from '../components/timeline'
-import { Loading, Button } from './ui'
+import { Loading, Button, ErrorMessage } from './ui'
 import { useTimeline } from '../hooks'
 import {
   shareOrCopy,
@@ -164,12 +164,12 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
 
   if (error) {
     return (
-      <div className="error-box">
+      <ErrorMessage variant="box">
         <p>{error}</p>
         <Button size="md" onClick={reload}>
           Retry
         </Button>
-      </div>
+      </ErrorMessage>
     )
   }
 

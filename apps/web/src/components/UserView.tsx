@@ -12,7 +12,7 @@ import {
   copyToClipboard,
   verifyNip05,
 } from '../lib/utils'
-import { Button, Loading } from '../components/ui'
+import { Button, Loading, BackButton, ErrorMessage } from '../components/ui'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
 import {
   setHashtagClickHandler,
@@ -172,12 +172,12 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
 
   if (error) {
     return (
-      <div className="error-box">
+      <ErrorMessage variant="box">
         <p>{error}</p>
         <Button size="md" onClick={handleBack}>
           Back to Timeline
         </Button>
-      </div>
+      </ErrorMessage>
     )
   }
 
@@ -187,9 +187,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
 
   return (
     <div className="user-view">
-      <button className="back-button text-outlined text-outlined-button" onClick={handleBack}>
-        ← BACK
-      </button>
+      <BackButton onClick={handleBack} />
 
       {profileLoading ? (
         <div className="user-profile-card loading">Loading profile...</div>

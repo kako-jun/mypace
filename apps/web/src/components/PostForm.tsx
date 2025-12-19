@@ -20,7 +20,7 @@ import {
 } from '../lib/utils'
 import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../lib/constants'
 import { ImageDropZone, AttachedImages, PostPreview } from '../components/post'
-import { Avatar, Icon } from './ui'
+import { Avatar, Icon, TextButton, ErrorMessage } from './ui'
 import { setBoolean } from '../lib/utils/storage'
 import { StickerPicker } from './StickerPicker'
 import { StickerList } from './StickerList'
@@ -340,13 +340,9 @@ export function PostForm({
         </button>
         <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
         <StickerPicker onAddSticker={handleAddSticker} />
-        <button
-          type="button"
-          className="mode-toggle-corner text-outlined text-outlined-button text-outlined-primary"
-          onClick={handleLongModeToggle}
-        >
+        <TextButton variant="primary" className="mode-toggle-corner" onClick={handleLongModeToggle}>
           LONG ↗
-        </button>
+        </TextButton>
         <button
           type="button"
           className="minimize-button"
@@ -385,7 +381,7 @@ export function PostForm({
         onCancel={handleCancel}
       />
 
-      {error && <p className="error">{error}</p>}
+      <ErrorMessage>{error}</ErrorMessage>
     </form>
   )
 }

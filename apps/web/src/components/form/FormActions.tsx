@@ -1,3 +1,4 @@
+import { TextButton } from '../ui'
 import { LIMITS } from '../../lib/constants'
 
 interface FormActionsProps {
@@ -35,13 +36,13 @@ export function FormActions({
   return (
     <div className="post-actions">
       <div className="post-actions-left">
-        <button
-          type="button"
-          className={`preview-toggle text-outlined text-outlined-button text-outlined-primary ${showPreview ? 'active' : ''}`}
+        <TextButton
+          variant="primary"
+          className={`preview-toggle ${showPreview ? 'active' : ''}`}
           onClick={() => onShowPreviewChange(!showPreview)}
         >
           {showPreview ? 'HIDE' : 'PREVIEW'}
-        </button>
+        </TextButton>
         <span className={`char-count ${content.length > LIMITS.FOLD_THRESHOLD ? 'char-count-fold' : ''}`}>
           {content.length}/{LIMITS.MAX_POST_LENGTH}
           {content.length > LIMITS.FOLD_THRESHOLD && ' (folded)'}

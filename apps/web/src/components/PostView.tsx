@@ -31,7 +31,7 @@ import {
 } from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers } from '../components/post'
-import { parseEmojiTags, Loading } from '../components/ui'
+import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton } from '../components/ui'
 import { useShare, useDeleteConfirm, usePostViewData } from '../hooks'
 import type { Profile, ReactionData } from '../types'
 
@@ -251,12 +251,10 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   if (error || !event) {
     return (
       <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
-        <div className="error-box">
+        <ErrorMessage variant="box">
           <p>{error || 'Post not found'}</p>
-          <button className="text-outlined text-outlined-button" onClick={handleBack}>
-            Back to Timeline
-          </button>
-        </div>
+          <TextButton onClick={handleBack}>Back to Timeline</TextButton>
+        </ErrorMessage>
       </div>
     )
   }
@@ -271,10 +269,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
   return (
     <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
-      <button className="back-button text-outlined text-outlined-button" onClick={handleBack}>
-        <span className="back-button-icon">{isModal ? '×' : '←'}</span>
-        <span>{isModal ? 'CLOSE' : 'BACK'}</span>
-      </button>
+      <BackButton onClick={handleBack} icon={isModal ? '×' : '←'} label={isModal ? 'CLOSE' : 'BACK'} />
 
       <article className={`post-card post-card-large ${themeProps.className}`} style={themeProps.style}>
         <PostHeader

@@ -20,6 +20,7 @@ import {
   importMuteList,
 } from '../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS } from '../lib/constants'
+import { TextButton } from './ui'
 import {
   ProfileSection,
   ThemeSection,
@@ -151,9 +152,9 @@ export function Settings() {
 
   if (!open) {
     return (
-      <button className="settings-toggle text-outlined text-outlined-button" onClick={() => setOpen(true)}>
+      <TextButton className="settings-toggle" onClick={() => setOpen(true)}>
         SETTINGS
-      </button>
+      </TextButton>
     )
   }
 

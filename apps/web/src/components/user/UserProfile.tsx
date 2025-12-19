@@ -1,5 +1,4 @@
-import { Icon } from '../ui'
-import { Avatar } from '../ui'
+import { Icon, Avatar, TextButton } from '../ui'
 import { getWebsites, getWebsiteIcon } from '../../lib/utils'
 import { nip19 } from 'nostr-tools'
 import type { Profile, ThemeColors } from '../../types'
@@ -72,12 +71,9 @@ export function UserProfile({
             )}
           </div>
           {isOwnProfile && (
-            <button
-              className="edit-button text-outlined text-outlined-button text-outlined-primary"
-              onClick={onEditClick}
-            >
+            <TextButton variant="primary" className="edit-button" onClick={onEditClick}>
               EDIT
-            </button>
+            </TextButton>
           )}
         </div>
 

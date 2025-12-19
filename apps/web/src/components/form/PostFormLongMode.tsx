@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import type { ThemeColors, EmojiTag, Sticker, Event } from '../../types'
 import { ImageDropZone, AttachedImages, PostPreview } from '../post'
 import { LongModeEditor } from '../LongModeEditor'
-import { Toggle, Avatar } from '../ui'
+import { Toggle, Avatar, TextButton, ErrorMessage } from '../ui'
 import { StickerPicker } from '../StickerPicker'
 import { StickerList } from '../StickerList'
 import { FormActions } from './FormActions'
@@ -72,13 +72,9 @@ export function PostFormLongMode({
 
   return (
     <div className={`long-mode-container ${showPreview ? 'with-preview' : 'no-preview'}`}>
-      <button
-        type="button"
-        className="long-mode-exit-button text-outlined text-outlined-button text-outlined-primary"
-        onClick={onLongModeToggle}
-      >
+      <TextButton variant="primary" className="long-mode-exit-button" onClick={onLongModeToggle}>
         ↙ SHORT
-      </button>
+      </TextButton>
 
       <div className="long-mode-editor-pane">
         <form
@@ -123,7 +119,7 @@ export function PostFormLongMode({
             onCancel={onCancel}
           />
 
-          {error && <p className="error">{error}</p>}
+          <ErrorMessage>{error}</ErrorMessage>
         </form>
       </div>
 

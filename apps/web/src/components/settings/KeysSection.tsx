@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { importNsec, saveSecretKey, clearSecretKey } from '../../lib/nostr/keys'
-import { Button, Input } from '../ui'
+import { Button, Input, ErrorMessage } from '../ui'
 import { copyToClipboard, removeItem, removeLocalProfile } from '../../lib/utils'
 import { STORAGE_KEYS } from '../../lib/constants'
 import { useTemporaryFlag } from '../../hooks'
@@ -118,7 +118,7 @@ export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps
             Import
           </Button>
         </div>
-        {error && <p className="error">{error}</p>}
+        <ErrorMessage>{error}</ErrorMessage>
       </div>
 
       <div className="settings-section danger">

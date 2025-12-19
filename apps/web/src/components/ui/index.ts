@@ -1,5 +1,8 @@
 export { default as Avatar } from './Avatar'
 export { default as Button } from './Button'
+export { default as TextButton } from './TextButton'
+export { default as BackButton } from './BackButton'
+export { default as ErrorMessage } from './ErrorMessage'
 export { default as Input } from './Input'
 export { default as ColorPicker } from './ColorPicker'
 export { default as Toggle } from './Toggle'

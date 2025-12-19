@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Avatar, Icon, Button, Input } from '../ui'
+import { Avatar, Icon, Button, Input, ErrorMessage } from '../ui'
 import { useImageUpload, useDragDrop, useTemporaryFlag, useWebsiteEditor } from '../../hooks'
 import { publishEvent } from '../../lib/nostr/relay'
 import { createProfileEvent } from '../../lib/nostr/events'
@@ -253,7 +253,7 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
           <Input value={editLud16} onChange={setEditLud16} placeholder="you@getalby.com" />
         </div>
 
-        {editError && <p className="error">{editError}</p>}
+        <ErrorMessage>{editError}</ErrorMessage>
         {editSaved && <p className="success">Saved!</p>}
 
         <div className="edit-actions">

@@ -1,3 +1,4 @@
+import { TextButton } from '../ui'
 import DeleteConfirmDialog from './DeleteConfirmDialog'
 
 interface EditDeleteButtonsProps {
@@ -21,20 +22,12 @@ export default function EditDeleteButtons({
 
   return (
     <>
-      <button
-        className="edit-button text-outlined text-outlined-button text-outlined-primary"
-        onClick={onEdit}
-        aria-label="Edit this post"
-      >
+      <TextButton variant="primary" className="edit-button" onClick={onEdit} aria-label="Edit this post">
         EDIT
-      </button>
-      <button
-        className="delete-button text-outlined text-outlined-button text-outlined-warning"
-        onClick={onDelete}
-        aria-label="Delete this post"
-      >
+      </TextButton>
+      <TextButton variant="warning" className="delete-button" onClick={onDelete} aria-label="Delete this post">
         DELETE
-      </button>
+      </TextButton>
     </>
   )
 }
