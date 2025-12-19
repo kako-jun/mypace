@@ -15,6 +15,9 @@ import {
   setLocalProfile,
   getErrorMessage,
   verifyNip05,
+  detectServiceLabel,
+  getWebsites,
+  getWebsiteIcon,
 } from '../lib/utils'
 import { Avatar, Icon, Button, Input, Loading } from '../components/ui'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
@@ -24,7 +27,7 @@ import { TimelinePostCard } from '../components/timeline'
 import { useTimeline, useDragDrop, useTemporaryFlag } from '../hooks'
 import { uploadImage } from '../lib/upload'
 import { nip19 } from 'nostr-tools'
-import type { Event, Profile } from '../types'
+import type { Event, Profile, WebsiteEntry } from '../types'
 
 interface UserViewProps {
   pubkey: string
@@ -70,7 +73,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const [editAbout, setEditAbout] = useState('')
   const [editPicture, setEditPicture] = useState('')
   const [editBanner, setEditBanner] = useState('')
-  const [editWebsite, setEditWebsite] = useState('')
+  const [editWebsites, setEditWebsites] = useState<WebsiteEntry[]>([])
   const [editNip05, setEditNip05] = useState('')
   const [editLud16, setEditLud16] = useState('')
   const [saving, setSaving] = useState(false)
@@ -83,7 +86,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     about: '',
     picture: '',
     banner: '',
-    website: '',
+    websites: [] as WebsiteEntry[],
     nip05: '',
     lud16: '',
   })
@@ -185,7 +188,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     const initialAbout = profile?.about || ''
     const initialPicture = profile?.picture || ''
     const initialBanner = profile?.banner || ''
-    const initialWebsite = profile?.website || ''
+    const initialWebsites = getWebsites(profile)
     const initialNip05 = profile?.nip05 || ''
     const initialLud16 = profile?.lud16 || ''
 
@@ -194,7 +197,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
       about: initialAbout,
       picture: initialPicture,
       banner: initialBanner,
-      website: initialWebsite,
+      websites: initialWebsites,
       nip05: initialNip05,
       lud16: initialLud16,
     }
@@ -203,11 +206,19 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     setEditAbout(initialAbout)
     setEditPicture(initialPicture)
     setEditBanner(initialBanner)
-    setEditWebsite(initialWebsite)
+    setEditWebsites(initialWebsites.length > 0 ? initialWebsites : [{ url: '', label: '' }])
     setEditNip05(initialNip05)
     setEditLud16(initialLud16)
     setEditError('')
     setEditMode(true)
+  }
+
+  // Check if websites have been modified
+  const websitesChanged = () => {
+    const initial = editInitialRef.current.websites
+    const current = editWebsites.filter((w) => w.url.trim())
+    if (initial.length !== current.length) return true
+    return current.some((w, i) => w.url !== initial[i]?.url || w.label !== initial[i]?.label)
   }
 
   // Check if profile has been modified
@@ -217,7 +228,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
       editAbout !== editInitialRef.current.about ||
       editPicture !== editInitialRef.current.picture ||
       editBanner !== editInitialRef.current.banner ||
-      editWebsite !== editInitialRef.current.website ||
+      websitesChanged() ||
       editNip05 !== editInitialRef.current.nip05 ||
       editLud16 !== editInitialRef.current.lud16)
 
@@ -237,13 +248,22 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     setEditError('')
 
     try {
+      // Filter out empty websites and ensure labels
+      const validWebsites = editWebsites
+        .filter((w) => w.url.trim())
+        .map((w) => ({
+          url: w.url.trim(),
+          label: w.label?.trim() || detectServiceLabel(w.url.trim()),
+        }))
+
       const newProfile: Profile = {
         name: editName.trim(),
         display_name: editName.trim(),
         picture: editPicture.trim() || undefined,
         banner: editBanner.trim() || undefined,
         about: editAbout.trim() || undefined,
-        website: editWebsite.trim() || undefined,
+        website: validWebsites[0]?.url || undefined, // 互換性: 最初のURLをwebsiteにも設定
+        websites: validWebsites.length > 0 ? validWebsites : undefined,
         nip05: editNip05.trim() || undefined,
         lud16: editLud16.trim() || undefined,
       }
@@ -260,6 +280,45 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     } finally {
       setSaving(false)
     }
+  }
+
+  // Website editing helpers
+  const handleWebsiteUrlChange = (index: number, url: string) => {
+    const updated = [...editWebsites]
+    updated[index] = {
+      ...updated[index],
+      url,
+      label: updated[index].label || (url.trim() ? detectServiceLabel(url) : ''),
+    }
+    setEditWebsites(updated)
+  }
+
+  const handleWebsiteLabelChange = (index: number, label: string) => {
+    const updated = [...editWebsites]
+    updated[index] = { ...updated[index], label }
+    setEditWebsites(updated)
+  }
+
+  const addWebsite = () => {
+    if (editWebsites.length < 10) {
+      setEditWebsites([...editWebsites, { url: '', label: '' }])
+    }
+  }
+
+  const removeWebsite = (index: number) => {
+    if (editWebsites.length > 1) {
+      setEditWebsites(editWebsites.filter((_, i) => i !== index))
+    } else {
+      setEditWebsites([{ url: '', label: '' }])
+    }
+  }
+
+  const moveWebsite = (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1
+    if (newIndex < 0 || newIndex >= editWebsites.length) return
+    const updated = [...editWebsites]
+    ;[updated[index], updated[newIndex]] = [updated[newIndex], updated[index]]
+    setEditWebsites(updated)
   }
 
   // Avatar upload
@@ -421,8 +480,57 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
               />
             </div>
             <div className="edit-field">
-              <label>Website</label>
-              <Input value={editWebsite} onChange={setEditWebsite} placeholder="https://example.com" />
+              <label>Websites</label>
+              <div className="websites-editor">
+                {editWebsites.map((w, index) => (
+                  <div key={index} className="website-entry">
+                    <div className="website-reorder">
+                      <button
+                        type="button"
+                        className="website-move-btn"
+                        onClick={() => moveWebsite(index, 'up')}
+                        disabled={index === 0}
+                        aria-label="Move up"
+                      >
+                        <Icon name="ChevronUp" size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        className="website-move-btn"
+                        onClick={() => moveWebsite(index, 'down')}
+                        disabled={index === editWebsites.length - 1}
+                        aria-label="Move down"
+                      >
+                        <Icon name="ChevronDown" size={14} />
+                      </button>
+                    </div>
+                    <Input
+                      value={w.url}
+                      onChange={(val) => handleWebsiteUrlChange(index, val)}
+                      placeholder="https://example.com"
+                    />
+                    <Input
+                      value={w.label || ''}
+                      onChange={(val) => handleWebsiteLabelChange(index, val)}
+                      placeholder={w.url ? detectServiceLabel(w.url) : 'Label'}
+                      className="website-label-input"
+                    />
+                    <button
+                      type="button"
+                      className="website-remove-btn"
+                      onClick={() => removeWebsite(index)}
+                      aria-label="Remove website"
+                    >
+                      <Icon name="X" size={16} />
+                    </button>
+                  </div>
+                ))}
+                {editWebsites.length < 10 && (
+                  <button type="button" className="website-add-btn" onClick={addWebsite}>
+                    <Icon name="Plus" size={14} /> Add URL
+                  </button>
+                )}
+              </div>
             </div>
             <div className="edit-field">
               <label>NIP-05</label>
@@ -494,16 +602,18 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
             {profile?.about && <p className="user-about">{profile.about}</p>}
 
             <div className="user-links">
-              {profile?.website && (
+              {getWebsites(profile).map((w, i) => (
                 <a
-                  href={profile.website.match(/^https?:\/\//) ? profile.website : `https://${profile.website}`}
+                  key={i}
+                  href={w.url.match(/^https?:\/\//) ? w.url : `https://${w.url}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="user-link"
                 >
-                  <Icon name="Globe" size={14} /> {profile.website.replace(/^https?:\/\//, '')}
+                  <Icon name={getWebsiteIcon(w.label)} size={14} />{' '}
+                  {w.label !== 'Website' ? w.label : w.url.replace(/^https?:\/\//, '')}
                 </a>
-              )}
+              ))}
               {profile?.lud16 && (
                 <span className="user-link user-lightning">
                   <Icon name="Zap" size={14} /> {profile.lud16}

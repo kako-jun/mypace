@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   nip05 TEXT,
   banner TEXT,
   website TEXT,
+  websites TEXT,
   lud16 TEXT,
   emojis TEXT,
   cached_at INTEGER NOT NULL
@@ -32,5 +33,6 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- Migration: Add new profile columns (run manually if table exists)
 -- ALTER TABLE profiles ADD COLUMN banner TEXT;
 -- ALTER TABLE profiles ADD COLUMN website TEXT;
+-- ALTER TABLE profiles ADD COLUMN websites TEXT;
 -- ALTER TABLE profiles ADD COLUMN lud16 TEXT;
 -- ALTER TABLE profiles ADD COLUMN emojis TEXT;

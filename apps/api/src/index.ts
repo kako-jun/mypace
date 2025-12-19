@@ -381,7 +381,7 @@ app.get('/api/profiles', async (c) => {
     const cached = await db
       .prepare(
         `
-      SELECT pubkey, name, display_name, picture, about, nip05, banner, website, lud16, emojis
+      SELECT pubkey, name, display_name, picture, about, nip05, banner, website, websites, lud16, emojis
       FROM profiles WHERE pubkey IN (${placeholders}) AND cached_at > ?
     `
       )
@@ -397,6 +397,7 @@ app.get('/api/profiles', async (c) => {
         nip05: row.nip05,
         banner: row.banner,
         website: row.website,
+        websites: row.websites ? JSON.parse(row.websites as string) : undefined,
         lud16: row.lud16,
         emojis: row.emojis ? JSON.parse(row.emojis as string) : [],
       }
@@ -436,8 +437,8 @@ app.get('/api/profiles', async (c) => {
           await db
             .prepare(
               `
-            INSERT OR REPLACE INTO profiles (pubkey, name, display_name, picture, about, nip05, banner, website, lud16, emojis, cached_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT OR REPLACE INTO profiles (pubkey, name, display_name, picture, about, nip05, banner, website, websites, lud16, emojis, cached_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `
             )
             .bind(
@@ -449,6 +450,7 @@ app.get('/api/profiles', async (c) => {
               profile.nip05,
               profile.banner,
               profile.website,
+              profile.websites ? JSON.stringify(profile.websites) : null,
               profile.lud16,
               JSON.stringify(emojis),
               now

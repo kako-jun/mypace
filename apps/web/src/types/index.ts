@@ -15,6 +15,12 @@ export interface EmojiTag {
   url: string
 }
 
+// Website entry for multiple URLs
+export interface WebsiteEntry {
+  url: string
+  label?: string
+}
+
 // Profile types
 export interface Profile {
   name?: string
@@ -23,7 +29,8 @@ export interface Profile {
   about?: string
   nip05?: string
   banner?: string
-  website?: string
+  website?: string // 互換性のため維持（他クライアント用）
+  websites?: WebsiteEntry[] // 複数URL（MyPace拡張）
   lud16?: string
   emojis?: EmojiTag[]
 }
