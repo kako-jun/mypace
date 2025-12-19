@@ -15,7 +15,7 @@ export default function App() {
 
   // Initialize router navigation utilities
   useEffect(() => {
-    initializeNavigation(navigate, () => location)
+    initializeNavigation(navigate, location)
   }, [navigate, location])
 
   // Check for background location (modal mode)
