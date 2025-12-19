@@ -13,6 +13,7 @@
   border: 2px solid var(--border-card);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
   color: var(--text-primary);
+  overflow: visible; /* Allow stickers to extend beyond card */
 }
 
 /* Folded corner effect */
@@ -127,4 +128,30 @@
   color: var(--text-muted);
   margin-bottom: 0.5rem;
   padding-bottom: 0.25rem;
+}
+
+/* ===========================================
+   Stickers
+   =========================================== */
+
+.post-sticker {
+  position: absolute;
+  pointer-events: none; /* Allow clicking through stickers */
+  z-index: 10;
+  max-width: 50%; /* Safety limit */
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+  animation: sticker-appear 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes sticker-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotate(-10deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
 }

@@ -33,10 +33,10 @@ import {
   applyThemeColors,
 } from '../lib/utils'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
-import { hasTeaserTag, getTeaserContent, removeReadMoreLink } from '../lib/nostr/tags'
+import { hasTeaserTag, getTeaserContent, removeReadMoreLink, parseStickers } from '../lib/nostr/tags'
 import { setHashtagClickHandler, setImageClickHandler, clearImageClickHandler } from '../lib/content-parser'
 import { LightBox, triggerLightBox } from './LightBox'
-import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent } from '../components/post'
+import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers } from '../components/post'
 import { parseEmojiTags, Loading, Button } from '../components/ui'
 import { useShare, useDeleteConfirm } from '../hooks'
 import type { Event, Profile, ReactionData } from '../types'
@@ -375,6 +375,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
   const isMyPost = myPubkey === event.pubkey
   const themeColors = getEventThemeColors(event)
+  const stickers = parseStickers(event.tags)
 
   // Merge fold tag content for full display
   const fullContent = hasTeaserTag(event)
@@ -399,7 +400,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
           emojis={profile?.emojis}
           eventKind={event.kind}
         />
-
         <div className="post-content post-content-full">
           <PostContent
             content={fullContent}
@@ -407,9 +407,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
             profiles={{ ...(profile ? { [event.pubkey]: profile } : {}), ...replyProfiles }}
           />
         </div>
-
         {deletedId === event.id && <p className="success">Deleted!</p>}
-
         {deletedId !== event.id && (
           <div className="post-footer">
             <PostActions
@@ -441,6 +439,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
             )}
           </div>
         )}
+        <PostStickers stickers={stickers} />{' '}
       </article>
 
       {replies.count > 0 && (

@@ -109,3 +109,11 @@ export interface FilterPreset {
   filters: SearchFilters
   createdAt: number // timestamp
 }
+
+// Sticker types
+export interface Sticker {
+  url: string // Image URL
+  x: number // Position from left (0-100%)
+  y: number // Position from top (0-100%)
+  size: number // Width (5-50%)
+}

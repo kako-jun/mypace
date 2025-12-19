@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Icon, parseEmojiTags } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
-import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies, PostContent } from '../post'
+import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies, PostContent, PostStickers } from '../post'
 import { cachePost, cacheProfile, navigateToPostModal, navigateToUser } from '../../lib/utils'
+import { parseStickers } from '../../lib/nostr/tags'
 import { useDeleteConfirm } from '../../hooks'
 import type { Event, ReactionData, ReplyData, RepostData, ProfileCache } from '../../types'
 
@@ -55,6 +56,7 @@ export default function TimelinePostCard({
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
 
   const themeProps = getThemeCardProps(getEventThemeColors(event))
+  const stickers = parseStickers(event.tags)
 
   const handleCardClick = (e: React.MouseEvent<HTMLElement>) => {
     const target = e.target as HTMLElement
@@ -150,6 +152,8 @@ export default function TimelinePostCard({
           getAvatarUrl={getAvatarUrl}
         />
       )}
+
+      <PostStickers stickers={stickers} />
     </article>
   )
 }
