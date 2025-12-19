@@ -13,13 +13,22 @@ export async function fetchTimeline(
   since = 0,
   mypaceOnly = true,
   language = '',
-  until = 0
+  until = 0,
+  showSNS = true,
+  showBlog = true
 ): Promise<{ events: Event[]; source: string }> {
   const params = new URLSearchParams({ limit: String(limit) })
   if (since > 0) params.set('since', String(since))
   if (until > 0) params.set('until', String(until))
   if (!mypaceOnly) params.set('all', '1')
   if (language) params.set('lang', language)
+  // Set kinds parameter based on showSNS and showBlog
+  const kindsList: number[] = []
+  if (showSNS) kindsList.push(1)
+  if (showBlog) kindsList.push(30023)
+  if (kindsList.length > 0) {
+    params.set('kinds', kindsList.join(','))
+  }
 
   const res = await fetch(`${API_BASE}/api/timeline?${params}`)
   if (!res.ok) throw new Error('Failed to fetch timeline')

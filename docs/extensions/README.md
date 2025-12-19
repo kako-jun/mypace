@@ -38,6 +38,7 @@ MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装し
 | 機能 | ドキュメント | 概要 |
 |------|-------------|------|
 | 設定エクスポート | [settings-export.md](./settings-export.md) | テーマ設定の保存・復元 |
+| Kind Filter | [kind-filter.md](./kind-filter.md) | SNS/ブログの表示切替 |
 
 ## データフロー
 

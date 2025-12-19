@@ -16,10 +16,12 @@ export async function fetchEvents(
   since = 0,
   mypaceOnly = true,
   language = '',
-  until = 0
+  until = 0,
+  showSNS = true,
+  showBlog = true
 ): Promise<Event[]> {
   try {
-    const result = await api.fetchTimeline(limit, since, mypaceOnly, language, until)
+    const result = await api.fetchTimeline(limit, since, mypaceOnly, language, until, showSNS, showBlog)
     return result.events
   } catch (e) {
     console.error('Failed to fetch events:', e)

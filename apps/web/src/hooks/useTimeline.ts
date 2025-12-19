@@ -32,6 +32,8 @@ interface GapInfo {
 interface UseTimelineOptions {
   authorPubkey?: string // 特定ユーザーの投稿のみ取得
   mypaceOnly?: boolean // mypaceタグでフィルタリング（デフォルト: true）
+  showSNS?: boolean // Show kind 1 (short notes) (デフォルト: true)
+  showBlog?: boolean // Show kind 30023 (long-form articles) (デフォルト: true)
 }
 
 interface UseTimelineResult {
@@ -64,7 +66,7 @@ interface UseTimelineResult {
 }
 
 export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult {
-  const { authorPubkey, mypaceOnly = true } = options
+  const { authorPubkey, mypaceOnly = true, showSNS = true, showBlog = true } = options
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [profiles, setProfiles] = useState<ProfileCache>({})
@@ -188,7 +190,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         notes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT)
       } else {
         // mypace投稿を取得（タグ/キーワードはクライアント側でフィルタリング）
-        notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, mypaceOnly, '')
+        notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, mypaceOnly, '', 0, showSNS, showBlog)
       }
 
       const initialItems: TimelineItem[] = notes.map((note) => ({ event: note }))
@@ -221,7 +223,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       setError(getErrorMessage(err, 'Failed to load timeline'))
       setLoading(false)
     }
-  }, [authorPubkey])
+  }, [authorPubkey, mypaceOnly, showSNS, showBlog])
 
   // Send accumulated stella to the network
   const flushStella = async (targetEvent: Event) => {
@@ -465,7 +467,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         newNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime)
       } else {
         // mypace投稿の新着をチェック
-        newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime, mypaceOnly, '')
+        newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime, mypaceOnly, '', 0, showSNS, showBlog)
       }
 
       // 既存のイベントIDを除外
@@ -506,7 +508,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     } catch (err) {
       console.error('Failed to check new events:', err)
     }
-  }, [latestEventTime, events, authorPubkey])
+  }, [latestEventTime, events, authorPubkey, mypaceOnly, showSNS, showBlog])
 
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const loadTimelineRef = useRef(loadTimeline)
@@ -519,7 +521,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     return () => {
       window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
     }
-  }, [authorPubkey, mypaceOnly])
+  }, [authorPubkey, mypaceOnly, showSNS, showBlog])
 
   // 1分ごとのポーリング
   useEffect(() => {
@@ -555,7 +557,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
           0,
           mypaceOnly,
           '',
-          oldestEventTime // until: この時刻より古いものを取得
+          oldestEventTime, // until: この時刻より古いものを取得
+          showSNS,
+          showBlog
         )
       }
 
@@ -610,7 +614,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     } finally {
       setLoadingMore(false)
     }
-  }, [loadingMore, hasMore, oldestEventTime, events, authorPubkey])
+  }, [loadingMore, hasMore, oldestEventTime, events, authorPubkey, mypaceOnly, showSNS, showBlog])
 
   // ギャップを埋める
   const fillGap = useCallback(
@@ -630,7 +634,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
             gap.since, // since: この時刻より新しいもの
             mypaceOnly,
             '',
-            gap.until // until: この時刻より古いもの
+            gap.until, // until: この時刻より古いもの
+            showSNS,
+            showBlog
           )
         }
 
@@ -695,7 +701,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         setLoadingGap(null)
       }
     },
-    [gaps, loadingGap, events, authorPubkey]
+    [gaps, loadingGap, events, authorPubkey, mypaceOnly, showSNS, showBlog]
   )
 
   return {

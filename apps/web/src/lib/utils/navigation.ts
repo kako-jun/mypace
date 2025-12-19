@@ -60,6 +60,8 @@ export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
   tags: [],
   ngTags: [],
   mode: 'and',
+  showSNS: true,
+  showBlog: true,
   mypace: true,
   lang: '',
 }
@@ -102,6 +104,8 @@ export function buildSearchUrl(filters: Partial<SearchFilters>): string {
   if (f.ngTags.length > 0) {
     params.set('ngtags', f.ngTags.map((t) => encodeURIComponent(t)).join(','))
   }
+  if (!f.showSNS) params.set('sns', 'off')
+  if (!f.showBlog) params.set('blog', 'off')
   if (!f.mypace) params.set('mypace', 'off')
   if (f.lang) params.set('lang', f.lang)
 
@@ -121,6 +125,8 @@ export function parseSearchParams(searchParams: URLSearchParams): SearchFilters 
     : []
   const tagsParam = searchParams.get('tags') || ''
   const ngTagsParam = searchParams.get('ngtags') || ''
+  const snsParam = searchParams.get('sns')
+  const blogParam = searchParams.get('blog')
   const mypaceParam = searchParams.get('mypace')
   const lang = searchParams.get('lang') || ''
 
@@ -159,6 +165,8 @@ export function parseSearchParams(searchParams: URLSearchParams): SearchFilters 
     tags,
     ngTags,
     mode,
+    showSNS: snsParam !== 'off',
+    showBlog: blogParam !== 'off',
     mypace: mypaceParam !== 'off',
     lang,
   }

@@ -37,12 +37,121 @@
   max-width: calc(100vw - 2rem);
 }
 
-/* mypace row at top */
-.filter-mypace-row {
+/* Circuit Diagram Filter */
+.filter-circuit {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  gap: 0;
   margin-bottom: 0.75rem;
+  padding: 0.5rem 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.filter-circuit-source,
+.filter-circuit-output {
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 0.25rem 0.5rem;
+  background: var(--surface-tertiary);
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.filter-circuit-branch {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 48px;
+  width: 16px;
+  position: relative;
+}
+
+.filter-circuit-line {
+  height: 2px;
+  background: var(--border-light);
+  transition: background 0.15s ease;
+}
+
+.filter-circuit-line.active {
+  background: var(--btn-primary-bg);
+}
+
+.filter-circuit-line-top,
+.filter-circuit-line-bottom {
+  width: 16px;
+  position: absolute;
+}
+
+.filter-circuit-line-top {
+  top: 6px;
+}
+
+.filter-circuit-line-bottom {
+  bottom: 6px;
+}
+
+.filter-circuit-nodes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.filter-circuit-node {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.4rem;
+  background: var(--surface-secondary);
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.filter-circuit-node.active {
+  border-color: var(--btn-primary-bg);
+  background: color-mix(in srgb, var(--btn-primary-bg) 10%, var(--surface-secondary));
+}
+
+.filter-circuit-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  min-width: 28px;
+}
+
+.filter-circuit-node.active .filter-circuit-label {
+  color: var(--btn-primary-bg);
+}
+
+.filter-circuit-merge {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 48px;
+  width: 8px;
+}
+
+.filter-circuit-line-merge {
+  width: 8px;
+  height: 2px;
+}
+
+.filter-circuit-mypace {
+  margin-left: 0.25rem;
+}
+
+.filter-circuit-line-output {
+  width: 8px;
+  height: 2px;
+  flex-shrink: 0;
+}
+
+/* Small toggle for circuit nodes */
+.toggle-small {
+  transform: scale(0.7);
+  transform-origin: center;
+  margin: -4px;
 }
 
 /* Filter groups (OK/NG) */

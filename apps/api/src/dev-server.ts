@@ -137,14 +137,23 @@ const NOSTR_PROXY = process.env.NOSTR_PROXY
 app.get('/api/timeline', async (c) => {
   const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
   const since = Number(c.req.query('since')) || 0
+  const until = Number(c.req.query('until')) || 0
   const showAll = c.req.query('all') === '1'
   const langFilter = c.req.query('lang') || ''
+  // Parse kinds parameter (default: 1 and 30023)
+  const kindsParam = c.req.query('kinds')
+  const kinds = kindsParam
+    ? kindsParam
+        .split(',')
+        .map((k) => parseInt(k, 10))
+        .filter((k) => !isNaN(k))
+    : [1, 30023]
 
   const pool = await createPool(NOSTR_PROXY)
 
   try {
     const filter: Filter = {
-      kinds: [1],
+      kinds,
       limit: langFilter ? limit * 3 : limit, // 言語フィルタ時は多めに取得
     }
     // mypaceタグでフィルタリング（all=1でない場合のみ）
@@ -153,6 +162,9 @@ app.get('/api/timeline', async (c) => {
     }
     if (since > 0) {
       filter.since = since
+    }
+    if (until > 0) {
+      filter.until = until
     }
 
     console.log('Querying relays with filter:', filter)
@@ -334,7 +346,7 @@ app.get('/api/user/:pubkey/events', async (c) => {
 
   try {
     const filter: Filter = {
-      kinds: [1],
+      kinds: [1, 30023],
       authors: [pubkey],
       '#t': [MYPACE_TAG],
       limit,

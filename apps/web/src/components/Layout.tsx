@@ -32,6 +32,8 @@ export function Layout() {
       currentFilters.ngWords.length > 0 ||
       currentFilters.tags.length > 0 ||
       (currentFilters.ngTags?.length ?? 0) > 0 ||
+      !currentFilters.showSNS || // SNS OFF means filtering out SNS posts
+      !currentFilters.showBlog || // Blog OFF means filtering out blog posts
       currentFilters.mypace || // mypace ON means filtering to mypace posts only
       currentFilters.lang !== ''
     )

@@ -115,16 +115,25 @@ app.get('/api/timeline', async (c) => {
   const until = Number(c.req.query('until')) || 0
   const showAll = c.req.query('all') === '1'
   const langFilter = c.req.query('lang') || ''
+  // Parse kinds parameter (default: 1 only, add 30023 if blog=1)
+  const kindsParam = c.req.query('kinds')
+  const kinds = kindsParam
+    ? kindsParam
+        .split(',')
+        .map((k) => parseInt(k, 10))
+        .filter((k) => !isNaN(k))
+    : [1, 30023] // Default to both
 
   // まずキャッシュから取得（TTL内のもののみ）
   const cacheThreshold = Date.now() - CACHE_TTL_MS
   try {
+    const kindPlaceholders = kinds.map(() => '?').join(',')
     let query = `
       SELECT id, pubkey, created_at, kind, tags, content, sig
       FROM events
-      WHERE kind IN (1, 30023) AND created_at > ? AND cached_at > ?
+      WHERE kind IN (${kindPlaceholders}) AND created_at > ? AND cached_at > ?
     `
-    const params: (number | string)[] = [since, cacheThreshold]
+    const params: (number | string)[] = [...kinds, since, cacheThreshold]
 
     if (until > 0) {
       query += ` AND created_at < ?`
@@ -171,7 +180,7 @@ app.get('/api/timeline', async (c) => {
 
   try {
     const filter: Filter = {
-      kinds: [1, 30023], // Kind 1 (short notes) + Kind 30023 (long articles)
+      kinds, // Kind 1 (short notes) + Kind 30023 (long articles)
       limit,
     }
     if (!showAll) {

@@ -33,13 +33,15 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
   }, [])
 
   // Extract filter values for easier access
-  // Note: mypace filtering is done server-side, langFilter is reserved for future
+  // Note: mypace/showSNS/showBlog filtering is done server-side, langFilter is reserved for future
   const {
     query,
     ngWords,
     tags: filterTags,
     ngTags: filterNgTags,
     mode: filterMode,
+    showSNS,
+    showBlog,
     mypace: mypaceOnly,
     lang: _langFilter,
   } = filters
@@ -71,7 +73,7 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
     handleDelete,
     getDisplayName,
     getAvatarUrl,
-  } = useTimeline({ mypaceOnly })
+  } = useTimeline({ mypaceOnly, showSNS, showBlog })
 
   const handleEdit = useCallback(
     (event: Event) => {

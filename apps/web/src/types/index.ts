@@ -86,6 +86,8 @@ export interface SearchFilters {
   tags: string[] // OK tags (include posts with these hashtags)
   ngTags: string[] // NG tags (exclude posts with these hashtags)
   mode: FilterMode // AND/OR for tags
-  mypace: boolean // mypace filter
+  showSNS: boolean // Show kind 1 (short notes)
+  showBlog: boolean // Show kind 30023 (long-form articles)
+  mypace: boolean // mypace filter (#mypace tag only)
   lang: string // Language code (empty = all)
 }

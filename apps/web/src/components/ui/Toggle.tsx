@@ -3,11 +3,12 @@ interface ToggleProps {
   onChange: (checked: boolean) => void
   label?: string
   disabled?: boolean
+  size?: 'small' | 'normal'
 }
 
-export default function Toggle({ checked, onChange, label, disabled = false }: ToggleProps) {
+export default function Toggle({ checked, onChange, label, disabled = false, size = 'normal' }: ToggleProps) {
   return (
-    <label className="toggle">
+    <label className={`toggle ${size === 'small' ? 'toggle-small' : ''}`}>
       <input
         type="checkbox"
         checked={checked}

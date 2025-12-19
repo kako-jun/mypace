@@ -20,6 +20,8 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Local state initialized from filters
+  const [showSNS, setShowSNS] = useState(filters.showSNS)
+  const [showBlog, setShowBlog] = useState(filters.showBlog)
   const [mypaceOnly, setMypaceOnly] = useState(filters.mypace)
   const [okTagsInput, setOkTagsInput] = useState(filters.tags.join(', '))
   const [ngTagsInput, setNgTagsInput] = useState(filters.ngTags?.join(', ') || '')
@@ -29,6 +31,8 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
 
   // Update local state when filters change (URL change)
   useEffect(() => {
+    setShowSNS(filters.showSNS)
+    setShowBlog(filters.showBlog)
     setMypaceOnly(filters.mypace)
     setOkTagsInput(filters.tags.join(', '))
     setNgTagsInput(filters.ngTags?.join(', ') || '')
@@ -39,6 +43,8 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
 
   // Track if form is dirty
   const isDirty =
+    showSNS !== filters.showSNS ||
+    showBlog !== filters.showBlog ||
     mypaceOnly !== filters.mypace ||
     okTagsInput !== filters.tags.join(', ') ||
     ngTagsInput !== (filters.ngTags?.join(', ') || '') ||
@@ -63,6 +69,8 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
   // Apply filters - save to localStorage and navigate to URL
   const handleApply = () => {
     const newFilters: SearchFilters = {
+      showSNS,
+      showBlog,
       mypace: mypaceOnly,
       tags: parseInput(okTagsInput),
       ngTags: parseInput(ngTagsInput),
@@ -84,6 +92,8 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
   // Clear all filters - save defaults and navigate to home
   const handleClear = () => {
     // Reset local state
+    setShowSNS(true)
+    setShowBlog(true)
     setMypaceOnly(true)
     setOkTagsInput('')
     setNgTagsInput('')
@@ -110,9 +120,32 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
 
   return (
     <div className={`filter-panel ${isPopup ? 'filter-panel-popup' : 'filter-panel-embedded'}`}>
-      {/* mypace toggle */}
-      <div className="filter-mypace-row">
-        <Toggle checked={mypaceOnly} onChange={setMypaceOnly} label="MY PACE" />
+      {/* Kind filter - circuit diagram style */}
+      <div className="filter-circuit">
+        <div className="filter-circuit-source">Nostr</div>
+        <div className="filter-circuit-branch">
+          <div className={`filter-circuit-line filter-circuit-line-top ${showSNS ? 'active' : ''}`} />
+          <div className={`filter-circuit-line filter-circuit-line-bottom ${showBlog ? 'active' : ''}`} />
+        </div>
+        <div className="filter-circuit-nodes">
+          <div className={`filter-circuit-node ${showSNS ? 'active' : ''}`}>
+            <span className="filter-circuit-label">SNS</span>
+            <Toggle checked={showSNS} onChange={setShowSNS} size="small" />
+          </div>
+          <div className={`filter-circuit-node ${showBlog ? 'active' : ''}`}>
+            <span className="filter-circuit-label">Blog</span>
+            <Toggle checked={showBlog} onChange={setShowBlog} size="small" />
+          </div>
+        </div>
+        <div className="filter-circuit-merge">
+          <div className={`filter-circuit-line filter-circuit-line-merge ${showSNS || showBlog ? 'active' : ''}`} />
+        </div>
+        <div className={`filter-circuit-node filter-circuit-mypace ${mypaceOnly ? 'active' : ''}`}>
+          <span className="filter-circuit-label">MY PACE</span>
+          <Toggle checked={mypaceOnly} onChange={setMypaceOnly} size="small" />
+        </div>
+        <div className={`filter-circuit-line filter-circuit-line-output ${showSNS || showBlog ? 'active' : ''}`} />
+        <div className="filter-circuit-output">TL</div>
       </div>
 
       {/* OK group */}
