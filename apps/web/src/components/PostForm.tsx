@@ -150,8 +150,15 @@ export function PostForm({
     setError('')
 
     try {
-      // シールタグを生成
-      const stickerTags = stickers.map((s) => ['sticker', s.url, `${s.x}`, `${s.y}`, `${s.size}`, `${s.rotation}`])
+      // シールタグを生成（値は整数に丸める）
+      const stickerTags = stickers.map((s) => [
+        'sticker',
+        s.url,
+        `${Math.round(s.x)}`,
+        `${Math.round(s.y)}`,
+        `${Math.round(s.size)}`,
+        `${Math.round(s.rotation)}`,
+      ])
 
       if (replyingTo) {
         const event = await createReplyEvent(content.trim(), replyingTo)

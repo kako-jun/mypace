@@ -5,62 +5,16 @@ interface StickerPickerProps {
   onAddSticker: (sticker: { url: string }) => void
 }
 
-// SVG data URL stickers (guaranteed to work)
+// Sample stickers using Twemoji CDN (short URLs for Nostr relay compatibility)
 const SAMPLE_STICKERS = [
-  {
-    id: 'new',
-    url:
-      'data:image/svg+xml,' +
-      encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#ff3333" width="100" height="100" rx="10"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="28" font-weight="bold">NEW</text></svg>'
-      ),
-    name: 'NEW',
-  },
-  {
-    id: 'sale',
-    url:
-      'data:image/svg+xml,' +
-      encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#ffcc00" width="100" height="100" rx="10"/><text x="50" y="60" text-anchor="middle" fill="#333" font-size="26" font-weight="bold">SALE</text></svg>'
-      ),
-    name: 'SALE',
-  },
-  {
-    id: 'limited',
-    url:
-      'data:image/svg+xml,' +
-      encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#3366ff" width="100" height="100" rx="10"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="28" font-weight="bold">限定</text></svg>'
-      ),
-    name: '限定',
-  },
-  {
-    id: 'hot',
-    url:
-      'data:image/svg+xml,' +
-      encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#ff6600" width="100" height="100" rx="10"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="28" font-weight="bold">HOT</text></svg>'
-      ),
-    name: 'HOT',
-  },
-  {
-    id: 'recommended',
-    url:
-      'data:image/svg+xml,' +
-      encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#22cc66" width="100" height="100" rx="10"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="24" font-weight="bold">おすすめ</text></svg>'
-      ),
-    name: 'おすすめ',
-  },
-  {
-    id: 'important',
-    url:
-      'data:image/svg+xml,' +
-      encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#cc33ff" width="100" height="100" rx="10"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="28" font-weight="bold">重要</text></svg>'
-      ),
-    name: '重要',
-  },
+  { id: 'fire', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/1f525.svg', name: '🔥' },
+  { id: 'star', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/2b50.svg', name: '⭐' },
+  { id: 'heart', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/2764.svg', name: '❤️' },
+  { id: 'rocket', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/1f680.svg', name: '🚀' },
+  { id: 'sparkles', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/2728.svg', name: '✨' },
+  { id: 'party', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/1f389.svg', name: '🎉' },
+  { id: 'hundred', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/1f4af.svg', name: '💯' },
+  { id: 'eyes', url: 'https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/1f440.svg', name: '👀' },
 ]
 
 export function StickerPicker({ onAddSticker }: StickerPickerProps) {
