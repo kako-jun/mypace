@@ -246,12 +246,12 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
             />
             {gapAfterThis && (
               <Button
-                size="sm"
+                size="md"
                 className="timeline-gap-button"
                 onClick={() => fillGap(gapAfterThis.id)}
                 disabled={loadingGap === gapAfterThis.id}
               >
-                {loadingGap === gapAfterThis.id ? '読み込み中...' : 'さらに表示'}
+                {loadingGap === gapAfterThis.id ? 'Loading...' : 'Load More'}
               </Button>
             )}
           </Fragment>

@@ -95,16 +95,16 @@ function ColorMenu({ corner, color, copiedColor, position, onCopy, onApplyToAll,
             <div className="color-menu-preview" style={{ backgroundColor: color }} />
           </div>
           <Button
-            size="sm"
+            size="md"
             onClick={() => {
               onCopy()
               setIsOpen(false)
             }}
           >
-            コピー
+            Copy
           </Button>
           <Button
-            size="sm"
+            size="md"
             onClick={() => {
               if (copiedColor) {
                 onColorChange(copiedColor)
@@ -113,16 +113,16 @@ function ColorMenu({ corner, color, copiedColor, position, onCopy, onApplyToAll,
             }}
             disabled={!copiedColor}
           >
-            ペースト
+            Paste
           </Button>
           <Button
-            size="sm"
+            size="md"
             onClick={() => {
               onApplyToAll(color)
               setIsOpen(false)
             }}
           >
-            全隅に適用
+            Apply to All
           </Button>
         </div>
       )}
@@ -189,14 +189,14 @@ export default function ThemeSection({
         <h3>App Theme</h3>
         <div className="theme-switcher">
           <Button
-            size="sm"
+            size="md"
             variant={appTheme === 'light' ? 'primary' : 'secondary'}
             onClick={() => onAppThemeChange('light')}
           >
             LIGHT
           </Button>
           <Button
-            size="sm"
+            size="md"
             variant={appTheme === 'dark' ? 'primary' : 'secondary'}
             onClick={() => onAppThemeChange('dark')}
           >

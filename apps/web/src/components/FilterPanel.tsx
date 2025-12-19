@@ -317,23 +317,18 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
             </option>
           ))}
         </select>
-        <button
-          type="button"
-          className="filter-preset-btn filter-preset-save"
-          onClick={handleOpenSaveModal}
-          title="Save as preset"
-        >
+        <Button size="md" onClick={handleOpenSaveModal} title="Save as preset">
           <Icon name="Save" size={14} />
-        </button>
-        <button
-          type="button"
-          className={`filter-preset-btn filter-preset-delete ${deleteConfirm ? 'confirm' : ''}`}
+        </Button>
+        <Button
+          size="md"
+          variant={deleteConfirm ? 'danger' : 'secondary'}
           onClick={handleDeletePreset}
           disabled={!selectedPresetId}
           title={deleteConfirm ? 'Click again to delete' : 'Delete preset'}
         >
           {deleteConfirm ? <Icon name="Check" size={14} /> : <Icon name="Trash2" size={14} />}
-        </button>
+        </Button>
       </div>
 
       {/* Save preset modal */}
@@ -464,9 +459,9 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
                   if (e.key === 'Enter') handleAddToMuteList()
                 }}
               />
-              <button type="button" className="mute-list-add-btn" onClick={handleAddToMuteList}>
+              <Button size="md" onClick={handleAddToMuteList}>
                 <Icon name="Plus" size={14} />
-              </button>
+              </Button>
             </div>
             {muteError && <div className="mute-list-error">{muteError}</div>}
             {muteList.length > 0 ? (

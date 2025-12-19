@@ -385,7 +385,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
   return (
     <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
-      <Button size="sm" className="back-button" onClick={handleBack}>
+      <Button size="md" className="back-button" onClick={handleBack}>
         <span className="back-button-icon">{isModal ? '×' : '←'}</span>
         <span>{isModal ? 'CLOSE' : 'BACK'}</span>
       </Button>

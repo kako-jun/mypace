@@ -103,14 +103,14 @@ export default function ExportSection({ themeColors, appTheme, onImport }: Expor
       const settings = parseSettings(text)
       if (settings) {
         onImport(settings)
-        setMessage({ type: 'success', text: '設定を読み込みました' })
+        setMessage({ type: 'success', text: 'Settings imported' })
         setTimeout(() => setMessage(null), 2000)
       } else {
-        setMessage({ type: 'error', text: '無効な設定ファイルです' })
+        setMessage({ type: 'error', text: 'Invalid settings file' })
         setTimeout(() => setMessage(null), 2000)
       }
     } catch {
-      setMessage({ type: 'error', text: 'ファイルの読み込みに失敗しました' })
+      setMessage({ type: 'error', text: 'Failed to read file' })
       setTimeout(() => setMessage(null), 2000)
     }
 
@@ -121,14 +121,14 @@ export default function ExportSection({ themeColors, appTheme, onImport }: Expor
   return (
     <div className="settings-section">
       <h3>Export / Import</h3>
-      <p className="hint">設定を他のデバイスに移行</p>
+      <p className="hint">Transfer settings to other devices</p>
 
       <div className="export-buttons">
-        <Button size="sm" onClick={handleDownload}>
-          ファイルで保存
+        <Button size="md" onClick={handleDownload}>
+          Export
         </Button>
-        <Button size="sm" variant="secondary" onClick={() => document.getElementById('settings-file-input')?.click()}>
-          ファイルから読み込み
+        <Button size="md" variant="secondary" onClick={() => document.getElementById('settings-file-input')?.click()}>
+          Import
         </Button>
         <input id="settings-file-input" type="file" accept=".json" onChange={handleFileSelect} hidden />
       </div>

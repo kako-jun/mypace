@@ -74,6 +74,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const [editPicture, setEditPicture] = useState('')
   const [editBanner, setEditBanner] = useState('')
   const [editWebsites, setEditWebsites] = useState<WebsiteEntry[]>([])
+  const [newWebsiteUrl, setNewWebsiteUrl] = useState('')
   const [editNip05, setEditNip05] = useState('')
   const [editLud16, setEditLud16] = useState('')
   const [saving, setSaving] = useState(false)
@@ -290,8 +291,9 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   }
 
   const addWebsite = () => {
-    if (editWebsites.length < 10) {
-      setEditWebsites([...editWebsites, { url: '', label: '' }])
+    if (editWebsites.length < 10 && newWebsiteUrl.trim()) {
+      setEditWebsites([...editWebsites, { url: newWebsiteUrl.trim(), label: '' }])
+      setNewWebsiteUrl('')
     }
   }
 
@@ -512,12 +514,22 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
                     </button>
                   </div>
                 ))}
-                {editWebsites.length < 10 && (
-                  <button type="button" className="website-add-btn" onClick={addWebsite} aria-label="Add URL">
-                    <Icon name="Plus" size={16} />
-                  </button>
-                )}
               </div>
+              {editWebsites.length < 10 && (
+                <div className="website-input-row">
+                  <Input
+                    value={newWebsiteUrl}
+                    onChange={setNewWebsiteUrl}
+                    placeholder="https://example.com"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') addWebsite()
+                    }}
+                  />
+                  <Button size="md" onClick={addWebsite} aria-label="Add URL">
+                    <Icon name="Plus" size={16} />
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="edit-field">
               <label>NIP-05</label>

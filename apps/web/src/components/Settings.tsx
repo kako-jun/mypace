@@ -30,7 +30,6 @@ import {
 } from '../components/settings'
 import type { ImportedSettings } from '../components/settings'
 import type { ThemeColors } from '../types'
-import { Button } from '../components/ui'
 
 export function Settings() {
   const [open, setOpen] = useState(false)
@@ -152,9 +151,9 @@ export function Settings() {
 
   if (!open) {
     return (
-      <Button size="sm" onClick={() => setOpen(true)}>
+      <button className="settings-toggle text-outlined text-outlined-button" onClick={() => setOpen(true)}>
         SETTINGS
-      </Button>
+      </button>
     )
   }
 
@@ -166,27 +165,24 @@ export function Settings() {
           ×
         </button>
         <div className="settings-tabs">
-          <Button
-            size="sm"
-            variant={activeTab === 'settings' ? 'primary' : 'secondary'}
+          <button
+            className={`settings-tab ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
           >
             SETTINGS
-          </Button>
-          <Button
-            size="sm"
-            variant={activeTab === 'account' ? 'primary' : 'secondary'}
+          </button>
+          <button
+            className={`settings-tab ${activeTab === 'account' ? 'active' : ''}`}
             onClick={() => setActiveTab('account')}
           >
             ACCOUNT
-          </Button>
-          <Button
-            size="sm"
-            variant={activeTab === 'about' ? 'primary' : 'secondary'}
+          </button>
+          <button
+            className={`settings-tab ${activeTab === 'about' ? 'active' : ''}`}
             onClick={() => setActiveTab('about')}
           >
             ABOUT
-          </Button>
+          </button>
         </div>
 
         <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
