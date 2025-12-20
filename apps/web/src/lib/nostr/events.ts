@@ -51,20 +51,15 @@ export async function createTextNote(
     tags.push(...additionalTags)
   }
 
-  // Extract super mentions (@/path) and add as t tags
-  const superMentionRegex = /@(\/[\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-/:.?=&%#,]+)/g
+  // Extract super mentions (@@label) and add as t tags
+  const superMentionRegex = /@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
   const refs = new Set<string>()
   let match
   while ((match = superMentionRegex.exec(content)) !== null) {
-    refs.add(match[1]) // The path including leading /
+    refs.add(`/${match[1]}`) // Add leading / to create path
   }
   for (const ref of refs) {
     tags.push(['t', ref])
-    // If it's a web reference with URL, also add r tag
-    if (ref.startsWith('/web/http')) {
-      const url = ref.slice(5) // Remove "/web/"
-      tags.push(['r', url])
-    }
   }
 
   // Handle long posts: split content and add fold tag
@@ -234,19 +229,15 @@ export async function createReplyEvent(
     tags.push(...additionalTags)
   }
 
-  // Extract super mentions (@/path) and add as t tags
-  const superMentionRegex = /@(\/[\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-/:.?=&%#,]+)/g
+  // Extract super mentions (@@label) and add as t tags
+  const superMentionRegex = /@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
   const refs = new Set<string>()
   let match
   while ((match = superMentionRegex.exec(content)) !== null) {
-    refs.add(match[1])
+    refs.add(`/${match[1]}`) // Add leading / to create path
   }
   for (const ref of refs) {
     tags.push(['t', ref])
-    if (ref.startsWith('/web/http')) {
-      const url = ref.slice(5)
-      tags.push(['r', url])
-    }
   }
 
   const template: EventTemplate = {

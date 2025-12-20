@@ -224,7 +224,7 @@
   }
 }
 
-/* Super mentions (@/path) */
+/* Super mentions (@@label) */
 .content-super-mention {
   background: none;
   border: none;
