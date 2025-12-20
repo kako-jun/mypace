@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { TIMEOUTS } from '../lib/constants'
+import { TIMEOUTS } from '../../lib/constants'
 
 // Hook for temporary state that resets after a timeout
 export function useTemporaryState<T>(

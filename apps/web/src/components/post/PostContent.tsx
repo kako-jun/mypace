@@ -1,4 +1,4 @@
-import { renderContent } from '../../lib/content-parser'
+import { renderContent } from '../../lib/parser'
 import { PostEmbeds } from '../embed'
 import { TextButton } from '../ui'
 import { LIMITS } from '../../lib/constants'

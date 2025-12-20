@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { uploadImage } from '../lib/upload'
+import { uploadImage } from '../../lib/api'
 
 interface UploadFileResult {
   url: string | null

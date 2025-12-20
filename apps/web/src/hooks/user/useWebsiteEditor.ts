@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { WebsiteEntry } from '../types'
+import type { WebsiteEntry } from '../../types'
 
 interface UseWebsiteEditorResult {
   websites: WebsiteEntry[]

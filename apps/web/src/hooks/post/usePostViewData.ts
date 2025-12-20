@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchEventById, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts } from '../lib/nostr/relay'
-import { getCurrentPubkey } from '../lib/nostr/events'
-import { getCachedPost, getCachedProfile, getErrorMessage } from '../lib/utils'
-import type { Event, LoadableProfile, ReactionData, Profile } from '../types'
+import { fetchEventById, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts } from '../../lib/nostr/relay'
+import { getCurrentPubkey } from '../../lib/nostr/events'
+import { getCachedPost, getCachedProfile, getErrorMessage } from '../../lib/utils'
+import type { Event, LoadableProfile, ReactionData, Profile } from '../../types'
 
 interface PostViewData {
   event: Event | null

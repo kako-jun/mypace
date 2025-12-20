@@ -28,7 +28,7 @@ import {
   setSuperMentionClickHandler,
   setImageClickHandler,
   clearImageClickHandler,
-} from '../../lib/content-parser'
+} from '../../lib/parser'
 import { LightBox, triggerLightBox } from '../ui'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers } from './index'
 import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage } from '../ui'

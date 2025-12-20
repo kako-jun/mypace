@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
-import { publishEvent } from '../lib/nostr/relay'
-import { createDeleteEvent, createReactionEvent, MAX_STELLA_PER_USER } from '../lib/nostr/events'
-import type { Event, ReactionData } from '../types'
+import { publishEvent } from '../../lib/nostr/relay'
+import { createDeleteEvent, createReactionEvent, MAX_STELLA_PER_USER } from '../../lib/nostr/events'
+import type { Event, ReactionData } from '../../types'
 
 interface UseReactionsOptions {
   event: Event | null

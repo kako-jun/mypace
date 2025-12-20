@@ -1,6 +1,6 @@
-import { createNip98AuthEvent } from './nostr/events'
-import { getErrorMessage } from './utils'
-import { LIMITS } from './constants'
+import { createNip98AuthEvent } from '../nostr/events'
+import { getErrorMessage } from '../utils'
+import { LIMITS } from '../constants'
 
 const UPLOAD_URL = 'https://nostr.build/api/v2/upload/files'
 

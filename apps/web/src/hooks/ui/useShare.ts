@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TIMEOUTS } from '../lib/constants'
+import { TIMEOUTS } from '../../lib/constants'
 
 export function useShare() {
   const [copied, setCopied] = useState(false)

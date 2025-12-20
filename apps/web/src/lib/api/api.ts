@@ -1,5 +1,5 @@
 // API client for mypace backend
-import type { Event, Profile, ReactionData, ReplyData, RepostData } from '../types'
+import type { Event, Profile, ReactionData, ReplyData, RepostData } from '../../types'
 
 export const API_BASE =
   import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://api.mypace.llll-ll.com' : 'http://localhost:8787')

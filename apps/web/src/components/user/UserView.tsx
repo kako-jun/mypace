@@ -19,7 +19,7 @@ import {
   setSuperMentionClickHandler,
   setImageClickHandler,
   clearImageClickHandler,
-} from '../../lib/content-parser'
+} from '../../lib/parser'
 import { LightBox, triggerLightBox } from '../ui'
 import { UserProfile } from './UserProfile'
 import { UserProfileEditor } from './UserProfileEditor'

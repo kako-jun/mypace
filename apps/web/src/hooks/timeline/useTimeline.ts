@@ -1,25 +1,25 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { fetchEvents, fetchUserPosts, publishEvent } from '../lib/nostr/relay'
+import { fetchEvents, fetchUserPosts, publishEvent } from '../../lib/nostr/relay'
 import {
   getCurrentPubkey,
   createDeleteEvent,
   createReactionEvent,
   createRepostEvent,
   MAX_STELLA_PER_USER,
-} from '../lib/nostr/events'
-import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage } from '../lib/utils'
-import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../lib/constants'
-import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../types'
-import type { GapInfo, UseTimelineOptions, UseTimelineResult } from './timeline/types'
+} from '../../lib/nostr/events'
+import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage } from '../../lib/utils'
+import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
+import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../../types'
+import type { GapInfo, UseTimelineOptions, UseTimelineResult } from './types'
 import {
   loadProfiles,
   loadReactionsForEvents,
   loadRepliesForEvents,
   loadRepostsForEvents,
   mergeProfiles,
-} from './timeline/useTimelineData'
-import { useTimelinePolling } from './timeline/useTimelinePolling'
-import { useGapDetection } from './timeline/useGapDetection'
+} from './useTimelineData'
+import { useTimelinePolling } from './useTimelinePolling'
+import { useGapDetection } from './useGapDetection'
 
 export type { GapInfo, UseTimelineOptions, UseTimelineResult }
 

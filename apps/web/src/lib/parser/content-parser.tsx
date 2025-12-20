@@ -1,38 +1,16 @@
 import { useEffect, useRef } from 'react'
 import { Marked } from 'marked'
 import Prism from 'prismjs'
-import type { EmojiTag, ProfileMap } from '../types'
+import type { EmojiTag, ProfileMap } from '../../types'
 
-// Import parser utilities
-import {
-  getHashtagClickHandler,
-  getImageClickHandler,
-  getSuperMentionClickHandler,
-  escapeHtml,
-  sanitizeHtml,
-  processLinks,
-  processImageUrls,
-  removeImageLinks,
-  extractAlignments,
-  restoreAlignments,
-  processFontSyntax,
-  extractCodeBlocks,
-  restoreCodeBlocks,
-  processHashtags,
-  processSuperMentions,
-  processNostrMentions,
-  processCustomEmojis,
-} from './parser'
-
-// Re-export callback setters
-export {
-  setHashtagClickHandler,
-  clearHashtagClickHandler,
-  setImageClickHandler,
-  clearImageClickHandler,
-  setSuperMentionClickHandler,
-  clearSuperMentionClickHandler,
-} from './parser'
+// Import parser utilities from individual modules
+import { getHashtagClickHandler, getImageClickHandler, getSuperMentionClickHandler } from './callbacks'
+import { escapeHtml, sanitizeHtml, processLinks, processImageUrls, removeImageLinks } from './html-utils'
+import { extractAlignments, restoreAlignments } from './alignment'
+import { processFontSyntax } from './font-syntax'
+import { extractCodeBlocks, restoreCodeBlocks } from './code-blocks'
+import { processHashtags, processSuperMentions, processNostrMentions } from './nostr-tags'
+import { processCustomEmojis } from './emoji'
 
 // Load common Prism languages
 import 'prismjs/components/prism-typescript'
