@@ -141,10 +141,6 @@ export function renderContent(
       }
     }
     if (target.classList.contains('content-super-mention') || target.classList.contains('super-mention-prefix')) {
-      // Don't trigger super mention handler if clicking on Wikipedia link
-      if (target.classList.contains('super-mention-q-badge-link')) {
-        return
-      }
       const button = target.classList.contains('super-mention-prefix') ? target.parentElement : target
       const path = button?.getAttribute('data-ref')
       if (path && superMentionHandler) {

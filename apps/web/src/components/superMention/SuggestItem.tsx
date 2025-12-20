@@ -4,7 +4,6 @@ import type { SuggestItem } from './types'
 interface SuggestItemProps {
   item: SuggestItem
   isSelected: boolean
-  currentCategory: string | null
   onSelect: (item: SuggestItem) => void
   onHover: () => void
 }
@@ -28,21 +27,10 @@ function WikidataQBadge({ id }: { id: string }) {
   )
 }
 
-export function SuggestItemView({ item, isSelected, currentCategory, onSelect, onHover }: SuggestItemProps) {
+export function SuggestItemView({ item, isSelected, onSelect, onHover }: SuggestItemProps) {
   const baseClass = `super-mention-suggest-item ${isSelected ? 'selected' : ''}`
 
   switch (item.type) {
-    case 'category': {
-      const IconComponent = item.icon
-      return (
-        <button key={`cat-${item.path}`} className={baseClass} onClick={() => onSelect(item)} onMouseEnter={onHover}>
-          <span className="super-mention-suggest-icon">{IconComponent && <IconComponent size={16} />}</span>
-          <span className="super-mention-suggest-path">@/{item.path}/</span>
-          <span className="super-mention-suggest-label">{item.label}</span>
-        </button>
-      )
-    }
-
     case 'wikidata':
       return (
         <button
@@ -55,11 +43,9 @@ export function SuggestItemView({ item, isSelected, currentCategory, onSelect, o
           <span className="super-mention-suggest-icon">
             <Search size={16} />
           </span>
-          <span className="super-mention-suggest-path">{item.label}</span>
-          <span className="super-mention-suggest-desc">
-            {item.description}
-            <WikidataQBadge id={item.id} />
-          </span>
+          <span className="super-mention-suggest-label">{item.label}</span>
+          <WikidataQBadge id={item.id} />
+          <span className="super-mention-suggest-desc">{item.description}</span>
         </button>
       )
 
@@ -75,11 +61,9 @@ export function SuggestItemView({ item, isSelected, currentCategory, onSelect, o
           <span className="super-mention-suggest-icon">
             {item.wikidataId ? <Check size={16} /> : <Pin size={16} />}
           </span>
-          <span className="super-mention-suggest-path">{item.label}</span>
-          <span className="super-mention-suggest-desc">
-            {item.description}
-            {item.wikidataId && <WikidataQBadge id={item.wikidataId} />}
-          </span>
+          <span className="super-mention-suggest-label">{item.label}</span>
+          {item.wikidataId && <WikidataQBadge id={item.wikidataId} />}
+          <span className="super-mention-suggest-desc">{item.description}</span>
         </button>
       )
 
@@ -89,9 +73,7 @@ export function SuggestItemView({ item, isSelected, currentCategory, onSelect, o
           <span className="super-mention-suggest-icon">
             <PenLine size={16} />
           </span>
-          <span className="super-mention-suggest-path">
-            @/{currentCategory}/{item.label}
-          </span>
+          <span className="super-mention-suggest-label">{item.label}</span>
           <span className="super-mention-suggest-desc">新規作成</span>
         </button>
       )

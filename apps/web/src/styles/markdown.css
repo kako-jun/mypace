@@ -254,6 +254,25 @@
   letter-spacing: -0.05em;
 }
 
+/* Q badge in post content */
+.super-mention-q-badge-content {
+  color: #fc0;
+  font-size: 0.85em;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+}
+
+.super-mention-q-badge-content:hover {
+  color: #ff0;
+  text-decoration: underline;
+}
+
 /* Nostr mentions (@user) */
 .nostr-mention {
   color: #9a6;

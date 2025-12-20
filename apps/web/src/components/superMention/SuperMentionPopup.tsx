@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { searchWikidata, getSuperMentionSuggestions, saveSuperMentionPath } from '../../lib/api'
-import { TOP_CATEGORIES } from './categories'
 import { SuggestItemView, type SuggestItem } from './index'
 
 interface SuperMentionPopupProps {
@@ -10,7 +9,6 @@ interface SuperMentionPopupProps {
 
 export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps) {
   const [query, setQuery] = useState('')
-  const [currentCategory, setCurrentCategory] = useState<string | null>(null)
   const [items, setItems] = useState<SuggestItem[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -44,29 +42,15 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
       clearTimeout(searchTimeoutRef.current)
     }
 
-    // Show categories if no category selected
-    if (!currentCategory) {
-      const filtered = TOP_CATEGORIES.filter((cat) => {
-        if (!query) return true
-        return cat.path.toLowerCase().includes(query.toLowerCase()) || cat.label.includes(query)
-      }).map((cat) => ({
-        type: 'category' as const,
-        ...cat,
-      }))
-      setItems(filtered)
-      setLoading(false)
-      return
-    }
-
-    // Category selected, show history or search
+    // No query: show recent history
     if (!query) {
       setLoading(true)
-      getSuperMentionSuggestions('', currentCategory, 10)
+      getSuperMentionSuggestions('', undefined, 10)
         .then((suggestions) => {
           const historyItems: SuggestItem[] = suggestions.map((s) => ({
             type: 'history' as const,
             path: s.path,
-            label: s.wikidataLabel || s.path.split('/').pop() || '',
+            label: s.wikidataLabel || s.path.replace(/^\//, ''),
             description: s.wikidataDescription || '',
             wikidataId: s.wikidataId || undefined,
           }))
@@ -81,14 +65,14 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
     setLoading(true)
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const historyResults = await getSuperMentionSuggestions(query, currentCategory, 5)
+        const historyResults = await getSuperMentionSuggestions(query, undefined, 5)
         const newItems: SuggestItem[] = []
 
         for (const s of historyResults) {
           newItems.push({
             type: 'history',
             path: s.path,
-            label: s.wikidataLabel || s.path.split('/').pop() || '',
+            label: s.wikidataLabel || s.path.replace(/^\//, ''),
             description: s.wikidataDescription || '',
             wikidataId: s.wikidataId || undefined,
           })
@@ -121,25 +105,19 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
         clearTimeout(searchTimeoutRef.current)
       }
     }
-  }, [currentCategory, query])
+  }, [query])
 
   const handleSelect = useCallback(
     async (item: SuggestItem) => {
       let insertText: string
-      let path: string | undefined
+      let path: string
       let wikidataId: string | undefined
       let wikidataLabel: string | undefined
       let wikidataDescription: string | undefined
 
       switch (item.type) {
-        case 'category':
-          setCurrentCategory(item.path)
-          setQuery('')
-          inputRef.current?.focus()
-          return
-
         case 'wikidata':
-          path = `/${currentCategory}/${item.label}`
+          path = `/${item.label}`
           insertText = `@${path} `
           wikidataId = item.id
           wikidataLabel = item.label
@@ -155,7 +133,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
           break
 
         case 'custom':
-          path = `/${currentCategory}/${item.label}`
+          path = `/${item.label}`
           insertText = `@${path} `
           break
 
@@ -163,14 +141,12 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
           return
       }
 
-      if (currentCategory && path) {
-        saveSuperMentionPath(path, currentCategory, wikidataId, wikidataLabel, wikidataDescription).catch(() => {})
-      }
+      saveSuperMentionPath(path, wikidataId, wikidataLabel, wikidataDescription).catch(() => {})
 
       onSelect(insertText)
       onClose()
     },
-    [currentCategory, onSelect, onClose]
+    [onSelect, onClose]
   )
 
   const handleKeyDown = useCallback(
@@ -199,15 +175,9 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
           e.preventDefault()
           onClose()
           break
-        case 'Backspace':
-          if (query === '' && currentCategory) {
-            e.preventDefault()
-            setCurrentCategory(null)
-          }
-          break
       }
     },
-    [items, selectedIndex, handleSelect, onClose, query, currentCategory]
+    [items, selectedIndex, handleSelect, onClose]
   )
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -221,11 +191,6 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
       <div className="super-mention-popup">
         <div className="super-mention-popup-header">
           <span className="super-mention-popup-prefix">@/</span>
-          {currentCategory && (
-            <button type="button" className="super-mention-popup-category" onClick={() => setCurrentCategory(null)}>
-              {currentCategory}/
-            </button>
-          )}
           <input
             ref={inputRef}
             type="text"
@@ -233,7 +198,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={currentCategory ? '検索...' : 'カテゴリを選択...'}
+            placeholder="検索..."
           />
         </div>
         <div ref={containerRef} className="super-mention-popup-list">
@@ -241,24 +206,15 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
           {items.map((item, index) => (
             <SuggestItemView
               key={
-                item.type === 'category'
-                  ? `cat-${item.path}`
-                  : item.type === 'wikidata'
-                    ? `wd-${item.id}`
-                    : item.type === 'history'
-                      ? `hist-${item.path}`
-                      : 'custom'
+                item.type === 'wikidata' ? `wd-${item.id}` : item.type === 'history' ? `hist-${item.path}` : 'custom'
               }
               item={item}
               isSelected={index === selectedIndex}
-              currentCategory={currentCategory}
               onSelect={handleSelect}
               onHover={() => setSelectedIndex(index)}
             />
           ))}
-          {!loading && items.length === 0 && currentCategory && (
-            <div className="super-mention-suggest-empty">候補が見つかりません</div>
-          )}
+          {!loading && items.length === 0 && <div className="super-mention-suggest-empty">候補が見つかりません</div>}
         </div>
       </div>
     </div>

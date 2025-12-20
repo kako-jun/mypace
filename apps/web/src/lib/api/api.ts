@@ -156,7 +156,6 @@ export async function getSuperMentionSuggestions(
 // Save super mention path
 export async function saveSuperMentionPath(
   path: string,
-  category: string,
   wikidataId?: string,
   wikidataLabel?: string,
   wikidataDescription?: string
@@ -166,7 +165,6 @@ export async function saveSuperMentionPath(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       path,
-      category,
       wikidataId,
       wikidataLabel,
       wikidataDescription,
