@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Icon, ExternalLink } from '../ui'
+import EmbedPlaceholder from './EmbedPlaceholder'
 
 interface InstagramEmbedProps {
   instagramId: string
@@ -29,12 +30,12 @@ export default function InstagramEmbed({ instagramId, instagramType, url }: Inst
 
   if (!loaded) {
     return (
-      <div className="embed-container embed-instagram embed-placeholder" onClick={() => setLoaded(true)}>
-        <div className="embed-placeholder-content">
-          <Icon name="Instagram" size={32} />
-          <span className="embed-placeholder-text">Click to load {instagramType === 'reel' ? 'reel' : 'post'}</span>
-        </div>
-      </div>
+      <EmbedPlaceholder
+        embedType="instagram"
+        iconName="Instagram"
+        text={`Click to load ${instagramType === 'reel' ? 'reel' : 'post'}`}
+        onClick={() => setLoaded(true)}
+      />
     )
   }
 

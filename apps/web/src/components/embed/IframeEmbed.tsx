@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Icon, ExternalLink } from '../ui'
+import EmbedPlaceholder from './EmbedPlaceholder'
 
 interface IframeEmbedProps {
   url: string
@@ -44,12 +45,12 @@ export default function IframeEmbed({ url }: IframeEmbedProps) {
   }
 
   return (
-    <div className="embed-container embed-iframe embed-placeholder" onClick={() => setLoaded(true)}>
-      <div className="embed-placeholder-content">
-        <Icon name="Gamepad2" size={32} />
-        <span className="embed-placeholder-text">Click to load content</span>
-        <span className="embed-placeholder-domain">{displayDomain}</span>
-      </div>
-    </div>
+    <EmbedPlaceholder
+      embedType="iframe"
+      iconName="Gamepad2"
+      text="Click to load content"
+      domain={displayDomain}
+      onClick={() => setLoaded(true)}
+    />
   )
 }

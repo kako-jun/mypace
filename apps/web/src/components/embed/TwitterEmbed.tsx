@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Tweet } from 'react-tweet'
 import { Icon, ExternalLink } from '../ui'
 import { API_BASE } from '../../lib/api'
+import EmbedPlaceholder from './EmbedPlaceholder'
 
 interface TwitterEmbedProps {
   tweetId: string
@@ -35,12 +36,12 @@ export default function TwitterEmbed({ tweetId, url }: TwitterEmbedProps) {
 
   if (!loaded) {
     return (
-      <div className="embed-container embed-twitter embed-placeholder" onClick={() => setLoaded(true)}>
-        <div className="embed-placeholder-content">
-          <Icon name="Twitter" size={32} />
-          <span className="embed-placeholder-text">Click to load tweet</span>
-        </div>
-      </div>
+      <EmbedPlaceholder
+        embedType="twitter"
+        iconName="Twitter"
+        text="Click to load tweet"
+        onClick={() => setLoaded(true)}
+      />
     )
   }
 

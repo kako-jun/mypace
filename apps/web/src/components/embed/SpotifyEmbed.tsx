@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Icon, ExternalLink } from '../ui'
 import { getSpotifyEmbedUrl } from '../../lib/utils/embed'
+import EmbedPlaceholder from './EmbedPlaceholder'
 
 interface SpotifyEmbedProps {
   spotifyId: string
@@ -48,13 +49,13 @@ export default function SpotifyEmbed({ spotifyId, spotifyType, url }: SpotifyEmb
 
   if (!loaded) {
     return (
-      <div className="embed-container embed-spotify embed-placeholder" onClick={() => setLoaded(true)}>
-        <div className="embed-placeholder-content">
-          <Icon name="Music" size={32} />
-          <span className="embed-placeholder-text">Click to load {getTypeLabel()}</span>
-          <span className="embed-placeholder-domain">Spotify</span>
-        </div>
-      </div>
+      <EmbedPlaceholder
+        embedType="spotify"
+        iconName="Music"
+        text={`Click to load ${getTypeLabel()}`}
+        domain="Spotify"
+        onClick={() => setLoaded(true)}
+      />
     )
   }
 

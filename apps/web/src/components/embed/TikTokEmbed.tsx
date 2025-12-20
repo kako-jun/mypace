@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Icon, ExternalLink } from '../ui'
+import EmbedPlaceholder from './EmbedPlaceholder'
 
 interface TikTokEmbedProps {
   tiktokId: string
@@ -58,12 +59,12 @@ export default function TikTokEmbed({ tiktokId, url }: TikTokEmbedProps) {
 
   if (!loaded) {
     return (
-      <div className="embed-container embed-tiktok embed-placeholder" onClick={() => setLoaded(true)}>
-        <div className="embed-placeholder-content">
-          <Icon name="Video" size={32} />
-          <span className="embed-placeholder-text">Click to load TikTok</span>
-        </div>
-      </div>
+      <EmbedPlaceholder
+        embedType="tiktok"
+        iconName="Video"
+        text="Click to load TikTok"
+        onClick={() => setLoaded(true)}
+      />
     )
   }
 

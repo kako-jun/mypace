@@ -1,6 +1,6 @@
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { Icon } from '../ui'
+import ReactorsPopup from './ReactorsPopup'
 import { MAX_STELLA_PER_USER } from '../../lib/nostr/events'
 import type { ReactionData, ReplyData, RepostData } from '../../types'
 
@@ -165,44 +165,17 @@ export default function PostActions({
 
   // Reactors popup component rendered via portal (only when position is calculated)
   const reactorsPopup =
-    showReactorsPopup && popupPosition
-      ? createPortal(
-          <>
-            <div className="reactors-popup-overlay" onClick={handleClosePopup} />
-            <div
-              className="reactors-popup"
-              style={{ top: popupPosition.top, left: popupPosition.left }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="reactors-popup-header">
-                <span className="reactors-popup-title">Stella</span>
-                <button className="reactors-popup-close" onClick={handleClosePopup}>
-                  <Icon name="X" size={16} />
-                </button>
-              </div>
-              <div className="reactors-list">
-                {reactors.map((reactor) => (
-                  <div key={reactor.pubkey} className="reactor-item">
-                    <span className="reactor-name" onClick={() => onNavigateToProfile(reactor.pubkey)}>
-                      {getDisplayName(reactor.pubkey)}
-                    </span>
-                    <span className="reactor-stella">
-                      <Icon name="Star" size={14} fill="#f1c40f" />
-                      {reactor.stella}
-                    </span>
-                    {reactor.pubkey === myPubkey && (
-                      <button className="reactor-remove" onClick={handleUnlikeConfirm}>
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>,
-          document.body
-        )
-      : null
+    showReactorsPopup && popupPosition ? (
+      <ReactorsPopup
+        reactors={reactors}
+        position={popupPosition}
+        myPubkey={myPubkey}
+        getDisplayName={getDisplayName}
+        onNavigateToProfile={onNavigateToProfile}
+        onRemove={handleUnlikeConfirm}
+        onClose={handleClosePopup}
+      />
+    ) : null
 
   // Reactors are already sorted by newest first from API
 
