@@ -16,58 +16,69 @@
   direction: ltr;
 }
 
-/* Timeline Action Button - unified style for all timeline buttons */
-.timeline-action-button {
+/* Timeline Action Wrapper - layout for timeline buttons */
+.timeline-action-wrapper {
   column-span: all;
   break-inside: avoid;
   direction: ltr;
-  width: 100%;
-  padding: 1rem 1.5rem;
   margin: 1rem 0;
-  background: #f5a623;
-  color: #000;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.3);
 }
 
-.timeline-action-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(245, 166, 35, 0.4);
-  background: #ffb700;
-}
-
-.timeline-action-button:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(245, 166, 35, 0.3);
-}
-
-.timeline-action-button:disabled {
-  cursor: wait;
-  opacity: 0.7;
-  background: #999;
-  box-shadow: none;
+.timeline-action-wrapper .btn {
+  width: 100%;
 }
 
 /* End of timeline message - same size as load-more-button */
 .timeline-end {
+  --btn-corner: 12px;
   column-span: all;
   direction: ltr;
   width: 100%;
   padding: 1.25rem 1.5rem;
   margin-top: 1.5rem;
-  background: transparent;
-  border: 2px dashed var(--border-light);
-  border-radius: 12px;
+  background: var(--surface-secondary);
   color: var(--text-muted);
   font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-align: center;
+  position: relative;
+}
+
+/* Octagonal dashed border using pseudo-element */
+.timeline-end::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--border-light);
+  clip-path: polygon(
+    var(--btn-corner) 0,
+    calc(100% - var(--btn-corner)) 0,
+    100% var(--btn-corner),
+    100% calc(100% - var(--btn-corner)),
+    calc(100% - var(--btn-corner)) 100%,
+    var(--btn-corner) 100%,
+    0 calc(100% - var(--btn-corner)),
+    0 var(--btn-corner)
+  );
+  z-index: -2;
+}
+
+.timeline-end::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: var(--surface-secondary);
+  clip-path: polygon(
+    calc(var(--btn-corner) - 1px) 0,
+    calc(100% - var(--btn-corner) + 1px) 0,
+    100% calc(var(--btn-corner) - 1px),
+    100% calc(100% - var(--btn-corner) + 1px),
+    calc(100% - var(--btn-corner) + 1px) 100%,
+    calc(var(--btn-corner) - 1px) 100%,
+    0 calc(100% - var(--btn-corner) + 1px),
+    0 calc(var(--btn-corner) - 1px)
+  );
+  z-index: -1;
 }

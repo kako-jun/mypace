@@ -1,3 +1,5 @@
+import Button from '../ui/Button'
+
 interface TimelineActionButtonProps {
   onClick: () => void
   disabled?: boolean
@@ -6,8 +8,10 @@ interface TimelineActionButtonProps {
 
 export function TimelineActionButton({ onClick, disabled = false, children }: TimelineActionButtonProps) {
   return (
-    <button type="button" className="timeline-action-button" onClick={onClick} disabled={disabled}>
-      {children}
-    </button>
+    <div className="timeline-action-wrapper">
+      <Button onClick={onClick} disabled={disabled} variant="primary" size="lg">
+        {children}
+      </Button>
+    </div>
   )
 }
