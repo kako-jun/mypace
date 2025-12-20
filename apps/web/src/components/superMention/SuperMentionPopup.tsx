@@ -50,7 +50,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
     // No query: show recent history
     if (!query) {
       setLoading(true)
-      getSuperMentionSuggestions('', undefined, 10)
+      getSuperMentionSuggestions('', undefined, 20)
         .then((suggestions) => {
           const historyItems: SuggestItem[] = suggestions.map((s) => ({
             type: 'history' as const,
@@ -70,7 +70,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
     setLoading(true)
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const historyResults = await getSuperMentionSuggestions(query, undefined, 5)
+        const historyResults = await getSuperMentionSuggestions(query, undefined, 10)
         const newItems: SuggestItem[] = []
 
         for (const s of historyResults) {

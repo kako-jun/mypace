@@ -385,7 +385,7 @@ body.custom-theme .logo-pace {
 .super-mention-popup-list {
   flex: 1;
   overflow-y: auto;
-  max-height: 300px;
+  max-height: 400px;
 }
 
 [data-theme='dark'] .super-mention-popup {

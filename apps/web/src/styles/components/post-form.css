@@ -405,6 +405,9 @@
   margin-bottom: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  min-height: 32px;
+  display: flex;
+  align-items: flex-end;
 }
 
 .preview-content {

@@ -3,7 +3,7 @@ import { Icon, parseEmojiTags } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies, PostContent, PostStickers } from '../post'
 import { cachePost, cacheProfile, navigateToPostModal, navigateToUser, contentHasTag } from '../../lib/utils'
-import { parseStickers } from '../../lib/nostr/tags'
+import { parseStickers, hasTeaserTag } from '../../lib/nostr/tags'
 import { useDeleteConfirm } from '../../hooks'
 import type { Event, ReactionData, ReplyData, RepostData, ProfileCache } from '../../types'
 
@@ -177,7 +177,7 @@ export default function TimelinePostCard({
         />
       )}
 
-      <PostStickers stickers={stickers} truncated />
+      <PostStickers stickers={stickers} truncated={hasTeaserTag(event)} />
     </article>
   )
 }
