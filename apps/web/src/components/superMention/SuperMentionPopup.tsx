@@ -114,7 +114,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
       } finally {
         setLoading(false)
       }
-    }, 300)
+    }, 500)
 
     return () => {
       if (searchTimeoutRef.current) {
