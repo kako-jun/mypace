@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { searchWikidata, getSuperMentionSuggestions, saveSuperMentionLabel } from '../../lib/api'
 import { SuggestItemView, type SuggestItem } from './index'
+import { CloseButton } from '../ui'
 
 interface SuperMentionPopupProps {
   onSelect: (text: string) => void
@@ -205,6 +206,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
             onKeyDown={handleKeyDown}
             placeholder="Search..."
           />
+          <CloseButton onClick={onClose} size={20} />
         </div>
         <div ref={containerRef} className="super-mention-popup-list">
           {loading && items.length === 0 && <div className="super-mention-suggest-loading">Searching...</div>}

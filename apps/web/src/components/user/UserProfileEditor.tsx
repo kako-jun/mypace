@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Avatar, Icon, Button, Input, Textarea, ErrorMessage, SuccessMessage } from '../ui'
+import { Avatar, Icon, Button, Input, Textarea, ErrorMessage, SuccessMessage, CloseButton } from '../ui'
 import { useImageUpload, useDragDrop, useTemporaryFlag, useWebsiteEditor } from '../../hooks'
 import { publishEvent } from '../../lib/nostr/relay'
 import { createProfileEvent } from '../../lib/nostr/events'
@@ -226,14 +226,11 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
                   placeholder="https://example.com"
                 />
                 {w.url.trim() && <span className="website-detected-label">{detectServiceLabel(w.url)}</span>}
-                <button
-                  type="button"
-                  className="website-remove-btn"
+                <CloseButton
                   onClick={() => websiteEditor.removeWebsite(index)}
-                  aria-label="Remove website"
-                >
-                  <Icon name="X" size={14} />
-                </button>
+                  size={14}
+                  className="website-remove-btn"
+                />
               </div>
             ))}
           </div>

@@ -325,3 +325,24 @@ body {
 .emoji-text {
   display: inline;
 }
+
+/* ===========================================
+   Close Button (common X button with rotate animation)
+   =========================================== */
+
+.close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: var(--text-primary);
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.close-button:hover {
+  transform: rotate(90deg);
+}

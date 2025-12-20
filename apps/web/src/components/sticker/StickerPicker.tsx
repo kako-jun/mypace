@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Icon, Input } from '../ui'
+import { Icon, Input, CloseButton } from '../ui'
 import Button from '../ui/Button'
 
 interface StickerPickerProps {
@@ -52,9 +52,7 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
           <div className="sticker-picker-modal">
             <div className="sticker-picker-header">
               <h3>Select Sticker</h3>
-              <button type="button" className="sticker-picker-close" onClick={() => setIsOpen(false)}>
-                <Icon name="X" size={20} />
-              </button>
+              <CloseButton onClick={() => setIsOpen(false)} size={20} />
             </div>
 
             <div className="sticker-picker-custom">

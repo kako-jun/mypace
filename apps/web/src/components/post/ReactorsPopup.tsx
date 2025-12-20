@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { Icon } from '../ui'
+import { Icon, CloseButton } from '../ui'
 
 interface Reactor {
   pubkey: string
@@ -35,9 +35,7 @@ export default function ReactorsPopup({
       >
         <div className="reactors-popup-header">
           <span className="reactors-popup-title">Stella</span>
-          <button className="reactors-popup-close" onClick={onClose}>
-            <Icon name="X" size={16} />
-          </button>
+          <CloseButton onClick={() => onClose()} size={16} />
         </div>
         <div className="reactors-list">
           {reactors.map((reactor) => (

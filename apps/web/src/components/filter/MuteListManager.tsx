@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Icon, Button, Input } from '../ui'
+import { Icon, Button, Input, CloseButton } from '../ui'
 import { loadMuteList, addToMuteList, removeFromMuteList, type MuteEntry } from '../../lib/utils'
 
 export function MuteListManager() {
@@ -83,14 +83,11 @@ export function MuteListManager() {
                   <span className="mute-list-npub" title={entry.npub}>
                     {entry.npub.slice(0, 12)}...{entry.npub.slice(-4)}
                   </span>
-                  <button
-                    type="button"
-                    className="mute-list-remove-btn"
+                  <CloseButton
                     onClick={() => handleRemoveFromMuteList(entry.pubkey)}
-                    title="Remove from mute list"
-                  >
-                    <Icon name="X" size={12} />
-                  </button>
+                    size={12}
+                    className="mute-list-remove-btn"
+                  />
                 </div>
               ))}
             </div>

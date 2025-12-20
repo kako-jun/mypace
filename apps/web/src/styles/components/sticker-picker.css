@@ -69,19 +69,6 @@
   font-weight: 600;
 }
 
-.sticker-picker-close {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.25rem;
-  color: var(--text-primary);
-  transition: transform 0.2s ease;
-}
-
-.sticker-picker-close:hover {
-  transform: rotate(90deg);
-}
-
 /* Custom URL input */
 .sticker-picker-custom {
   display: flex;
