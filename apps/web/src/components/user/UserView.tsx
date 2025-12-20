@@ -6,6 +6,7 @@ import {
   getAvatarUrl,
   navigateToHome,
   navigateToTag,
+  navigateTo,
   getUIThemeColors,
   applyThemeColors,
   shareOrCopy,
@@ -19,6 +20,7 @@ import {
   setSuperMentionClickHandler,
   setImageClickHandler,
   clearImageClickHandler,
+  setInternalLinkClickHandler,
 } from '../../lib/parser'
 import { LightBox, triggerLightBox } from '../ui'
 import { UserProfile } from './UserProfile'
@@ -114,6 +116,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     applyThemeColors(getUIThemeColors())
     setHashtagClickHandler((tag) => navigateToTag(tag))
     setSuperMentionClickHandler((path) => navigateToTag(path))
+    setInternalLinkClickHandler((path) => navigateTo(path))
     setImageClickHandler(triggerLightBox)
     loadProfile()
     return () => clearImageClickHandler()

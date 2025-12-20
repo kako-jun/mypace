@@ -69,6 +69,11 @@ export function detectEmbed(url: string): EmbedInfo | null {
     return null
   }
 
+  // Exclude internal mypace URLs from OGP
+  if (/^https?:\/\/mypace\.llll-ll\.com\//i.test(url)) {
+    return null
+  }
+
   return { type: 'ogp', url }
 }
 

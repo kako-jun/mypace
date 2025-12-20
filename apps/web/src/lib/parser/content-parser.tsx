@@ -4,7 +4,12 @@ import Prism from 'prismjs'
 import type { EmojiTag, ProfileMap } from '../../types'
 
 // Import parser utilities from individual modules
-import { getHashtagClickHandler, getImageClickHandler, getSuperMentionClickHandler } from './callbacks'
+import {
+  getHashtagClickHandler,
+  getImageClickHandler,
+  getSuperMentionClickHandler,
+  getInternalLinkClickHandler,
+} from './callbacks'
 import { escapeHtml, sanitizeHtml, processLinks, processImageUrls, removeImageLinks } from './html-utils'
 import { extractAlignments, restoreAlignments } from './alignment'
 import { processFontSyntax } from './font-syntax'
@@ -133,6 +138,7 @@ export function renderContent(
     const hashtagHandler = getHashtagClickHandler()
     const superMentionHandler = getSuperMentionClickHandler()
     const imageHandler = getImageClickHandler()
+    const internalLinkHandler = getInternalLinkClickHandler()
 
     if (target.classList.contains('content-hashtag')) {
       const tag = target.getAttribute('data-tag')
@@ -153,6 +159,17 @@ export function renderContent(
       const src = target.getAttribute('data-lightbox')
       if (src && imageHandler) {
         imageHandler(src)
+      }
+    }
+    // Handle internal links (SPA navigation)
+    if (target.classList.contains('content-link-internal') || target.closest('.content-link-internal')) {
+      e.preventDefault()
+      const link = target.classList.contains('content-link-internal')
+        ? target
+        : target.closest('.content-link-internal')
+      const href = link?.getAttribute('href')
+      if (href && internalLinkHandler) {
+        internalLinkHandler(href)
       }
     }
   }

@@ -14,6 +14,7 @@ import {
   getAvatarUrl,
   navigateToHome,
   navigateToTag,
+  navigateTo,
   navigateToEdit,
   navigateToReply,
   navigateToPost,
@@ -28,6 +29,7 @@ import {
   setSuperMentionClickHandler,
   setImageClickHandler,
   clearImageClickHandler,
+  setInternalLinkClickHandler,
 } from '../../lib/parser'
 import { LightBox, triggerLightBox } from '../ui'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers } from './index'
@@ -104,6 +106,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     applyThemeColors(getUIThemeColors())
     setHashtagClickHandler((tag) => navigateToTag(tag))
     setSuperMentionClickHandler((path) => navigateToTag(path))
+    setInternalLinkClickHandler((path) => navigateTo(path))
     setImageClickHandler(triggerLightBox)
     return () => clearImageClickHandler()
   }, [eventId])

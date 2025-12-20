@@ -76,31 +76,55 @@
   color: var(--text-primary);
 }
 
-/* ===== About Speech Bubble ===== */
+/* ===== About Speech Bubble (Octagonal) ===== */
 .user-about {
+  --bubble-corner: 8px;
   margin: 0 0 16px 0;
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: 0.9rem;
   line-height: 1.6;
   white-space: pre-wrap;
-  background: var(--surface-secondary);
   padding: 12px 16px;
-  border-radius: 12px;
   position: relative;
+  background: transparent;
 }
 
-/* Mobile: bubble with tail pointing up-left towards avatar */
+/* Octagonal border using pseudo-elements */
+.user-about::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--border-card, #333);
+  clip-path: polygon(
+    var(--bubble-corner) 0,
+    calc(100% - var(--bubble-corner)) 0,
+    100% var(--bubble-corner),
+    100% calc(100% - var(--bubble-corner)),
+    calc(100% - var(--bubble-corner)) 100%,
+    var(--bubble-corner) 100%,
+    0 calc(100% - var(--bubble-corner)),
+    0 var(--bubble-corner)
+  );
+  z-index: -2;
+}
+
 .user-about::after {
   content: '';
   position: absolute;
-  top: -8px;
-  left: 32px;
-  width: 0;
-  height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-bottom: 8px solid var(--surface-secondary);
+  inset: 2px;
+  background: var(--surface-secondary);
+  clip-path: polygon(
+    calc(var(--bubble-corner) - 1px) 0,
+    calc(100% - var(--bubble-corner) + 1px) 0,
+    100% calc(var(--bubble-corner) - 1px),
+    100% calc(100% - var(--bubble-corner) + 1px),
+    calc(100% - var(--bubble-corner) + 1px) 100%,
+    calc(var(--bubble-corner) - 1px) 100%,
+    0 calc(100% - var(--bubble-corner) + 1px),
+    0 calc(var(--bubble-corner) - 1px)
+  );
+  z-index: -1;
 }
 
 /* PC: bubble pops out to the left, avatar speaking */
@@ -115,18 +139,7 @@
     top: 24px;
     width: 180px;
     margin: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 1;
-  }
-
-  .user-about::after {
-    top: 20px;
-    left: auto;
-    right: -8px;
-    border-left: 8px solid var(--surface-secondary);
-    border-right: none;
-    border-top: 8px solid transparent;
-    border-bottom: 8px solid transparent;
   }
 }
 

@@ -42,3 +42,18 @@ export function clearSuperMentionClickHandler() {
 export function getSuperMentionClickHandler() {
   return onSuperMentionClick
 }
+
+// Callback for internal link clicks (SPA navigation)
+let onInternalLinkClick: ((path: string) => void) | null = null
+
+export function setInternalLinkClickHandler(handler: (path: string) => void) {
+  onInternalLinkClick = handler
+}
+
+export function clearInternalLinkClickHandler() {
+  onInternalLinkClick = null
+}
+
+export function getInternalLinkClickHandler() {
+  return onInternalLinkClick
+}

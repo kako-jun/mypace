@@ -1,6 +1,6 @@
 import { useState, useCallback, Fragment, useEffect } from 'react'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
-import { setHashtagClickHandler, setSuperMentionClickHandler } from '../../lib/parser'
+import { setHashtagClickHandler, setSuperMentionClickHandler, setInternalLinkClickHandler } from '../../lib/parser'
 import { TimelinePostCard, TimelineActionButton } from './index'
 import { Loading, Button, ErrorMessage, SuccessMessage } from '../ui'
 import { useTimeline } from '../../hooks'
@@ -154,11 +154,17 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
     [filters, filterTags]
   )
 
+  // Handle internal link clicks - SPA navigation
+  const handleInternalLinkClick = useCallback((path: string) => {
+    navigateTo(path)
+  }, [])
+
   // Set up click handlers
   useEffect(() => {
     setHashtagClickHandler(handleHashtagClick)
     setSuperMentionClickHandler(handleSuperMentionClick)
-  }, [handleHashtagClick, handleSuperMentionClick])
+    setInternalLinkClickHandler(handleInternalLinkClick)
+  }, [handleHashtagClick, handleSuperMentionClick, handleInternalLinkClick])
 
   if (loading && events.length === 0) return <Loading />
 

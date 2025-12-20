@@ -14,10 +14,18 @@ export function sanitizeHtml(content: string): string {
   return content.replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-// Add target="_blank" to links with random animation delay
+// Internal mypace URL pattern
+const INTERNAL_URL_REGEX = /^https?:\/\/mypace\.llll-ll\.com(\/|$)/i
+
+// Add target="_blank" to external links, mark internal links for SPA routing
 export function processLinks(html: string): string {
-  return html.replace(/<a href="/g, () => {
+  return html.replace(/<a href="([^"]+)"/g, (_match, url) => {
     const randomDelay = Math.random() * 12
+    if (INTERNAL_URL_REGEX.test(url)) {
+      // Internal link: extract path for SPA routing
+      const path = url.replace(/^https?:\/\/mypace\.llll-ll\.com/, '') || '/'
+      return `<a class="content-link content-link-internal" style="animation-delay: ${randomDelay.toFixed(1)}s" href="${path}" data-internal="true"`
+    }
     return `<a class="content-link" style="animation-delay: ${randomDelay.toFixed(1)}s" target="_blank" rel="noopener noreferrer" href="`
   })
 }
