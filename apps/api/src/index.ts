@@ -16,6 +16,7 @@ import {
   superMention,
   sticker,
   wellKnown,
+  raw,
 } from './routes'
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -47,6 +48,9 @@ app.route('/api/sticker', sticker)
 
 // Well-known
 app.route('/.well-known', wellKnown)
+
+// Raw content
+app.route('/raw', raw)
 
 // Health check
 app.get('/health', (c) => c.json({ status: 'ok' }))

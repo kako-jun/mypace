@@ -36,6 +36,6 @@ export function downloadAsMarkdown(content: string, filename: string): void {
 }
 
 export function openRawUrl(eventId: string): void {
-  const rawUrl = `${window.location.origin}/api/events/${eventId}/raw`
+  const rawUrl = `${window.location.origin}/raw/${eventId}`
   window.open(rawUrl, '_blank')
 }
