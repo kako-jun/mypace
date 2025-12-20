@@ -45,6 +45,16 @@
   letter-spacing: 0.02em;
   text-align: center;
   position: relative;
+  clip-path: polygon(
+    var(--btn-corner) 0,
+    calc(100% - var(--btn-corner)) 0,
+    100% var(--btn-corner),
+    100% calc(100% - var(--btn-corner)),
+    calc(100% - var(--btn-corner)) 100%,
+    var(--btn-corner) 100%,
+    0 calc(100% - var(--btn-corner)),
+    0 var(--btn-corner)
+  );
 }
 
 /* Octagonal dashed border using pseudo-element */

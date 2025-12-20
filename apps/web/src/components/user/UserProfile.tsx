@@ -77,12 +77,7 @@ export function UserProfile({
           )}
         </div>
 
-        {profile?.about && (
-          <p className="user-about">
-            {profile.about}
-            <span className="bubble-pointer" />
-          </p>
-        )}
+        {profile?.about && <p className="user-about">{profile.about}</p>}
 
         <div className="user-links">
           {getWebsites(profile).map((w, i) => (
