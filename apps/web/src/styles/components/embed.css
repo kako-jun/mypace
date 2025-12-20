@@ -517,11 +517,31 @@ html[data-theme="dark"] .embed-twitter {
   display: flex;
   text-decoration: none;
   color: inherit;
+  background: var(--surface-secondary);
   transition: background 0.2s;
 }
 
 .embed-link:hover {
-  background: var(--bg-hover);
+  background: var(--surface-tertiary);
+}
+
+/* Reset text-shadow for embed-link inside themed cards */
+.themed-card .embed-link,
+.themed-card .embed-link * {
+  text-shadow: none;
+  color: var(--text-primary);
+}
+
+.themed-card .embed-link-title {
+  color: var(--text-primary);
+}
+
+.themed-card .embed-link-description {
+  color: var(--text-secondary);
+}
+
+.themed-card .embed-link-domain {
+  color: var(--text-tertiary);
 }
 
 .embed-link-image {
