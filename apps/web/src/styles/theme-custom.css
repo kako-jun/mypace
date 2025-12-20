@@ -379,17 +379,27 @@ body.custom-theme .logo-pace {
 
 .super-mention-popup-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding-bottom: 0.5rem;
   margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-light);
-  padding-right: 2rem;
 }
 
 .super-mention-popup-header .close-button {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
+}
+
+.super-mention-popup-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.super-mention-popup-search {
+  margin-bottom: 0.75rem;
 }
 
 .super-mention-popup-input-group {

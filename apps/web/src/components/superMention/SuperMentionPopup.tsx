@@ -196,6 +196,10 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
     <div className="super-mention-popup-backdrop" onClick={handleBackdropClick}>
       <div className="super-mention-popup">
         <div className="super-mention-popup-header">
+          <h3>Super Mention</h3>
+          <CloseButton onClick={onClose} size={20} />
+        </div>
+        <div className="super-mention-popup-search">
           <div className="super-mention-popup-input-group">
             <span className="super-mention-popup-prefix">@@</span>
             <input
@@ -208,7 +212,6 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
               placeholder="Search..."
             />
           </div>
-          <CloseButton onClick={onClose} size={20} />
         </div>
         <div ref={containerRef} className="super-mention-popup-list">
           {loading && items.length === 0 && <div className="super-mention-suggest-loading">Searching...</div>}
