@@ -22,6 +22,9 @@ replies.get('/:eventId', async (c) => {
       return rootTag[1] === eventId
     })
 
+    // 古い順にソート（ツリー表示用）
+    replyList.sort((a, b) => a.created_at - b.created_at)
+
     return c.json({ count: replyList.length, replies: replyList })
   } finally {
     pool.close(RELAYS)

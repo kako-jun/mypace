@@ -37,7 +37,14 @@ export default function ReplyCard({
         eventKind={reply.kind}
       />
       <div className="post-content">
-        <PostContent content={reply.content} emojis={parseEmojiTags(reply.tags)} profiles={profiles} />
+        <PostContent
+          content={reply.content}
+          emojis={parseEmojiTags(reply.tags)}
+          profiles={profiles}
+          truncate={true}
+          tags={reply.tags}
+          onReadMore={onClick}
+        />
       </div>
     </article>
   )
