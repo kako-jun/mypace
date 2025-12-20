@@ -154,19 +154,23 @@ body.custom-theme .logo-pace {
 
 .light-text .content-link {
   color: #8fd8ff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
 .light-text .content-hashtag {
   color: #c8b4ff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
 .light-text .inline-code {
   background: rgba(255, 255, 255, 0.15);
   color: #ffb4d8;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
 .light-text .markdown-content a {
   color: #8fd8ff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
 .light-text .markdown-content blockquote {
@@ -177,6 +181,13 @@ body.custom-theme .logo-pace {
 /* Dark text adjustments */
 .dark-text .preview-label {
   color: #666;
+}
+
+.dark-text .content-link,
+.dark-text .content-hashtag,
+.dark-text .inline-code,
+.dark-text .markdown-content a {
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 /* Light text adjustments */
@@ -332,16 +343,17 @@ body.custom-theme .logo-pace {
   background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
 }
 
 .super-mention-popup {
   background: var(--surface-primary);
   border: 2px solid #333;
+  border-bottom: none;
   width: 90%;
   max-width: 400px;
-  max-height: 80vh;
+  max-height: 70vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;

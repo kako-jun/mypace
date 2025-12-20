@@ -1,6 +1,8 @@
 // Font syntax processing (color and size only)
-const ESCAPED_FONT_TAG_REGEX = /&lt;font(\s+[^&]*)&gt;([\s\S]*?)&lt;\/font&gt;/gi
-const ESCAPED_UNCLOSED_FONT_TAG_REGEX = /&lt;font(\s+[^&]*)&gt;([^&]*)/gi
+// Match &lt;font ...&gt; with non-greedy content capture until &lt;/font&gt;
+const ESCAPED_FONT_TAG_REGEX = /&lt;font(\s+(?:(?!&gt;).)*?)&gt;([\s\S]*?)&lt;\/font&gt;/gi
+// Unclosed font tags: match until end of line or next tag
+const ESCAPED_UNCLOSED_FONT_TAG_REGEX = /&lt;font(\s+(?:(?!&gt;).)*?)&gt;([^<\n]*)/gi
 // Support both regular quotes ("') and HTML-escaped quotes (&quot;)
 const COLOR_ATTR_REGEX = /color=(?:&quot;([^&]+)&quot;|["']([^"']+)["']|([^\s&]+))/i
 const SIZE_ATTR_REGEX = /size=(?:&quot;([1-5])&quot;|["']([1-5])["']|([1-5]))/i

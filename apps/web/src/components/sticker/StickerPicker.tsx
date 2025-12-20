@@ -43,7 +43,7 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
   return (
     <div className="sticker-picker">
       <button type="button" className="sticker-picker-toggle" onClick={() => setIsOpen(!isOpen)} title="Add sticker">
-        <Icon name="Sticker" size={20} />
+        <img src="/icons/kiss.webp" alt="Sticker" className="sticker-picker-toggle-icon" />
       </button>
 
       {isOpen && (

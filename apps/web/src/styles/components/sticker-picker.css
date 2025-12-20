@@ -9,19 +9,26 @@
 .sticker-picker-toggle {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 4px;
   background: var(--surface-secondary);
   border: 2px solid var(--border-primary);
-  border-radius: 0.5rem;
+  border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 1.2rem;
 }
 
 .sticker-picker-toggle:hover {
   background: var(--surface-hover);
   transform: scale(1.05);
+}
+
+.sticker-picker-toggle-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 
 .sticker-picker-backdrop {
@@ -33,15 +40,16 @@
 
 .sticker-picker-modal {
   position: fixed;
-  top: 50%;
+  bottom: 0;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   background: var(--surface-primary);
   border: 2px solid #333;
+  border-bottom: none;
   padding: 1rem;
   max-width: 400px;
   width: 90%;
-  max-height: 80vh;
+  max-height: 70vh;
   overflow-y: auto;
   z-index: 1001;
 }
