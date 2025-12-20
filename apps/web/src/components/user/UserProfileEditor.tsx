@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Avatar, Icon, Button, Input, ErrorMessage, SuccessMessage } from '../ui'
+import { Avatar, Icon, Button, Input, Textarea, ErrorMessage, SuccessMessage } from '../ui'
 import { useImageUpload, useDragDrop, useTemporaryFlag, useWebsiteEditor } from '../../hooks'
 import { publishEvent } from '../../lib/nostr/relay'
 import { createProfileEvent } from '../../lib/nostr/events'
@@ -178,13 +178,7 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
         </div>
         <div className="edit-field">
           <label>About</label>
-          <textarea
-            value={editAbout}
-            onChange={(e) => setEditAbout(e.target.value)}
-            placeholder="Tell us about yourself"
-            rows={3}
-            className="edit-textarea"
-          />
+          <Textarea value={editAbout} onChange={setEditAbout} placeholder="Tell us about yourself" rows={3} />
         </div>
         <div className="edit-field">
           <label>Websites</label>

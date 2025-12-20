@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Icon } from '../ui/Icon'
-import Button from '../ui/Button'
+import { Icon, Button, Input } from '../ui'
 import { loadMuteList, addToMuteList, removeFromMuteList, type MuteEntry } from '../../lib/utils'
 
 export function MuteListManager() {
@@ -63,15 +62,14 @@ export function MuteListManager() {
       {showPopup && (
         <div className="mute-list-popup">
           <div className="mute-list-input-row">
-            <input
-              type="text"
-              className="mute-list-input"
+            <Input
               value={muteInput}
-              onChange={(e) => setMuteInput(e.target.value)}
+              onChange={setMuteInput}
               placeholder="npub1..."
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleAddToMuteList()
               }}
+              className="mute-list-input"
             />
             <Button size="md" onClick={handleAddToMuteList}>
               <Icon name="Plus" size={14} />

@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Icon } from '../ui/Icon'
-import Button from '../ui/Button'
+import { Icon, Button, Input } from '../ui'
 import { loadPresets, savePreset, deletePreset, MAX_PRESETS } from '../../lib/utils'
 import type { SearchFilters, FilterPreset } from '../../types'
 
@@ -101,17 +100,16 @@ export function FilterPresets({
         <div className="filter-preset-modal-backdrop" onClick={() => setShowSaveModal(false)}>
           <div className="filter-preset-modal" onClick={(e) => e.stopPropagation()}>
             <div className="filter-preset-modal-header">Save Preset</div>
-            <input
-              type="text"
-              className="filter-preset-modal-input"
+            <Input
               value={presetName}
-              onChange={(e) => setPresetName(e.target.value)}
+              onChange={setPresetName}
               placeholder="Preset name..."
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSavePreset()
                 if (e.key === 'Escape') setShowSaveModal(false)
               }}
+              className="filter-preset-modal-input"
             />
             {presetError && <div className="filter-preset-modal-error">{presetError}</div>}
             <div className="filter-preset-modal-actions">

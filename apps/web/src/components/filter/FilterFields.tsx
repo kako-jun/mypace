@@ -1,4 +1,4 @@
-import { Icon } from '../ui/Icon'
+import { Icon, Input } from '../ui'
 
 interface FilterFieldsProps {
   searchQuery: string
@@ -9,7 +9,7 @@ interface FilterFieldsProps {
   onOkTagsChange: (value: string) => void
   onNgWordsChange: (value: string) => void
   onNgTagsChange: (value: string) => void
-  onKeyDown: (e: React.KeyboardEvent) => void
+  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
   inputRef: React.RefObject<HTMLInputElement | null>
 }
 
@@ -34,14 +34,13 @@ export function FilterFields({
           {/* OK word input */}
           <div className="filter-search-row">
             <Icon name="Search" size={16} className="filter-search-icon" />
-            <input
+            <Input
               ref={inputRef}
-              type="text"
-              className="filter-search-input"
               value={searchQuery}
               placeholder="Keyword..."
-              onChange={(e) => onSearchQueryChange(e.target.value)}
+              onChange={onSearchQueryChange}
               onKeyDown={onKeyDown}
+              className="filter-search-input"
             />
             {searchQuery && (
               <button
@@ -58,13 +57,12 @@ export function FilterFields({
           {/* OK tags input */}
           <div className="filter-search-row">
             <Icon name="Hash" size={16} className="filter-search-icon" />
-            <input
-              type="text"
-              className="filter-search-input"
+            <Input
               value={okTagsInput}
               placeholder="Tags..."
-              onChange={(e) => onOkTagsChange(e.target.value)}
+              onChange={onOkTagsChange}
               onKeyDown={onKeyDown}
+              className="filter-search-input"
             />
             {okTagsInput && (
               <button
@@ -87,13 +85,12 @@ export function FilterFields({
           {/* NG word input */}
           <div className="filter-search-row">
             <Icon name="Ban" size={16} className="filter-search-icon filter-ng-icon" />
-            <input
-              type="text"
-              className="filter-search-input"
+            <Input
               value={ngWordsInput}
               placeholder="Keywords..."
-              onChange={(e) => onNgWordsChange(e.target.value)}
+              onChange={onNgWordsChange}
               onKeyDown={onKeyDown}
+              className="filter-search-input"
             />
             {ngWordsInput && (
               <button
@@ -110,13 +107,12 @@ export function FilterFields({
           {/* NG tags input */}
           <div className="filter-search-row">
             <Icon name="Hash" size={16} className="filter-search-icon filter-ng-icon" />
-            <input
-              type="text"
-              className="filter-search-input"
+            <Input
               value={ngTagsInput}
               placeholder="Tags..."
-              onChange={(e) => onNgTagsChange(e.target.value)}
+              onChange={onNgTagsChange}
               onKeyDown={onKeyDown}
+              className="filter-search-input"
             />
             {ngTagsInput && (
               <button

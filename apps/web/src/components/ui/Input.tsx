@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from 'react'
+import { forwardRef, type KeyboardEvent } from 'react'
 
 interface InputProps {
   type?: 'text' | 'password' | 'email' | 'url'
@@ -14,21 +14,25 @@ interface InputProps {
   onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void
 }
 
-export default function Input({
-  type = 'text',
-  value,
-  onChange,
-  placeholder,
-  disabled = false,
-  readOnly = false,
-  className = '',
-  maxLength,
-  required = false,
-  autoFocus = false,
-  onKeyDown,
-}: InputProps) {
+const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  {
+    type = 'text',
+    value,
+    onChange,
+    placeholder,
+    disabled = false,
+    readOnly = false,
+    className = '',
+    maxLength,
+    required = false,
+    autoFocus = false,
+    onKeyDown,
+  },
+  ref
+) {
   return (
     <input
+      ref={ref}
       type={type}
       value={value}
       onInput={(e) => onChange((e.target as HTMLInputElement).value)}
@@ -42,4 +46,6 @@ export default function Input({
       autoFocus={autoFocus}
     />
   )
-}
+})
+
+export default Input
