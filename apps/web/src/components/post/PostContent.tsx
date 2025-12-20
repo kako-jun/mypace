@@ -7,15 +7,21 @@ import { hasTeaserTag as checkTeaserTag, removeReadMoreLink } from '../../lib/no
 import { lookupSuperMentionPaths } from '../../lib/api'
 import type { EmojiTag, ProfileMap, Event } from '../../types'
 
-// Regex to extract super mention paths from content
-const SUPER_MENTION_PATH_REGEX =
-  /@(\/[\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-/:.?=&%#,]+)/g
+// Regex to extract super mention paths from content (@@label format)
+const SUPER_MENTION_REGEX = /@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
+
+// URL pattern to distinguish URLs from Wikidata references
+const URL_PATTERN = /^(https?:\/\/)?[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(\/.*)?$/
 
 function extractSuperMentionPaths(content: string): string[] {
   const paths: string[] = []
   let match
-  while ((match = SUPER_MENTION_PATH_REGEX.exec(content)) !== null) {
-    paths.push(match[1])
+  while ((match = SUPER_MENTION_REGEX.exec(content)) !== null) {
+    const label = match[1]
+    // Skip URL references - they don't need Wikidata lookup
+    if (!URL_PATTERN.test(label)) {
+      paths.push(`/${label}`)
+    }
   }
   return [...new Set(paths)]
 }
