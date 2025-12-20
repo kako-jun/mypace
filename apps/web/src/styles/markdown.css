@@ -280,9 +280,13 @@
   font-size: 0.75em;
   font-weight: 400;
   text-decoration: none;
-  margin-left: 4px;
   opacity: 0.7;
   transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+/* Force spacing before Q badge using ::before pseudo-element */
+.content-q-badge::before {
+  content: '\00a0';  /* non-breaking space */
 }
 
 .content-q-badge:hover {
