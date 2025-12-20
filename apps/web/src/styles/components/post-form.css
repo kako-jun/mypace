@@ -416,6 +416,62 @@
   color: var(--text-secondary);
 }
 
+/* Preview skeleton - matches actual post card structure for sticker positioning */
+.preview-header-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.preview-avatar-skeleton {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--surface-tertiary);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.preview-author-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.preview-name-skeleton {
+  width: 80px;
+  height: 14px;
+  background: var(--surface-tertiary);
+  opacity: 0.5;
+  border-radius: 4px;
+}
+
+.preview-time-skeleton {
+  width: 50px;
+  height: 12px;
+  background: var(--surface-tertiary);
+  opacity: 0.5;
+  border-radius: 4px;
+}
+
+.preview-footer-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-left: 0.25rem;
+}
+
+.preview-action-skeleton {
+  width: 48px;
+  height: 28px;
+  background: var(--surface-tertiary);
+  opacity: 0.5;
+  border-radius: 1rem;
+}
+
 /* post-button styles are in buttons.css */
 
 /* Minimized post form: small square with avatar */

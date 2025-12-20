@@ -32,9 +32,23 @@ export default function PostPreview({
 
   return (
     <div className={`post-preview ${themeProps.className}`} style={transparentBackground ? {} : themeProps.style}>
-      <div className="preview-label">Preview</div>
+      {/* Header skeleton - matches PostHeader size */}
+      <div className="preview-header-skeleton">
+        <div className="preview-avatar-skeleton" />
+        <div className="preview-author-skeleton">
+          <div className="preview-name-skeleton" />
+          <div className="preview-time-skeleton" />
+        </div>
+      </div>
       <div className="preview-content">
         <PostContent content={content} emojis={emojis} />
+      </div>
+      {/* Footer skeleton - matches PostActions size */}
+      <div className="preview-footer-skeleton">
+        <div className="preview-action-skeleton" />
+        <div className="preview-action-skeleton" />
+        <div className="preview-action-skeleton" />
+        <div className="preview-action-skeleton" />
       </div>
       <PostStickers
         stickers={stickers}
