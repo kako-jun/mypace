@@ -18,8 +18,11 @@ export function sanitizeHtml(content: string): string {
 const INTERNAL_URL_REGEX = /^https?:\/\/mypace\.llll-ll\.com(\/|$)/i
 
 // Add target="_blank" to external links, mark internal links for SPA routing
+// Skip links that already have a class attribute (e.g., content-q-badge)
 export function processLinks(html: string): string {
-  return html.replace(/<a href="([^"]+)"/g, (_match, url) => {
+  // Match <a href="..." that is NOT followed by a class attribute
+  // Use negative lookahead to skip links that already have class
+  return html.replace(/<a href="([^"]+)"(?![^>]*\bclass=)/g, (_match, url) => {
     const randomDelay = Math.random() * 12
     if (INTERNAL_URL_REGEX.test(url)) {
       // Internal link: extract path for SPA routing
