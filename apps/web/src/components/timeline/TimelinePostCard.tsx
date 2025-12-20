@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Icon, parseEmojiTags } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies, PostContent, PostStickers } from '../post'
-import { cachePost, cacheProfile, navigateToPostModal, navigateToUser } from '../../lib/utils'
+import { cachePost, cacheProfile, navigateToPostModal, navigateToUser, contentHasTag } from '../../lib/utils'
 import { parseStickers } from '../../lib/nostr/tags'
 import { useDeleteConfirm } from '../../hooks'
 import type { Event, ReactionData, ReplyData, RepostData, ProfileCache } from '../../types'
@@ -19,6 +19,9 @@ interface TimelinePostCardProps {
   likingId: string | null
   repostingId: string | null
   copiedId: string | null
+  ngWords?: string[]
+  ngTags?: string[]
+  mutedPubkeys?: string[]
   onEdit: (event: Event) => void
   onDeleteConfirm: (event: Event) => void
   onLike: (event: Event) => void
@@ -42,6 +45,9 @@ export default function TimelinePostCard({
   likingId,
   repostingId,
   copiedId,
+  ngWords = [],
+  ngTags = [],
+  mutedPubkeys = [],
   onEdit,
   onDeleteConfirm,
   onLike,
@@ -57,6 +63,24 @@ export default function TimelinePostCard({
 
   const themeProps = getThemeCardProps(getEventThemeColors(event))
   const stickers = parseStickers(event.tags)
+
+  // Filter replies by NG words, NG tags, and muted users
+  const filteredReplies = replies?.replies
+    ? replies.replies.filter((reply) => {
+        // Filter by muted users
+        if (mutedPubkeys.includes(reply.pubkey)) return false
+        // Filter by NG words
+        if (ngWords.length > 0) {
+          const lowerContent = reply.content.toLowerCase()
+          if (ngWords.some((ngWord) => lowerContent.includes(ngWord.toLowerCase()))) return false
+        }
+        // Filter by NG tags
+        if (ngTags.length > 0) {
+          if (ngTags.some((tag) => contentHasTag(reply.content, tag))) return false
+        }
+        return true
+      })
+    : []
 
   const handleCardClick = (e: React.MouseEvent<HTMLElement>) => {
     const target = e.target as HTMLElement
@@ -142,9 +166,9 @@ export default function TimelinePostCard({
         )}
       </div>
 
-      {replies?.replies && replies.replies.length > 0 && (
+      {filteredReplies.length > 0 && (
         <ThreadReplies
-          replies={replies.replies}
+          replies={filteredReplies}
           expanded={expandedThread}
           onToggle={() => setExpandedThread(!expandedThread)}
           profiles={profiles}
