@@ -37,7 +37,7 @@
   right: 0;
   width: 20px;
   height: 20px;
-  background: linear-gradient(135deg, transparent calc(50% + 1px), #000 calc(50% + 1px), #000 calc(50% + 3px), transparent calc(50% + 3px));
+  background: linear-gradient(135deg, transparent calc(50% + 1px), #000 calc(50% + 1px), #000 calc(50% + 4px), transparent calc(50% + 4px));
   pointer-events: none;
 }
 
@@ -53,14 +53,22 @@
 .post-card:nth-child(9) { animation-delay: 0.24s; }
 .post-card:nth-child(10) { animation-delay: 0.27s; }
 
-.post-card.clickable {
-  cursor: pointer;
-  transition: transform 0.15s ease, filter 0.15s ease;
+/* Wrapper for drop-shadow on hover */
+.post-card-wrapper {
+  transition: filter 0.15s ease-out;
 }
 
-.post-card.clickable:hover {
-  transform: translate(-4px, -4px);
-  filter: drop-shadow(6px 6px 0 #000);
+.post-card-wrapper:hover {
+  filter: drop-shadow(10px 10px 0 #000);
+}
+
+.post-card.clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease-out;
+}
+
+.post-card-wrapper:hover .post-card {
+  transform: translate(-10px, -10px);
 }
 
 /* Post header */

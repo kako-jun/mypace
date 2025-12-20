@@ -103,81 +103,83 @@ export default function TimelinePostCard({
   }
 
   return (
-    <article
-      className={`post-card clickable ${isMyPost ? 'my-post' : ''} ${themeProps.className}`}
-      style={themeProps.style}
-      onClick={handleCardClick}
-    >
-      {repostedBy && (
-        <div className="repost-label">
-          <Icon name="Repeat2" size={14} /> {getDisplayName(repostedBy.pubkey)} reposted
+    <div className="post-card-wrapper">
+      <article
+        className={`post-card clickable ${isMyPost ? 'my-post' : ''} ${themeProps.className}`}
+        style={themeProps.style}
+        onClick={handleCardClick}
+      >
+        {repostedBy && (
+          <div className="repost-label">
+            <Icon name="Repeat2" size={14} /> {getDisplayName(repostedBy.pubkey)} reposted
+          </div>
+        )}
+
+        <PostHeader
+          pubkey={event.pubkey}
+          createdAt={event.created_at}
+          displayName={getDisplayName(event.pubkey)}
+          avatarUrl={getAvatarUrl(event.pubkey)}
+          isProfileLoading={profiles[event.pubkey] === undefined}
+          emojis={profiles[event.pubkey]?.emojis}
+          eventKind={event.kind}
+        />
+
+        <div className="post-content">
+          <PostContent
+            content={event.content}
+            truncate
+            emojis={parseEmojiTags(event.tags)}
+            profiles={profiles}
+            onReadMore={() => navigateToPostModal(event.id)}
+            tags={event.tags}
+          />
         </div>
-      )}
 
-      <PostHeader
-        pubkey={event.pubkey}
-        createdAt={event.created_at}
-        displayName={getDisplayName(event.pubkey)}
-        avatarUrl={getAvatarUrl(event.pubkey)}
-        isProfileLoading={profiles[event.pubkey] === undefined}
-        emojis={profiles[event.pubkey]?.emojis}
-        eventKind={event.kind}
-      />
+        <div className="post-footer">
+          <PostActions
+            isMyPost={isMyPost}
+            reactions={reactions}
+            replies={replies}
+            reposts={reposts}
+            likingId={likingId}
+            repostingId={repostingId}
+            eventId={event.id}
+            copied={copiedId === event.id}
+            myPubkey={myPubkey}
+            getDisplayName={getDisplayName}
+            onLike={() => onLike(event)}
+            onUnlike={() => onUnlike(event)}
+            onReply={() => onReply(event)}
+            onRepost={() => onRepost(event)}
+            onShare={() => onShare(event.id)}
+            onNavigateToProfile={navigateToUser}
+          />
 
-      <div className="post-content">
-        <PostContent
-          content={event.content}
-          truncate
-          emojis={parseEmojiTags(event.tags)}
-          profiles={profiles}
-          onReadMore={() => navigateToPostModal(event.id)}
-          tags={event.tags}
-        />
-      </div>
+          {isMyPost && (
+            <EditDeleteButtons
+              isConfirming={isConfirming(event.id)}
+              onEdit={() => onEdit(event)}
+              onDelete={() => showConfirm(event.id)}
+              onDeleteConfirm={handleDeleteConfirmClick}
+              onDeleteCancel={hideConfirm}
+            />
+          )}
+        </div>
 
-      <div className="post-footer">
-        <PostActions
-          isMyPost={isMyPost}
-          reactions={reactions}
-          replies={replies}
-          reposts={reposts}
-          likingId={likingId}
-          repostingId={repostingId}
-          eventId={event.id}
-          copied={copiedId === event.id}
-          myPubkey={myPubkey}
-          getDisplayName={getDisplayName}
-          onLike={() => onLike(event)}
-          onUnlike={() => onUnlike(event)}
-          onReply={() => onReply(event)}
-          onRepost={() => onRepost(event)}
-          onShare={() => onShare(event.id)}
-          onNavigateToProfile={navigateToUser}
-        />
-
-        {isMyPost && (
-          <EditDeleteButtons
-            isConfirming={isConfirming(event.id)}
-            onEdit={() => onEdit(event)}
-            onDelete={() => showConfirm(event.id)}
-            onDeleteConfirm={handleDeleteConfirmClick}
-            onDeleteCancel={hideConfirm}
+        {filteredReplies.length > 0 && (
+          <ThreadReplies
+            replies={filteredReplies}
+            expanded={expandedThread}
+            onToggle={() => setExpandedThread(!expandedThread)}
+            profiles={profiles}
+            getDisplayName={getDisplayName}
+            getAvatarUrl={getAvatarUrl}
           />
         )}
-      </div>
 
-      {filteredReplies.length > 0 && (
-        <ThreadReplies
-          replies={filteredReplies}
-          expanded={expandedThread}
-          onToggle={() => setExpandedThread(!expandedThread)}
-          profiles={profiles}
-          getDisplayName={getDisplayName}
-          getAvatarUrl={getAvatarUrl}
-        />
-      )}
-
-      <PostStickers stickers={stickers} truncated={hasTeaserTag(event)} />
-    </article>
+        <PostStickers stickers={stickers} truncated={hasTeaserTag(event)} />
+      </article>
+    </div>
   )
 }
