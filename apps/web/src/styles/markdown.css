@@ -274,23 +274,29 @@
   letter-spacing: -0.05em;
 }
 
-/* Q badge in post content */
-.super-mention-q-badge-content {
-  color: #fc0;
-  font-size: 0.85em;
-  font-weight: 600;
+/* Q badge in post content - subtle style */
+.content-q-badge {
+  color: #999;
+  font-size: 0.75em;
+  font-weight: 400;
   text-decoration: none;
-  transition: color 0.15s ease;
-  text-shadow:
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
-    1px 1px 0 #000;
+  margin-left: 4px;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, color 0.15s ease;
 }
 
-.super-mention-q-badge-content:hover {
-  color: #ff0;
+.content-q-badge:hover {
+  opacity: 1;
+  color: #0066cc;
   text-decoration: underline;
+}
+
+[data-theme="dark"] .content-q-badge {
+  color: #666;
+}
+
+[data-theme="dark"] .content-q-badge:hover {
+  color: #6ab4ff;
 }
 
 /* Nostr mentions (@user) */
