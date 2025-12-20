@@ -15,7 +15,8 @@ export function processHashtags(html: string): string {
 }
 
 // Super mention regex
-const SUPER_MENTION_REGEX = /(^|[\s>])@(\/[\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\-/:.?=&%#,]+)/g
+const SUPER_MENTION_REGEX =
+  /(^|[\s>])@(\/[\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-/:.?=&%#,]+)/g
 
 // Process super mentions in HTML
 export function processSuperMentions(html: string): string {

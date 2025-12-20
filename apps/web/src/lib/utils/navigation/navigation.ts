@@ -102,10 +102,10 @@ export function buildSearchUrl(filters: Partial<SearchFilters>): string {
   if (f.ngWords.length > 0) params.set('ng', f.ngWords.join(','))
   if (f.tags.length > 0) {
     const separator = f.mode === 'and' ? '+' : ','
-    params.set('tags', f.tags.map((t) => encodeURIComponent(t)).join(separator))
+    params.set('tags', f.tags.join(separator))
   }
   if (f.ngTags.length > 0) {
-    params.set('ngtags', f.ngTags.map((t) => encodeURIComponent(t)).join(','))
+    params.set('ngtags', f.ngTags.join(','))
   }
   if (!f.showSNS) params.set('sns', 'off')
   if (!f.showBlog) params.set('blog', 'off')

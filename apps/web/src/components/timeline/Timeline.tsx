@@ -275,11 +275,11 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
         </p>
       )}
       {filteredItems.length > 0 && hasMore && (
-        <Button size="md" className="load-more-button" onClick={loadOlderEvents} disabled={loadingMore}>
-          {loadingMore ? '読み込み中...' : '過去の投稿を読み込む'}
+        <Button size="lg" className="load-more-button" onClick={loadOlderEvents} disabled={loadingMore}>
+          {loadingMore ? 'Loading...' : 'Load Older Posts'}
         </Button>
       )}
-      {filteredItems.length > 0 && !hasMore && <p className="timeline-end">これ以上の投稿はありません</p>}
+      {filteredItems.length > 0 && !hasMore && <p className="timeline-end">End of timeline</p>}
     </div>
   )
 }

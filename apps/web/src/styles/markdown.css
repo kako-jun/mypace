@@ -228,11 +228,11 @@
 .content-super-mention {
   background: none;
   border: none;
-  color: #c85;
-  font-weight: 600;
+  color: #fd0;
+  font-weight: 700;
   cursor: pointer;
   padding: 0;
-  font-size: inherit;
+  font-size: 1.1em;
   font-family: inherit;
   transition: all 0.15s ease;
   text-shadow:
@@ -240,17 +240,17 @@
     1px -1px 0 #000,
     -1px 1px 0 #000,
     1px 1px 0 #000,
-    0 0 2px rgba(0, 0, 0, 0.5);
+    0 0 3px rgba(0, 0, 0, 0.7);
 }
 
 .content-super-mention:hover {
-  color: #fc8;
+  color: #ff0;
   text-decoration: underline;
 }
 
 .super-mention-prefix {
   font-weight: 800;
-  color: #fa0;
+  color: #fe0;
   letter-spacing: -0.05em;
 }
 

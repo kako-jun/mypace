@@ -76,28 +76,37 @@
   column-span: all;
   direction: ltr;
   width: 100%;
-  padding: 1rem;
-  margin-top: 1rem;
-  background: var(--surface-secondary);
-  color: var(--text-secondary);
-  border: 2px solid var(--text-muted);
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.5rem;
+  background: #f5a623;
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   text-align: center;
+  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.3);
 }
 
 .load-more-button:hover:not(:disabled) {
-  border-color: var(--text-primary);
-  color: var(--text-primary);
-  background: var(--surface-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(245, 166, 35, 0.4);
+  background: #ffb700;
+}
+
+.load-more-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(245, 166, 35, 0.3);
 }
 
 .load-more-button:disabled {
   cursor: wait;
-  opacity: 0.6;
+  opacity: 0.7;
+  background: #999;
+  box-shadow: none;
 }
 
 /* End of timeline message - same style as load-more-button */

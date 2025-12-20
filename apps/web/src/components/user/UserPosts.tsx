@@ -127,7 +127,7 @@ export function UserPosts({
                 onClick={() => fillGap(gapAfterThis.id)}
                 disabled={loadingGap === gapAfterThis.id}
               >
-                {loadingGap === gapAfterThis.id ? '読み込み中...' : 'さらに表示'}
+                {loadingGap === gapAfterThis.id ? 'Loading...' : 'Load More'}
               </button>
             )}
           </Fragment>
@@ -136,10 +136,10 @@ export function UserPosts({
       {items.length === 0 && <p className="empty">No posts yet</p>}
       {items.length > 0 && hasMore && (
         <button className="load-more-button" onClick={loadOlderEvents} disabled={loadingMore}>
-          {loadingMore ? '読み込み中...' : '過去の投稿を読み込む'}
+          {loadingMore ? 'Loading...' : 'Load Older Posts'}
         </button>
       )}
-      {items.length > 0 && !hasMore && <p className="timeline-end">これ以上の投稿はありません</p>}
+      {items.length > 0 && !hasMore && <p className="timeline-end">End of timeline</p>}
     </div>
   )
 }
