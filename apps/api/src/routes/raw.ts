@@ -6,6 +6,25 @@ import { SimplePool } from 'nostr-tools/pool'
 
 const raw = new Hono<{ Bindings: Bindings }>()
 
+// teaserタグの内容を取得
+function getTeaserContent(tags: string[][]): string | undefined {
+  return tags.find((t) => t[0] === 'teaser')?.[1]
+}
+
+// READ MOREリンクを削除
+function removeReadMoreLink(content: string): string {
+  return content.replace(/\n\n\.\.\.READ MORE → https?:\/\/[^\s]+$/i, '')
+}
+
+// 完全なコンテンツを取得（teaser展開）
+function getFullContent(content: string, tags: string[][]): string {
+  const teaserContent = getTeaserContent(tags)
+  if (!teaserContent) {
+    return content
+  }
+  return removeReadMoreLink(content) + teaserContent
+}
+
 // GET /raw/:id - イベント本文をプレーンテキストで取得
 raw.get('/:id', async (c) => {
   const id = c.req.param('id')
@@ -15,7 +34,8 @@ raw.get('/:id', async (c) => {
   try {
     const cached = await getCachedEventById(db, id)
     if (cached) {
-      return c.text(cached.content, 200, {
+      const fullContent = getFullContent(cached.content, cached.tags || [])
+      return c.text(fullContent, 200, {
         'Content-Type': 'text/plain; charset=utf-8',
       })
     }
@@ -29,7 +49,9 @@ raw.get('/:id', async (c) => {
   try {
     const relayEvents = await pool.querySync(RELAYS, { ids: [id] })
     if (relayEvents.length > 0) {
-      return c.text(relayEvents[0].content, 200, {
+      const event = relayEvents[0]
+      const fullContent = getFullContent(event.content, event.tags || [])
+      return c.text(fullContent, 200, {
         'Content-Type': 'text/plain; charset=utf-8',
       })
     }
