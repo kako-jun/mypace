@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   createTextNote,
   createDeleteEvent,
@@ -70,6 +70,7 @@ export function PostForm({
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const shortTextEditorRef = useRef<ShortTextEditorRef>(null)
+  const fileImportRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const profile = getLocalProfile()
@@ -268,6 +269,24 @@ export function PostForm({
     setStickers(updatedStickers)
   }
 
+  const handleFileImport = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file) return
+
+      try {
+        const text = await file.text()
+        onContentChange(text)
+      } catch {
+        setError('Failed to read file')
+      }
+
+      // Reset input
+      e.target.value = ''
+    },
+    [onContentChange]
+  )
+
   const imageUrls = getImageUrls(content)
 
   if (checkingProfile) {
@@ -344,6 +363,25 @@ export function PostForm({
         <button type="button" className="post-form-avatar-button" onClick={handleAvatarClick}>
           <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
         </button>
+        {!content && (
+          <>
+            <button
+              type="button"
+              className="file-import-button"
+              onClick={() => fileImportRef.current?.click()}
+              title="Import text file"
+            >
+              <Icon name="FileUp" size={16} />
+            </button>
+            <input
+              ref={fileImportRef}
+              type="file"
+              accept=".md,.txt,text/markdown,text/plain"
+              onChange={handleFileImport}
+              style={{ display: 'none' }}
+            />
+          </>
+        )}
         <button
           type="button"
           className="super-mention-button"

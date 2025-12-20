@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant } from '../../types'
 import { ImageDropZone, AttachedImages, PostPreview } from '../post'
 import { LongModeEditor, type LongModeEditorRef } from './LongModeEditor'
-import { Toggle, Avatar, TextButton, ErrorMessage } from '../ui'
+import { Toggle, Avatar, TextButton, ErrorMessage, Icon } from '../ui'
 import { StickerPicker, StickerList } from '../sticker'
 import { SuperMentionPopup } from '../superMention'
 import { FormActions } from './FormActions'
@@ -68,11 +68,29 @@ export function PostFormLongMode({
 }: PostFormLongModeProps) {
   const longModeFormRef = useRef<HTMLFormElement>(null)
   const editorRef = useRef<LongModeEditorRef>(null)
+  const fileImportRef = useRef<HTMLInputElement>(null)
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
 
   const handleInsertToEditor = (text: string) => {
     editorRef.current?.insertText(text)
   }
+
+  const handleFileImport = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file) return
+
+      try {
+        const text = await file.text()
+        onContentChange(text)
+      } catch {
+        onError('Failed to read file')
+      }
+
+      e.target.value = ''
+    },
+    [onContentChange, onError]
+  )
 
   return (
     <div className={`long-mode-container ${showPreview ? 'with-preview' : 'no-preview'}`}>
@@ -93,6 +111,25 @@ export function PostFormLongMode({
             <button type="button" className="post-form-avatar-button" onClick={onAvatarClick}>
               <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
             </button>
+            {!content && (
+              <>
+                <button
+                  type="button"
+                  className="file-import-button"
+                  onClick={() => fileImportRef.current?.click()}
+                  title="Import text file"
+                >
+                  <Icon name="FileUp" size={16} />
+                </button>
+                <input
+                  ref={fileImportRef}
+                  type="file"
+                  accept=".md,.txt,text/markdown,text/plain"
+                  onChange={handleFileImport}
+                  style={{ display: 'none' }}
+                />
+              </>
+            )}
             <button
               type="button"
               className="super-mention-button"

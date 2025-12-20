@@ -519,6 +519,27 @@
   padding: 0.25rem;
 }
 
+/* File import button */
+.file-import-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-secondary);
+  border: 2px solid #000;
+  color: var(--text-primary);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.file-import-button:hover {
+  transform: scale(1.05);
+  background: var(--surface-tertiary);
+}
+
 /* Super mention button (@@) */
 .super-mention-button {
   display: flex;
