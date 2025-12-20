@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Icon } from '../ui'
+import { Icon, Input } from '../ui'
+import Button from '../ui/Button'
 
 interface StickerPickerProps {
   onAddSticker: (sticker: { url: string }) => void
@@ -32,7 +33,7 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
     handleSelectSticker(customUrl)
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && customUrl.trim()) {
       e.preventDefault()
       handleCustomAdd()
@@ -41,7 +42,7 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
 
   return (
     <div className="sticker-picker">
-      <button type="button" className="sticker-picker-toggle" onClick={() => setIsOpen(!isOpen)} title="シールを貼る">
+      <button type="button" className="sticker-picker-toggle" onClick={() => setIsOpen(!isOpen)} title="Add sticker">
         <Icon name="Sticker" size={20} />
       </button>
 
@@ -50,30 +51,26 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
           <div className="sticker-picker-backdrop" onClick={() => setIsOpen(false)} />
           <div className="sticker-picker-modal">
             <div className="sticker-picker-header">
-              <h3>シールを選択</h3>
+              <h3>Select Sticker</h3>
               <button type="button" className="sticker-picker-close" onClick={() => setIsOpen(false)}>
                 <Icon name="X" size={20} />
               </button>
             </div>
 
-            {/* カスタムURL入力 */}
             <div className="sticker-picker-custom">
-              <input
-                type="text"
-                value={customUrl}
-                onChange={(e) => setCustomUrl(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="画像URLを入力..."
-                className="sticker-picker-input"
-              />
-              <button
-                type="button"
-                className="sticker-picker-add"
-                onClick={handleCustomAdd}
-                disabled={!customUrl.trim()}
-              >
-                追加
-              </button>
+              <div className="sticker-picker-input-row">
+                <Icon name="Link" size={16} className="sticker-picker-icon" />
+                <Input
+                  value={customUrl}
+                  onChange={setCustomUrl}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Image URL..."
+                  className="sticker-picker-input"
+                />
+              </div>
+              <Button size="sm" variant="primary" onClick={handleCustomAdd} disabled={!customUrl.trim()}>
+                Add
+              </Button>
             </div>
 
             <div className="sticker-picker-grid">

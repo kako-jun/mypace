@@ -203,11 +203,11 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="検索..."
+            placeholder="Search..."
           />
         </div>
         <div ref={containerRef} className="super-mention-popup-list">
-          {loading && items.length === 0 && <div className="super-mention-suggest-loading">検索中...</div>}
+          {loading && items.length === 0 && <div className="super-mention-suggest-loading">Searching...</div>}
           {items.map((item, index) => (
             <SuggestItemView
               key={
@@ -219,7 +219,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
               onHover={() => setSelectedIndex(index)}
             />
           ))}
-          {!loading && items.length === 0 && <div className="super-mention-suggest-empty">候補が見つかりません</div>}
+          {!loading && items.length === 0 && <div className="super-mention-suggest-empty">No results</div>}
         </div>
       </div>
     </div>
