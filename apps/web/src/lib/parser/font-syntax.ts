@@ -1,8 +1,9 @@
 // Font syntax processing (color and size only)
 const ESCAPED_FONT_TAG_REGEX = /&lt;font(\s+[^&]*)&gt;([\s\S]*?)&lt;\/font&gt;/gi
 const ESCAPED_UNCLOSED_FONT_TAG_REGEX = /&lt;font(\s+[^&]*)&gt;([^&]*)/gi
-const COLOR_ATTR_REGEX = /color=(?:["']([^"']+)["']|([^\s&]+))/i
-const SIZE_ATTR_REGEX = /size=(?:["']([1-5])["']|([1-5]))/i
+// Support both regular quotes ("') and HTML-escaped quotes (&quot;)
+const COLOR_ATTR_REGEX = /color=(?:&quot;([^&]+)&quot;|["']([^"']+)["']|([^\s&]+))/i
+const SIZE_ATTR_REGEX = /size=(?:&quot;([1-5])&quot;|["']([1-5])["']|([1-5]))/i
 
 const ALLOWED_COLORS = new Set([
   'red',
@@ -44,13 +45,13 @@ export function processFontSyntax(html: string): string {
     const styles: string[] = []
 
     const colorMatch = attrs.match(COLOR_ATTR_REGEX)
-    const colorValue = colorMatch ? colorMatch[1] || colorMatch[2] : null
+    const colorValue = colorMatch ? colorMatch[1] || colorMatch[2] || colorMatch[3] : null
     if (colorValue && isValidColor(colorValue)) {
       styles.push(`color: ${colorValue}`)
     }
 
     const sizeMatch = attrs.match(SIZE_ATTR_REGEX)
-    const sizeValue = sizeMatch ? sizeMatch[1] || sizeMatch[2] : null
+    const sizeValue = sizeMatch ? sizeMatch[1] || sizeMatch[2] || sizeMatch[3] : null
     if (sizeValue && SIZE_MAP[sizeValue]) {
       styles.push(`font-size: ${SIZE_MAP[sizeValue]}`)
     }
