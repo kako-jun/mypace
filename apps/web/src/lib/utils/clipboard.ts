@@ -1,3 +1,5 @@
+import { API_BASE } from '../api/api'
+
 export async function copyToClipboard(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text)
@@ -24,7 +26,9 @@ export async function shareOrCopy(url: string): Promise<{ shared: boolean; copie
 }
 
 export function downloadAsMarkdown(content: string, filename: string): void {
-  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' })
+  // UTF-8 BOM for proper Japanese character encoding in Windows
+  const bom = new Uint8Array([0xef, 0xbb, 0xbf])
+  const blob = new Blob([bom, content], { type: 'text/markdown;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -36,6 +40,6 @@ export function downloadAsMarkdown(content: string, filename: string): void {
 }
 
 export function openRawUrl(eventId: string): void {
-  const rawUrl = `${window.location.origin}/raw/${eventId}`
+  const rawUrl = `${API_BASE}/raw/${eventId}`
   window.open(rawUrl, '_blank')
 }
