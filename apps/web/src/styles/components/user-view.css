@@ -154,6 +154,17 @@
     border-left: 10px solid var(--border-card, #333);
   }
 
+  .user-about .bubble-pointer::before {
+    /* Cover the octagonal border at the pointer attachment point */
+    content: '';
+    position: absolute;
+    right: 0;
+    top: -10px;
+    width: 4px;
+    height: 20px;
+    background: var(--surface-secondary);
+  }
+
   .user-about .bubble-pointer::after {
     content: '';
     position: absolute;
