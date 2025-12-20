@@ -118,7 +118,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
       switch (item.type) {
         case 'wikidata':
           path = `/${item.label}`
-          insertText = `@${path} `
+          insertText = `@@${item.label} `
           wikidataId = item.id
           wikidataLabel = item.label
           wikidataDescription = item.description
@@ -126,7 +126,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
 
         case 'history':
           path = item.path
-          insertText = `@${path} `
+          insertText = `@@${item.label} `
           wikidataId = item.wikidataId
           wikidataLabel = item.label
           wikidataDescription = item.description
@@ -134,7 +134,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
 
         case 'custom':
           path = `/${item.label}`
-          insertText = `@${path} `
+          insertText = `@@${item.label} `
           break
 
         default:
@@ -190,7 +190,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
     <div className="super-mention-popup-backdrop" onClick={handleBackdropClick}>
       <div className="super-mention-popup">
         <div className="super-mention-popup-header">
-          <span className="super-mention-popup-prefix">@/</span>
+          <span className="super-mention-popup-prefix">@@</span>
           <input
             ref={inputRef}
             type="text"

@@ -97,9 +97,9 @@ export function PostFormLongMode({
               type="button"
               className="super-mention-button"
               onClick={() => setShowSuperMentionPopup(true)}
-              title="Super Mention (@/)"
+              title="Super Mention (@@)"
             >
-              @/
+              @@
             </button>
             <ImageDropZone onImageUploaded={handleInsertToEditor} onError={onError} />
             <StickerPicker onAddSticker={onAddSticker} />

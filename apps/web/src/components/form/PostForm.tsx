@@ -343,9 +343,9 @@ export function PostForm({
           type="button"
           className="super-mention-button"
           onClick={() => setShowSuperMentionPopup(true)}
-          title="Super Mention (@/)"
+          title="Super Mention (@@)"
         >
-          @/
+          @@
         </button>
         <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
         <StickerPicker onAddSticker={handleAddSticker} />

@@ -216,12 +216,12 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
           if (update.docChanged) {
             const newDoc = update.state.doc.toString()
 
-            // Detect @/ input
+            // Detect @@ input
             if (onSuperMentionTriggerRef.current) {
               const cursorPos = update.state.selection.main.head
               const beforeCursor = newDoc.slice(0, cursorPos)
-              if (beforeCursor.endsWith('@/')) {
-                // Remove the @/ that was just typed
+              if (beforeCursor.endsWith('@@')) {
+                // Remove the @@ that was just typed
                 const withoutTrigger = newDoc.slice(0, cursorPos - 2) + newDoc.slice(cursorPos)
                 update.view.dispatch({
                   changes: { from: cursorPos - 2, to: cursorPos, insert: '' },

@@ -14,9 +14,9 @@ export function processHashtags(html: string): string {
   })
 }
 
-// Super mention regex
+// Super mention regex (@@label format)
 const SUPER_MENTION_REGEX =
-  /(^|[\s>])@(\/[\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-/:.?=&%#,]+)/g
+  /(^|[\s>])@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,]+)/g
 
 function getWikipediaUrl(wikidataId: string): string {
   return `https://ja.wikipedia.org/wiki/Special:GoToLinkedPage/jawiki/${wikidataId}`
@@ -24,13 +24,14 @@ function getWikipediaUrl(wikidataId: string): string {
 
 // Process super mentions in HTML
 export function processSuperMentions(html: string, wikidataMap?: Record<string, string>): string {
-  return html.replace(SUPER_MENTION_REGEX, (_match, prefix, path) => {
+  return html.replace(SUPER_MENTION_REGEX, (_match, prefix, label) => {
+    const path = `/${label}`
     const escapedPath = escapeHtml(path)
     const wikidataId = wikidataMap?.[path]
     const qBadge = wikidataId
       ? ` <a href="${getWikipediaUrl(wikidataId)}" target="_blank" rel="noopener noreferrer" class="super-mention-q-badge-content" title="Wikipediaで開く">(${escapeHtml(wikidataId)})</a>`
       : ''
-    return `${prefix}<button class="content-super-mention" data-ref="${escapedPath}"><span class="super-mention-prefix">@/</span>${escapeHtml(path.slice(1))}</button>${qBadge}`
+    return `${prefix}<button class="content-super-mention" data-ref="${escapedPath}"><span class="super-mention-prefix">@@</span>${escapeHtml(label)}</button>${qBadge}`
   })
 }
 
