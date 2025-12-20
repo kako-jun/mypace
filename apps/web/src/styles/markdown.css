@@ -248,6 +248,26 @@
   text-decoration: underline;
 }
 
+/* Super mention URL variant */
+.content-super-mention-url {
+  color: #fd0;
+  font-weight: 700;
+  font-size: 1.1em;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 0 3px rgba(0, 0, 0, 0.7);
+}
+
+.content-super-mention-url:hover {
+  color: #ff0;
+  text-decoration: underline;
+}
+
 .super-mention-prefix {
   font-weight: 800;
   color: #fe0;

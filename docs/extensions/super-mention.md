@@ -151,15 +151,26 @@ CREATE TABLE super_mention_paths (
 - `GET /api/super-mention/suggest?prefix=ハンチョウ` - サジェスト取得
 - `POST /api/super-mention/paths` - パス保存（使用時に自動）
 
-## 将来の拡張
+## URL参照
 
-### URL参照
-
-URLへの言及も `@@` 構文で対応予定:
+URLへの言及も `@@` 構文で対応:
 
 ```
 @@example.com/article/123
 ```
+
+- ドメイン形式（`example.com` や `example.com/path`）は自動でURL参照として認識
+- クリックで `https://` を付与して外部リンクとして開く
+- Wikidata検索は行われず、直接リンクとして機能
+
+**例:**
+```
+@@github.com/nostr-protocol/nips
+
+このリポジトリ、よくまとまってる
+```
+
+## 将来の拡張
 
 ### 検索
 
