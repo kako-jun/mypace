@@ -4,23 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx src/dev-server.ts",
-    "dev:wrangler": "wrangler dev --port 8787",
+    "dev": "wrangler dev --port 8787",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.7",
-    "dotenv": "^17.2.3",
     "hono": "^4.6.0",
-    "https-proxy-agent": "^7.0.6",
-    "nostr-tools": "^2.10.0",
-    "ws": "^8.18.3"
+    "nostr-tools": "^2.10.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
-    "@types/ws": "^8.5.13",
-    "tsx": "^4.21.0",
     "typescript": "^5.7.0",
     "wrangler": "^3.90.0"
   }
