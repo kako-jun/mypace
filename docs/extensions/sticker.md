@@ -11,14 +11,30 @@
 ## タグ形式
 
 ```json
-["sticker", "<url>", "<x>", "<y>", "<size>", "<rotation>"]
+["sticker", "<url>", "<x>", "<y>", "<size>", "<rotation>", "<quadrant>"]
 ```
 
 - **url**: シール画像のURL
-- **x**: 左からの位置（0-100%）
-- **y**: 上からの位置（0-100%）
+- **x**: 象限内での位置（0-100%）
+- **y**: 象限内での位置（0-100%）
 - **size**: 幅（5-100%）
-- **rotation**: 回転角度（0-360度、オプション、デフォルト0）
+- **rotation**: 回転角度（0-360度）
+- **quadrant**: 基準コーナー（`top-left`, `top-right`, `bottom-left`, `bottom-right`）
+
+## 象限システム
+
+シールは4つのコーナーのいずれかを基準に配置される:
+
+```
+┌───────────┬───────────┐
+│ top-left  │ top-right │
+├───────────┼───────────┤
+│bottom-left│bottom-right│
+└───────────┴───────────┘
+```
+
+ドラッグでカード中央を越えると、最も近いコーナーにスナップ。
+これにより、カードサイズに関わらず相対位置が維持される。
 
 ## イベント形式
 
@@ -31,7 +47,7 @@ Kind 1に`sticker`タグを追加:
   "tags": [
     ["t", "mypace"],
     ["client", "mypace"],
-    ["sticker", "https://example.com/new-label.png", "85", "5", "20", "15"]
+    ["sticker", "https://example.com/new-label.png", "85", "5", "20", "15", "top-right"]
   ]
 }
 ```
@@ -45,8 +61,8 @@ Kind 1に`sticker`タグを追加:
   "tags": [
     ["t", "mypace"],
     ["client", "mypace"],
-    ["sticker", "https://example.com/sale.png", "80", "10", "25", "0"],
-    ["sticker", "https://example.com/limited.png", "5", "5", "18", "45"]
+    ["sticker", "https://example.com/sale.png", "80", "10", "25", "0", "top-right"],
+    ["sticker", "https://example.com/limited.png", "5", "5", "18", "45", "top-left"]
   ]
 }
 ```
@@ -57,6 +73,7 @@ Kind 1に`sticker`タグを追加:
 
 ```typescript
 function parseStickers(tags: string[][]): Sticker[] {
+  const validQuadrants = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
   return tags
     .filter((t) => t[0] === 'sticker' && t.length >= 5)
     .map((t) => ({
@@ -65,6 +82,7 @@ function parseStickers(tags: string[][]): Sticker[] {
       y: Math.max(0, Math.min(100, parseInt(t[3], 10) || 0)),
       size: Math.max(5, Math.min(100, parseInt(t[4], 10) || 15)),
       rotation: t[5] ? Math.max(0, Math.min(360, parseInt(t[5], 10) || 0)) : 0,
+      quadrant: validQuadrants.includes(t[6]) ? t[6] : 'top-left',
     }))
     .filter((s) => s.url)
 }
@@ -73,12 +91,15 @@ function parseStickers(tags: string[][]): Sticker[] {
 ### Sticker型（types/index.ts）
 
 ```typescript
+type StickerQuadrant = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+
 interface Sticker {
-  url: string    // Image URL
-  x: number      // Position from left (0-100%)
-  y: number      // Position from top (0-100%)
-  size: number   // Width (5-100%)
-  rotation: number // Rotation angle (0-360 degrees)
+  url: string              // 画像URL
+  x: number                // 象限内での位置（0-100%）
+  y: number                // 象限内での位置（0-100%）
+  size: number             // 幅（5-100%）
+  rotation: number         // 回転角度（0-360度）
+  quadrant: StickerQuadrant // 基準コーナー
 }
 ```
 
@@ -134,6 +155,24 @@ PostStickers (表示/編集共通)
 
 stickerタグはmypace独自拡張のため、他のNostrクライアントでは無視される。
 本文のみが表示され、シールは見えない。
+
+## シール履歴
+
+サーバーサイドでシールの使用履歴を追跡:
+
+```sql
+CREATE TABLE sticker_history (
+  url TEXT PRIMARY KEY,
+  first_used_by TEXT,      -- 最初に使用したユーザーのnpub
+  use_count INTEGER DEFAULT 1,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+```
+
+**APIエンドポイント:**
+- `GET /api/stickers/history` - 人気シール取得
+- `POST /api/stickers/history` - 使用履歴記録
 
 ## 将来の拡張
 
