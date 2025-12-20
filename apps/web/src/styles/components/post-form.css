@@ -540,6 +540,10 @@
   background: var(--surface-tertiary);
 }
 
+[data-theme='dark'] .file-import-button {
+  border-color: #fff;
+}
+
 /* Super mention button (@@) */
 .super-mention-button {
   display: flex;
