@@ -1,91 +1,62 @@
-# sticker
+# sticker（シール機能）
 
-Post card stickers - freely positionable images on posts.
+投稿カードの上に画像を自由配置できる「シール」機能。
 
-## Background
+## 背景
 
-- LINE sticker culture inspiration
-- Village Vanguard-style cheap POP aesthetic
-- Visual accents for posts
+- LINEのスタンプ文化のように、独自のシール文化を作りたい
+- ヴィレバン的な安っぽいPOP感の演出
+- 投稿に視覚的なアクセントを追加
 
-## Tag Format
+## タグ形式
 
 ```json
-["sticker", "<url>", "<x>", "<y>", "<size>", "<rotation>", "<quadrant>"]
+["sticker", "<url>", "<x>", "<y>", "<size>", "<rotation>"]
 ```
 
-- **url**: Sticker image URL
-- **x**: Position within quadrant (0-100%)
-- **y**: Position within quadrant (0-100%)
-- **size**: Width (5-100%)
-- **rotation**: Rotation angle (0-360 degrees)
-- **quadrant**: Anchor corner (`top-left`, `top-right`, `bottom-left`, `bottom-right`)
+- **url**: シール画像のURL
+- **x**: 左からの位置（0-100%）
+- **y**: 上からの位置（0-100%）
+- **size**: 幅（5-100%）
+- **rotation**: 回転角度（0-360度、オプション、デフォルト0）
 
-## Quadrant System
+## イベント形式
 
-Stickers are positioned relative to one of four corners:
-
-```
-┌───────────┬───────────┐
-│ top-left  │ top-right │
-├───────────┼───────────┤
-│bottom-left│bottom-right│
-└───────────┴───────────┘
-```
-
-When dragging a sticker across the center of the card, it snaps to the nearest quadrant. This ensures stickers maintain their relative position regardless of card size.
-
-## Event Format
-
-Kind 1 with `sticker` tags:
+Kind 1に`sticker`タグを追加:
 
 ```json
 {
   "kind": 1,
-  "content": "New product announcement",
+  "content": "新商品のお知らせ",
   "tags": [
     ["t", "mypace"],
     ["client", "mypace"],
-    ["sticker", "https://example.com/new-label.png", "85", "5", "20", "15", "top-right"]
+    ["sticker", "https://example.com/new-label.png", "85", "5", "20", "15"]
   ]
 }
 ```
 
-Multiple stickers:
+複数のシールを貼る場合は複数のタグを追加:
 
 ```json
 {
   "kind": 1,
-  "content": "Special sale!",
+  "content": "特別セール開催中！",
   "tags": [
     ["t", "mypace"],
     ["client", "mypace"],
-    ["sticker", "https://example.com/sale.png", "80", "10", "25", "0", "top-right"],
-    ["sticker", "https://example.com/limited.png", "5", "5", "18", "45", "top-left"]
+    ["sticker", "https://example.com/sale.png", "80", "10", "25", "0"],
+    ["sticker", "https://example.com/limited.png", "5", "5", "18", "45"]
   ]
 }
 ```
 
-## Sticker Type
+## 表示ロジック
 
-```typescript
-type StickerQuadrant = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-
-interface Sticker {
-  url: string           // Image URL
-  x: number             // Position within quadrant (0-100%)
-  y: number             // Position within quadrant (0-100%)
-  size: number          // Width (5-100%)
-  rotation: number      // Rotation angle (0-360 degrees)
-  quadrant: StickerQuadrant  // Anchor corner
-}
-```
-
-## Tag Parsing
+### タグ解析（lib/nostr/tags.ts）
 
 ```typescript
 function parseStickers(tags: string[][]): Sticker[] {
-  const validQuadrants = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
   return tags
     .filter((t) => t[0] === 'sticker' && t.length >= 5)
     .map((t) => ({
@@ -94,81 +65,78 @@ function parseStickers(tags: string[][]): Sticker[] {
       y: Math.max(0, Math.min(100, parseInt(t[3], 10) || 0)),
       size: Math.max(5, Math.min(100, parseInt(t[4], 10) || 15)),
       rotation: t[5] ? Math.max(0, Math.min(360, parseInt(t[5], 10) || 0)) : 0,
-      quadrant: validQuadrants.includes(t[6]) ? t[6] : 'top-left',
     }))
     .filter((s) => s.url)
 }
 ```
 
-## Post UI
+### Sticker型（types/index.ts）
 
-### Sticker Selection
-
-1. Click sticker icon in editor top actions
-2. Modal shows sticker history (most used first)
-3. Enter URL for custom sticker
-4. Selected sticker appears at center of preview
-
-### Photoshop-style Editing
-
-When a sticker is selected:
-
-- **Bounding box**: Blue dashed border
-- **Resize handles**: Blue circles at corners
-- **Rotation handle**: Green circle above center
-- **Drag**: Move sticker position
-- **Deselect**: Click outside or press ESC
-
-### Controls
-
-- Mouse and touch support
-- Larger handles on mobile
-- Position clamped to 0-100%
-- Maximum 10 stickers per post
-
-## Sticker History
-
-Server-side tracking of sticker usage:
-
-```sql
-CREATE TABLE sticker_history (
-  url TEXT PRIMARY KEY,
-  first_used_by TEXT,      -- npub of first user
-  use_count INTEGER DEFAULT 1,
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
-);
+```typescript
+interface Sticker {
+  url: string    // Image URL
+  x: number      // Position from left (0-100%)
+  y: number      // Position from top (0-100%)
+  size: number   // Width (5-100%)
+  rotation: number // Rotation angle (0-360 degrees)
+}
 ```
 
-API Endpoints:
-- `GET /api/stickers/history` - Get popular stickers
-- `POST /api/stickers/history` - Record sticker usage
+## 投稿UI
 
-## Component Structure
+### シール選択
+
+1. エディタ上部のシールアイコンをクリック
+2. モーダルからシールを選択（中央に配置される）
+
+### Photoshop風編集
+
+シールを選択すると:
+
+- **バウンディングボックス**: 青い破線で囲まれる
+- **リサイズハンドル**: 四隅の青い丸をドラッグでサイズ変更
+- **回転ハンドル**: 上部中央の緑の丸をドラッグで回転
+- **ドラッグ移動**: シール本体をドラッグで位置移動
+- **選択解除**: 外側クリックまたはESCキー
+
+### 操作
+
+- マウス/タッチ両対応
+- モバイルでは大きめのハンドル表示（タッチしやすい）
+- 位置は0-100%の範囲でクランプ（はみ出し防止）
+- 最大10枚まで
+
+## コンポーネント構成
 
 ```
-PostStickers (display/edit)
-├── sticker-wrapper (position/rotation/size)
-│   ├── post-sticker (image)
-│   ├── sticker-bbox (bounding box)
-│   ├── sticker-handle-resize × 4 (corners)
-│   ├── sticker-rotate-line
-│   └── sticker-handle-rotate
+PostStickers (表示/編集共通)
+├── sticker-wrapper (位置・回転・サイズ適用)
+│   ├── post-sticker (画像)
+│   ├── sticker-bbox (バウンディングボックス)
+│   ├── sticker-handle-resize × 4 (四隅)
+│   ├── sticker-rotate-line (回転ライン)
+│   └── sticker-handle-rotate (回転ハンドル)
 ```
 
-## Usage Locations
+## 使用箇所
 
-- **Timeline**: TimelinePostCard → PostStickers (display only)
-- **Detail page**: PostView → PostStickers (display only)
-- **Post preview**: PostPreview → PostStickers (editable)
-- **Edit mode**: Restore existing stickers, reposition
+- **タイムライン**: TimelinePostCard → PostStickers（表示のみ）
+- **詳細ページ**: PostView → PostStickers（表示のみ）
+- **投稿プレビュー**: PostPreview → PostStickers（編集可能）
+- **編集時**: 既存シールを復元、再配置可能
 
-## Other Clients
+## 編集時の復元
 
-Sticker tags are MyPace-specific. Other Nostr clients ignore them and show only the text content.
+編集モードでは既存のシールタグを解析し、シールを復元。
+位置・サイズ・回転すべて保持される。
 
-## Future
+## 他クライアントでの表示
 
-- Custom sticker upload
-- Sticker collection sharing
-- Zap-based sticker economy
+stickerタグはmypace独自拡張のため、他のNostrクライアントでは無視される。
+本文のみが表示され、シールは見えない。
+
+## 将来の拡張
+
+- カスタムシールのアップロード
+- シールコレクションの共有
+- Zapでシールを売買できる経済圏

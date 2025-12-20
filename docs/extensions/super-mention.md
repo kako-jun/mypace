@@ -1,204 +1,216 @@
-# Super Mention
+# スーパーメンション（万物への言及）
 
-> **"Personification of all things"** - Say "Thanks for the great story" to a manga, "Always appreciate you" to oxygen.
+> **「万物の擬人化」** - ハンチョウに「面白かったで」、酸素に「いつもありがとう」と呼びかける
 
-## Overview
+## 概要
 
-`@@` syntax to comment on anything in the world.
+`@@` 構文を使って、この世のあらゆるものに対してコメントできる機能。
 
-Regular mention `@user` is for people. Super mention `@@` is for everything.
+通常のメンション `@user` が人への呼びかけなら、スーパーメンション `@@` は万物への呼びかけ。
 
 ```
-@@Kaiji
+@@ハンチョウ
 
-The scene with Miyamoto was amazing
+宮本さんのセリフ、ぐっときた
 
 #mypace
 ```
 
-## Syntax
+## 構文
 
 ```
-@@target
+@@対象
 ```
 
-- Starts with `@@` (double at-mark)
-- UTF-8 string (Japanese OK)
-- Spaces converted to underscores automatically
-- Can include: letters, numbers, CJK characters, `-`, `_`, `.`, `:`, `?`, `=`, `&`, `%`, `#`, `,`, `/`
+- `@@` で始まる（ダブルアットマーク）
+- UTF-8 文字列（日本語OK）
+- スペースは使用不可（代わりにハイフンかアンダースコア）
 
-## Nostr Tag Conversion
+## Nostrタグへの変換
 
-Super mentions are converted to `t` tags with `/` prefix.
+投稿時、スーパーメンションは `t` タグに変換される。
 
-**Post content:**
+**投稿内容:**
 ```
-@@Kaiji
+@@ハンチョウ
 
-Volume 20 was amazing
+20巻の宮本さん、最高だった
 ```
 
-**Nostr event:**
+**Nostrイベント:**
 ```json
 {
   "kind": 1,
-  "content": "@@Kaiji\n\nVolume 20 was amazing",
+  "content": "@@ハンチョウ\n\n20巻の宮本さん、最高だった",
   "tags": [
     ["t", "mypace"],
-    ["t", "/Kaiji"]
+    ["t", "/ハンチョウ"]
   ]
 }
 ```
 
-- Uses `t` tag (standard Nostr spec)
-- Other clients display as hashtag
+- `t` タグを使用（既存のNostr仕様に準拠）
+- 他のNostrクライアントでもタグとして表示される
 
-## Display
+## 表示
 
-Super mentions are highlighted in post cards.
+投稿カードにはスーパーメンションが強調表示される。
 
 ```
 ┌────────────────────────────────────┐
-│ @username · 2 hours ago            │
+│ @username · 2時間前                 │
 │                                    │
-│ @@Kaiji (Q12345678)                │  ← Highlighted + Q badge
+│ @@ハンチョウ (Q12345678)            │  ← 強調表示 + Qバッジ
 │                                    │
-│ Volume 20 was amazing              │
+│ 20巻の宮本さん、最高だった          │
 │                                    │
-│ ★★★                                │
+│ ★★★                               │
 └────────────────────────────────────┘
 ```
 
-- `@@` portion shown in bold yellow
-- Click to filter by this super mention
-- Q badge shown for confirmed Wikidata mappings
+`@@` 部分が太字・黄色で表示され、クリックでフィルタリング可能。
 
-### Q Badge Wikipedia Link
+確定済みのスーパーメンションにはQ番号バッジが表示される（例: `(Q12345678)`）。
 
-Click the Q badge to open the corresponding Wikipedia page:
+### Q番号バッジのWikipediaリンク
+
+Q番号バッジはクリック可能で、対応するWikipediaページを新しいタブで開く。
 
 ```
-https://www.wikidata.org/wiki/Special:GoToLinkedPage/jawiki/{Q-number}
+https://www.wikidata.org/wiki/Special:GoToLinkedPage/jawiki/{Q番号}
 ```
 
-## Suggest UI
+- サジェストポップアップ内のQ番号バッジ → クリックでWikipediaを開く
+- 投稿本文内のQ番号バッジ → クリックでWikipediaを開く
+- Wikipedia URLはOGPカード表示の対象外（プレビューカードは表示されない）
 
-Click the `@@` button in editor or type `@@` to open the popup:
+## サジェストUI
+
+エディタ上部の `@@` ボタンをクリックするか、エディタ内で `@@` と入力すると、ポップアップでサジェストが表示される。
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ Super Mention                                       [×] │
+│ @@ [検索...]                                            │
 ├─────────────────────────────────────────────────────────┤
-│ @@ [Search...]                                          │
-├─────────────────────────────────────────────────────────┤
-│ [Check] Kaiji [Q12345678] Japanese manga                │ ← Confirmed
-│ [Search] Gambling Apocalypse Kaiji [Q99999] Manga       │ ← Wikidata
-│ [PenLine] Kaiji  Create new                             │ ← Custom
+│ [Check] ハンチョウ [Q12345678] 1日外出録ハンチョウ       │ ← Q確定済み
+│ [Search] 班長 [Q99999999] カイジの登場人物               │ ← Wikidata候補
+│ [PenLine] ハンチョウ  新規作成                           │
 └─────────────────────────────────────────────────────────┘
 ```
 
-- Popup modal (not inline dropdown)
-- Search is partial match
-- Arrow keys to navigate, Enter/Tab to select, Escape to close
-- Empty search shows recent history
+- 検索は部分一致（「無限城」で「鬼滅の刃 無限城編」がヒット）
+- Escでポップアップを閉じる
+- 履歴とWikidataから直接検索
 
-### Suggest Icons
+### サジェストアイコン
 
-| Icon | Meaning |
-|------|---------|
-| Check | History with confirmed Q number |
-| Pin | History without Q number |
-| Search | Wikidata search result |
-| PenLine | Create new (custom path) |
+| アイコン | 意味 |
+|----------|------|
+| Check | Q番号が確定済みの履歴 |
+| Pin | Q番号未確定の履歴 |
+| Search | Wikidata検索結果 |
+| PenLine | 新規作成（カスタムパス） |
 
-### Space Handling
+### Q番号の表示
 
-Spaces in paths are automatically converted to underscores:
+- サジェスト候補にQ番号がバッジ表示される（例: `[Q12345678]`）
+- ホバーでtooltipにも `Wikidata: Q12345678` と表示
+- クリックでWikipediaを開く
 
-- Input: `@@My Favorite Manga`
-- Stored: `@@My_Favorite_Manga`
+### Q番号の訂正
 
-### Q Number Correction
+誤ったQ番号が紐付いた場合:
 
-If wrong Q number is linked:
+1. 同じパスを入力（例: `@@ハンチョウ`）
+2. 履歴とWikidata候補が両方表示される
+3. 正しいWikidata候補を選択
+4. Q番号が上書きされる
 
-1. Enter same path (e.g., `@@Kaiji`)
-2. Both history and Wikidata results appear
-3. Select correct Wikidata result
-4. Q number is updated
+※ 常にWikidata検索が実行されるため、いつでも訂正可能
 
-## Wikidata Mapping
+## Wikidataマッピング
 
-Super mentions are linked to Wikidata Q numbers.
+スーパーメンションはWikidata Q番号と紐付けて管理される。
 
 ```sql
 CREATE TABLE super_mention_paths (
-  path TEXT PRIMARY KEY,              -- "/Kaiji"
+  path TEXT PRIMARY KEY,              -- "/ハンチョウ"
+  category TEXT,                      -- (レガシー、現在は未使用)
   wikidata_id TEXT,                   -- "Q123456789" (nullable)
-  wikidata_label TEXT,                -- "Gambling Apocalypse Kaiji"
-  wikidata_description TEXT,          -- "Japanese manga series"
+  wikidata_label TEXT,                -- "1日外出録ハンチョウ"
+  wikidata_description TEXT,          -- "日本の漫画作品"
   use_count INTEGER DEFAULT 1,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );
 ```
 
-**API Endpoints:**
+**API エンドポイント:**
 
-- `GET /api/wikidata/search?q=Kaiji&lang=ja` - Wikidata search
-- `GET /api/super-mention/suggest?prefix=Kaiji` - Get suggestions
-- `POST /api/super-mention/paths` - Save path (auto on use)
+- `GET /api/wikidata/search?q=ハンチョウ&lang=ja` - Wikidata検索
+- `GET /api/super-mention/suggest?prefix=ハンチョウ` - サジェスト取得
+- `POST /api/super-mention/paths` - パス保存（使用時に自動）
 
-## URL Reference
+## URL参照
 
-URLs can be mentioned with `@@`:
+URLへの言及も `@@` 構文で対応:
 
+```
+@@example.com/article/123
+```
+
+- ドメイン形式（`example.com` や `example.com/path`）は自動でURL参照として認識
+- クリックで `https://` を付与して外部リンクとして開く
+- Wikidata検索は行われず、直接リンクとして機能
+
+**例:**
 ```
 @@github.com/nostr-protocol/nips
+
+このリポジトリ、よくまとまってる
 ```
 
-- Domain format (`example.com` or `example.com/path`) recognized as URL
-- Click opens as external link with `https://`
-- No Wikidata search for URLs
+## 将来の拡張
 
-**Example:**
-```
-@@github.com/nostr-protocol/nips
+### 検索
 
-This repo is well organized
-```
-
-## Future
-
-### Search
-
-Search posts about specific targets:
+特定の対象についての投稿を検索:
 
 ```
-/posts?ref=/Kaiji
+/posts?ref=/ハンチョウ
 ```
 
-### Q Number Normalization
+### Q番号による正規化
 
-Unify variant spellings:
-- `@@Kaiji` → normalized by Q number
-- `@@GamblingApocalypseKaiji` → same Q number
+同じ作品の表記ゆれを統一:
+- `@@ハンチョウ` → Q番号で正規化
+- `@@1日外出録ハンチョウ` → 同じQ番号
 
-## Design Philosophy
+## 設計思想
 
-### Why `@@`
+### なぜ `@@` か
 
-- `@` is mention for people
-- `@@` is "super" mention (for everything)
-- Flat management with Wikidata Q numbers
+- `@` は人へのメンション
+- `@@` は「スーパー」メンション（万物への呼びかけ）
+- WikidataのQ番号でフラットに管理するため、階層構造（`/`）は不要
 
-### Difference from Hatena Bookmark
+### はてブとの違い
 
-- Hatena: Only things with URLs
-- mypace: Everything (with or without URL)
+- はてブ: URLのあるものだけ
+- mypace: 万物（URLがなくてもOK）
 
-### Tag Proliferation Solution
+### タグ乱立の解決
 
-- Suggestions guide convergence
-- Popular paths ranked higher
-- Q numbers identify same target
+- サジェストで収束を促す
+- 使用数が多いパスが上位に
+- Q番号で同じ対象を識別
+
+### 万物の擬人化
+
+`@@` はメンション（呼びかけ）。作品や概念に対して「語りかける」ニュアンス。
+
+```
+@@酸素
+
+いつもありがとう
+```
