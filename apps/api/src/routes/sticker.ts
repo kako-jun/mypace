@@ -8,7 +8,7 @@ sticker.post('/save', async (c) => {
   const db = c.env.DB
 
   try {
-    const body = await c.req.json<{ url: string }>()
+    const body = await c.req.json<{ url: string; pubkey?: string }>()
 
     if (!body.url) {
       return c.json({ error: 'url required' }, 400)
@@ -16,18 +16,19 @@ sticker.post('/save', async (c) => {
 
     const now = Math.floor(Date.now() / 1000)
 
-    // UPSERT: increment use_count if exists, otherwise create new
+    // UPSERT: increment use_count if exists, otherwise create new with first_used_by
+    // first_used_by is only set on initial insert, never updated
     await db
       .prepare(
         `
-        INSERT INTO sticker_history (url, use_count, created_at, updated_at)
-        VALUES (?, 1, ?, ?)
+        INSERT INTO sticker_history (url, first_used_by, use_count, created_at, updated_at)
+        VALUES (?, ?, 1, ?, ?)
         ON CONFLICT(url) DO UPDATE SET
           use_count = use_count + 1,
           updated_at = excluded.updated_at
       `
       )
-      .bind(body.url, now, now)
+      .bind(body.url, body.pubkey || null, now, now)
       .run()
 
     return c.json({ success: true })

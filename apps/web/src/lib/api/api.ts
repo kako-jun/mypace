@@ -234,12 +234,12 @@ export async function getStickerHistory(limit = 20): Promise<StickerHistoryItem[
   }
 }
 
-export async function saveStickerToHistory(url: string): Promise<void> {
+export async function saveStickerToHistory(url: string, pubkey?: string): Promise<void> {
   try {
     await fetch(`${API_BASE}/api/sticker/save`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url, pubkey }),
     })
   } catch {
     // Silently fail

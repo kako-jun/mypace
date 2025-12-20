@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Icon, Input, CloseButton } from '../ui'
 import Button from '../ui/Button'
 import { getStickerHistory, saveStickerToHistory, type StickerHistoryItem } from '../../lib/api'
+import { getCurrentPubkey } from '../../lib/nostr/events'
 
 interface StickerPickerProps {
   onAddSticker: (sticker: { url: string }) => void
@@ -27,7 +28,8 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
     if (!url.trim()) return
     const trimmedUrl = url.trim()
     onAddSticker({ url: trimmedUrl })
-    saveStickerToHistory(trimmedUrl)
+    const pubkey = await getCurrentPubkey()
+    saveStickerToHistory(trimmedUrl, pubkey)
     setIsOpen(false)
     setCustomUrl('')
   }

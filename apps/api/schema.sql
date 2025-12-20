@@ -56,9 +56,14 @@ CREATE INDEX IF NOT EXISTS idx_super_mention_use_count ON super_mention_paths(us
 -- Sticker history table
 CREATE TABLE IF NOT EXISTS sticker_history (
   url TEXT PRIMARY KEY,
+  first_used_by TEXT,                 -- npub of the first user who used this sticker
   use_count INTEGER DEFAULT 1,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_sticker_updated_at ON sticker_history(updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_sticker_first_used_by ON sticker_history(first_used_by);
+
+-- Migration: Add first_used_by column (run manually if table exists)
+-- ALTER TABLE sticker_history ADD COLUMN first_used_by TEXT;
