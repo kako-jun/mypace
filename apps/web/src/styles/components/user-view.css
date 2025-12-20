@@ -46,7 +46,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .user-npub {
@@ -130,9 +130,9 @@
   clip-path: polygon(
     /* pointer at top-left (inner) */
     calc(var(--bubble-corner) - 1px) var(--pointer-size),
-    calc(15% - var(--pointer-size) - 1px) var(--pointer-size),
+    calc(15% - var(--pointer-size) - 1px) calc(var(--pointer-size) + 1px),
     calc(15% - 1px) calc(var(--border-width) - 1px),
-    calc(15% + var(--pointer-size) - 1px) var(--pointer-size),
+    calc(15% + var(--pointer-size) - 1px) calc(var(--pointer-size) + 1px),
     calc(100% - var(--bubble-corner) + 1px) var(--pointer-size),
     /* octagon right side */
     100% calc(var(--pointer-size) + var(--bubble-corner) - 1px),
@@ -217,8 +217,13 @@
 }
 
 .user-stats {
-  font-size: 0.9rem;
-  color: var(--text-muted);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+  text-align: right;
 }
 
 /* Post Header User Button */
@@ -299,9 +304,11 @@
 /* ===== Links ===== */
 .user-links {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px 16px;
   margin: 12px 0;
+  justify-content: space-between;
 }
 
 .user-link {
