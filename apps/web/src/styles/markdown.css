@@ -285,7 +285,9 @@
   border-radius: 3px;
   color: #666;
   text-decoration: none;
-  vertical-align: middle;
+  vertical-align: baseline;
+  position: relative;
+  top: -0.1em;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
