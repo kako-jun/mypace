@@ -35,6 +35,10 @@
   object-fit: contain;
 }
 
+[data-theme='dark'] .sticker-picker-toggle-icon {
+  filter: invert(1);
+}
+
 .sticker-picker-backdrop {
   position: fixed;
   top: 0;
