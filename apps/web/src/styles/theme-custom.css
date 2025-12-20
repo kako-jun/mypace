@@ -368,7 +368,7 @@ body.custom-theme .logo-pace {
   background: var(--surface-primary);
   border: 2px solid #333;
   border-bottom: none;
-  width: 90%;
+  width: calc(100vw - 2rem);
   max-width: 400px;
   max-height: 70vh;
   padding: 1rem;
