@@ -21,6 +21,10 @@ import {
   navigateToUser,
   getUIThemeColors,
   applyThemeColors,
+  copyToClipboard,
+  downloadAsMarkdown,
+  openRawUrl,
+  shareOrCopy,
 } from '../../lib/utils'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import { hasTeaserTag, getTeaserContent, removeReadMoreLink, parseStickers } from '../../lib/nostr/tags'
@@ -34,8 +38,9 @@ import {
 import { LightBox, triggerLightBox } from '../ui'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers } from './index'
 import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage } from '../ui'
-import { useShare, useDeleteConfirm, usePostViewData } from '../../hooks'
+import { useDeleteConfirm, usePostViewData } from '../../hooks'
 import type { Profile, ReactionData } from '../../types'
+import type { ShareOption } from './ShareMenu'
 
 interface PostViewProps {
   eventId: string
@@ -69,8 +74,8 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const [repostingId, setRepostingId] = useState<string | null>(null)
   const [, setThemeVersion] = useState(0)
+  const [copied, setCopied] = useState(false)
 
-  const { copied, share } = useShare()
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
 
   const {
@@ -232,7 +237,39 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     }
   }
 
-  const handleShare = () => share(window.location.href)
+  const handleShareOption = async (option: ShareOption) => {
+    if (!event) return
+    switch (option) {
+      case 'url': {
+        const url = window.location.href
+        const result = await shareOrCopy(url)
+        if (result.copied) {
+          setCopied(true)
+          setTimeout(() => setCopied(false), TIMEOUTS.COPY_FEEDBACK)
+        }
+        break
+      }
+      case 'md-copy': {
+        const success = await copyToClipboard(event.content)
+        if (success) {
+          setCopied(true)
+          setTimeout(() => setCopied(false), TIMEOUTS.COPY_FEEDBACK)
+        }
+        break
+      }
+      case 'md-download': {
+        const filename = `post-${eventId.slice(0, 8)}`
+        downloadAsMarkdown(event.content, filename)
+        setCopied(true)
+        setTimeout(() => setCopied(false), TIMEOUTS.COPY_FEEDBACK)
+        break
+      }
+      case 'md-open': {
+        openRawUrl(eventId)
+        break
+      }
+    }
+  }
 
   const handleDeleteConfirm = async () => {
     if (!event) return
@@ -309,7 +346,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
               onUnlike={handleUnlike}
               onReply={() => navigateToReply(eventId)}
               onRepost={handleRepost}
-              onShare={handleShare}
+              onShareOption={handleShareOption}
               onNavigateToProfile={navigateToUser}
             />
             {isMyPost && (

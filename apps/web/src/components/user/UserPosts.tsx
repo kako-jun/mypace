@@ -12,6 +12,7 @@ import type {
   TimelineItem,
 } from '../../types'
 import type { GapInfo } from '../../hooks/timeline/types'
+import type { ShareOption } from '../post/ShareMenu'
 
 interface UserPostsProps {
   items: TimelineItem[]
@@ -34,7 +35,7 @@ interface UserPostsProps {
   onUnlike: (event: Event) => Promise<void>
   onRepost: (event: Event) => Promise<void>
   onDeleteConfirm: (event: Event) => void
-  onShare: (eventId: string) => void
+  onShareOption: (eventId: string, content: string, option: ShareOption) => void
   onCopied: (eventId: string) => void
   loadOlderEvents: () => Promise<void>
   fillGap: (gapId: string) => Promise<void>
@@ -61,7 +62,7 @@ export function UserPosts({
   onUnlike,
   onRepost,
   onDeleteConfirm,
-  onShare,
+  onShareOption,
   loadOlderEvents,
   fillGap,
 }: UserPostsProps) {
@@ -117,7 +118,7 @@ export function UserPosts({
               onUnlike={() => onUnlike(event)}
               onReply={() => handleReplyClick(event)}
               onRepost={() => onRepost(event)}
-              onShare={() => onShare(event.id)}
+              onShareOption={onShareOption}
               getDisplayName={getDisplayNameForEvent}
               getAvatarUrl={getAvatarUrlForEvent}
             />

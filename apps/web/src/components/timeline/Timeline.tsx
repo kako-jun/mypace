@@ -5,6 +5,9 @@ import { TimelinePostCard, TimelineActionButton } from './index'
 import { Loading, Button, ErrorMessage, SuccessMessage } from '../ui'
 import { useTimeline } from '../../hooks'
 import {
+  copyToClipboard,
+  downloadAsMarkdown,
+  openRawUrl,
   shareOrCopy,
   navigateToEdit,
   navigateTo,
@@ -14,6 +17,7 @@ import {
   getMutedPubkeys,
 } from '../../lib/utils'
 import type { Event, SearchFilters } from '../../types'
+import type { ShareOption } from '../post/ShareMenu'
 
 interface TimelineProps {
   onEditStart?: (event: Event) => void
@@ -114,12 +118,36 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
 
   const handleReplyClick = useCallback((event: Event) => onReplyStart?.(event), [onReplyStart])
 
-  const handleShare = useCallback(async (eventId: string) => {
-    const url = `${window.location.origin}/post/${eventId}`
-    const result = await shareOrCopy(url)
-    if (result.copied) {
-      setCopiedId(eventId)
-      setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+  const handleShareOption = useCallback(async (eventId: string, content: string, option: ShareOption) => {
+    switch (option) {
+      case 'url': {
+        const url = `${window.location.origin}/post/${eventId}`
+        const result = await shareOrCopy(url)
+        if (result.copied) {
+          setCopiedId(eventId)
+          setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+        }
+        break
+      }
+      case 'md-copy': {
+        const copied = await copyToClipboard(content)
+        if (copied) {
+          setCopiedId(eventId)
+          setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+        }
+        break
+      }
+      case 'md-download': {
+        const filename = `post-${eventId.slice(0, 8)}`
+        downloadAsMarkdown(content, filename)
+        setCopiedId(eventId)
+        setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+        break
+      }
+      case 'md-open': {
+        openRawUrl(eventId)
+        break
+      }
     }
   }, [])
 
@@ -259,7 +287,7 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
               onUnlike={handleUnlike}
               onReply={handleReplyClick}
               onRepost={handleRepost}
-              onShare={handleShare}
+              onShareOption={handleShareOption}
               getDisplayName={getDisplayName}
               getAvatarUrl={getAvatarUrl}
             />

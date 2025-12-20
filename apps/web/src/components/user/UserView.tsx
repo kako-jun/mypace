@@ -9,8 +9,10 @@ import {
   navigateTo,
   getUIThemeColors,
   applyThemeColors,
-  shareOrCopy,
   copyToClipboard,
+  downloadAsMarkdown,
+  openRawUrl,
+  shareOrCopy,
   verifyNip05,
 } from '../../lib/utils'
 import { Button, Loading, BackButton, ErrorMessage } from '../ui'
@@ -29,6 +31,7 @@ import { UserPosts } from './UserPosts'
 import { useTimeline } from '../../hooks'
 import { nip19 } from 'nostr-tools'
 import type { Event, LoadableProfile, Profile } from '../../types'
+import type { ShareOption } from '../post/ShareMenu'
 
 interface UserViewProps {
   pubkey: string
@@ -131,12 +134,36 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     }
   }, [profile?.nip05, pubkey])
 
-  const handleShare = async (eventId: string) => {
-    const url = `${window.location.origin}/post/${eventId}`
-    const result = await shareOrCopy(url)
-    if (result.copied) {
-      setCopiedId(eventId)
-      setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+  const handleShareOption = async (eventId: string, content: string, option: ShareOption) => {
+    switch (option) {
+      case 'url': {
+        const url = `${window.location.origin}/post/${eventId}`
+        const result = await shareOrCopy(url)
+        if (result.copied) {
+          setCopiedId(eventId)
+          setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+        }
+        break
+      }
+      case 'md-copy': {
+        const copied = await copyToClipboard(content)
+        if (copied) {
+          setCopiedId(eventId)
+          setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+        }
+        break
+      }
+      case 'md-download': {
+        const filename = `post-${eventId.slice(0, 8)}`
+        downloadAsMarkdown(content, filename)
+        setCopiedId(eventId)
+        setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+        break
+      }
+      case 'md-open': {
+        openRawUrl(eventId)
+        break
+      }
     }
   }
 
@@ -233,7 +260,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
         onUnlike={handleUnlike}
         onRepost={handleRepost}
         onDeleteConfirm={handleDeleteConfirm}
-        onShare={handleShare}
+        onShareOption={handleShareOption}
         onCopied={(id) => setCopiedId(id)}
         loadOlderEvents={loadOlderEvents}
         fillGap={fillGap}

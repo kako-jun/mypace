@@ -312,3 +312,129 @@
     transform: rotate(360deg);
   }
 }
+
+/* ===========================================
+   Share Menu
+   =========================================== */
+
+/* Share button wrapper - for positioning menu */
+.share-button-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Overlay to close menu on click outside */
+.share-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+/* Share menu - speech bubble style pointing down (appears above button) */
+.share-menu {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  margin-top: -12px;
+  background: var(--surface-primary);
+  border: 2px solid var(--border-card);
+  padding: 0.75rem;
+  z-index: 10000;
+  min-width: 200px;
+}
+
+/* Speech bubble arrow pointing down */
+.share-menu::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 10px 8px 0 8px;
+  border-style: solid;
+  border-color: var(--border-card) transparent transparent transparent;
+}
+
+/* Inner arrow for background color */
+.share-menu::before {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 8px 6px 0 6px;
+  border-style: solid;
+  border-color: var(--surface-primary) transparent transparent transparent;
+  z-index: 1;
+}
+
+.share-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--border-card);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.share-menu-title {
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.share-menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.share-menu-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.share-menu-option:hover {
+  background: var(--surface-secondary);
+}
+
+.share-menu-option svg {
+  stroke: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.share-menu-option span {
+  flex: 1;
+}
+
+.share-menu-arrow {
+  margin-left: auto;
+}
+
+.share-menu-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.share-menu-back:hover {
+  color: var(--text-primary);
+}

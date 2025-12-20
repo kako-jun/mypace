@@ -1,6 +1,7 @@
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react'
 import { Icon } from '../ui'
 import ReactorsPopup from './ReactorsPopup'
+import ShareMenu, { type ShareOption } from './ShareMenu'
 import { MAX_STELLA_PER_USER } from '../../lib/nostr/events'
 import type { ReactionData, ReplyData, RepostData } from '../../types'
 
@@ -19,7 +20,7 @@ interface PostActionsProps {
   onUnlike: () => void
   onReply: () => void
   onRepost: () => void
-  onShare: () => void
+  onShareOption: (option: ShareOption) => void
   onNavigateToProfile: (pubkey: string) => void
 }
 
@@ -40,7 +41,7 @@ export default function PostActions({
   onUnlike,
   onReply,
   onRepost,
-  onShare,
+  onShareOption,
   onNavigateToProfile,
 }: PostActionsProps) {
   // Random delay for stella spin animation (0-42 seconds)
@@ -52,6 +53,11 @@ export default function PostActions({
   const [showReactorsPopup, setShowReactorsPopup] = useState(false)
   const buttonWrapperRef = useRef<HTMLDivElement>(null)
   const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null)
+
+  // Share menu state
+  const [showShareMenu, setShowShareMenu] = useState(false)
+  const shareButtonRef = useRef<HTMLDivElement>(null)
+  const [shareMenuPosition, setShareMenuPosition] = useState<{ top: number; left: number } | null>(null)
 
   const myStella = reactions?.myStella || 0
   const canAddMoreStella = myStella < MAX_STELLA_PER_USER
@@ -140,6 +146,39 @@ export default function PostActions({
     }
     setShowReactorsPopup(false)
   }, [])
+
+  // Share menu position calculation (above the button)
+  useEffect(() => {
+    if (showShareMenu && shareButtonRef.current) {
+      const rect = shareButtonRef.current.getBoundingClientRect()
+      setShareMenuPosition({
+        top: rect.top + window.scrollY,
+        left: rect.left + rect.width / 2 + window.scrollX,
+      })
+    } else {
+      setShareMenuPosition(null)
+    }
+  }, [showShareMenu])
+
+  const handleShareClick = useCallback(() => {
+    setShowShareMenu(true)
+  }, [])
+
+  const handleShareMenuClose = useCallback((e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation()
+      e.preventDefault()
+    }
+    setShowShareMenu(false)
+  }, [])
+
+  const handleShareSelect = useCallback(
+    (option: ShareOption) => {
+      setShowShareMenu(false)
+      onShareOption(option)
+    },
+    [onShareOption]
+  )
 
   // Render count with loading/normal states
   const renderCount = (
@@ -243,13 +282,18 @@ export default function PostActions({
         {renderCount(reposts)}
       </button>
 
-      <button
-        className={`icon-button share-button ${copied ? 'copied' : ''}`}
-        onClick={onShare}
-        aria-label="Share this post"
-      >
-        {copied ? <Icon name="Check" size={20} /> : <Icon name="Share2" size={20} />}
-      </button>
+      <div className="share-button-wrapper" ref={shareButtonRef}>
+        <button
+          className={`icon-button share-button ${copied ? 'copied' : ''}`}
+          onClick={handleShareClick}
+          aria-label="Share this post"
+        >
+          {copied ? <Icon name="Check" size={20} /> : <Icon name="Share2" size={20} />}
+        </button>
+        {showShareMenu && shareMenuPosition && (
+          <ShareMenu position={shareMenuPosition} onSelect={handleShareSelect} onClose={handleShareMenuClose} />
+        )}
+      </div>
     </>
   )
 }

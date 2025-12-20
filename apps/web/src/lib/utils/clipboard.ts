@@ -22,3 +22,20 @@ export async function shareOrCopy(url: string): Promise<{ shared: boolean; copie
   const copied = await copyToClipboard(url)
   return { shared: false, copied }
 }
+
+export function downloadAsMarkdown(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename.endsWith('.md') ? filename : `${filename}.md`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+export function openRawUrl(eventId: string): void {
+  const rawUrl = `${window.location.origin}/api/events/${eventId}/raw`
+  window.open(rawUrl, '_blank')
+}

@@ -6,6 +6,7 @@ import { cachePost, cacheProfile, navigateToPostModal, navigateToUser, contentHa
 import { parseStickers, hasTeaserTag } from '../../lib/nostr/tags'
 import { useDeleteConfirm } from '../../hooks'
 import type { Event, ReactionData, ReplyData, RepostData, ProfileCache } from '../../types'
+import type { ShareOption } from '../post/ShareMenu'
 
 interface TimelinePostCardProps {
   event: Event
@@ -28,7 +29,7 @@ interface TimelinePostCardProps {
   onUnlike: (event: Event) => void
   onReply: (event: Event) => void
   onRepost: (event: Event) => void
-  onShare: (eventId: string) => void
+  onShareOption: (eventId: string, content: string, option: ShareOption) => void
   getDisplayName: (pubkey: string) => string
   getAvatarUrl: (pubkey: string) => string | null
 }
@@ -54,7 +55,7 @@ export default function TimelinePostCard({
   onUnlike,
   onReply,
   onRepost,
-  onShare,
+  onShareOption,
   getDisplayName,
   getAvatarUrl,
 }: TimelinePostCardProps) {
@@ -152,7 +153,7 @@ export default function TimelinePostCard({
             onUnlike={() => onUnlike(event)}
             onReply={() => onReply(event)}
             onRepost={() => onRepost(event)}
-            onShare={() => onShare(event.id)}
+            onShareOption={(option) => onShareOption(event.id, event.content, option)}
             onNavigateToProfile={navigateToUser}
           />
 
