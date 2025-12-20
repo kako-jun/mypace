@@ -194,23 +194,23 @@
     left: var(--border-width);
     right: auto;
     bottom: var(--border-width);
-    width: calc(100% + var(--pointer-size) - var(--border-width));
+    width: calc(100% + var(--pointer-size) - var(--border-width) * 2);
     clip-path: polygon(
       /* octagon top (inner) */
-      calc(var(--bubble-corner) - 1px) 0,
-      calc(100% - var(--pointer-size) - var(--bubble-corner) + 1px) 0,
+      calc(var(--bubble-corner) - var(--border-width)) 0,
+      calc(100% - var(--pointer-size) - var(--bubble-corner) + var(--border-width)) 0,
       /* octagon right side + pointer (inner) */
-      calc(100% - var(--pointer-size)) calc(var(--bubble-corner) - 1px),
+      calc(100% - var(--pointer-size)) calc(var(--bubble-corner) - var(--border-width)),
       calc(100% - var(--pointer-size)) calc(50% - var(--pointer-size) + var(--border-width)),
-      calc(100% - var(--border-width)) 50%,
+      100% 50%,
       calc(100% - var(--pointer-size)) calc(50% + var(--pointer-size) - var(--border-width)),
-      calc(100% - var(--pointer-size)) calc(100% - var(--bubble-corner) + 1px),
+      calc(100% - var(--pointer-size)) calc(100% - var(--bubble-corner) + var(--border-width)),
       /* octagon bottom (inner) */
-      calc(100% - var(--pointer-size) - var(--bubble-corner) + 1px) 100%,
-      calc(var(--bubble-corner) - 1px) 100%,
+      calc(100% - var(--pointer-size) - var(--bubble-corner) + var(--border-width)) 100%,
+      calc(var(--bubble-corner) - var(--border-width)) 100%,
       /* octagon left side (inner) */
-      0 calc(100% - var(--bubble-corner) + 1px),
-      0 calc(var(--bubble-corner) - 1px)
+      0 calc(100% - var(--bubble-corner) + var(--border-width)),
+      0 calc(var(--bubble-corner) - var(--border-width))
     );
   }
 }
