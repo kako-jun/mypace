@@ -30,26 +30,32 @@ export default function PostPreview({
 
   const themeProps = getThemeCardProps(themeColors)
 
+  const hasStickers = stickers.length > 0
+
   return (
     <div className={`post-preview ${themeProps.className}`} style={transparentBackground ? {} : themeProps.style}>
-      {/* Header skeleton - matches PostHeader size */}
-      <div className="preview-header-skeleton">
-        <div className="preview-avatar-skeleton" />
-        <div className="preview-author-skeleton">
-          <div className="preview-name-skeleton" />
-          <div className="preview-time-skeleton" />
+      {/* Header skeleton - only shown when stickers exist */}
+      {hasStickers && (
+        <div className="preview-header-skeleton">
+          <div className="preview-avatar-skeleton" />
+          <div className="preview-author-skeleton">
+            <div className="preview-name-skeleton" />
+            <div className="preview-time-skeleton" />
+          </div>
         </div>
-      </div>
+      )}
       <div className="preview-content">
         <PostContent content={content} emojis={emojis} />
       </div>
-      {/* Footer skeleton - matches PostActions size */}
-      <div className="preview-footer-skeleton">
-        <div className="preview-action-skeleton" />
-        <div className="preview-action-skeleton" />
-        <div className="preview-action-skeleton" />
-        <div className="preview-action-skeleton" />
-      </div>
+      {/* Footer skeleton - only shown when stickers exist */}
+      {hasStickers && (
+        <div className="preview-footer-skeleton">
+          <div className="preview-action-skeleton" />
+          <div className="preview-action-skeleton" />
+          <div className="preview-action-skeleton" />
+          <div className="preview-action-skeleton" />
+        </div>
+      )}
       <PostStickers
         stickers={stickers}
         editable={editableStickers}

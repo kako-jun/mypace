@@ -464,12 +464,19 @@
   padding-left: 0.25rem;
 }
 
+/* Action skeleton - matches actual button sizes exactly */
+/* Like/Reply/Repost buttons: vertical layout with icon (20px) + count (16px) + padding (4px × 2) */
 .preview-action-skeleton {
-  width: 48px;
-  height: 28px;
+  width: 36px;
+  height: 44px;
   background: var(--surface-tertiary);
   opacity: 0.5;
   border-radius: 1rem;
+}
+
+/* Share button: icon only (20px) + padding (4px × 2) */
+.preview-action-skeleton:last-child {
+  height: 28px;
 }
 
 /* post-button styles are in buttons.css */
