@@ -1,4 +1,4 @@
-import type { Sticker } from '../types'
+import type { Sticker } from '../../types'
 
 interface StickerListProps {
   stickers: Sticker[]

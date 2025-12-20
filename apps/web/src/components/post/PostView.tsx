@@ -29,7 +29,7 @@ import {
   setImageClickHandler,
   clearImageClickHandler,
 } from '../../lib/content-parser'
-import { LightBox, triggerLightBox } from '../LightBox'
+import { LightBox, triggerLightBox } from '../ui'
 import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers } from './index'
 import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage } from '../ui'
 import { useShare, useDeleteConfirm, usePostViewData } from '../../hooks'

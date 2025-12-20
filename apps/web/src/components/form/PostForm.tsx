@@ -9,7 +9,7 @@ import {
 import { navigateToUser } from '../../lib/utils'
 import type { ThemeColors, EmojiTag, Sticker, Event } from '../../types'
 import { publishEvent } from '../../lib/nostr/relay'
-import { ProfileSetup } from '../ProfileSetup'
+import { ProfileSetup } from '../user'
 import {
   hasLocalProfile,
   getLocalProfile,
@@ -22,8 +22,7 @@ import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../../lib/constants'
 import { ImageDropZone, AttachedImages, PostPreview } from '../post'
 import { Avatar, Icon, TextButton, ErrorMessage } from '../ui'
 import { setBoolean } from '../../lib/utils/storage'
-import { StickerPicker } from '../StickerPicker'
-import { StickerList } from '../StickerList'
+import { StickerPicker, StickerList } from '../sticker'
 import { FormActions, ShortTextEditor, PostFormLongMode } from './index'
 
 interface PostFormProps {

@@ -1,10 +1,9 @@
 import { useRef } from 'react'
 import type { ThemeColors, EmojiTag, Sticker, Event } from '../../types'
 import { ImageDropZone, AttachedImages, PostPreview } from '../post'
-import { LongModeEditor } from '../LongModeEditor'
+import { LongModeEditor } from './LongModeEditor'
 import { Toggle, Avatar, TextButton, ErrorMessage } from '../ui'
-import { StickerPicker } from '../StickerPicker'
-import { StickerList } from '../StickerList'
+import { StickerPicker, StickerList } from '../sticker'
 import { FormActions } from './FormActions'
 
 interface PostFormLongModeProps {

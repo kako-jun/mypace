@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Icon } from './ui'
+import { Icon } from '../ui'
 
 interface StickerPickerProps {
   onAddSticker: (sticker: { url: string }) => void

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { getCurrentPubkey, createProfileEvent } from '../lib/nostr/events'
-import type { Profile } from '../types'
-import { publishEvent, fetchUserProfile } from '../lib/nostr/relay'
-import { Button, Input, ErrorMessage } from '../components/ui'
-import { getLocalProfile, setLocalProfile, getErrorMessage } from '../lib/utils'
+import { getCurrentPubkey, createProfileEvent } from '../../lib/nostr/events'
+import type { Profile } from '../../types'
+import { publishEvent, fetchUserProfile } from '../../lib/nostr/relay'
+import { Button, Input, ErrorMessage } from '../ui'
+import { getLocalProfile, setLocalProfile, getErrorMessage } from '../../lib/utils'
 
 interface Props {
   onProfileSet?: () => void

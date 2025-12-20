@@ -20,7 +20,7 @@ import {
   setImageClickHandler,
   clearImageClickHandler,
 } from '../../lib/content-parser'
-import { LightBox, triggerLightBox } from '../LightBox'
+import { LightBox, triggerLightBox } from '../ui'
 import { UserProfile } from './UserProfile'
 import { UserProfileEditor } from './UserProfileEditor'
 import { UserPosts } from './UserPosts'

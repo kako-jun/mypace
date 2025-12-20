@@ -6,7 +6,7 @@ import { PostPage } from './pages/PostPage'
 import { UserPage } from './pages/UserPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { TagPage } from './pages/TagPage'
-import { PostModal } from './components/PostModal'
+import { PostModal } from './components/post'
 import { initializeNavigation } from './lib/utils'
 
 export default function App() {

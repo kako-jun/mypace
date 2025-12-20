@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { PostView } from './post'
-import { navigateBack } from '../lib/utils'
+import { PostView } from './PostView'
+import { navigateBack } from '../../lib/utils'
 
 export function PostModal() {
   const { id } = useParams<{ id: string }>()
