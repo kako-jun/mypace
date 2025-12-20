@@ -14,7 +14,7 @@
   height: 32px;
   padding: 4px;
   background: var(--surface-secondary);
-  border: 1px solid #333;
+  border: 1px solid var(--border-primary, #333);
   border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -23,6 +23,10 @@
 .sticker-picker-toggle:hover {
   background: var(--surface-hover);
   transform: scale(1.05);
+}
+
+[data-theme='dark'] .sticker-picker-toggle {
+  border-color: #666;
 }
 
 .sticker-picker-toggle-icon {
