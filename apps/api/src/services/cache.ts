@@ -78,7 +78,29 @@ export async function cacheEvents(db: D1Database, events: Event[]): Promise<void
 
 // 単一イベントをキャッシュに保存
 export async function cacheEvent(db: D1Database, event: Event): Promise<void> {
+  // kind 5 (delete) イベントの場合、参照されているイベントをキャッシュから削除
+  if (event.kind === 5) {
+    const eventIdsToDelete = event.tags.filter((t) => t[0] === 'e').map((t) => t[1])
+    if (eventIdsToDelete.length > 0) {
+      await deleteEventsFromCache(db, eventIdsToDelete)
+    }
+    return // 削除イベント自体はキャッシュしない
+  }
   await cacheEvents(db, [event])
+}
+
+// イベントをキャッシュから削除
+export async function deleteEventsFromCache(db: D1Database, eventIds: string[]): Promise<void> {
+  if (eventIds.length === 0) return
+  const placeholders = eventIds.map(() => '?').join(',')
+  try {
+    await db
+      .prepare(`DELETE FROM events WHERE id IN (${placeholders})`)
+      .bind(...eventIds)
+      .run()
+  } catch (e) {
+    console.error('Cache delete error:', e)
+  }
 }
 
 // IDでイベントを取得
