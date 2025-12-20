@@ -454,18 +454,18 @@
 
 /* Super mention button (@/) */
 .super-mention-button {
-  background: transparent;
-  border: 1px solid #fd0;
-  color: #fd0;
+  background: #fd0;
+  border: 2px solid #000;
+  color: #000;
   font-size: 0.85rem;
   font-weight: 700;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
 .super-mention-button:hover {
-  background: #fd0;
-  color: #000;
+  transform: scale(1.05);
+  opacity: 0.9;
 }

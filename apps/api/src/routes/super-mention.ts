@@ -66,15 +66,15 @@ superMention.get('/suggest', async (c) => {
     let params: (string | number)[]
 
     if (category) {
-      // カテゴリ指定あり: そのカテゴリ内で部分一致検索
+      // カテゴリ指定あり: そのカテゴリ内で部分一致検索（パスとラベル両方）
       query = `
         SELECT path, category, wikidata_id, wikidata_label, wikidata_description, use_count
         FROM super_mention_paths
-        WHERE category = ? AND path LIKE ?
+        WHERE category = ? AND (path LIKE ? OR wikidata_label LIKE ?)
         ORDER BY use_count DESC, updated_at DESC
         LIMIT ?
       `
-      params = [category, `%${prefix}%`, limit]
+      params = [category, `%${prefix}%`, `%${prefix}%`, limit]
     } else if (prefix) {
       // 部分一致検索（パスまたはラベルに含まれる）
       query = `

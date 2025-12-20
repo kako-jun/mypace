@@ -117,6 +117,7 @@ export function PostFormLongMode({
             darkTheme={darkTheme}
             onWrite={() => longModeFormRef.current?.requestSubmit()}
             onQuit={onLongModeToggle}
+            onSuperMentionTrigger={() => setShowSuperMentionPopup(true)}
           />
 
           <AttachedImages imageUrls={imageUrls} onRemove={onRemoveImage} />

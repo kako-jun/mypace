@@ -9,6 +9,7 @@ interface LongModeEditorProps {
   darkTheme?: boolean
   onWrite?: () => void
   onQuit?: () => void
+  onSuperMentionTrigger?: () => void
 }
 
 export interface LongModeEditorRef {
@@ -17,7 +18,7 @@ export interface LongModeEditorRef {
 }
 
 export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>(function LongModeEditor(
-  { value, onChange, placeholder = '', vimMode = false, darkTheme = false, onWrite, onQuit },
+  { value, onChange, placeholder = '', vimMode = false, darkTheme = false, onWrite, onQuit, onSuperMentionTrigger },
   ref
 ) {
   const editorRef = useRef<HTMLDivElement>(null)
@@ -25,12 +26,14 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
   const onChangeRef = useRef<(value: string) => void>(onChange)
   const onWriteRef = useRef<(() => void) | undefined>(onWrite)
   const onQuitRef = useRef<(() => void) | undefined>(onQuit)
+  const onSuperMentionTriggerRef = useRef<(() => void) | undefined>(onSuperMentionTrigger)
   const [isVimActive, setIsVimActive] = useState(vimMode)
   const [loading, setLoading] = useState(true)
 
   onChangeRef.current = onChange
   onWriteRef.current = onWrite
   onQuitRef.current = onQuit
+  onSuperMentionTriggerRef.current = onSuperMentionTrigger
 
   useImperativeHandle(ref, () => ({
     insertText: (text: string) => {
@@ -211,7 +214,25 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
         EditorView.lineWrapping,
         EditorView.updateListener.of((update: ViewUpdate) => {
           if (update.docChanged) {
-            onChangeRef.current?.(update.state.doc.toString())
+            const newDoc = update.state.doc.toString()
+
+            // Detect @/ input
+            if (onSuperMentionTriggerRef.current) {
+              const cursorPos = update.state.selection.main.head
+              const beforeCursor = newDoc.slice(0, cursorPos)
+              if (beforeCursor.endsWith('@/')) {
+                // Remove the @/ that was just typed
+                const withoutTrigger = newDoc.slice(0, cursorPos - 2) + newDoc.slice(cursorPos)
+                update.view.dispatch({
+                  changes: { from: cursorPos - 2, to: cursorPos, insert: '' },
+                })
+                onChangeRef.current?.(withoutTrigger)
+                onSuperMentionTriggerRef.current()
+                return
+              }
+            }
+
+            onChangeRef.current?.(newDoc)
           }
         }),
       ]

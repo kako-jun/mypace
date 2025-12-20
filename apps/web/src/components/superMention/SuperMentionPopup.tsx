@@ -81,7 +81,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
     setLoading(true)
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const historyResults = await getSuperMentionSuggestions(`/${currentCategory}/${query}`, undefined, 5)
+        const historyResults = await getSuperMentionSuggestions(query, currentCategory, 5)
         const newItems: SuggestItem[] = []
 
         for (const s of historyResults) {

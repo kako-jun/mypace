@@ -362,7 +362,12 @@ export function PostForm({
         </button>
       </div>
 
-      <ShortTextEditor ref={shortTextEditorRef} content={content} onContentChange={onContentChange} />
+      <ShortTextEditor
+        ref={shortTextEditorRef}
+        content={content}
+        onContentChange={onContentChange}
+        onSuperMentionTrigger={() => setShowSuperMentionPopup(true)}
+      />
 
       <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
       <StickerList stickers={stickers} onRemove={handleRemoveSticker} />

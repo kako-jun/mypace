@@ -5,6 +5,7 @@ interface ShortTextEditorProps {
   content: string
   onContentChange: (content: string) => void
   placeholder?: string
+  onSuperMentionTrigger?: () => void
 }
 
 export interface ShortTextEditorRef {
@@ -13,10 +14,11 @@ export interface ShortTextEditorRef {
 }
 
 export const ShortTextEditor = forwardRef<ShortTextEditorRef, ShortTextEditorProps>(function ShortTextEditor(
-  { content, onContentChange, placeholder = 'マイペースで書こう' },
+  { content, onContentChange, placeholder = 'マイペースで書こう', onSuperMentionTrigger },
   ref
 ) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const prevContentRef = useRef(content)
 
   useImperativeHandle(ref, () => ({
     insertText: (text: string) => {
@@ -45,7 +47,25 @@ export const ShortTextEditor = forwardRef<ShortTextEditorRef, ShortTextEditorPro
         value={content}
         onInput={(e) => {
           const target = e.target as HTMLTextAreaElement
-          onContentChange(target.value)
+          const newValue = target.value
+          const prevValue = prevContentRef.current
+
+          // Detect @/ input: check if @/ was just typed
+          if (onSuperMentionTrigger && newValue.length > prevValue.length) {
+            const cursorPos = target.selectionStart
+            const beforeCursor = newValue.slice(0, cursorPos)
+            if (beforeCursor.endsWith('@/')) {
+              // Remove the @/ that was just typed
+              const withoutTrigger = newValue.slice(0, cursorPos - 2) + newValue.slice(cursorPos)
+              onContentChange(withoutTrigger)
+              prevContentRef.current = withoutTrigger
+              onSuperMentionTrigger()
+              return
+            }
+          }
+
+          prevContentRef.current = newValue
+          onContentChange(newValue)
         }}
         rows={3}
         maxLength={LIMITS.MAX_POST_LENGTH}
