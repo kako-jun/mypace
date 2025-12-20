@@ -46,13 +46,12 @@ export function processSuperMentions(html: string, wikidataMap?: Record<string, 
     }
 
     // Wikidata reference
-    const path = `/${label}`
-    const escapedPath = escapeHtml(path)
-    const wikidataId = wikidataMap?.[path]
+    const escapedLabel = escapeHtml(label)
+    const wikidataId = wikidataMap?.[label]
     const qBadge = wikidataId
       ? ` <a href="${getWikipediaUrl(wikidataId)}" target="_blank" rel="noopener noreferrer" class="content-q-badge" title="Wikipediaで開く">${escapeHtml(wikidataId)}</a>`
       : ''
-    return `${prefix}<button class="content-super-mention" data-ref="${escapedPath}"><span class="super-mention-prefix">@@</span>${escapeHtml(label)}</button>${qBadge}`
+    return `${prefix}<button class="content-super-mention" data-ref="${escapedLabel}"><span class="super-mention-prefix">@@</span>${escapedLabel}</button>${qBadge}`
   })
 }
 

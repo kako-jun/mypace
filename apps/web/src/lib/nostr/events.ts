@@ -56,7 +56,7 @@ export async function createTextNote(
   const refs = new Set<string>()
   let match
   while ((match = superMentionRegex.exec(content)) !== null) {
-    refs.add(`/${match[1]}`) // Add leading / to create path
+    refs.add(match[1])
   }
   for (const ref of refs) {
     tags.push(['t', ref])
@@ -234,7 +234,7 @@ export async function createReplyEvent(
   const refs = new Set<string>()
   let match
   while ((match = superMentionRegex.exec(content)) !== null) {
-    refs.add(`/${match[1]}`) // Add leading / to create path
+    refs.add(match[1])
   }
   for (const ref of refs) {
     tags.push(['t', ref])

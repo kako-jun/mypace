@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { searchWikidata, getSuperMentionSuggestions, saveSuperMentionPath } from '../../lib/api'
+import { searchWikidata, getSuperMentionSuggestions, saveSuperMentionLabel } from '../../lib/api'
 import { SuggestItemView, type SuggestItem } from './index'
 
 interface SuperMentionPopupProps {
@@ -55,7 +55,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
           const historyItems: SuggestItem[] = suggestions.map((s) => ({
             type: 'history' as const,
             path: s.path,
-            label: s.wikidataLabel || s.path.replace(/^\//, ''),
+            label: s.wikidataLabel || s.path,
             description: s.wikidataDescription || '',
             wikidataId: s.wikidataId || undefined,
           }))
@@ -77,7 +77,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
           newItems.push({
             type: 'history',
             path: s.path,
-            label: s.wikidataLabel || s.path.replace(/^\//, ''),
+            label: s.wikidataLabel || s.path,
             description: s.wikidataDescription || '',
             wikidataId: s.wikidataId || undefined,
           })
@@ -115,38 +115,38 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
   const handleSelect = useCallback(
     async (item: SuggestItem) => {
       let insertText: string
-      let path: string
+      let label: string
       let wikidataId: string | undefined
       let wikidataLabel: string | undefined
       let wikidataDescription: string | undefined
 
       switch (item.type) {
         case 'wikidata':
-          path = `/${normalizeLabel(item.label)}`
-          insertText = `@@${normalizeLabel(item.label)} `
+          label = normalizeLabel(item.label)
+          insertText = `@@${label} `
           wikidataId = item.id
           wikidataLabel = item.label
           wikidataDescription = item.description
           break
 
         case 'history':
-          path = item.path
-          insertText = `@@${normalizeLabel(item.label)} `
+          label = normalizeLabel(item.label)
+          insertText = `@@${label} `
           wikidataId = item.wikidataId
           wikidataLabel = item.label
           wikidataDescription = item.description
           break
 
         case 'custom':
-          path = `/${normalizeLabel(item.label)}`
-          insertText = `@@${normalizeLabel(item.label)} `
+          label = normalizeLabel(item.label)
+          insertText = `@@${label} `
           break
 
         default:
           return
       }
 
-      saveSuperMentionPath(path, wikidataId, wikidataLabel, wikidataDescription).catch(() => {})
+      saveSuperMentionLabel(label, wikidataId, wikidataLabel, wikidataDescription).catch(() => {})
 
       onSelect(insertText)
       onClose()
