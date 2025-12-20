@@ -26,7 +26,7 @@ import { UserProfileEditor } from './user/UserProfileEditor'
 import { UserPosts } from './user/UserPosts'
 import { useTimeline } from '../hooks'
 import { nip19 } from 'nostr-tools'
-import type { Event, Profile } from '../types'
+import type { Event, LoadableProfile, Profile } from '../types'
 
 interface UserViewProps {
   pubkey: string
@@ -56,7 +56,7 @@ function decodePubkey(id: string): string {
 export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const pubkey = decodePubkey(rawPubkey)
   const [mounted, setMounted] = useState(false)
-  const [profile, setProfile] = useState<Profile | null | undefined>(undefined)
+  const [profile, setProfile] = useState<LoadableProfile>(undefined)
   const [profileLoading, setProfileLoading] = useState(true)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)

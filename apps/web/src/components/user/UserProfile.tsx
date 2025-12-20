@@ -1,11 +1,11 @@
 import { Icon, Avatar, TextButton, CopyButton, ExternalLink } from '../ui'
 import { getWebsites, getWebsiteIcon } from '../../lib/utils'
 import { nip19 } from 'nostr-tools'
-import type { Profile, ThemeColors } from '../../types'
+import type { LoadableProfile, ThemeColors } from '../../types'
 import { getThemeCardProps } from '../../lib/nostr/events'
 
 interface UserProfileProps {
-  profile: Profile | null | undefined
+  profile: LoadableProfile
   pubkey: string
   displayName: string
   avatarUrl: string | null

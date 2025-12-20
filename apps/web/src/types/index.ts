@@ -39,6 +39,12 @@ export interface ProfileCache {
   [pubkey: string]: Profile | null
 }
 
+// Profile that may be loading (undefined), not found (null), or loaded (Profile)
+export type LoadableProfile = Profile | null | undefined
+
+// Map of profiles that may be in various loading states
+export type ProfileMap = Record<string, LoadableProfile>
+
 // Reaction types
 export interface Reactor {
   pubkey: string

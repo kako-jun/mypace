@@ -2,7 +2,7 @@ import PostHeader from './PostHeader'
 import { PostContent } from './PostContent'
 import { parseEmojiTags } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
-import type { Event, EmojiTag, Profile } from '../../types'
+import type { Event, EmojiTag, ProfileMap } from '../../types'
 
 interface ReplyCardProps {
   reply: Event
@@ -10,7 +10,7 @@ interface ReplyCardProps {
   avatarUrl: string | null
   isProfileLoading?: boolean
   emojis?: EmojiTag[]
-  profiles?: Record<string, Profile | null | undefined>
+  profiles?: ProfileMap
   onClick?: () => void
 }
 

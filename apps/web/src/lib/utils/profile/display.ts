@@ -1,12 +1,12 @@
 import { nip19 } from 'nostr-tools'
-import type { Profile, ProfileCache } from '../../../types'
+import type { LoadableProfile, ProfileCache } from '../../../types'
 import { t } from '../../i18n'
 
 function isValidPubkey(pubkey: string): boolean {
   return typeof pubkey === 'string' && pubkey.length === 64 && /^[0-9a-f]+$/i.test(pubkey)
 }
 
-export function getDisplayName(profile: Profile | null | undefined, pubkey: string): string {
+export function getDisplayName(profile: LoadableProfile, pubkey: string): string {
   if (profile?.display_name) return profile.display_name
   if (profile?.name) return profile.name
   if (profile === undefined) {
@@ -21,7 +21,7 @@ export function getDisplayName(profile: Profile | null | undefined, pubkey: stri
   return t('anonymousName')
 }
 
-export function getAvatarUrl(profile: Profile | null | undefined): string | null {
+export function getAvatarUrl(profile: LoadableProfile): string | null {
   return profile?.picture || null
 }
 

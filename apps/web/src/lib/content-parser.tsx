@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Marked } from 'marked'
 import Prism from 'prismjs'
-import type { EmojiTag, Profile } from '../types'
+import type { EmojiTag, ProfileMap } from '../types'
 
 // Import parser utilities
 import {
@@ -72,11 +72,7 @@ const marked = new Marked({
   },
 })
 
-export function renderContent(
-  content: string,
-  emojis: EmojiTag[] = [],
-  profiles: Record<string, Profile | null | undefined> = {}
-) {
+export function renderContent(content: string, emojis: EmojiTag[] = [], profiles: ProfileMap = {}) {
   // 1. Extract code blocks FIRST (protect from all processing)
   const { text: textWithCodePlaceholders, codeBlocks } = extractCodeBlocks(content)
 

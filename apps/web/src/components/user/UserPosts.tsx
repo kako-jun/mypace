@@ -2,7 +2,15 @@ import { Fragment, useCallback } from 'react'
 import { TimelinePostCard } from '../timeline'
 import { SuccessMessage } from '../ui'
 import { navigateToEdit, navigateToReply, getDisplayName, getAvatarUrl } from '../../lib/utils'
-import type { Event, Profile, ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../../types'
+import type {
+  Event,
+  LoadableProfile,
+  ProfileCache,
+  ReactionData,
+  ReplyData,
+  RepostData,
+  TimelineItem,
+} from '../../types'
 import type { GapInfo } from '../../hooks/timeline/types'
 
 interface UserPostsProps {
@@ -13,7 +21,7 @@ interface UserPostsProps {
   reposts: { [eventId: string]: RepostData }
   myPubkey: string | null
   authorPubkey: string
-  authorProfile: Profile | null | undefined
+  authorProfile: LoadableProfile
   likingId: string | null
   repostingId: string | null
   copiedId: string | null

@@ -5,10 +5,10 @@ import { publishEvent } from '../../lib/nostr/relay'
 import { createProfileEvent } from '../../lib/nostr/events'
 import { setLocalProfile, getErrorMessage, detectServiceLabel, getWebsites } from '../../lib/utils'
 import { CUSTOM_EVENTS } from '../../lib/constants'
-import type { Profile } from '../../types'
+import type { Profile, LoadableProfile } from '../../types'
 
 interface UserProfileEditorProps {
-  profile: Profile | null | undefined
+  profile: LoadableProfile
   onSave: (profile: Profile) => void
   onCancel: () => void
 }

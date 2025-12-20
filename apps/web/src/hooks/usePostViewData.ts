@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback } from 'react'
 import { fetchEventById, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts } from '../lib/nostr/relay'
 import { getCurrentPubkey } from '../lib/nostr/events'
 import { getCachedPost, getCachedProfile, getErrorMessage } from '../lib/utils'
-import type { Event, Profile, ReactionData } from '../types'
+import type { Event, LoadableProfile, ReactionData, Profile } from '../types'
 
 interface PostViewData {
   event: Event | null
-  profile: Profile | null | undefined
+  profile: LoadableProfile
   myPubkey: string | null
   loading: boolean
   error: string
@@ -28,7 +28,7 @@ const initialReactions: ReactionData = {
 
 export function usePostViewData(eventId: string): PostViewData {
   const [event, setEvent] = useState<Event | null>(null)
-  const [profile, setProfile] = useState<Profile | null | undefined>(undefined)
+  const [profile, setProfile] = useState<LoadableProfile>(undefined)
   const [myPubkey, setMyPubkey] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

@@ -3,13 +3,13 @@ import { PostEmbeds } from '../embed'
 import { TextButton } from '../ui'
 import { LIMITS } from '../../lib/constants'
 import { hasTeaserTag as checkTeaserTag, removeReadMoreLink } from '../../lib/nostr/tags'
-import type { EmojiTag, Profile, Event } from '../../types'
+import type { EmojiTag, ProfileMap, Event } from '../../types'
 
 interface PostContentProps {
   content: string
   truncate?: boolean
   emojis?: EmojiTag[]
-  profiles?: Record<string, Profile | null | undefined>
+  profiles?: ProfileMap
   onReadMore?: () => void
   tags?: string[][] // Event tags for fold detection
 }

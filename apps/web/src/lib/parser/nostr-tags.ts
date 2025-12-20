@@ -1,6 +1,6 @@
 import { nip19 } from 'nostr-tools'
 import { escapeHtml } from './html-utils'
-import type { Profile } from '../../types'
+import type { ProfileMap } from '../../types'
 
 // Hashtag regex (requires whitespace or start of string before #)
 const HASHTAG_REGEX = /(^|[\s>])#([a-zA-Z0-9_\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+)/g
@@ -33,7 +33,7 @@ function isValidHex(hex: string, expectedLength = 64): boolean {
 }
 
 // Process Nostr URIs (NIP-19 mentions and references)
-export function processNostrMentions(html: string, profiles: Record<string, Profile | null | undefined>): string {
+export function processNostrMentions(html: string, profiles: ProfileMap): string {
   return html.replace(NOSTR_URI_REGEX, (match, encoded: string) => {
     try {
       const decoded = nip19.decode(encoded)

@@ -1,4 +1,4 @@
-import type { Profile } from '../../../types'
+import type { LoadableProfile } from '../../../types'
 import { detectServiceLabel } from './serviceDetection'
 
 export interface ResolvedWebsite {
@@ -6,7 +6,7 @@ export interface ResolvedWebsite {
   label: string
 }
 
-export function getWebsites(profile: Profile | null | undefined): ResolvedWebsite[] {
+export function getWebsites(profile: LoadableProfile): ResolvedWebsite[] {
   if (!profile) return []
   if (profile.websites && profile.websites.length > 0) {
     return profile.websites.map((w) => ({
