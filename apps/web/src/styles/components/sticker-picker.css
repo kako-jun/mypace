@@ -33,16 +33,19 @@
 
 .sticker-picker-backdrop {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
 
 .sticker-picker-modal {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   background: var(--surface-primary);
   border: 2px solid #333;
   border-bottom: none;
@@ -51,7 +54,6 @@
   width: 90%;
   max-height: 70vh;
   overflow-y: auto;
-  z-index: 1001;
 }
 
 .sticker-picker-header {

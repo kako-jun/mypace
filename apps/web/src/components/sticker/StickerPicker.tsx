@@ -50,9 +50,8 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
       </button>
 
       {isOpen && (
-        <>
-          <div className="sticker-picker-backdrop" onClick={() => setIsOpen(false)} />
-          <div className="sticker-picker-modal">
+        <div className="sticker-picker-backdrop" onClick={() => setIsOpen(false)}>
+          <div className="sticker-picker-modal" onClick={(e) => e.stopPropagation()}>
             <div className="sticker-picker-header">
               <h3>Select Sticker</h3>
               <CloseButton onClick={() => setIsOpen(false)} size={20} />
@@ -91,7 +90,7 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
               ))}
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   )

@@ -317,7 +317,7 @@ body.custom-theme .logo-pace {
 
 .super-mention-q-badge {
   display: inline-block;
-  margin-left: 0.5em;
+  margin-left: 1em;
   padding: 1px 4px;
   font-size: 10px;
   font-family: var(--font-mono, monospace);

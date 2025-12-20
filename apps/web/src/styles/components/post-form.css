@@ -457,12 +457,16 @@
 
 /* Super mention button (@@) */
 .super-mention-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: #fd0;
   border: 2px solid #000;
   color: #000;
   font-size: 0.85rem;
   font-weight: 700;
-  padding: 0.25rem 0.5rem;
+  height: 32px;
+  padding: 0 0.5rem;
   border-radius: 4px;
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease;

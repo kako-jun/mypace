@@ -30,6 +30,7 @@ import {
   FilterSection,
   type ImportedSettings,
 } from './index'
+import { CloseButton } from '../ui'
 import type { ThemeColors } from '../../types'
 
 export function Settings() {
@@ -162,9 +163,7 @@ export function Settings() {
     <>
       <div className="settings-backdrop" onClick={() => setOpen(false)} />
       <div className="settings-panel" onClick={(e) => e.stopPropagation()}>
-        <button className="close-button" onClick={() => setOpen(false)} aria-label="Close settings">
-          ×
-        </button>
+        <CloseButton onClick={() => setOpen(false)} size={24} />
         <div className="settings-tabs">
           <button
             className={`settings-tab ${activeTab === 'settings' ? 'active' : ''}`}

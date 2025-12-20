@@ -34,7 +34,7 @@
   background: var(--surface-primary);
   border: 2px solid #333;
   padding: 0.75rem;
-  padding-top: 2rem;
+  padding-top: 2.5rem;
   min-width: 400px;
   max-width: calc(100vw - 2rem);
 }
@@ -520,7 +520,7 @@
   gap: 0.5rem;
   background: var(--surface-secondary);
   border-radius: 8px;
-  padding: 0.5rem 0.75rem;
+  padding: 0.25rem 0.5rem;
 }
 
 .filter-search-icon {
@@ -528,7 +528,8 @@
   flex-shrink: 0;
 }
 
-.filter-search-input {
+.filter-search-input,
+.filter-search-input:focus {
   flex: 1;
   border: none;
   background: transparent;
