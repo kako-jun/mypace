@@ -42,6 +42,7 @@ export default function ReplyCard({
           emojis={parseEmojiTags(reply.tags)}
           profiles={profiles}
           truncate={true}
+          forceTruncate={true}
           tags={reply.tags}
           onReadMore={onClick}
         />

@@ -26,6 +26,7 @@
 }
 
 .timeline-action-wrapper .btn {
+  --btn-corner: 12px;
   width: 100%;
 }
 

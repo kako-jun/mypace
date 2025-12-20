@@ -7,7 +7,7 @@ export function getWebsiteIcon(label: string): string {
     case 'GitLab':
       return 'Gitlab'
     case 'X':
-      return 'Twitter' // lucide-react icon name
+      return 'AtSign' // X (formerly Twitter) - generic social icon
     case 'YouTube':
       return 'Youtube'
     case 'Instagram':

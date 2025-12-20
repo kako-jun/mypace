@@ -29,6 +29,7 @@ function extractSuperMentionLabels(content: string): string[] {
 interface PostContentProps {
   content: string
   truncate?: boolean
+  forceTruncate?: boolean // Always show READ MORE regardless of content length
   emojis?: EmojiTag[]
   profiles?: ProfileMap
   onReadMore?: () => void
@@ -38,6 +39,7 @@ interface PostContentProps {
 export function PostContent({
   content,
   truncate = false,
+  forceTruncate = false,
   emojis = [],
   profiles = {},
   onReadMore,
@@ -62,7 +64,9 @@ export function PostContent({
   const shouldTruncate =
     truncate &&
     !hasTeaser &&
-    (content.length > LIMITS.PREVIEW_TRUNCATE_LENGTH || content.split('\n').length > LIMITS.PREVIEW_LINE_THRESHOLD)
+    (forceTruncate ||
+      content.length > LIMITS.PREVIEW_TRUNCATE_LENGTH ||
+      content.split('\n').length > LIMITS.PREVIEW_LINE_THRESHOLD)
 
   // For teaser posts in timeline, remove the READ MORE URL and show styled button instead
   const displayContent = hasTeaser && truncate ? removeReadMoreLink(content) : content
