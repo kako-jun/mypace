@@ -30,17 +30,20 @@
 
 /* Filter Panel */
 .filter-panel {
+  position: relative;
   background: var(--surface-primary);
   border: 2px solid #333;
   padding: 0.75rem;
+  padding-top: 2rem;
   min-width: 400px;
   max-width: calc(100vw - 2rem);
 }
 
 .filter-panel-header {
-  display: flex;
-  justify-content: flex-end;
-  margin: -0.25rem -0.25rem 0.5rem 0;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 1;
 }
 
 /* Circuit Diagram Filter */

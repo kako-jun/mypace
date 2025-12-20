@@ -364,6 +364,7 @@ body.custom-theme .logo-pace {
 }
 
 .super-mention-popup {
+  position: relative;
   background: var(--surface-primary);
   border: 2px solid #333;
   border-bottom: none;
@@ -379,21 +380,23 @@ body.custom-theme .logo-pace {
 .super-mention-popup-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding-bottom: 0.5rem;
   margin-bottom: 0.75rem;
   border-bottom: 1px solid var(--border-light);
-  gap: 8px;
+  padding-right: 2rem;
 }
 
 .super-mention-popup-header .close-button {
-  margin: -0.5rem -1rem -0.5rem 0;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
 }
 
 .super-mention-popup-input-group {
   display: flex;
   align-items: center;
   flex: 1;
+  min-width: 0;
   gap: 4px;
 }
 
@@ -401,6 +404,7 @@ body.custom-theme .logo-pace {
   color: #fd0;
   font-weight: 700;
   font-size: 1.1rem;
+  flex-shrink: 0;
   text-shadow:
     -1px -1px 0 #000,
     1px -1px 0 #000,
@@ -425,6 +429,7 @@ body.custom-theme .logo-pace {
 
 .super-mention-popup-input {
   flex: 1;
+  min-width: 0;
   border: none;
   background: transparent;
   font-size: 1rem;

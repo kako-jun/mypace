@@ -95,24 +95,11 @@
   font-size: 0.8rem;
 }
 
-.close-button {
+.settings-panel .close-button {
   position: absolute;
-  top: 0.75rem;
-  right: 1rem;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--text-timestamp);
-  transition: color 0.2s ease;
-  pointer-events: auto;
+  top: 0.5rem;
+  right: 0.5rem;
   z-index: 201;
-  line-height: 1;
-  padding: 0.25rem 0.5rem;
-}
-
-.close-button:hover {
-  color: var(--text-muted);
 }
 
 .settings-section {
