@@ -1,21 +1,21 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { Bindings } from './types'
-
-// Routes
-import timeline from './routes/timeline'
-import events from './routes/events'
-import profiles from './routes/profiles'
-import reactions from './routes/reactions'
-import replies from './routes/replies'
-import reposts from './routes/reposts'
-import userEvents from './routes/user-events'
-import publish from './routes/publish'
-import ogp from './routes/ogp'
-import tweet from './routes/tweet'
-import wikidata from './routes/wikidata'
-import superMention from './routes/super-mention'
-import wellKnown from './routes/well-known'
+import {
+  timeline,
+  events,
+  profiles,
+  reactions,
+  replies,
+  reposts,
+  userEvents,
+  publish,
+  ogp,
+  tweet,
+  wikidata,
+  superMention,
+  wellKnown,
+} from './routes'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
