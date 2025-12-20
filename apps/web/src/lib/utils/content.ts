@@ -4,9 +4,10 @@
 export function contentHasTag(content: string, tag: string): boolean {
   const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-  // Super mention: /path/to/something → search for @/path/to/something
+  // Super mention: /label → search for @@label in content
   if (tag.startsWith('/')) {
-    return new RegExp(`@${escapedTag}(?=[\\s\\u3000]|$)`, 'i').test(content)
+    const label = escapedTag.slice(1) // Remove leading /
+    return new RegExp(`@@${label}(?=[\\s\\u3000]|$)`, 'i').test(content)
   }
 
   // Regular hashtag: #tag
