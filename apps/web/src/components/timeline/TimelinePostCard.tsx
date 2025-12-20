@@ -153,7 +153,7 @@ export default function TimelinePostCard({
         />
       )}
 
-      <PostStickers stickers={stickers} />
+      <PostStickers stickers={stickers} truncated />
     </article>
   )
 }

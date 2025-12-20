@@ -1,7 +1,7 @@
 import { getThemeCardProps } from '../../lib/nostr/events'
 import { PostContent } from './PostContent'
 import { PostStickers } from './PostStickers'
-import type { ThemeColors, EmojiTag, Sticker } from '../../types'
+import type { ThemeColors, EmojiTag, Sticker, StickerQuadrant } from '../../types'
 
 interface PostPreviewProps {
   content: string
@@ -10,7 +10,7 @@ interface PostPreviewProps {
   emojis?: EmojiTag[]
   stickers?: Sticker[]
   editableStickers?: boolean
-  onStickerMove?: (index: number, x: number, y: number) => void
+  onStickerMove?: (index: number, x: number, y: number, quadrant: StickerQuadrant) => void
   onStickerResize?: (index: number, size: number) => void
   onStickerRotate?: (index: number, rotation: number) => void
 }

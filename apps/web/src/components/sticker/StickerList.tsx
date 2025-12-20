@@ -10,12 +10,12 @@ export function StickerList({ stickers, onRemove }: StickerListProps) {
 
   return (
     <div className="sticker-list">
-      <div className="sticker-list-label">貼り付けたシール ({stickers.length})</div>
+      <div className="sticker-list-label">Stickers ({stickers.length})</div>
       <div className="sticker-list-items">
         {stickers.map((sticker, index) => (
           <div key={index} className="sticker-list-item">
             <img src={sticker.url} alt={`Sticker ${index + 1}`} />
-            <button type="button" className="sticker-list-remove" onClick={() => onRemove(index)} title="削除">
+            <button type="button" className="sticker-list-remove" onClick={() => onRemove(index)} title="Remove">
               ×
             </button>
             <div className="sticker-list-info">

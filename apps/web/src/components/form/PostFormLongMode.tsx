@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import type { ThemeColors, EmojiTag, Sticker, Event } from '../../types'
+import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant } from '../../types'
 import { ImageDropZone, AttachedImages, PostPreview } from '../post'
 import { LongModeEditor, type LongModeEditorRef } from './LongModeEditor'
 import { Toggle, Avatar, TextButton, ErrorMessage } from '../ui'
@@ -30,9 +30,9 @@ interface PostFormLongModeProps {
   onAvatarClick: () => void
   onRemoveImage: (url: string) => void
   onError: (error: string) => void
-  onAddSticker: (sticker: Omit<Sticker, 'x' | 'y' | 'size' | 'rotation'>) => void
+  onAddSticker: (sticker: Omit<Sticker, 'x' | 'y' | 'size' | 'rotation' | 'quadrant'>) => void
   onRemoveSticker: (index: number) => void
-  onStickerMove: (index: number, x: number, y: number) => void
+  onStickerMove: (index: number, x: number, y: number, quadrant: StickerQuadrant) => void
   onStickerResize: (index: number, size: number) => void
   onStickerRotate: (index: number, rotation: number) => void
 }

@@ -7,7 +7,7 @@ import {
   getCurrentPubkey,
 } from '../../lib/nostr/events'
 import { navigateToUser } from '../../lib/utils'
-import type { ThemeColors, EmojiTag, Sticker, Event } from '../../types'
+import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant } from '../../types'
 import { publishEvent } from '../../lib/nostr/relay'
 import { ProfileSetup } from '../user'
 import {
@@ -102,9 +102,10 @@ export function PostForm({
   useEffect(() => {
     if (editingEvent && editingEvent.tags) {
       const stickerTags = editingEvent.tags.filter((tag) => tag[0] === 'sticker')
+      const validQuadrants: StickerQuadrant[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
       const restoredStickers: Sticker[] = stickerTags
         .map((tag) => {
-          const [, url, x, y, size, rotation] = tag
+          const [, url, x, y, size, rotation, quadrant] = tag
           if (!url) return null
           return {
             url,
@@ -112,6 +113,9 @@ export function PostForm({
             y: parseFloat(y) || 50,
             size: parseFloat(size) || 15,
             rotation: parseFloat(rotation) || 0,
+            quadrant: (quadrant && validQuadrants.includes(quadrant as StickerQuadrant)
+              ? quadrant
+              : 'top-left') as StickerQuadrant,
           }
         })
         .filter((s): s is Sticker => s !== null)
@@ -155,6 +159,7 @@ export function PostForm({
         `${Math.round(s.y)}`,
         `${Math.round(s.size)}`,
         `${Math.round(s.rotation)}`,
+        s.quadrant,
       ])
 
       if (replyingTo) {
@@ -232,9 +237,9 @@ export function PostForm({
     onContentChange(removeImageUrl(content, url))
   }
 
-  const handleAddSticker = (sticker: Omit<Sticker, 'x' | 'y' | 'size' | 'rotation'>) => {
+  const handleAddSticker = (sticker: Omit<Sticker, 'x' | 'y' | 'size' | 'rotation' | 'quadrant'>) => {
     if (stickers.length >= LIMITS.MAX_STICKERS) return
-    const newSticker: Sticker = { ...sticker, x: 50, y: 50, size: 15, rotation: 0 }
+    const newSticker: Sticker = { ...sticker, x: 50, y: 50, size: 15, rotation: 0, quadrant: 'top-left' }
     setStickers([...stickers, newSticker])
     if (!showPreview) {
       onShowPreviewChange(true)
@@ -245,9 +250,9 @@ export function PostForm({
     setStickers(stickers.filter((_, i) => i !== index))
   }
 
-  const handleStickerMove = (index: number, x: number, y: number) => {
+  const handleStickerMove = (index: number, x: number, y: number, quadrant: StickerQuadrant) => {
     const updatedStickers = [...stickers]
-    updatedStickers[index] = { ...updatedStickers[index], x: Math.round(x), y: Math.round(y) }
+    updatedStickers[index] = { ...updatedStickers[index], x: Math.round(x), y: Math.round(y), quadrant }
     setStickers(updatedStickers)
   }
 

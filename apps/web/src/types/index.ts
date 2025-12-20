@@ -117,10 +117,13 @@ export interface FilterPreset {
 }
 
 // Sticker types
+export type StickerQuadrant = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+
 export interface Sticker {
   url: string // Image URL
-  x: number // Position from left (0-100%)
-  y: number // Position from top (0-100%)
+  x: number // Position within quadrant (0-100%)
+  y: number // Position within quadrant (0-100%)
   size: number // Width (5-100%)
   rotation: number // Rotation angle (0-360 degrees)
+  quadrant: StickerQuadrant // Anchor corner for positioning
 }
