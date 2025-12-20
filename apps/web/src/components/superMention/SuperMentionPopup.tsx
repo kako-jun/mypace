@@ -7,6 +7,11 @@ interface SuperMentionPopupProps {
   onClose: () => void
 }
 
+// Replace spaces with underscores for super mention labels
+function normalizeLabel(label: string): string {
+  return label.replace(/\s+/g, '_')
+}
+
 export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps) {
   const [query, setQuery] = useState('')
   const [items, setItems] = useState<SuggestItem[]>([])
@@ -117,8 +122,8 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
 
       switch (item.type) {
         case 'wikidata':
-          path = `/${item.label}`
-          insertText = `@@${item.label} `
+          path = `/${normalizeLabel(item.label)}`
+          insertText = `@@${normalizeLabel(item.label)} `
           wikidataId = item.id
           wikidataLabel = item.label
           wikidataDescription = item.description
@@ -126,15 +131,15 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
 
         case 'history':
           path = item.path
-          insertText = `@@${item.label} `
+          insertText = `@@${normalizeLabel(item.label)} `
           wikidataId = item.wikidataId
           wikidataLabel = item.label
           wikidataDescription = item.description
           break
 
         case 'custom':
-          path = `/${item.label}`
-          insertText = `@@${item.label} `
+          path = `/${normalizeLabel(item.label)}`
+          insertText = `@@${normalizeLabel(item.label)} `
           break
 
         default:
