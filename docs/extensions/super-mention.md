@@ -77,7 +77,7 @@
 Q番号バッジはクリック可能で、対応するWikipediaページを新しいタブで開く。
 
 ```
-https://ja.wikipedia.org/wiki/Special:GoToLinkedPage/jawiki/{Q番号}
+https://www.wikidata.org/wiki/Special:GoToLinkedPage/jawiki/{Q番号}
 ```
 
 - サジェストポップアップ内のQ番号バッジ → クリックでWikipediaを開く

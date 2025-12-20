@@ -9,7 +9,7 @@ interface SuggestItemProps {
 }
 
 function getWikipediaUrl(wikidataId: string): string {
-  return `https://ja.wikipedia.org/wiki/Special:GoToLinkedPage/jawiki/${wikidataId}`
+  return `https://www.wikidata.org/wiki/Special:GoToLinkedPage/jawiki/${wikidataId}`
 }
 
 function WikidataQBadge({ id }: { id: string }) {

@@ -23,7 +23,7 @@ const PROTOCOL_PREFIX = /^https?:\/\//i
 const URL_PATTERN = /^[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(\/.*)?$/
 
 function getWikipediaUrl(wikidataId: string): string {
-  return `https://ja.wikipedia.org/wiki/Special:GoToLinkedPage/jawiki/${wikidataId}`
+  return `https://www.wikidata.org/wiki/Special:GoToLinkedPage/jawiki/${wikidataId}`
 }
 
 function stripProtocol(label: string): string {
