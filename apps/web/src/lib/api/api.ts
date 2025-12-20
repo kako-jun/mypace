@@ -216,3 +216,32 @@ export async function lookupSuperMentionLabels(labels: string[]): Promise<Record
     return {}
   }
 }
+
+// Sticker history
+export interface StickerHistoryItem {
+  url: string
+  useCount: number
+}
+
+export async function getStickerHistory(limit = 20): Promise<StickerHistoryItem[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/sticker/history?limit=${limit}`)
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.stickers || []
+  } catch {
+    return []
+  }
+}
+
+export async function saveStickerToHistory(url: string): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/api/sticker/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    })
+  } catch {
+    // Silently fail
+  }
+}

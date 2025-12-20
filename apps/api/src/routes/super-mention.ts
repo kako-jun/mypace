@@ -61,16 +61,16 @@ superMention.get('/suggest', async (c) => {
         SELECT path, wikidata_id, wikidata_label, wikidata_description, use_count
         FROM super_mention_paths
         WHERE path LIKE ? OR wikidata_label LIKE ?
-        ORDER BY use_count DESC, updated_at DESC
+        ORDER BY updated_at DESC
         LIMIT ?
       `
       params = [`%${prefix}%`, `%${prefix}%`, limit]
     } else {
-      // 人気のパスを返す
+      // 最近使用したものを返す
       query = `
         SELECT path, wikidata_id, wikidata_label, wikidata_description, use_count
         FROM super_mention_paths
-        ORDER BY use_count DESC, updated_at DESC
+        ORDER BY updated_at DESC
         LIMIT ?
       `
       params = [limit]

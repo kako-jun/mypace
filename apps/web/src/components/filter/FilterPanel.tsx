@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Button from '../ui/Button'
 import Toggle from '../ui/Toggle'
+import { CloseButton } from '../ui'
 import { buildSearchUrl, DEFAULT_SEARCH_FILTERS, saveFiltersToStorage, loadPresets } from '../../lib/utils'
 import { FilterPresets } from './FilterPresets'
 import { SmartFilter } from './SmartFilter'
@@ -150,6 +151,11 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
 
   return (
     <div className={`filter-panel ${isPopup ? 'filter-panel-popup' : 'filter-panel-embedded'}`}>
+      {isPopup && onClose && (
+        <div className="filter-panel-header">
+          <CloseButton onClick={onClose} size={20} />
+        </div>
+      )}
       <FilterPresets
         presets={presets}
         selectedPresetId={selectedPresetId}

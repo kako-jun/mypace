@@ -52,3 +52,13 @@ CREATE TABLE IF NOT EXISTS super_mention_paths (
 CREATE INDEX IF NOT EXISTS idx_super_mention_category ON super_mention_paths(category);
 CREATE INDEX IF NOT EXISTS idx_super_mention_wikidata ON super_mention_paths(wikidata_id);
 CREATE INDEX IF NOT EXISTS idx_super_mention_use_count ON super_mention_paths(use_count DESC);
+
+-- Sticker history table
+CREATE TABLE IF NOT EXISTS sticker_history (
+  url TEXT PRIMARY KEY,
+  use_count INTEGER DEFAULT 1,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_sticker_updated_at ON sticker_history(updated_at DESC);

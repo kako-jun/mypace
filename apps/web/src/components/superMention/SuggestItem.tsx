@@ -43,9 +43,11 @@ export function SuggestItemView({ item, isSelected, onSelect, onHover }: Suggest
           <span className="super-mention-suggest-icon">
             <Search size={16} />
           </span>
-          <span className="super-mention-suggest-label">{item.label}</span>
-          <WikidataQBadge id={item.id} />
-          <span className="super-mention-suggest-desc">{item.description}</span>
+          <span className="super-mention-suggest-content">
+            <span className="super-mention-suggest-label">{item.label}</span>
+            <WikidataQBadge id={item.id} />
+            <span className="super-mention-suggest-desc">{item.description}</span>
+          </span>
         </button>
       )
 
@@ -61,9 +63,11 @@ export function SuggestItemView({ item, isSelected, onSelect, onHover }: Suggest
           <span className="super-mention-suggest-icon">
             {item.wikidataId ? <Check size={16} /> : <Pin size={16} />}
           </span>
-          <span className="super-mention-suggest-label">{item.label}</span>
-          {item.wikidataId && <WikidataQBadge id={item.wikidataId} />}
-          <span className="super-mention-suggest-desc">{item.description}</span>
+          <span className="super-mention-suggest-content">
+            <span className="super-mention-suggest-label">{item.label}</span>
+            {item.wikidataId && <WikidataQBadge id={item.wikidataId} />}
+            <span className="super-mention-suggest-desc">{item.description}</span>
+          </span>
         </button>
       )
 
@@ -73,8 +77,10 @@ export function SuggestItemView({ item, isSelected, onSelect, onHover }: Suggest
           <span className="super-mention-suggest-icon">
             <PenLine size={16} />
           </span>
-          <span className="super-mention-suggest-label">{item.label}</span>
-          <span className="super-mention-suggest-desc">新規作成</span>
+          <span className="super-mention-suggest-content">
+            <span className="super-mention-suggest-label">{item.label}</span>
+            <span className="super-mention-suggest-desc">Create new</span>
+          </span>
         </button>
       )
   }

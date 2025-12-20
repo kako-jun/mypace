@@ -1,30 +1,33 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Icon, Input, CloseButton } from '../ui'
 import Button from '../ui/Button'
+import { getStickerHistory, saveStickerToHistory, type StickerHistoryItem } from '../../lib/api'
 
 interface StickerPickerProps {
   onAddSticker: (sticker: { url: string }) => void
 }
 
-// Sample stickers using Twemoji CDN (short URLs for Nostr relay compatibility)
-const SAMPLE_STICKERS = [
-  { id: 'fire', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f525.svg', name: '🔥' },
-  { id: 'star', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/2b50.svg', name: '⭐' },
-  { id: 'heart', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/2764.svg', name: '❤️' },
-  { id: 'rocket', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f680.svg', name: '🚀' },
-  { id: 'sparkles', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/2728.svg', name: '✨' },
-  { id: 'party', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f389.svg', name: '🎉' },
-  { id: 'hundred', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f4af.svg', name: '💯' },
-  { id: 'eyes', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14/assets/svg/1f440.svg', name: '👀' },
-]
-
 export function StickerPicker({ onAddSticker }: StickerPickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [customUrl, setCustomUrl] = useState('')
+  const [history, setHistory] = useState<StickerHistoryItem[]>([])
+  const [loading, setLoading] = useState(false)
 
-  const handleSelectSticker = (url: string) => {
+  // Fetch history when popup opens
+  useEffect(() => {
+    if (isOpen) {
+      setLoading(true)
+      getStickerHistory(30)
+        .then(setHistory)
+        .finally(() => setLoading(false))
+    }
+  }, [isOpen])
+
+  const handleSelectSticker = async (url: string) => {
     if (!url.trim()) return
-    onAddSticker({ url: url.trim() })
+    const trimmedUrl = url.trim()
+    onAddSticker({ url: trimmedUrl })
+    saveStickerToHistory(trimmedUrl)
     setIsOpen(false)
     setCustomUrl('')
   }
@@ -57,7 +60,7 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
 
             <div className="sticker-picker-custom">
               <div className="sticker-picker-input-row">
-                <Icon name="Link" size={16} className="sticker-picker-icon" />
+                <Icon name="Image" size={16} className="sticker-picker-icon" />
                 <Input
                   value={customUrl}
                   onChange={setCustomUrl}
@@ -72,15 +75,18 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
             </div>
 
             <div className="sticker-picker-grid">
-              {SAMPLE_STICKERS.map((sticker) => (
+              {loading && history.length === 0 && <div className="sticker-picker-loading">Loading...</div>}
+              {!loading && history.length === 0 && (
+                <div className="sticker-picker-empty">No stickers yet. Add one above!</div>
+              )}
+              {history.map((sticker) => (
                 <button
-                  key={sticker.id}
+                  key={sticker.url}
                   type="button"
                   className="sticker-picker-item"
                   onClick={() => handleSelectSticker(sticker.url)}
                 >
-                  <img src={sticker.url} alt={sticker.name} />
-                  <span>{sticker.name}</span>
+                  <img src={sticker.url} alt="sticker" />
                 </button>
               ))}
             </div>

@@ -196,16 +196,18 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
     <div className="super-mention-popup-backdrop" onClick={handleBackdropClick}>
       <div className="super-mention-popup">
         <div className="super-mention-popup-header">
-          <span className="super-mention-popup-prefix">@@</span>
-          <input
-            ref={inputRef}
-            type="text"
-            className="super-mention-popup-input"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Search..."
-          />
+          <div className="super-mention-popup-input-group">
+            <span className="super-mention-popup-prefix">@@</span>
+            <input
+              ref={inputRef}
+              type="text"
+              className="super-mention-popup-input"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Search..."
+            />
+          </div>
           <CloseButton onClick={onClose} size={20} />
         </div>
         <div ref={containerRef} className="super-mention-popup-list">

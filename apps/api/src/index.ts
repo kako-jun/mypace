@@ -14,6 +14,7 @@ import {
   tweet,
   wikidata,
   superMention,
+  sticker,
   wellKnown,
 } from './routes'
 
@@ -42,6 +43,7 @@ app.route('/api/ogp', ogp)
 app.route('/api/tweet', tweet)
 app.route('/api/wikidata', wikidata)
 app.route('/api/super-mention', superMention)
+app.route('/api/sticker', sticker)
 
 // Well-known
 app.route('/.well-known', wellKnown)

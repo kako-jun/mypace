@@ -37,6 +37,12 @@
   max-width: calc(100vw - 2rem);
 }
 
+.filter-panel-header {
+  display: flex;
+  justify-content: flex-end;
+  margin: -0.25rem -0.25rem 0.5rem 0;
+}
+
 /* Circuit Diagram Filter */
 .filter-circuit {
   display: flex;
