@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { searchWikidata, getSuperMentionSuggestions, saveSuperMentionLabel } from '../../lib/api'
+import { searchWikidata, getSuperMentionSuggestions, saveSuperMentionPath } from '../../lib/api'
 import { SuggestItemView, type SuggestItem } from './index'
 import { CloseButton } from '../ui'
 
@@ -8,9 +8,9 @@ interface SuperMentionPopupProps {
   onClose: () => void
 }
 
-// Replace spaces with underscores for super mention labels
-function normalizeLabel(label: string): string {
-  return label.replace(/\s+/g, '_')
+// Replace spaces with underscores for super mention paths
+function normalizePath(path: string): string {
+  return path.replace(/\s+/g, '_')
 }
 
 export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps) {
@@ -56,7 +56,6 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
           const historyItems: SuggestItem[] = suggestions.map((s) => ({
             type: 'history' as const,
             path: s.path,
-            label: s.wikidataLabel || s.path,
             description: s.wikidataDescription || '',
             wikidataId: s.wikidataId || undefined,
           }))
@@ -78,7 +77,6 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
           newItems.push({
             type: 'history',
             path: s.path,
-            label: s.wikidataLabel || s.path,
             description: s.wikidataDescription || '',
             wikidataId: s.wikidataId || undefined,
           })
@@ -91,16 +89,16 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
             newItems.push({
               type: 'wikidata',
               id: w.id,
-              label: w.label,
+              path: w.label,
               description: w.description,
             })
           }
         }
 
-        newItems.push({ type: 'custom', label: query })
+        newItems.push({ type: 'custom', path: query })
         setItems(newItems)
       } catch {
-        setItems([{ type: 'custom', label: query }])
+        setItems([{ type: 'custom', path: query }])
       } finally {
         setLoading(false)
       }
@@ -116,38 +114,38 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
   const handleSelect = useCallback(
     async (item: SuggestItem) => {
       let insertText: string
-      let label: string
+      let path: string
       let wikidataId: string | undefined
       let wikidataLabel: string | undefined
       let wikidataDescription: string | undefined
 
       switch (item.type) {
         case 'wikidata':
-          label = normalizeLabel(item.label)
-          insertText = `@@${label} `
+          path = normalizePath(item.path)
+          insertText = `@@${path} `
           wikidataId = item.id
-          wikidataLabel = item.label
+          wikidataLabel = item.path
           wikidataDescription = item.description
           break
 
         case 'history':
-          label = normalizeLabel(item.label)
-          insertText = `@@${label} `
+          path = normalizePath(item.path)
+          insertText = `@@${path} `
           wikidataId = item.wikidataId
-          wikidataLabel = item.label
+          wikidataLabel = item.path
           wikidataDescription = item.description
           break
 
         case 'custom':
-          label = normalizeLabel(item.label)
-          insertText = `@@${label} `
+          path = normalizePath(item.path)
+          insertText = `@@${path} `
           break
 
         default:
           return
       }
 
-      saveSuperMentionLabel(label, wikidataId, wikidataLabel, wikidataDescription).catch(() => {})
+      saveSuperMentionPath(path, wikidataId, wikidataLabel, wikidataDescription).catch(() => {})
 
       onSelect(insertText)
       onClose()

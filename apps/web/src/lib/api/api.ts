@@ -153,9 +153,9 @@ export async function getSuperMentionSuggestions(
   return data.suggestions || []
 }
 
-// Save super mention label
-export async function saveSuperMentionLabel(
-  label: string,
+// Save super mention path
+export async function saveSuperMentionPath(
+  path: string,
   wikidataId?: string,
   wikidataLabel?: string,
   wikidataDescription?: string
@@ -164,28 +164,28 @@ export async function saveSuperMentionLabel(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      path: label, // API still uses 'path' field for DB compatibility
+      path,
       wikidataId,
       wikidataLabel,
       wikidataDescription,
     }),
   })
-  if (!res.ok) throw new Error('Failed to save label')
+  if (!res.ok) throw new Error('Failed to save path')
 }
 
-// Lookup wikidata_id for multiple labels (with cache)
+// Lookup wikidata_id for multiple paths (with cache)
 const wikidataCache = new Map<string, string>()
 
-export async function lookupSuperMentionLabels(labels: string[]): Promise<Record<string, string>> {
-  // Filter out already cached labels
-  const uncachedLabels = labels.filter((l) => !wikidataCache.has(l))
+export async function lookupSuperMentionPaths(paths: string[]): Promise<Record<string, string>> {
+  // Filter out already cached paths
+  const uncachedPaths = paths.filter((p) => !wikidataCache.has(p))
 
-  // Return from cache if all labels are cached
-  if (uncachedLabels.length === 0) {
+  // Return from cache if all paths are cached
+  if (uncachedPaths.length === 0) {
     const result: Record<string, string> = {}
-    for (const l of labels) {
-      const cached = wikidataCache.get(l)
-      if (cached) result[l] = cached
+    for (const p of paths) {
+      const cached = wikidataCache.get(p)
+      if (cached) result[p] = cached
     }
     return result
   }
@@ -194,22 +194,22 @@ export async function lookupSuperMentionLabels(labels: string[]): Promise<Record
     const res = await fetch(`${API_BASE}/api/super-mention/lookup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paths: uncachedLabels }), // API still uses 'paths' field
+      body: JSON.stringify({ paths: uncachedPaths }),
     })
     if (!res.ok) return {}
 
     const data = (await res.json()) as { mapping: Record<string, string> }
 
     // Cache the results
-    for (const [label, wikidataId] of Object.entries(data.mapping)) {
-      wikidataCache.set(label, wikidataId)
+    for (const [path, wikidataId] of Object.entries(data.mapping)) {
+      wikidataCache.set(path, wikidataId)
     }
 
-    // Return all requested labels from cache
+    // Return all requested paths from cache
     const result: Record<string, string> = {}
-    for (const l of labels) {
-      const cached = wikidataCache.get(l)
-      if (cached) result[l] = cached
+    for (const p of paths) {
+      const cached = wikidataCache.get(p)
+      if (cached) result[p] = cached
     }
     return result
   } catch {

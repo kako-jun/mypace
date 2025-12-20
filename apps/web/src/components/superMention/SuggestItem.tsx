@@ -44,7 +44,7 @@ export function SuggestItemView({ item, isSelected, onSelect, onHover }: Suggest
             <Search size={16} />
           </span>
           <span className="super-mention-suggest-content">
-            <span className="super-mention-suggest-label">{item.label}</span>
+            <span className="super-mention-suggest-path">{item.path}</span>
             <WikidataQBadge id={item.id} />
             <span className="super-mention-suggest-desc">{item.description}</span>
           </span>
@@ -64,7 +64,7 @@ export function SuggestItemView({ item, isSelected, onSelect, onHover }: Suggest
             {item.wikidataId ? <Check size={16} /> : <Pin size={16} />}
           </span>
           <span className="super-mention-suggest-content">
-            <span className="super-mention-suggest-label">{item.label}</span>
+            <span className="super-mention-suggest-path">{item.path}</span>
             {item.wikidataId && <WikidataQBadge id={item.wikidataId} />}
             <span className="super-mention-suggest-desc">{item.description}</span>
           </span>
@@ -78,7 +78,7 @@ export function SuggestItemView({ item, isSelected, onSelect, onHover }: Suggest
             <PenLine size={16} />
           </span>
           <span className="super-mention-suggest-content">
-            <span className="super-mention-suggest-label">{item.label}</span>
+            <span className="super-mention-suggest-path">{item.path}</span>
             <span className="super-mention-suggest-desc">Create new</span>
           </span>
         </button>

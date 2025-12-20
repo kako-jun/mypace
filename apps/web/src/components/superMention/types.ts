@@ -1,4 +1,4 @@
 export type SuggestItem =
-  | { type: 'wikidata'; id: string; label: string; description: string }
-  | { type: 'history'; path: string; label: string; description: string; wikidataId?: string }
-  | { type: 'custom'; label: string }
+  | { type: 'wikidata'; id: string; path: string; description: string }
+  | { type: 'history'; path: string; description: string; wikidataId?: string }
+  | { type: 'custom'; path: string }

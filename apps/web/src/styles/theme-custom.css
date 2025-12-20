@@ -269,13 +269,6 @@ body.custom-theme .logo-pace {
   color: #c85;
 }
 
-.super-mention-suggest-label {
-  color: var(--text-secondary, #666);
-  font-size: 12px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
 /* Dark theme */
 [data-theme='dark'] .super-mention-suggest {
   background: #2a2a2a;
@@ -285,10 +278,6 @@ body.custom-theme .logo-pace {
 [data-theme='dark'] .super-mention-suggest-item:hover,
 [data-theme='dark'] .super-mention-suggest-item.selected {
   background: #3a3a3a;
-}
-
-[data-theme='dark'] .super-mention-suggest-label {
-  color: #999;
 }
 
 .super-mention-suggest-desc {
