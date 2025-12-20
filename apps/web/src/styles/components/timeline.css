@@ -26,13 +26,13 @@
 }
 
 .timeline-action-wrapper .btn {
-  --btn-corner: 12px;
+  --btn-corner: 24px;
   width: 100%;
 }
 
 /* End of timeline message - same size as load-more-button */
 .timeline-end {
-  --btn-corner: 12px;
+  --btn-corner: 24px;
   column-span: all;
   direction: ltr;
   width: 100%;

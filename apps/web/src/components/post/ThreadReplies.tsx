@@ -3,6 +3,7 @@ import PostHeader from './PostHeader'
 import { PostContent } from './PostContent'
 import { parseEmojiTags } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
+import { navigateToPost } from '../../lib/utils'
 
 interface ThreadRepliesProps {
   replies: Event[]
@@ -47,7 +48,15 @@ export default function ThreadReplies({
                   eventKind={reply.kind}
                 />
                 <div className="post-content">
-                  <PostContent content={reply.content} emojis={parseEmojiTags(reply.tags)} profiles={profiles} />
+                  <PostContent
+                    content={reply.content}
+                    emojis={parseEmojiTags(reply.tags)}
+                    profiles={profiles}
+                    truncate={true}
+                    forceTruncate={true}
+                    tags={reply.tags}
+                    onReadMore={() => navigateToPost(reply.id)}
+                  />
                 </div>
               </div>
             )

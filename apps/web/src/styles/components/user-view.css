@@ -76,10 +76,13 @@
   color: var(--text-primary);
 }
 
-/* ===== About Speech Bubble (Octagonal) ===== */
+/* ===== About Speech Bubble (Octagonal with pointer) ===== */
 .user-about {
   --bubble-corner: 8px;
+  --pointer-size: 10px;
+  --border-width: 2px;
   margin: 0 0 16px 0;
+  margin-top: calc(var(--pointer-size) + 4px);
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: 0.9rem;
@@ -90,21 +93,29 @@
   background: transparent;
 }
 
-/* Octagonal border using pseudo-elements */
+/* Octagonal border with UP pointer (mobile default) */
 .user-about::before {
   content: '';
   position: absolute;
   inset: 0;
+  top: calc(-1 * var(--pointer-size));
   background: var(--border-card, #333);
   clip-path: polygon(
-    var(--bubble-corner) 0,
-    calc(100% - var(--bubble-corner)) 0,
-    100% var(--bubble-corner),
+    /* pointer at top */
+    var(--bubble-corner) var(--pointer-size),
+    calc(50% - var(--pointer-size)) var(--pointer-size),
+    50% 0,
+    calc(50% + var(--pointer-size)) var(--pointer-size),
+    calc(100% - var(--bubble-corner)) var(--pointer-size),
+    /* octagon right side */
+    100% calc(var(--pointer-size) + var(--bubble-corner)),
     100% calc(100% - var(--bubble-corner)),
+    /* octagon bottom */
     calc(100% - var(--bubble-corner)) 100%,
     var(--bubble-corner) 100%,
+    /* octagon left side */
     0 calc(100% - var(--bubble-corner)),
-    0 var(--bubble-corner)
+    0 calc(var(--pointer-size) + var(--bubble-corner))
   );
   z-index: -2;
 }
@@ -112,22 +123,30 @@
 .user-about::after {
   content: '';
   position: absolute;
-  inset: 2px;
+  inset: var(--border-width);
+  top: calc(-1 * var(--pointer-size) + var(--border-width));
   background: var(--surface-secondary);
   clip-path: polygon(
-    calc(var(--bubble-corner) - 1px) 0,
-    calc(100% - var(--bubble-corner) + 1px) 0,
-    100% calc(var(--bubble-corner) - 1px),
+    /* pointer at top (inner) */
+    calc(var(--bubble-corner) - 1px) var(--pointer-size),
+    calc(50% - var(--pointer-size) + 2px) var(--pointer-size),
+    50% 3px,
+    calc(50% + var(--pointer-size) - 2px) var(--pointer-size),
+    calc(100% - var(--bubble-corner) + 1px) var(--pointer-size),
+    /* octagon right side */
+    100% calc(var(--pointer-size) + var(--bubble-corner) - 1px),
     100% calc(100% - var(--bubble-corner) + 1px),
+    /* octagon bottom */
     calc(100% - var(--bubble-corner) + 1px) 100%,
     calc(var(--bubble-corner) - 1px) 100%,
+    /* octagon left side */
     0 calc(100% - var(--bubble-corner) + 1px),
-    0 calc(var(--bubble-corner) - 1px)
+    0 calc(var(--pointer-size) + var(--bubble-corner) - 1px)
   );
   z-index: -1;
 }
 
-/* PC: bubble pops out to the left, avatar speaking */
+/* PC: bubble pops out to the left with RIGHT pointer */
 @media (min-width: 768px) {
   .user-profile-card {
     overflow: visible;
@@ -139,9 +158,57 @@
     top: 24px;
     width: 180px;
     margin: 0;
+    margin-top: 0;
+    padding-right: calc(12px + var(--pointer-size));
     z-index: 1;
   }
 
+  /* Octagonal border with RIGHT pointer (PC) */
+  .user-about::before {
+    inset: 0;
+    top: 0;
+    right: calc(-1 * var(--pointer-size));
+    clip-path: polygon(
+      /* octagon top */
+      var(--bubble-corner) 0,
+      calc(100% - var(--bubble-corner)) 0,
+      /* octagon right side + pointer */
+      100% var(--bubble-corner),
+      100% calc(50% - var(--pointer-size)),
+      calc(100% + var(--pointer-size)) 50%,
+      100% calc(50% + var(--pointer-size)),
+      100% calc(100% - var(--bubble-corner)),
+      /* octagon bottom */
+      calc(100% - var(--bubble-corner)) 100%,
+      var(--bubble-corner) 100%,
+      /* octagon left side */
+      0 calc(100% - var(--bubble-corner)),
+      0 var(--bubble-corner)
+    );
+  }
+
+  .user-about::after {
+    inset: var(--border-width);
+    top: var(--border-width);
+    right: calc(-1 * var(--pointer-size) + var(--border-width));
+    clip-path: polygon(
+      /* octagon top (inner) */
+      calc(var(--bubble-corner) - 1px) 0,
+      calc(100% - var(--bubble-corner) + 1px) 0,
+      /* octagon right side + pointer (inner) */
+      100% calc(var(--bubble-corner) - 1px),
+      100% calc(50% - var(--pointer-size) + 2px),
+      calc(100% + var(--pointer-size) - 3px) 50%,
+      100% calc(50% + var(--pointer-size) - 2px),
+      100% calc(100% - var(--bubble-corner) + 1px),
+      /* octagon bottom (inner) */
+      calc(100% - var(--bubble-corner) + 1px) 100%,
+      calc(var(--bubble-corner) - 1px) 100%,
+      /* octagon left side (inner) */
+      0 calc(100% - var(--bubble-corner) + 1px),
+      0 calc(var(--bubble-corner) - 1px)
+    );
+  }
 }
 
 .user-stats {

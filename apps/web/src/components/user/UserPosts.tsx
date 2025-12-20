@@ -1,5 +1,5 @@
 import { Fragment, useCallback } from 'react'
-import { TimelinePostCard } from '../timeline'
+import { TimelinePostCard, TimelineActionButton } from '../timeline'
 import { SuccessMessage } from '../ui'
 import { navigateToEdit, navigateToReply, getDisplayName, getAvatarUrl } from '../../lib/utils'
 import type {
@@ -122,22 +122,18 @@ export function UserPosts({
               getAvatarUrl={getAvatarUrlForEvent}
             />
             {gapAfterThis && (
-              <button
-                className="timeline-gap-button"
-                onClick={() => fillGap(gapAfterThis.id)}
-                disabled={loadingGap === gapAfterThis.id}
-              >
+              <TimelineActionButton onClick={() => fillGap(gapAfterThis.id)} disabled={loadingGap === gapAfterThis.id}>
                 {loadingGap === gapAfterThis.id ? 'Loading...' : 'Load More'}
-              </button>
+              </TimelineActionButton>
             )}
           </Fragment>
         )
       })}
       {items.length === 0 && <p className="empty">No posts yet</p>}
       {items.length > 0 && hasMore && (
-        <button className="load-more-button" onClick={loadOlderEvents} disabled={loadingMore}>
+        <TimelineActionButton onClick={loadOlderEvents} disabled={loadingMore}>
           {loadingMore ? 'Loading...' : 'Load Older Posts'}
-        </button>
+        </TimelineActionButton>
       )}
       {items.length > 0 && !hasMore && <p className="timeline-end">End of timeline</p>}
     </div>
