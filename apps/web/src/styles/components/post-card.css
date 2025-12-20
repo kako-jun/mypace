@@ -29,6 +29,18 @@
   border-top: 2px solid #000;
 }
 
+/* Diagonal line on fold */
+.post-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, transparent calc(50% + 1px), #000 calc(50% + 1px), #000 calc(50% + 3px), transparent calc(50% + 3px));
+  pointer-events: none;
+}
+
 /* Staggered animation */
 .post-card:nth-child(1) { animation-delay: 0s; }
 .post-card:nth-child(2) { animation-delay: 0.03s; }
