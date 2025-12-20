@@ -277,16 +277,21 @@
 /* Q badge in post content - matches suggest popup style */
 .content-q-badge {
   display: inline-block;
-  margin-left: 1.5em;
-  padding: 1px 4px;
-  font-size: 10px;
+  margin-left: 0.5em;
+  padding: 2px 6px;
+  font-size: 0.85em;
   font-family: var(--font-mono);
-  background: var(--q-badge-bg, rgba(0, 0, 0, 0.1));
+  background: rgba(0, 0, 0, 0.12);
   border-radius: 3px;
-  color: var(--q-badge-color, #888);
+  color: #666;
   text-decoration: none;
   vertical-align: middle;
   transition: background 0.15s ease, color 0.15s ease;
+}
+
+[data-theme='dark'] .content-q-badge {
+  background: rgba(255, 255, 255, 0.15);
+  color: #999;
 }
 
 .content-q-badge:hover {
