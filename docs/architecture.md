@@ -197,7 +197,7 @@ src/
 | GET | /api/events/:id | 単一イベント取得 |
 | GET | /api/profiles | プロフィール取得（複数pubkey） |
 | GET | /api/reactions/:eventId | リアクション数・自分のリアクション |
-| GET | /api/replies/:eventId | 返信一覧 |
+| GET | /api/replies/:eventId | 返信一覧（古い順） |
 | GET | /api/reposts/:eventId | リポスト数・自分のリポスト |
 | GET | /api/user/:pubkey/events | ユーザーの投稿一覧 |
 | GET | /api/ogp | OGPメタデータ取得（リンクプレビュー用） |
