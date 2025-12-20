@@ -31,7 +31,7 @@ export default function ImageDropZone({ onImageUploaded, onError }: ImageDropZon
   }
 
   return (
-    <>
+    <div className="image-drop-zone">
       <button
         type="button"
         className={`drop-area ${dragging ? 'dragging' : ''}`}
@@ -52,6 +52,6 @@ export default function ImageDropZone({ onImageUploaded, onError }: ImageDropZon
         style={{ display: 'none' }}
         aria-hidden="true"
       />
-    </>
+    </div>
   )
 }

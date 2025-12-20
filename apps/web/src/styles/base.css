@@ -31,12 +31,17 @@ body {
    Common UI Components
    =========================================== */
 
+/* Image Drop Zone wrapper */
+.image-drop-zone {
+  display: flex;
+}
+
 /* Drop Area - shared by image-drop-area, avatar-drop-area */
 .drop-area {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
+  width: 32px;
   height: 32px;
   border: 2px dashed var(--text-placeholder);
   border-radius: 4px;
