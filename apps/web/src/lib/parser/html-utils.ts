@@ -26,7 +26,7 @@ export function processLinks(html: string): string {
       const path = url.replace(/^https?:\/\/mypace\.llll-ll\.com/, '') || '/'
       return `<a class="content-link content-link-internal" style="animation-delay: ${randomDelay.toFixed(1)}s" href="${path}" data-internal="true"`
     }
-    return `<a class="content-link" style="animation-delay: ${randomDelay.toFixed(1)}s" target="_blank" rel="noopener noreferrer" href="`
+    return `<a class="content-link" style="animation-delay: ${randomDelay.toFixed(1)}s" target="_blank" rel="noopener noreferrer" href="${url}"`
   })
 }
 
