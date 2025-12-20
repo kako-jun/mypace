@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import type { EditorView, ViewUpdate } from '@codemirror/view'
 
 interface LongModeEditorProps {
@@ -11,15 +11,15 @@ interface LongModeEditorProps {
   onQuit?: () => void
 }
 
-export function LongModeEditor({
-  value,
-  onChange,
-  placeholder = '',
-  vimMode = false,
-  darkTheme = false,
-  onWrite,
-  onQuit,
-}: LongModeEditorProps) {
+export interface LongModeEditorRef {
+  insertText: (text: string) => void
+  focus: () => void
+}
+
+export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>(function LongModeEditor(
+  { value, onChange, placeholder = '', vimMode = false, darkTheme = false, onWrite, onQuit },
+  ref
+) {
   const editorRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const onChangeRef = useRef<(value: string) => void>(onChange)
@@ -31,6 +31,24 @@ export function LongModeEditor({
   onChangeRef.current = onChange
   onWriteRef.current = onWrite
   onQuitRef.current = onQuit
+
+  useImperativeHandle(ref, () => ({
+    insertText: (text: string) => {
+      const view = viewRef.current
+      if (view) {
+        // Vimノーマルモード等でカーソル位置が曖昧な場合は末尾に追加
+        const docLength = view.state.doc.length
+        const selection = view.state.selection.main
+        const pos = selection.empty ? selection.head : docLength
+        view.dispatch({
+          changes: { from: pos, to: pos, insert: text },
+          selection: { anchor: pos + text.length },
+        })
+        view.focus()
+      }
+    },
+    focus: () => viewRef.current?.focus(),
+  }))
 
   useEffect(() => {
     if (!editorRef.current) return
@@ -284,4 +302,4 @@ export function LongModeEditor({
       {isVimActive && !loading && <div className="vim-mode-indicator">VIM</div>}
     </div>
   )
-}
+})

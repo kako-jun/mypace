@@ -1,6 +1,5 @@
-import { useRef, useState } from 'react'
+import { useRef, useImperativeHandle, forwardRef } from 'react'
 import { LIMITS } from '../../lib/constants'
-import { SuperMentionSuggest } from '../superMention'
 
 interface ShortTextEditorProps {
   content: string
@@ -8,14 +7,34 @@ interface ShortTextEditorProps {
   placeholder?: string
 }
 
-export function ShortTextEditor({
-  content,
-  onContentChange,
-  placeholder = 'マイペースで書こう',
-}: ShortTextEditorProps) {
+export interface ShortTextEditorRef {
+  insertText: (text: string) => void
+  focus: () => void
+}
+
+export const ShortTextEditor = forwardRef<ShortTextEditorRef, ShortTextEditorProps>(function ShortTextEditor(
+  { content, onContentChange, placeholder = 'マイペースで書こう' },
+  ref
+) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const [cursorPosition, setCursorPosition] = useState(0)
-  const [showSuggest, setShowSuggest] = useState(false)
+
+  useImperativeHandle(ref, () => ({
+    insertText: (text: string) => {
+      if (textareaRef.current) {
+        const pos = textareaRef.current.selectionStart
+        const newContent = content.slice(0, pos) + text + content.slice(pos)
+        onContentChange(newContent)
+        const newPos = pos + text.length
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.setSelectionRange(newPos, newPos)
+            textareaRef.current.focus()
+          }
+        }, 0)
+      }
+    },
+    focus: () => textareaRef.current?.focus(),
+  }))
 
   return (
     <div className="post-input-wrapper" style={{ position: 'relative' }}>
@@ -27,39 +46,10 @@ export function ShortTextEditor({
         onInput={(e) => {
           const target = e.target as HTMLTextAreaElement
           onContentChange(target.value)
-          setCursorPosition(target.selectionStart)
-          setShowSuggest(true)
         }}
-        onSelect={(e) => {
-          const target = e.target as HTMLTextAreaElement
-          setCursorPosition(target.selectionStart)
-        }}
-        onBlur={() => {
-          setTimeout(() => setShowSuggest(false), 150)
-        }}
-        onFocus={() => setShowSuggest(true)}
         rows={3}
         maxLength={LIMITS.MAX_POST_LENGTH}
       />
-      {showSuggest && (
-        <SuperMentionSuggest
-          content={content}
-          cursorPosition={cursorPosition}
-          onSelect={(text, start, end) => {
-            const newContent = content.slice(0, start) + text + content.slice(end)
-            onContentChange(newContent)
-            setTimeout(() => {
-              if (textareaRef.current) {
-                const newPos = start + text.length
-                textareaRef.current.setSelectionRange(newPos, newPos)
-                textareaRef.current.focus()
-                setCursorPosition(newPos)
-              }
-            }, 0)
-          }}
-          onClose={() => setShowSuggest(false)}
-        />
-      )}
       {content && (
         <button
           type="button"
@@ -72,7 +62,7 @@ export function ShortTextEditor({
       )}
     </div>
   )
-}
+})
 
 // Export textarea ref access hook for image insertion
 export function useTextareaRef() {

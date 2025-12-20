@@ -296,3 +296,95 @@ body.custom-theme .logo-pace {
   background: rgba(255, 255, 255, 0.1);
   color: #666;
 }
+
+/* Super Mention Popup */
+.super-mention-popup-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.super-mention-popup {
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.super-mention-popup-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color, #ddd);
+  gap: 4px;
+}
+
+.super-mention-popup-prefix {
+  color: #fd0;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.super-mention-popup-category {
+  background: #fd0;
+  color: #000;
+  border: none;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.super-mention-popup-category:hover {
+  opacity: 0.8;
+}
+
+.super-mention-popup-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  color: var(--text-primary, #333);
+  outline: none;
+  padding: 4px 8px;
+}
+
+.super-mention-popup-input::placeholder {
+  color: var(--text-muted, #999);
+}
+
+.super-mention-popup-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 300px;
+}
+
+[data-theme='dark'] .super-mention-popup {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+[data-theme='dark'] .super-mention-popup-header {
+  border-color: #444;
+}
+
+[data-theme='dark'] .super-mention-popup-input {
+  color: #e0e0e0;
+}
+
+[data-theme='dark'] .super-mention-popup-input::placeholder {
+  color: #666;
+}

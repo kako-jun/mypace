@@ -66,7 +66,7 @@ superMention.get('/suggest', async (c) => {
     let params: (string | number)[]
 
     if (category) {
-      // カテゴリ指定あり: そのカテゴリ内で検索
+      // カテゴリ指定あり: そのカテゴリ内で部分一致検索
       query = `
         SELECT path, category, wikidata_id, wikidata_label, wikidata_description, use_count
         FROM super_mention_paths
@@ -74,17 +74,17 @@ superMention.get('/suggest', async (c) => {
         ORDER BY use_count DESC, updated_at DESC
         LIMIT ?
       `
-      params = [category, `/${category}/${prefix}%`, limit]
+      params = [category, `%${prefix}%`, limit]
     } else if (prefix) {
-      // プレフィックス検索
+      // 部分一致検索（パスまたはラベルに含まれる）
       query = `
         SELECT path, category, wikidata_id, wikidata_label, wikidata_description, use_count
         FROM super_mention_paths
-        WHERE path LIKE ?
+        WHERE path LIKE ? OR wikidata_label LIKE ?
         ORDER BY use_count DESC, updated_at DESC
         LIMIT ?
       `
-      params = [`${prefix}%`, limit]
+      params = [`%${prefix}%`, `%${prefix}%`, limit]
     } else {
       // 人気のパスを返す
       query = `
@@ -115,6 +115,42 @@ superMention.get('/suggest', async (c) => {
   } catch (e) {
     console.error('Suggest error:', e)
     return c.json({ error: 'Failed to get suggestions' }, 500)
+  }
+})
+
+// POST /api/super-mention/lookup - 複数パスのwikidata_id一括取得
+superMention.post('/lookup', async (c) => {
+  const db = c.env.DB
+
+  try {
+    const body = await c.req.json<{ paths: string[] }>()
+
+    if (!body.paths || !Array.isArray(body.paths) || body.paths.length === 0) {
+      return c.json({ mapping: {} })
+    }
+
+    // 最大50パスまで
+    const paths = body.paths.slice(0, 50)
+    const placeholders = paths.map(() => '?').join(',')
+
+    const result = await db
+      .prepare(
+        `SELECT path, wikidata_id FROM super_mention_paths WHERE path IN (${placeholders}) AND wikidata_id IS NOT NULL`
+      )
+      .bind(...paths)
+      .all()
+
+    const mapping: Record<string, string> = {}
+    for (const row of result.results || []) {
+      if (row.path && row.wikidata_id) {
+        mapping[row.path as string] = row.wikidata_id as string
+      }
+    }
+
+    return c.json({ mapping })
+  } catch (e) {
+    console.error('Lookup error:', e)
+    return c.json({ error: 'Failed to lookup paths' }, 500)
   }
 })
 

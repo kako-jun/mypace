@@ -23,7 +23,9 @@ import { ImageDropZone, AttachedImages, PostPreview } from '../post'
 import { Avatar, Icon, TextButton, ErrorMessage } from '../ui'
 import { setBoolean } from '../../lib/utils/storage'
 import { StickerPicker, StickerList } from '../sticker'
+import { SuperMentionPopup } from '../superMention'
 import { FormActions, ShortTextEditor, PostFormLongMode } from './index'
+import type { ShortTextEditorRef } from './ShortTextEditor'
 
 interface PostFormProps {
   longMode: boolean
@@ -65,7 +67,9 @@ export function PostForm({
   const [darkTheme, setDarkTheme] = useState(() => getStoredAppTheme() === 'dark')
   const [minimized, setMinimized] = useState(false)
   const [stickers, setStickers] = useState<Sticker[]>([])
+  const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const shortTextEditorRef = useRef<ShortTextEditorRef>(null)
 
   useEffect(() => {
     const profile = getLocalProfile()
@@ -297,7 +301,6 @@ export function PostForm({
         onCancel={handleCancel}
         onLongModeToggle={handleLongModeToggle}
         onAvatarClick={handleAvatarClick}
-        onInsertImageUrl={insertImageUrl}
         onRemoveImage={handleRemoveImage}
         onError={setError}
         onAddSticker={handleAddSticker}
@@ -336,6 +339,14 @@ export function PostForm({
         <button type="button" className="post-form-avatar-button" onClick={handleAvatarClick}>
           <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
         </button>
+        <button
+          type="button"
+          className="super-mention-button"
+          onClick={() => setShowSuperMentionPopup(true)}
+          title="Super Mention (@/)"
+        >
+          @/
+        </button>
         <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
         <StickerPicker onAddSticker={handleAddSticker} />
         <TextButton variant="primary" className="mode-toggle-corner" onClick={handleLongModeToggle}>
@@ -351,7 +362,7 @@ export function PostForm({
         </button>
       </div>
 
-      <ShortTextEditor content={content} onContentChange={onContentChange} />
+      <ShortTextEditor ref={shortTextEditorRef} content={content} onContentChange={onContentChange} />
 
       <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
       <StickerList stickers={stickers} onRemove={handleRemoveSticker} />
@@ -380,6 +391,13 @@ export function PostForm({
       />
 
       <ErrorMessage>{error}</ErrorMessage>
+
+      {showSuperMentionPopup && (
+        <SuperMentionPopup
+          onSelect={(text) => shortTextEditorRef.current?.insertText(text)}
+          onClose={() => setShowSuperMentionPopup(false)}
+        />
+      )}
     </form>
   )
 }

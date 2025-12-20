@@ -1,9 +1,10 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import type { ThemeColors, EmojiTag, Sticker, Event } from '../../types'
 import { ImageDropZone, AttachedImages, PostPreview } from '../post'
-import { LongModeEditor } from './LongModeEditor'
+import { LongModeEditor, type LongModeEditorRef } from './LongModeEditor'
 import { Toggle, Avatar, TextButton, ErrorMessage } from '../ui'
 import { StickerPicker, StickerList } from '../sticker'
+import { SuperMentionPopup } from '../superMention'
 import { FormActions } from './FormActions'
 
 interface PostFormLongModeProps {
@@ -27,7 +28,6 @@ interface PostFormLongModeProps {
   onCancel: () => void
   onLongModeToggle: () => void
   onAvatarClick: () => void
-  onInsertImageUrl: (url: string) => void
   onRemoveImage: (url: string) => void
   onError: (error: string) => void
   onAddSticker: (sticker: Omit<Sticker, 'x' | 'y' | 'size' | 'rotation'>) => void
@@ -58,7 +58,6 @@ export function PostFormLongMode({
   onCancel,
   onLongModeToggle,
   onAvatarClick,
-  onInsertImageUrl,
   onRemoveImage,
   onError,
   onAddSticker,
@@ -68,6 +67,12 @@ export function PostFormLongMode({
   onStickerRotate,
 }: PostFormLongModeProps) {
   const longModeFormRef = useRef<HTMLFormElement>(null)
+  const editorRef = useRef<LongModeEditorRef>(null)
+  const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
+
+  const handleInsertToEditor = (text: string) => {
+    editorRef.current?.insertText(text)
+  }
 
   return (
     <div className={`long-mode-container ${showPreview ? 'with-preview' : 'no-preview'}`}>
@@ -88,7 +93,15 @@ export function PostFormLongMode({
             <button type="button" className="post-form-avatar-button" onClick={onAvatarClick}>
               <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
             </button>
-            <ImageDropZone onImageUploaded={onInsertImageUrl} onError={onError} />
+            <button
+              type="button"
+              className="super-mention-button"
+              onClick={() => setShowSuperMentionPopup(true)}
+              title="Super Mention (@/)"
+            >
+              @/
+            </button>
+            <ImageDropZone onImageUploaded={handleInsertToEditor} onError={onError} />
             <StickerPicker onAddSticker={onAddSticker} />
             <div className="vim-toggle">
               <Toggle checked={vimMode} onChange={onVimModeChange} label="Vim" />
@@ -96,6 +109,7 @@ export function PostFormLongMode({
           </div>
 
           <LongModeEditor
+            ref={editorRef}
             value={content}
             onChange={onContentChange}
             placeholder="マイペースで書こう"
@@ -136,6 +150,10 @@ export function PostFormLongMode({
             onStickerRotate={onStickerRotate}
           />
         </div>
+      )}
+
+      {showSuperMentionPopup && (
+        <SuperMentionPopup onSelect={handleInsertToEditor} onClose={() => setShowSuperMentionPopup(false)} />
       )}
     </div>
   )

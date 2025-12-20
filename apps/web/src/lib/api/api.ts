@@ -174,3 +174,47 @@ export async function saveSuperMentionPath(
   })
   if (!res.ok) throw new Error('Failed to save path')
 }
+
+// Lookup wikidata_id for multiple paths (with cache)
+const wikidataCache = new Map<string, string>()
+
+export async function lookupSuperMentionPaths(paths: string[]): Promise<Record<string, string>> {
+  // Filter out already cached paths
+  const uncachedPaths = paths.filter((p) => !wikidataCache.has(p))
+
+  // Return from cache if all paths are cached
+  if (uncachedPaths.length === 0) {
+    const result: Record<string, string> = {}
+    for (const p of paths) {
+      const cached = wikidataCache.get(p)
+      if (cached) result[p] = cached
+    }
+    return result
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/super-mention/lookup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paths: uncachedPaths }),
+    })
+    if (!res.ok) return {}
+
+    const data = (await res.json()) as { mapping: Record<string, string> }
+
+    // Cache the results
+    for (const [path, wikidataId] of Object.entries(data.mapping)) {
+      wikidataCache.set(path, wikidataId)
+    }
+
+    // Return all requested paths from cache
+    const result: Record<string, string> = {}
+    for (const p of paths) {
+      const cached = wikidataCache.get(p)
+      if (cached) result[p] = cached
+    }
+    return result
+  } catch {
+    return {}
+  }
+}

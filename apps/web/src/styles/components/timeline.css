@@ -109,17 +109,19 @@
   box-shadow: none;
 }
 
-/* End of timeline message - same style as load-more-button */
+/* End of timeline message - same size as load-more-button */
 .timeline-end {
   column-span: all;
   direction: ltr;
   width: 100%;
-  padding: 1rem;
-  margin-top: 1rem;
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.5rem;
   background: transparent;
   border: 2px dashed var(--border-light);
-  border-radius: 8px;
+  border-radius: 12px;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   text-align: center;
 }

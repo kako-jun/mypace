@@ -50,7 +50,12 @@ const marked = new Marked({
   },
 })
 
-export function renderContent(content: string, emojis: EmojiTag[] = [], profiles: ProfileMap = {}) {
+export function renderContent(
+  content: string,
+  emojis: EmojiTag[] = [],
+  profiles: ProfileMap = {},
+  wikidataMap: Record<string, string> = {}
+) {
   // 1. Extract code blocks FIRST (protect from all processing)
   const { text: textWithCodePlaceholders, codeBlocks } = extractCodeBlocks(content)
 
@@ -74,7 +79,7 @@ export function renderContent(content: string, emojis: EmojiTag[] = [], profiles
   html = removeImageLinks(html)
   html = processNostrMentions(html, profiles)
   html = processHashtags(html)
-  html = processSuperMentions(html)
+  html = processSuperMentions(html, wikidataMap)
   html = processLinks(html)
   html = processCustomEmojis(html, emojis)
 
