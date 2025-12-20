@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { LIMITS } from '../../lib/constants'
-import { SuperMentionSuggest } from '../SuperMentionSuggest'
+import { SuperMentionSuggest } from '../superMention'
 
 interface ShortTextEditorProps {
   content: string

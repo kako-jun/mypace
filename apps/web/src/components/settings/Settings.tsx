@@ -6,9 +6,9 @@ import {
   exportNpub,
   hasNip07,
   getNip07PublicKey,
-} from '../lib/nostr/keys'
-import { getCurrentPubkey } from '../lib/nostr/events'
-import { fetchUserProfile } from '../lib/nostr/relay'
+} from '../../lib/nostr/keys'
+import { getCurrentPubkey } from '../../lib/nostr/events'
+import { fetchUserProfile } from '../../lib/nostr/relay'
 import {
   getLocalProfile,
   setItem,
@@ -18,9 +18,9 @@ import {
   applyThemeColors,
   DEFAULT_COLORS,
   importMuteList,
-} from '../lib/utils'
-import { STORAGE_KEYS, CUSTOM_EVENTS } from '../lib/constants'
-import { TextButton } from './ui'
+} from '../../lib/utils'
+import { STORAGE_KEYS, CUSTOM_EVENTS } from '../../lib/constants'
+import { TextButton } from '../ui'
 import {
   ProfileSection,
   ThemeSection,
@@ -28,9 +28,9 @@ import {
   ShareSection,
   ExportSection,
   FilterSection,
-} from '../components/settings'
-import type { ImportedSettings } from '../components/settings'
-import type { ThemeColors } from '../types'
+  type ImportedSettings,
+} from './index'
+import type { ThemeColors } from '../../types'
 
 export function Settings() {
   const [open, setOpen] = useState(false)

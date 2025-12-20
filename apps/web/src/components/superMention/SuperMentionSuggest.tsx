@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { saveSuperMentionPath } from '../lib/api'
-import { useSuperMentionSearch, SuggestItemView, type SuggestItem } from './superMention'
+import { saveSuperMentionPath } from '../../lib/api'
+import { useSuperMentionSearch, SuggestItemView, type SuggestItem } from './index'
 
 interface SuperMentionSuggestProps {
   content: string

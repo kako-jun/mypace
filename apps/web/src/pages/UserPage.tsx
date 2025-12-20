@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import { UserView } from '../components/UserView'
+import { UserView } from '../components/user'
 
 export function UserPage() {
   const { pubkey } = useParams<{ pubkey: string }>()

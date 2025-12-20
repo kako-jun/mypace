@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { fetchUserProfile } from '../lib/nostr/relay'
-import { getEventThemeColors } from '../lib/nostr/events'
+import { fetchUserProfile } from '../../lib/nostr/relay'
+import { getEventThemeColors } from '../../lib/nostr/events'
 import {
   getDisplayName,
   getAvatarUrl,
@@ -11,22 +11,22 @@ import {
   shareOrCopy,
   copyToClipboard,
   verifyNip05,
-} from '../lib/utils'
-import { Button, Loading, BackButton, ErrorMessage } from '../components/ui'
-import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
+} from '../../lib/utils'
+import { Button, Loading, BackButton, ErrorMessage } from '../ui'
+import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import {
   setHashtagClickHandler,
   setSuperMentionClickHandler,
   setImageClickHandler,
   clearImageClickHandler,
-} from '../lib/content-parser'
-import { LightBox, triggerLightBox } from './LightBox'
-import { UserProfile } from './user/UserProfile'
-import { UserProfileEditor } from './user/UserProfileEditor'
-import { UserPosts } from './user/UserPosts'
-import { useTimeline } from '../hooks'
+} from '../../lib/content-parser'
+import { LightBox, triggerLightBox } from '../LightBox'
+import { UserProfile } from './UserProfile'
+import { UserProfileEditor } from './UserProfileEditor'
+import { UserPosts } from './UserPosts'
+import { useTimeline } from '../../hooks'
 import { nip19 } from 'nostr-tools'
-import type { Event, LoadableProfile, Profile } from '../types'
+import type { Event, LoadableProfile, Profile } from '../../types'
 
 interface UserViewProps {
   pubkey: string

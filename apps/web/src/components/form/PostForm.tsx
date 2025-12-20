@@ -5,11 +5,11 @@ import {
   createReplyEvent,
   getStoredThemeColors,
   getCurrentPubkey,
-} from '../lib/nostr/events'
-import { navigateToUser } from '../lib/utils'
-import type { ThemeColors, EmojiTag, Sticker } from '../types'
-import { publishEvent } from '../lib/nostr/relay'
-import { ProfileSetup } from './ProfileSetup'
+} from '../../lib/nostr/events'
+import { navigateToUser } from '../../lib/utils'
+import type { ThemeColors, EmojiTag, Sticker, Event } from '../../types'
+import { publishEvent } from '../../lib/nostr/relay'
+import { ProfileSetup } from '../ProfileSetup'
 import {
   hasLocalProfile,
   getLocalProfile,
@@ -17,15 +17,14 @@ import {
   removeImageUrl,
   getStoredVimMode,
   getStoredAppTheme,
-} from '../lib/utils'
-import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../lib/constants'
-import { ImageDropZone, AttachedImages, PostPreview } from '../components/post'
-import { Avatar, Icon, TextButton, ErrorMessage } from './ui'
-import { setBoolean } from '../lib/utils/storage'
-import { StickerPicker } from './StickerPicker'
-import { StickerList } from './StickerList'
-import { FormActions, ShortTextEditor, PostFormLongMode } from './form'
-import type { Event } from '../types'
+} from '../../lib/utils'
+import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../../lib/constants'
+import { ImageDropZone, AttachedImages, PostPreview } from '../post'
+import { Avatar, Icon, TextButton, ErrorMessage } from '../ui'
+import { setBoolean } from '../../lib/utils/storage'
+import { StickerPicker } from '../StickerPicker'
+import { StickerList } from '../StickerList'
+import { FormActions, ShortTextEditor, PostFormLongMode } from './index'
 
 interface PostFormProps {
   longMode: boolean

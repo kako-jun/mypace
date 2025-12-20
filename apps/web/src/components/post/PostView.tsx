@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { nip19 } from 'nostr-tools'
-import { publishEvent } from '../lib/nostr/relay'
+import { publishEvent } from '../../lib/nostr/relay'
 import {
   createDeleteEvent,
   createRepostEvent,
@@ -8,7 +8,7 @@ import {
   getThemeCardProps,
   MAX_STELLA_PER_USER,
   createReactionEvent,
-} from '../lib/nostr/events'
+} from '../../lib/nostr/events'
 import {
   getDisplayName,
   getAvatarUrl,
@@ -20,20 +20,20 @@ import {
   navigateToUser,
   getUIThemeColors,
   applyThemeColors,
-} from '../lib/utils'
-import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
-import { hasTeaserTag, getTeaserContent, removeReadMoreLink, parseStickers } from '../lib/nostr/tags'
+} from '../../lib/utils'
+import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
+import { hasTeaserTag, getTeaserContent, removeReadMoreLink, parseStickers } from '../../lib/nostr/tags'
 import {
   setHashtagClickHandler,
   setSuperMentionClickHandler,
   setImageClickHandler,
   clearImageClickHandler,
-} from '../lib/content-parser'
-import { LightBox, triggerLightBox } from './LightBox'
-import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers } from '../components/post'
-import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage } from '../components/ui'
-import { useShare, useDeleteConfirm, usePostViewData } from '../hooks'
-import type { Profile, ReactionData } from '../types'
+} from '../../lib/content-parser'
+import { LightBox, triggerLightBox } from '../LightBox'
+import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers } from './index'
+import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage } from '../ui'
+import { useShare, useDeleteConfirm, usePostViewData } from '../../hooks'
+import type { Profile, ReactionData } from '../../types'
 
 interface PostViewProps {
   eventId: string

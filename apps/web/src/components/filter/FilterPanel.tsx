@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Button from './ui/Button'
-import Toggle from './ui/Toggle'
-import { buildSearchUrl, DEFAULT_SEARCH_FILTERS, saveFiltersToStorage, loadPresets } from '../lib/utils'
-import { FilterPresets } from './filter/FilterPresets'
-import { SmartFilter } from './filter/SmartFilter'
-import { MuteListManager } from './filter/MuteListManager'
-import { FilterFields } from './filter/FilterFields'
-import type { SearchFilters, FilterPreset } from '../types'
+import Button from '../ui/Button'
+import Toggle from '../ui/Toggle'
+import { buildSearchUrl, DEFAULT_SEARCH_FILTERS, saveFiltersToStorage, loadPresets } from '../../lib/utils'
+import { FilterPresets } from './FilterPresets'
+import { SmartFilter } from './SmartFilter'
+import { MuteListManager } from './MuteListManager'
+import { FilterFields } from './FilterFields'
+import type { SearchFilters, FilterPreset } from '../../types'
 
 interface FilterPanelProps {
   isPopup?: boolean

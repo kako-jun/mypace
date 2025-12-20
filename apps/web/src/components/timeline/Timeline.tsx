@@ -1,9 +1,9 @@
 import { useState, useCallback, Fragment, useEffect } from 'react'
-import { TIMEOUTS, CUSTOM_EVENTS } from '../lib/constants'
-import { setHashtagClickHandler, setSuperMentionClickHandler } from '../lib/content-parser'
-import { TimelinePostCard } from '../components/timeline'
-import { Loading, Button, ErrorMessage, SuccessMessage } from './ui'
-import { useTimeline } from '../hooks'
+import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
+import { setHashtagClickHandler, setSuperMentionClickHandler } from '../../lib/content-parser'
+import { TimelinePostCard } from './index'
+import { Loading, Button, ErrorMessage, SuccessMessage } from '../ui'
+import { useTimeline } from '../../hooks'
 import {
   shareOrCopy,
   navigateToEdit,
@@ -12,8 +12,8 @@ import {
   contentHasTag,
   DEFAULT_SEARCH_FILTERS,
   getMutedPubkeys,
-} from '../lib/utils'
-import type { Event, SearchFilters } from '../types'
+} from '../../lib/utils'
+import type { Event, SearchFilters } from '../../types'
 
 interface TimelineProps {
   onEditStart?: (event: Event) => void

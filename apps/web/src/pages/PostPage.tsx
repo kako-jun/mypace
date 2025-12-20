@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import { PostView } from '../components/PostView'
+import { PostView } from '../components/post'
 import { ErrorMessage } from '../components/ui'
 
 export function PostPage() {

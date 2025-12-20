@@ -1,3 +1,4 @@
 export * from './UserProfile'
 export * from './UserProfileEditor'
 export * from './UserPosts'
+export { UserView } from './UserView'

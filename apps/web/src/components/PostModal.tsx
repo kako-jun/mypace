@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { PostView } from './PostView'
+import { PostView } from './post'
 import { navigateBack } from '../lib/utils'
 
 export function PostModal() {
