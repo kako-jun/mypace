@@ -4,7 +4,7 @@ export function detectServiceLabel(url: string): string {
 
   // Global services
   if (lowered.includes('github.com')) return 'GitHub'
-  if (lowered.includes('twitter.com') || lowered.includes('x.com')) return 'Twitter'
+  if (lowered.includes('twitter.com') || lowered.includes('x.com')) return 'X'
   if (lowered.includes('youtube.com') || lowered.includes('youtu.be')) return 'YouTube'
   if (lowered.includes('instagram.com')) return 'Instagram'
   if (lowered.includes('linkedin.com')) return 'LinkedIn'

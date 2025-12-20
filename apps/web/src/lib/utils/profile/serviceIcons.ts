@@ -6,8 +6,8 @@ export function getWebsiteIcon(label: string): string {
       return 'Github'
     case 'GitLab':
       return 'Gitlab'
-    case 'Twitter':
-      return 'Twitter'
+    case 'X':
+      return 'Twitter' // lucide-react icon name
     case 'YouTube':
       return 'Youtube'
     case 'Instagram':
