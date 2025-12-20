@@ -1,7 +1,7 @@
 import { useState, useCallback, Fragment, useEffect } from 'react'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import { setHashtagClickHandler, setSuperMentionClickHandler } from '../../lib/parser'
-import { TimelinePostCard } from './index'
+import { TimelinePostCard, TimelineActionButton } from './index'
 import { Loading, Button, ErrorMessage, SuccessMessage } from '../ui'
 import { useTimeline } from '../../hooks'
 import {
@@ -213,9 +213,7 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
   return (
     <div className="timeline">
       {newEventCount > 0 && (
-        <Button size="md" className="new-posts-banner" onClick={loadNewEvents}>
-          {newEventCount}件の新着投稿があります
-        </Button>
+        <TimelineActionButton onClick={loadNewEvents}>{newEventCount} New Posts</TimelineActionButton>
       )}
       {filteredItems.map((item) => {
         const event = item.event
@@ -257,14 +255,9 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
               getAvatarUrl={getAvatarUrl}
             />
             {gapAfterThis && (
-              <Button
-                size="md"
-                className="timeline-gap-button"
-                onClick={() => fillGap(gapAfterThis.id)}
-                disabled={loadingGap === gapAfterThis.id}
-              >
+              <TimelineActionButton onClick={() => fillGap(gapAfterThis.id)} disabled={loadingGap === gapAfterThis.id}>
                 {loadingGap === gapAfterThis.id ? 'Loading...' : 'Load More'}
-              </Button>
+              </TimelineActionButton>
             )}
           </Fragment>
         )
@@ -275,9 +268,9 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
         </p>
       )}
       {filteredItems.length > 0 && hasMore && (
-        <Button size="lg" className="load-more-button" onClick={loadOlderEvents} disabled={loadingMore}>
+        <TimelineActionButton onClick={loadOlderEvents} disabled={loadingMore}>
           {loadingMore ? 'Loading...' : 'Load Older Posts'}
-        </Button>
+        </TimelineActionButton>
       )}
       {filteredItems.length > 0 && !hasMore && <p className="timeline-end">End of timeline</p>}
     </div>
