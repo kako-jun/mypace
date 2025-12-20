@@ -45,11 +45,11 @@ export default function ShareMenu({ position, onSelect, onClose }: ShareMenuProp
             <div className="share-menu-options">
               <button className="share-menu-option" onClick={handleSelect('url')}>
                 <Icon name="Link" size={16} />
-                <span>URLをシェア</span>
+                <span>Share URL</span>
               </button>
               <button className="share-menu-option" onClick={handleShowContentMenu}>
                 <Icon name="FileText" size={16} />
-                <span>本文をシェア</span>
+                <span>Share Content</span>
                 <Icon name="ChevronRight" size={16} className="share-menu-arrow" />
               </button>
             </div>
@@ -60,21 +60,21 @@ export default function ShareMenu({ position, onSelect, onClose }: ShareMenuProp
               <button className="share-menu-back" onClick={handleBack}>
                 <Icon name="ChevronLeft" size={16} />
               </button>
-              <span className="share-menu-title">本文をシェア</span>
+              <span className="share-menu-title">Content</span>
               <CloseButton onClick={() => onClose()} size={16} />
             </div>
             <div className="share-menu-options">
               <button className="share-menu-option" onClick={handleSelect('md-copy')}>
                 <Icon name="Clipboard" size={16} />
-                <span>マークダウンをコピー</span>
-              </button>
-              <button className="share-menu-option" onClick={handleSelect('md-download')}>
-                <Icon name="Download" size={16} />
-                <span>マークダウンをダウンロード</span>
+                <span>Copy Markdown</span>
               </button>
               <button className="share-menu-option" onClick={handleSelect('md-open')}>
                 <Icon name="ExternalLink" size={16} />
-                <span>マークダウンのURLを開く</span>
+                <span>Open Markdown URL</span>
+              </button>
+              <button className="share-menu-option" onClick={handleSelect('md-download')}>
+                <Icon name="Download" size={16} />
+                <span>Download Markdown</span>
               </button>
             </div>
           </>
