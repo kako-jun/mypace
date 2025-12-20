@@ -297,6 +297,23 @@ body.custom-theme .logo-pace {
   color: #666;
 }
 
+.super-mention-q-badge-link {
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.super-mention-q-badge-link:hover {
+  background: rgba(0, 100, 200, 0.2);
+  color: #0066cc;
+  text-decoration: underline;
+}
+
+[data-theme='dark'] .super-mention-q-badge-link:hover {
+  background: rgba(100, 180, 255, 0.2);
+  color: #6ab4ff;
+}
+
 /* Super Mention Popup */
 .super-mention-popup-backdrop {
   position: fixed;

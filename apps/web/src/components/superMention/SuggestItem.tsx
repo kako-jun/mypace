@@ -9,6 +9,25 @@ interface SuggestItemProps {
   onHover: () => void
 }
 
+function getWikipediaUrl(wikidataId: string): string {
+  return `https://ja.wikipedia.org/wiki/Special:GoToLinkedPage/jawiki/${wikidataId}`
+}
+
+function WikidataQBadge({ id }: { id: string }) {
+  return (
+    <a
+      href={getWikipediaUrl(id)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="super-mention-q-badge super-mention-q-badge-link"
+      onClick={(e) => e.stopPropagation()}
+      title="Wikipediaで開く"
+    >
+      {id}
+    </a>
+  )
+}
+
 export function SuggestItemView({ item, isSelected, currentCategory, onSelect, onHover }: SuggestItemProps) {
   const baseClass = `super-mention-suggest-item ${isSelected ? 'selected' : ''}`
 
@@ -39,7 +58,7 @@ export function SuggestItemView({ item, isSelected, currentCategory, onSelect, o
           <span className="super-mention-suggest-path">{item.label}</span>
           <span className="super-mention-suggest-desc">
             {item.description}
-            <span className="super-mention-q-badge">{item.id}</span>
+            <WikidataQBadge id={item.id} />
           </span>
         </button>
       )
@@ -59,7 +78,7 @@ export function SuggestItemView({ item, isSelected, currentCategory, onSelect, o
           <span className="super-mention-suggest-path">{item.label}</span>
           <span className="super-mention-suggest-desc">
             {item.description}
-            {item.wikidataId && <span className="super-mention-q-badge">{item.wikidataId}</span>}
+            {item.wikidataId && <WikidataQBadge id={item.wikidataId} />}
           </span>
         </button>
       )

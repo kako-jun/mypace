@@ -64,6 +64,11 @@ export function detectEmbed(url: string): EmbedInfo | null {
     return { type: 'iframe', url, iframeSrc: url }
   }
 
+  // Exclude Wikipedia URLs from OGP (super mention Q badge links)
+  if (/^https?:\/\/([\w-]+\.)?wikipedia\.org\//i.test(url)) {
+    return null
+  }
+
   return { type: 'ogp', url }
 }
 
