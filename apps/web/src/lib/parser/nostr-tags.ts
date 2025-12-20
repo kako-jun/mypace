@@ -18,15 +18,21 @@ export function processHashtags(html: string): string {
 const SUPER_MENTION_REGEX =
   /(^|[\s>])@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
 
-// URL pattern: domain.tld or domain.tld/path
+// URL pattern: domain.tld or domain.tld/path (with optional protocol)
+const PROTOCOL_PREFIX = /^https?:\/\//i
 const URL_PATTERN = /^[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(\/.*)?$/
 
 function getWikipediaUrl(wikidataId: string): string {
   return `https://ja.wikipedia.org/wiki/Special:GoToLinkedPage/jawiki/${wikidataId}`
 }
 
+function stripProtocol(label: string): string {
+  return label.replace(PROTOCOL_PREFIX, '')
+}
+
 function isUrlLike(label: string): boolean {
-  return URL_PATTERN.test(label)
+  const stripped = stripProtocol(label)
+  return URL_PATTERN.test(stripped)
 }
 
 // Process super mentions in HTML
@@ -34,8 +40,9 @@ export function processSuperMentions(html: string, wikidataMap?: Record<string, 
   return html.replace(SUPER_MENTION_REGEX, (_match, prefix, label) => {
     // Check if it's a URL reference
     if (isUrlLike(label)) {
-      const url = `https://${label}`
-      return `${prefix}<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="content-super-mention content-super-mention-url"><span class="super-mention-prefix">@@</span>${escapeHtml(label)}</a>`
+      const domainAndPath = stripProtocol(label)
+      const url = `https://${domainAndPath}`
+      return `${prefix}<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="content-super-mention content-super-mention-url"><span class="super-mention-prefix">@@</span>${escapeHtml(domainAndPath)}</a>`
     }
 
     // Wikidata reference
