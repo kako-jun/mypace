@@ -392,46 +392,7 @@
   margin-bottom: 0.35rem;
 }
 
-/* Match mute-list-input / filter-search-input style */
-.edit-field input {
-  width: 100%;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.8rem;
-  font-family: monospace;
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
-  background: var(--surface-secondary);
-  color: var(--text-primary);
-  transition: border-color 0.15s ease;
-  outline: none;
-}
-
-.edit-field input:focus {
-  border-color: var(--btn-primary-bg);
-}
-
-.edit-field input::placeholder {
-  color: var(--text-placeholder);
-}
-
-.edit-textarea {
-  width: 100%;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.8rem;
-  font-family: monospace;
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
-  background: var(--surface-secondary);
-  color: var(--text-primary);
-  resize: vertical;
-  min-height: 60px;
-  transition: border-color 0.15s ease;
-  outline: none;
-}
-
-.edit-textarea:focus {
-  border-color: var(--btn-primary-bg);
-}
+/* Edit field uses shared .input and .textarea components from base.css */
 
 .edit-actions {
   display: flex;
