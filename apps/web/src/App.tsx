@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Routes, Route, useLocation, useNavigate, type Location } from 'react-router-dom'
-import { Layout } from './components/Layout'
+import { Layout } from './components/layout'
 import { HomePage } from './pages/HomePage'
 import { PostPage } from './pages/PostPage'
 import { UserPage } from './pages/UserPage'

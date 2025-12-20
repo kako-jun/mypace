@@ -1,8 +1,8 @@
 // Navigation utilities
 import { nip19 } from 'nostr-tools'
-import type { FilterMode, SearchFilters } from '../../types'
+import type { FilterMode, SearchFilters } from '../../../types'
 import { getNavigateFunction } from './router-navigation'
-import { STORAGE_KEYS } from '../constants'
+import { STORAGE_KEYS } from '../../constants'
 
 // Navigate to a URL using React Router
 export function navigateTo(href: string): void {

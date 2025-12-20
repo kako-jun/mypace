@@ -1,6 +1,6 @@
 // Filter presets management
-import { STORAGE_KEYS } from '../constants'
-import type { FilterPreset, SearchFilters } from '../../types'
+import { STORAGE_KEYS } from '../../constants'
+import type { FilterPreset, SearchFilters } from '../../../types'
 
 export const MAX_PRESETS = 10
 

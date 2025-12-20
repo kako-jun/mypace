@@ -1,6 +1,6 @@
 // Mute list management (user blocklist)
 import { nip19 } from 'nostr-tools'
-import { STORAGE_KEYS } from '../constants'
+import { STORAGE_KEYS } from '../../constants'
 
 export interface MuteEntry {
   npub: string // Display format (npub1...)

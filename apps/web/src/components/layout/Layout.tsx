@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { Icon } from './ui/Icon'
-import { Settings } from './settings'
-import { FilterPanel } from './filter'
-import { parseSearchParams, DEFAULT_SEARCH_FILTERS } from '../lib/utils'
-import { CUSTOM_EVENTS } from '../lib/constants'
-import { getStoredThemeColors, isDarkColor } from '../lib/nostr/theme'
+import { Icon } from '../ui/Icon'
+import { Settings } from '../settings'
+import { FilterPanel } from '../filter'
+import { parseSearchParams, DEFAULT_SEARCH_FILTERS } from '../../lib/utils'
+import { CUSTOM_EVENTS } from '../../lib/constants'
+import { getStoredThemeColors, isDarkColor } from '../../lib/nostr/theme'
 
 export function Layout() {
   const navigate = useNavigate()

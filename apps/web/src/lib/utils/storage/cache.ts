@@ -1,4 +1,4 @@
-import type { Event, Profile } from '../../types'
+import type { Event, Profile } from '../../../types'
 
 const CACHE_KEYS = {
   POST: 'post_',
