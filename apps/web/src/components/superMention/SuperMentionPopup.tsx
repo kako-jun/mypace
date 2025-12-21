@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { searchWikidata, getSuperMentionSuggestions, saveSuperMentionPath, deleteSuperMentionPath } from '../../lib/api'
 import { SuggestItemView, type SuggestItem } from './index'
 import { CloseButton } from '../ui'
+import Button from '../ui/Button'
 
 interface SuperMentionPopupProps {
   onSelect: (text: string) => void
@@ -13,11 +14,18 @@ function normalizePath(path: string): string {
   return path.replace(/\s+/g, '_')
 }
 
+interface SelectedWikidata {
+  id: string
+  label: string
+  description: string
+}
+
 export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps) {
   const [query, setQuery] = useState('')
   const [items, setItems] = useState<SuggestItem[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [selectedWikidata, setSelectedWikidata] = useState<SelectedWikidata | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -106,47 +114,43 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
     }
   }, [query])
 
-  const handleSelect = useCallback(
-    async (item: SuggestItem) => {
-      let insertText: string
-      let path: string
-      let wikidataId: string | undefined
-      let wikidataLabel: string | undefined
-      let wikidataDescription: string | undefined
+  // When selecting an item, update the query and store wikidata info
+  const handleSelect = useCallback((item: SuggestItem) => {
+    const path = normalizePath(item.path)
+    setQuery(path)
 
-      switch (item.type) {
-        case 'wikidata':
-          path = normalizePath(item.path)
-          insertText = `@@${path} `
-          wikidataId = item.id
-          wikidataLabel = item.path
-          wikidataDescription = item.description
-          break
+    if (item.type === 'wikidata') {
+      setSelectedWikidata({
+        id: item.id,
+        label: item.path,
+        description: item.description,
+      })
+    } else if (item.type === 'history' && item.wikidataId) {
+      setSelectedWikidata({
+        id: item.wikidataId,
+        label: item.path,
+        description: item.description,
+      })
+    }
 
-        case 'history':
-          path = normalizePath(item.path)
-          insertText = `@@${path} `
-          wikidataId = item.wikidataId
-          wikidataLabel = item.path
-          wikidataDescription = item.description
-          break
+    // Focus input for further editing
+    inputRef.current?.focus()
+  }, [])
 
-        case 'custom':
-          path = normalizePath(item.path)
-          insertText = `@@${path} `
-          break
+  // Confirm and insert the super mention
+  const handleConfirm = useCallback(() => {
+    if (!query.trim()) return
 
-        default:
-          return
-      }
+    const path = normalizePath(query)
+    const insertText = `@@${path}`
 
-      saveSuperMentionPath(path, wikidataId, wikidataLabel, wikidataDescription).catch(() => {})
+    saveSuperMentionPath(path, selectedWikidata?.id, selectedWikidata?.label, selectedWikidata?.description).catch(
+      () => {}
+    )
 
-      onSelect(insertText)
-      onClose()
-    },
-    [onSelect, onClose]
-  )
+    onSelect(insertText)
+    onClose()
+  }, [query, selectedWikidata, onSelect, onClose])
 
   const handleDelete = useCallback(async (item: SuggestItem) => {
     if (item.type !== 'history') return
@@ -171,12 +175,15 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
             setSelectedIndex((i) => (i - 1 + items.length) % items.length)
           }
           break
-        case 'Enter':
         case 'Tab':
           e.preventDefault()
           if (items.length > 0) {
             handleSelect(items[selectedIndex])
           }
+          break
+        case 'Enter':
+          e.preventDefault()
+          handleConfirm()
           break
         case 'Escape':
           e.preventDefault()
@@ -184,7 +191,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
           break
       }
     },
-    [items, selectedIndex, handleSelect, onClose]
+    [items, selectedIndex, handleSelect, handleConfirm, onClose]
   )
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -229,6 +236,14 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
             />
           ))}
           {!loading && items.length === 0 && <div className="super-mention-suggest-empty">No results</div>}
+        </div>
+        <div className="super-mention-popup-footer">
+          <Button size="md" variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="md" variant="primary" onClick={handleConfirm} disabled={!query.trim()}>
+            Add
+          </Button>
         </div>
       </div>
     </div>
