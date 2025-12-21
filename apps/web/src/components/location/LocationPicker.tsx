@@ -56,7 +56,7 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
   useEffect(() => {
     if (!isOpen || !mapContainerRef.current || mapRef.current) return
 
-    const map = L.map(mapContainerRef.current).setView([35.6762, 139.6503], 5)
+    const map = L.map(mapContainerRef.current).setView([35.6812, 139.7671], 5)
     mapRef.current = map
 
     // Add initial tile layer
@@ -231,6 +231,16 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
             </div>
 
             <p className="location-picker-hint">Move the map to place the crosshair on your location</p>
+
+            <div className="location-picker-name">
+              <input
+                type="text"
+                value={locationName}
+                onChange={(e) => setLocationName(e.target.value)}
+                placeholder="Location name (optional)"
+                className="location-picker-name-input"
+              />
+            </div>
 
             <div className="location-picker-footer">
               <Button size="md" variant="secondary" onClick={handleClose}>
