@@ -18,9 +18,7 @@ export function processHashtags(html: string): string {
 const SUPER_MENTION_REGEX =
   /(^|[\s>])@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
 
-// URL pattern: domain.tld or domain.tld/path (with optional protocol)
 const PROTOCOL_PREFIX = /^https?:\/\//i
-const URL_PATTERN = /^[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(\/.*)?$/
 
 function getWikipediaUrl(wikidataId: string): string {
   return `https://www.wikidata.org/wiki/Special:GoToLinkedPage/jawiki/${wikidataId}`
@@ -30,9 +28,16 @@ function stripProtocol(label: string): string {
   return label.replace(PROTOCOL_PREFIX, '')
 }
 
+// Use built-in URL class for robust URL detection
 function isUrlLike(label: string): boolean {
-  const stripped = stripProtocol(label)
-  return URL_PATTERN.test(stripped)
+  const withProtocol = PROTOCOL_PREFIX.test(label) ? label : `https://${label}`
+  try {
+    const url = new URL(withProtocol)
+    // Must have a valid hostname with at least one dot (not localhost)
+    return url.hostname.includes('.')
+  } catch {
+    return false
+  }
 }
 
 // Process super mentions in HTML
