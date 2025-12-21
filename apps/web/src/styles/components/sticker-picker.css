@@ -204,7 +204,11 @@
 }
 
 .sticker-picker-delete svg {
+  display: block;
+  width: 12px;
+  height: 12px;
   stroke: white;
+  flex-shrink: 0;
 }
 
 .sticker-picker-item img {
