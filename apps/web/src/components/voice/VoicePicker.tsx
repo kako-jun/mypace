@@ -355,7 +355,7 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
                 Cancel
               </Button>
               <Button size="md" variant="primary" onClick={handleUpload} disabled={!recordedBlob || uploading}>
-                {uploading ? 'Uploading...' : 'Add to Post'}
+                {uploading ? 'Uploading...' : 'Add'}
               </Button>
             </div>
           </div>

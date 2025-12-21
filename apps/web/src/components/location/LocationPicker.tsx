@@ -237,7 +237,7 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
                 Cancel
               </Button>
               <Button size="md" variant="primary" onClick={handleConfirm} disabled={!centerLocation}>
-                Add Location
+                Add
               </Button>
             </div>
           </div>

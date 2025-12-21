@@ -804,7 +804,17 @@
 }
 
 .location-picker-map-controls .toggle-label {
-  font-size: 0.9rem;
+  font-size: 1rem;
+}
+
+.location-picker-map-controls .toggle-slider {
+  width: 40px;
+  height: 22px;
+}
+
+.location-picker-map-controls .toggle-slider::before {
+  width: 18px;
+  height: 18px;
 }
 
 .location-picker-map-wrapper {

@@ -379,7 +379,7 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
                 Cancel
               </Button>
               <Button size="md" variant="primary" onClick={handleComplete} disabled={uploading || !hasDrawn}>
-                {uploading ? 'Uploading...' : 'Done'}
+                {uploading ? 'Uploading...' : 'Add'}
               </Button>
             </div>
           </div>
