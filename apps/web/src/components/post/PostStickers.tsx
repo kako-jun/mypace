@@ -377,6 +377,14 @@ export function PostStickers({
                     <div className="sticker-layer-line" />
                     <div
                       className={`sticker-layer-toggle ${sticker.layer === 'back' ? 'sticker-layer-back' : ''}`}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                      }}
+                      onTouchStart={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                      }}
                       onClick={(e) => {
                         e.stopPropagation()
                         const newLayer = sticker.layer === 'back' ? 'front' : 'back'
@@ -384,6 +392,7 @@ export function PostStickers({
                       }}
                       onTouchEnd={(e) => {
                         e.stopPropagation()
+                        e.preventDefault()
                         const newLayer = sticker.layer === 'back' ? 'front' : 'back'
                         onStickerLayerChange(originalIndex, newLayer)
                       }}
