@@ -24,6 +24,12 @@ ogp.get('/', async (c) => {
       return c.json({ error: 'Invalid URL characters' }, 400)
     }
 
+    // Block reserved/test domains that don't serve real content
+    const blockedDomains = ['example.com', 'example.org', 'example.net', 'localhost', '127.0.0.1']
+    if (blockedDomains.some((d) => parsedUrl.hostname === d || parsedUrl.hostname.endsWith('.' + d))) {
+      return c.json({ error: 'Reserved domain' }, 400)
+    }
+
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000)
 
