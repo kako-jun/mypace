@@ -77,11 +77,11 @@
 .drawing-picker-toolbar {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: space-between;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border-subtle);
-  flex-wrap: wrap;
 }
+
 
 .drawing-picker-colors {
   display: flex;
@@ -92,9 +92,9 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 2px solid var(--border-subtle);
+  border: 2px solid #666;
   cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .drawing-color-button.black {
@@ -107,6 +107,7 @@
 
 .drawing-color-button.white {
   background: #fff;
+  border-color: #333;
 }
 
 .drawing-color-button:hover {
@@ -114,8 +115,8 @@
 }
 
 .drawing-color-button.active {
-  border-color: var(--action-star);
-  box-shadow: 0 0 0 2px var(--action-star);
+  border-color: #fc0;
+  box-shadow: 0 0 0 2px #fc0;
 }
 
 /* Pen sizes */
@@ -128,13 +129,13 @@
   width: 32px;
   height: 32px;
   border-radius: 4px;
-  border: 1px solid var(--border-subtle);
+  border: 2px solid #666;
   background: var(--surface-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .drawing-size-button:hover {
@@ -142,8 +143,9 @@
 }
 
 .drawing-size-button.active {
-  border-color: var(--action-star);
+  border-color: #fc0;
   background: var(--surface-tertiary);
+  box-shadow: 0 0 0 2px #fc0;
 }
 
 .drawing-size-dot {
@@ -170,7 +172,6 @@
 .drawing-picker-actions {
   display: flex;
   gap: 0.35rem;
-  margin-left: auto;
 }
 
 .drawing-action-button {
@@ -203,6 +204,7 @@
   display: flex;
   justify-content: center;
   background: var(--surface-secondary);
+  position: relative;
 }
 
 .drawing-picker-canvas {
@@ -212,6 +214,21 @@
   touch-action: none;
   max-width: 100%;
   height: auto;
+}
+
+.drawing-picker-canvas.disabled {
+  cursor: not-allowed;
+}
+
+.drawing-picker-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  color: #999;
+  pointer-events: none;
 }
 
 /* Error */

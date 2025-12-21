@@ -64,6 +64,27 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
     return cleanup
   }, [cleanup])
 
+  // Initialize canvas with flat line when modal opens
+  useEffect(() => {
+    if (!isOpen) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Draw black background
+    ctx.fillStyle = '#000'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    // Draw flat red line in center
+    ctx.lineWidth = 2
+    ctx.strokeStyle = '#f33'
+    ctx.beginPath()
+    ctx.moveTo(0, canvas.height / 2)
+    ctx.lineTo(canvas.width, canvas.height / 2)
+    ctx.stroke()
+  }, [isOpen])
+
   const handleOpen = () => {
     setIsOpen(true)
     setRecordedBlob(null)
@@ -94,7 +115,7 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
     const dataArray = new Uint8Array(bufferLength)
     analyser.getByteTimeDomainData(dataArray)
 
-    ctx.fillStyle = 'var(--surface-secondary)'
+    ctx.fillStyle = '#000'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     ctx.lineWidth = 2

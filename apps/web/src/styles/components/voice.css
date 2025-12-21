@@ -89,7 +89,7 @@
 .voice-picker-waveform {
   border: 2px solid #333;
   border-radius: 0;
-  background: var(--surface-secondary);
+  background: #000;
 }
 
 /* Record button */

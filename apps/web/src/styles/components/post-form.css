@@ -804,7 +804,7 @@
 }
 
 .location-picker-map-controls .toggle-label {
-  font-size: 1rem;
+  font-size: 1.25rem;
 }
 
 .location-picker-map-wrapper {
@@ -862,7 +862,7 @@
 }
 
 .location-picker-hint {
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   text-align: center;
   margin: 0.5rem 1rem;

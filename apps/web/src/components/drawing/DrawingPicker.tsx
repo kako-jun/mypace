@@ -115,8 +115,15 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
     ctx.fillStyle = COLORS.white
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
 
-    // Redraw all strokes with smooth curves
+    // Redraw all actions
     for (const action of historyRef.current) {
+      // Fill action (size === 0)
+      if (action.size === 0) {
+        ctx.fillStyle = action.color
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+        continue
+      }
+
       if (action.points.length < 2) continue
       ctx.strokeStyle = action.color
       ctx.lineWidth = action.size
@@ -251,10 +258,29 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
     redrawCanvas()
   }
 
-  const handleClear = () => {
-    historyRef.current = []
-    setHistoryLength(0)
-    redrawCanvas()
+  const handleFill = () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Fill with current color
+    ctx.fillStyle = COLORS[color]
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+
+    // Add fill action to history
+    historyRef.current.push({
+      type: 'stroke',
+      color: COLORS[color],
+      size: 0,
+      points: [
+        { x: 0, y: 0 },
+        { x: CANVAS_WIDTH, y: CANVAS_HEIGHT },
+      ],
+    })
+    setHistoryLength(historyRef.current.length)
+    if (!hasDrawn) setHasDrawn(true)
+    if (!isTimerRunning) setIsTimerRunning(true)
   }
 
   const handleComplete = async () => {
@@ -340,20 +366,24 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
                   </button>
                 ))}
               </div>
-              <div className="drawing-picker-actions">
-                <button
-                  type="button"
-                  className="drawing-action-button"
-                  onClick={handleUndo}
-                  disabled={historyLength === 0}
-                  title="Undo"
-                >
-                  <Icon name="Undo2" size={18} />
-                </button>
-                <button type="button" className="drawing-action-button" onClick={handleClear} title="Clear">
-                  <Icon name="Trash2" size={18} />
-                </button>
-              </div>
+              <button
+                type="button"
+                className="drawing-action-button"
+                onClick={handleFill}
+                disabled={timeLeft <= 0}
+                title="Fill"
+              >
+                <Icon name="Droplet" size={18} />
+              </button>
+              <button
+                type="button"
+                className="drawing-action-button"
+                onClick={handleUndo}
+                disabled={historyLength === 0 || timeLeft <= 0}
+                title="Undo"
+              >
+                <Icon name="Undo2" size={18} />
+              </button>
             </div>
 
             <div className="drawing-picker-canvas-container">
@@ -361,7 +391,7 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
                 ref={canvasRef}
                 width={CANVAS_WIDTH}
                 height={CANVAS_HEIGHT}
-                className="drawing-picker-canvas"
+                className={`drawing-picker-canvas ${timeLeft <= 0 ? 'disabled' : ''}`}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
@@ -370,6 +400,8 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
                 onTouchMove={draw}
                 onTouchEnd={stopDrawing}
               />
+              {!hasDrawn && timeLeft > 0 && <div className="drawing-picker-overlay">Draw here to start</div>}
+              {timeLeft <= 0 && <div className="drawing-picker-overlay">Time's up</div>}
             </div>
 
             {error && <div className="drawing-picker-error">{error}</div>}
