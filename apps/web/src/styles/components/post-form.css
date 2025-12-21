@@ -807,16 +807,6 @@
   font-size: 1rem;
 }
 
-.location-picker-map-controls .toggle-slider {
-  width: 40px;
-  height: 22px;
-}
-
-.location-picker-map-controls .toggle-slider::before {
-  width: 18px;
-  height: 18px;
-}
-
 .location-picker-map-wrapper {
   position: relative;
   margin: 0 1rem;
@@ -872,7 +862,7 @@
 }
 
 .location-picker-hint {
-  font-size: 0.8rem;
+  font-size: 1rem;
   color: var(--text-muted);
   text-align: center;
   margin: 0.5rem 1rem;
