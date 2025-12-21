@@ -6,8 +6,6 @@ import TwitterEmbed from './TwitterEmbed'
 import InstagramEmbed from './InstagramEmbed'
 import TikTokEmbed from './TikTokEmbed'
 import SpotifyEmbed from './SpotifyEmbed'
-import VideoEmbed from './VideoEmbed'
-import AudioEmbed from './AudioEmbed'
 import IframeEmbed from './IframeEmbed'
 import LinkPreview from './LinkPreview'
 
@@ -18,8 +16,6 @@ export {
   InstagramEmbed,
   TikTokEmbed,
   SpotifyEmbed,
-  VideoEmbed,
-  AudioEmbed,
   IframeEmbed,
   LinkPreview,
 }
@@ -51,12 +47,6 @@ function EmbedRenderer({ embed }: EmbedRendererProps) {
       return embed.spotifyId && embed.spotifyType ? (
         <SpotifyEmbed spotifyId={embed.spotifyId} spotifyType={embed.spotifyType} url={embed.url} />
       ) : null
-
-    case 'video':
-      return <VideoEmbed url={embed.url} />
-
-    case 'audio':
-      return <AudioEmbed url={embed.url} />
 
     case 'iframe':
       return <IframeEmbed url={embed.url} />
