@@ -1,4 +1,5 @@
 import type { Event, ProfileCache } from '../../types'
+import '../../styles/components/thread.css'
 import PostHeader from './PostHeader'
 import { PostContent } from './PostContent'
 import { parseEmojiTags } from '../ui'

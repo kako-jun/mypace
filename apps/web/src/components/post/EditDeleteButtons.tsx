@@ -1,5 +1,6 @@
 import { TextButton } from '../ui'
 import DeleteConfirmDialog from './DeleteConfirmDialog'
+import '../../styles/components/edit-delete.css'
 
 interface EditDeleteButtonsProps {
   isConfirming: boolean

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import type { EditorView, ViewUpdate } from '@codemirror/view'
+import '../../styles/components/long-mode-editor.css'
 
 interface LongModeEditorProps {
   value: string

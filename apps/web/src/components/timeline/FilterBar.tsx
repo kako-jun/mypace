@@ -1,5 +1,6 @@
 import { Icon } from '../ui'
 import type { FilterMode } from '../../types'
+import '../../styles/components/filter-bar.css'
 
 interface FilterBarProps {
   filterTags: string[]

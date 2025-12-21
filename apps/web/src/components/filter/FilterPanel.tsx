@@ -8,6 +8,7 @@ import { FilterPresets } from './FilterPresets'
 import { SmartFilter } from './SmartFilter'
 import { MuteListManager } from './MuteListManager'
 import { FilterFields } from './FilterFields'
+import '../../styles/components/filter-panel.css'
 import type { SearchFilters, FilterPreset } from '../../types'
 
 interface FilterPanelProps {

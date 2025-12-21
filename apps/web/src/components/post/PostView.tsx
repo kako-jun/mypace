@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { nip19 } from 'nostr-tools'
 import { publishEvent } from '../../lib/nostr/relay'
+import '../../styles/components/post-view.css'
 import {
   createDeleteEvent,
   createRepostEvent,

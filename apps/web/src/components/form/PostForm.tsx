@@ -6,6 +6,7 @@ import {
   getStoredThemeColors,
   getCurrentPubkey,
 } from '../../lib/nostr/events'
+import '../../styles/components/post-form.css'
 import { navigateToUser } from '../../lib/utils'
 import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant, StickerLayer } from '../../types'
 import { publishEvent } from '../../lib/nostr/relay'
@@ -429,14 +430,6 @@ export function PostForm({
             />
           </>
         )}
-        <button
-          type="button"
-          className="super-mention-button"
-          onClick={() => setShowSuperMentionPopup(true)}
-          title="Super Mention (@@)"
-        >
-          @@
-        </button>
         <div className="post-form-spacer" />
         <TextButton variant="primary" className="mode-toggle-corner" onClick={handleLongModeToggle}>
           LONG ↗
@@ -453,6 +446,14 @@ export function PostForm({
 
       <div className="post-form-row-2">
         <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
+        <button
+          type="button"
+          className="super-mention-button"
+          onClick={() => setShowSuperMentionPopup(true)}
+          title="Super Mention (@@)"
+        >
+          @@
+        </button>
         <StickerPicker onAddSticker={handleAddSticker} />
         <DrawingPicker onComplete={insertImageUrl} />
         <VoicePicker onComplete={insertImageUrl} />

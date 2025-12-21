@@ -4,6 +4,7 @@ import type { Profile } from '../../types'
 import { publishEvent, fetchUserProfile } from '../../lib/nostr/relay'
 import { Button, Input, ErrorMessage } from '../ui'
 import { getLocalProfile, setLocalProfile, getErrorMessage } from '../../lib/utils'
+import '../../styles/components/profile-setup.css'
 
 interface Props {
   onProfileSet?: () => void

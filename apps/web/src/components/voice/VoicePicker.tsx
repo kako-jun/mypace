@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Icon, CloseButton } from '../ui'
 import { uploadImage } from '../../lib/api/upload'
+import '../../styles/components/voice.css'
 
 interface VoicePickerProps {
   onComplete: (url: string) => void

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import '../../styles/components/lightbox.css'
 
 let openLightBox: ((src: string) => void) | null = null
 

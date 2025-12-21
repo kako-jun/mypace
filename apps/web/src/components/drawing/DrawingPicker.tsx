@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Icon, CloseButton } from '../ui'
 import { uploadImage } from '../../lib/api'
+import '../../styles/components/drawing.css'
 
 interface DrawingPickerProps {
   onComplete: (url: string) => void

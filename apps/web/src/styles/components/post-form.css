@@ -616,27 +616,30 @@
   border-color: #666;
 }
 
-/* Super mention button (@@) */
+/* Super mention button (@@) - same style as sticker-picker-toggle but with yellow bg */
 .super-mention-button {
   display: flex;
   align-items: center;
   justify-content: center;
   background: #fd0;
-  border: 2px solid #000;
+  border: 1px solid var(--border-primary, #333);
   color: #000;
   font-size: 0.85rem;
   font-weight: 700;
   width: 32px;
   height: 32px;
-  padding: 0;
-  border-radius: 4px;
+  padding: 4px;
+  border-radius: 0;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .super-mention-button:hover {
   transform: scale(1.05);
-  opacity: 0.9;
+}
+
+[data-theme='dark'] .super-mention-button {
+  border-color: #666;
 }
 
 /* Location Picker container */
@@ -644,8 +647,8 @@
   position: relative;
 }
 
-/* Location toggle button */
-.location-picker-toggle {
+/* Location button */
+.location-picker-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -659,12 +662,12 @@
   transition: all 0.2s ease;
 }
 
-.location-picker-toggle:hover {
+.location-picker-button:hover {
   background: var(--surface-hover);
   transform: scale(1.05);
 }
 
-[data-theme='dark'] .location-picker-toggle {
+[data-theme='dark'] .location-picker-button {
   border-color: #666;
 }
 
@@ -675,9 +678,10 @@
   background: rgba(0, 0, 0, 0.6);
   z-index: 200;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   padding: 1rem;
+  padding-bottom: 0;
 }
 
 .location-picker-modal {

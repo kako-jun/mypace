@@ -1,4 +1,5 @@
 import { extractEmbeds, type EmbedInfo } from '../../lib/utils/embed'
+import '../../styles/components/embed.css'
 import YouTubeEmbed from './YouTubeEmbed'
 import YouTubeShortsEmbed from './YouTubeShortsEmbed'
 import TwitterEmbed from './TwitterEmbed'

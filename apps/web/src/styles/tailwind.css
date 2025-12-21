@@ -10,22 +10,4 @@
 @import "./markdown.css";
 @import "./theme-custom.css";
 
-/* Component styles */
-@import "./components/post-card.css";
-@import "./components/post-actions.css";
-@import "./components/post-form.css";
-@import "./components/timeline.css";
-@import "./components/filter-bar.css";
-@import "./components/thread.css";
-@import "./components/edit-delete.css";
-@import "./components/settings.css";
-@import "./components/long-mode-editor.css";
-@import "./components/profile-setup.css";
-@import "./components/post-view.css";
-@import "./components/lightbox.css";
-@import "./components/user-view.css";
-@import "./components/embed.css";
-@import "./components/filter-panel.css";
-@import "./components/sticker-picker.css";
-@import "./components/drawing.css";
-@import "./components/voice.css";
+/* Component styles are imported directly in their respective component files */

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { fetchUserProfile } from '../../lib/nostr/relay'
+import '../../styles/components/user-view.css'
 import {
   fetchPinnedPost,
   setPinnedPost,

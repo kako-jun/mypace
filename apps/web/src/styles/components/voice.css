@@ -5,9 +5,10 @@
   background: rgba(0, 0, 0, 0.6);
   z-index: 200;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   padding: 1rem;
+  padding-bottom: 0;
 }
 
 .voice-picker-modal {
@@ -16,6 +17,8 @@
   border-radius: 0;
   width: 100%;
   max-width: 360px;
+  max-height: 90vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
@@ -262,7 +265,7 @@
   position: relative;
 }
 
-/* Voice button in post form - matches location-picker-toggle style */
+/* Voice button in post form - matches location-picker-button style */
 .voice-picker-button {
   display: flex;
   align-items: center;

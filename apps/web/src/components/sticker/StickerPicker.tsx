@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Icon, Input, CloseButton } from '../ui'
 import Button from '../ui/Button'
+import '../../styles/components/sticker-picker.css'
 import {
   getStickerHistory,
   saveStickerToHistory,

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Icon, parseEmojiTags } from '../ui'
+import '../../styles/components/post-card.css'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
 import {
   PostHeader,

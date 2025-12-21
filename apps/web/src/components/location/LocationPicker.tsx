@@ -47,11 +47,6 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
   }
 
   const handleClose = () => {
-    // Cleanup map
-    if (mapRef.current) {
-      mapRef.current.remove()
-      mapRef.current = null
-    }
     setIsOpen(false)
   }
 
@@ -178,7 +173,7 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
     <div className="location-picker">
       <button
         type="button"
-        className="location-picker-toggle"
+        className="location-picker-button"
         onClick={handleOpen}
         title={currentLocations.length > 0 ? `${currentLocations.length} location(s)` : 'Add location'}
       >

@@ -1,5 +1,6 @@
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react'
 import { Icon } from '../ui'
+import '../../styles/components/post-actions.css'
 import ReactorsPopup from './ReactorsPopup'
 import ShareMenu, { type ShareOption } from './ShareMenu'
 import { MAX_STELLA_PER_USER } from '../../lib/nostr/events'

@@ -1,5 +1,6 @@
 import { useState, useCallback, Fragment, useEffect } from 'react'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
+import '../../styles/components/timeline.css'
 import { setHashtagClickHandler, setSuperMentionClickHandler, setInternalLinkClickHandler } from '../../lib/parser'
 import { TimelinePostCard, TimelineActionButton } from './index'
 import { Loading, Button, ErrorMessage, SuccessMessage } from '../ui'

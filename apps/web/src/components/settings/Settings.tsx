@@ -7,6 +7,7 @@ import {
   hasNip07,
   getNip07PublicKey,
 } from '../../lib/nostr/keys'
+import '../../styles/components/settings.css'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import { fetchUserProfile } from '../../lib/nostr/relay'
 import {
