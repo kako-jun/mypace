@@ -300,6 +300,54 @@
   opacity: 0.8;
 }
 
+/* Attached Locations */
+.attached-locations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.attached-location {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.attached-location span {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remove-location-button {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-danger);
+  color: var(--surface-primary);
+  border: none;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-left: 0.25rem;
+}
+
+.remove-location-button:hover {
+  opacity: 0.8;
+}
+
 .post-form .cancel-button {
   --btn-corner: 8px;
   background: var(--btn-cancel-bg);
@@ -616,18 +664,8 @@
   transform: scale(1.05);
 }
 
-.location-picker-toggle.active {
-  background: var(--action-star);
-  color: #000;
-  border-color: var(--action-star);
-}
-
 [data-theme='dark'] .location-picker-toggle {
   border-color: #666;
-}
-
-[data-theme='dark'] .location-picker-toggle.active {
-  border-color: var(--action-star);
 }
 
 /* Location Picker Modal */

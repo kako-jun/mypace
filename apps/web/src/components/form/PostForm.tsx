@@ -19,7 +19,7 @@ import {
   getStoredAppTheme,
 } from '../../lib/utils'
 import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../../lib/constants'
-import { ImageDropZone, AttachedImages, PostPreview } from '../post'
+import { ImageDropZone, AttachedImages, AttachedLocations, PostPreview } from '../post'
 import { Avatar, Icon, TextButton, ErrorMessage } from '../ui'
 import { setBoolean } from '../../lib/utils/storage'
 import { StickerPicker } from '../sticker'
@@ -71,7 +71,7 @@ export function PostForm({
   const [minimized, setMinimized] = useState(false)
   const [stickers, setStickers] = useState<Sticker[]>([])
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
-  const [location, setLocation] = useState<{ geohash: string; name?: string } | null>(null)
+  const [locations, setLocations] = useState<{ geohash: string; name?: string }[]>([])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const shortTextEditorRef = useRef<ShortTextEditorRef>(null)
   const fileImportRef = useRef<HTMLInputElement>(null)
@@ -129,17 +129,17 @@ export function PostForm({
         .filter((s): s is Sticker => s !== null)
       setStickers(restoredStickers)
 
-      // Restore location
-      const gTag = editingEvent.tags.find((tag) => tag[0] === 'g')
-      const locationTag = editingEvent.tags.find((tag) => tag[0] === 'location')
-      if (gTag && gTag[1]) {
-        setLocation({ geohash: gTag[1], name: locationTag?.[1] })
-      } else {
-        setLocation(null)
-      }
+      // Restore locations
+      const gTags = editingEvent.tags.filter((tag) => tag[0] === 'g')
+      const locationTags = editingEvent.tags.filter((tag) => tag[0] === 'location')
+      const restoredLocations = gTags.map((gTag, i) => ({
+        geohash: gTag[1],
+        name: locationTags[i]?.[1],
+      }))
+      setLocations(restoredLocations)
     } else {
       setStickers([])
-      setLocation(null)
+      setLocations([])
     }
   }, [editingEvent])
 
@@ -189,10 +189,10 @@ export function PostForm({
 
       // Location tags (NIP-52 compliant)
       const locationTags: string[][] = []
-      if (location) {
-        locationTags.push(['g', location.geohash])
-        if (location.name) {
-          locationTags.push(['location', location.name])
+      for (const loc of locations) {
+        locationTags.push(['g', loc.geohash])
+        if (loc.name) {
+          locationTags.push(['location', loc.name])
         }
       }
 
@@ -203,7 +203,7 @@ export function PostForm({
         await publishEvent(event)
         onContentChange('')
         setStickers([])
-        setLocation(null)
+        setLocations([])
         onReplyComplete?.()
       } else if (editingEvent) {
         const deleteEvent = await createDeleteEvent([editingEvent.id])
@@ -213,14 +213,14 @@ export function PostForm({
         await publishEvent(event)
         onContentChange('')
         setStickers([])
-        setLocation(null)
+        setLocations([])
         onEditComplete?.()
       } else {
         const event = await createTextNote(content.trim(), undefined, extraTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])
-        setLocation(null)
+        setLocations([])
       }
 
       window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NEW_POST))
@@ -377,8 +377,8 @@ export function PostForm({
         onStickerResize={handleStickerResize}
         onStickerRotate={handleStickerRotate}
         onStickerLayerChange={handleStickerLayerChange}
-        location={location}
-        onLocationChange={setLocation}
+        locations={locations}
+        onLocationsChange={setLocations}
       />
     )
   }
@@ -456,7 +456,10 @@ export function PostForm({
         <StickerPicker onAddSticker={handleAddSticker} />
         <DrawingPicker onComplete={insertImageUrl} />
         <VoicePicker onComplete={insertImageUrl} />
-        <LocationPicker onSelect={(geohash, name) => setLocation({ geohash, name })} currentLocation={location} />
+        <LocationPicker
+          onSelect={(geohash, name) => setLocations([...locations, { geohash, name }])}
+          currentLocations={locations}
+        />
       </div>
 
       <ShortTextEditor
@@ -467,6 +470,10 @@ export function PostForm({
       />
 
       <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
+      <AttachedLocations
+        locations={locations}
+        onRemove={(index) => setLocations(locations.filter((_, i) => i !== index))}
+      />
 
       {showPreview && (
         <PostPreview
@@ -480,7 +487,7 @@ export function PostForm({
           onStickerRotate={handleStickerRotate}
           onStickerLayerChange={handleStickerLayerChange}
           onStickerRemove={handleRemoveSticker}
-          location={location}
+          locations={locations}
         />
       )}
 

@@ -6,6 +6,7 @@ import InstagramEmbed from './InstagramEmbed'
 import TikTokEmbed from './TikTokEmbed'
 import SpotifyEmbed from './SpotifyEmbed'
 import VideoEmbed from './VideoEmbed'
+import AudioEmbed from './AudioEmbed'
 import IframeEmbed from './IframeEmbed'
 import LinkPreview from './LinkPreview'
 
@@ -17,6 +18,7 @@ export {
   TikTokEmbed,
   SpotifyEmbed,
   VideoEmbed,
+  AudioEmbed,
   IframeEmbed,
   LinkPreview,
 }
@@ -51,6 +53,9 @@ function EmbedRenderer({ embed }: EmbedRendererProps) {
 
     case 'video':
       return <VideoEmbed url={embed.url} />
+
+    case 'audio':
+      return <AudioEmbed url={embed.url} />
 
     case 'iframe':
       return <IframeEmbed url={embed.url} />

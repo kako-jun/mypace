@@ -6,6 +6,7 @@ export type EmbedType =
   | 'tiktok'
   | 'spotify'
   | 'video'
+  | 'audio'
   | 'iframe'
   | 'ogp'
 

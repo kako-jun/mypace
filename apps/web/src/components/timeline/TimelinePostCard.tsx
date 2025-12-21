@@ -81,11 +81,13 @@ export default function TimelinePostCard({
   const themeProps = getThemeCardProps(getEventThemeColors(event))
   const stickers = parseStickers(event.tags)
 
-  // Extract location from tags
-  const gTag = event.tags.find((tag) => tag[0] === 'g')
-  const locationTag = event.tags.find((tag) => tag[0] === 'location')
-  const locationGeohash = gTag?.[1]
-  const locationName = locationTag?.[1]
+  // Extract locations from tags
+  const gTags = event.tags.filter((tag) => tag[0] === 'g')
+  const locationTags = event.tags.filter((tag) => tag[0] === 'location')
+  const locations = gTags.map((gTag, i) => ({
+    geohash: gTag[1],
+    name: locationTags[i]?.[1],
+  }))
 
   // Filter replies by NG words, NG tags, and muted users
   const filteredReplies = replies?.replies
@@ -189,7 +191,9 @@ export default function TimelinePostCard({
           />
         </div>
 
-        {locationGeohash && <PostLocation geohashStr={locationGeohash} name={locationName} />}
+        {locations.map((loc, i) => (
+          <PostLocation key={i} geohashStr={loc.geohash} name={loc.name} />
+        ))}
 
         <div className="post-footer">
           <PostActions

@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from 'react'
 import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant, StickerLayer } from '../../types'
-import { ImageDropZone, AttachedImages, PostPreview } from '../post'
+import { ImageDropZone, AttachedImages, AttachedLocations, PostPreview } from '../post'
 import { LongModeEditor, type LongModeEditorRef } from './LongModeEditor'
 import { Toggle, Avatar, TextButton, ErrorMessage, Icon } from '../ui'
 import { StickerPicker } from '../sticker'
@@ -39,8 +39,8 @@ interface PostFormLongModeProps {
   onStickerResize: (index: number, size: number) => void
   onStickerRotate: (index: number, rotation: number) => void
   onStickerLayerChange: (index: number, layer: StickerLayer) => void
-  location: { geohash: string; name?: string } | null
-  onLocationChange: (location: { geohash: string; name?: string } | null) => void
+  locations: { geohash: string; name?: string }[]
+  onLocationsChange: (locations: { geohash: string; name?: string }[]) => void
 }
 
 export function PostFormLongMode({
@@ -72,8 +72,8 @@ export function PostFormLongMode({
   onStickerResize,
   onStickerRotate,
   onStickerLayerChange,
-  location,
-  onLocationChange,
+  locations,
+  onLocationsChange,
 }: PostFormLongModeProps) {
   const longModeFormRef = useRef<HTMLFormElement>(null)
   const editorRef = useRef<LongModeEditorRef>(null)
@@ -159,8 +159,8 @@ export function PostFormLongMode({
             <DrawingPicker onComplete={handleInsertToEditor} />
             <VoicePicker onComplete={handleInsertToEditor} />
             <LocationPicker
-              onSelect={(geohash, name) => onLocationChange({ geohash, name })}
-              currentLocation={location}
+              onSelect={(geohash, name) => onLocationsChange([...locations, { geohash, name }])}
+              currentLocations={locations}
             />
           </div>
 
@@ -177,6 +177,10 @@ export function PostFormLongMode({
           />
 
           <AttachedImages imageUrls={imageUrls} onRemove={onRemoveImage} />
+          <AttachedLocations
+            locations={locations}
+            onRemove={(index) => onLocationsChange(locations.filter((_, i) => i !== index))}
+          />
 
           <FormActions
             content={content}
@@ -206,7 +210,7 @@ export function PostFormLongMode({
             onStickerRotate={onStickerRotate}
             onStickerLayerChange={onStickerLayerChange}
             onStickerRemove={onRemoveSticker}
-            location={location}
+            locations={locations}
           />
         </div>
       )}

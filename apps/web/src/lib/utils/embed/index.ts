@@ -4,13 +4,13 @@ import { extractTweetId } from './twitter'
 import { extractInstagramInfo } from './instagram'
 import { extractTikTokId } from './tiktok'
 import { extractSpotifyInfo } from './spotify'
-import { isVideoUrl, isImageUrl, isAllowedIframeDomain } from './utils'
+import { isVideoUrl, isAudioUrl, isImageUrl, isAllowedIframeDomain } from './utils'
 
 export type { EmbedType, EmbedInfo } from './types'
 export { getYouTubeThumbnail, getYouTubeEmbedUrl, getYouTubeShortsEmbedUrl } from './youtube'
 export { getInstagramEmbedUrl } from './instagram'
 export { getSpotifyEmbedUrl } from './spotify'
-export { isVideoUrl, isAllowedIframeDomain, ALLOWED_IFRAME_DOMAINS } from './utils'
+export { isVideoUrl, isAudioUrl, isAllowedIframeDomain, ALLOWED_IFRAME_DOMAINS } from './utils'
 
 const URL_REGEX = /https?:\/\/[^\s<"]+/gi
 
@@ -61,6 +61,10 @@ export function detectEmbed(url: string): EmbedInfo | null {
 
   if (isVideoUrl(url)) {
     return { type: 'video', url }
+  }
+
+  if (isAudioUrl(url)) {
+    return { type: 'audio', url }
   }
 
   if (isAllowedIframeDomain(url)) {

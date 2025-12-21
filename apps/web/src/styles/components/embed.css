@@ -87,6 +87,16 @@
   background: #000;
 }
 
+/* Audio Embed */
+.embed-audio {
+  padding: 0.5rem;
+  background: var(--surface-secondary);
+}
+
+.embed-audio audio {
+  width: 100%;
+}
+
 /* Iframe Embed (Games) */
 .embed-iframe {
   position: relative;

@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css'
 
 interface LocationPickerProps {
   onSelect: (geohash: string, name?: string) => void
-  currentLocation?: { geohash: string; name?: string } | null
+  currentLocations?: { geohash: string; name?: string }[]
 }
 
 interface NominatimResult {
@@ -24,7 +24,7 @@ const GEOHASH_PRECISIONS = [
   { chars: 9, label: 'Precise', distance: '±2m' },
 ]
 
-export function LocationPicker({ onSelect, currentLocation }: LocationPickerProps) {
+export function LocationPicker({ onSelect, currentLocations = [] }: LocationPickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<NominatimResult[]>([])
@@ -178,9 +178,9 @@ export function LocationPicker({ onSelect, currentLocation }: LocationPickerProp
     <div className="location-picker">
       <button
         type="button"
-        className={`location-picker-toggle ${currentLocation ? 'active' : ''}`}
+        className="location-picker-toggle"
         onClick={handleOpen}
-        title={currentLocation ? currentLocation.name || currentLocation.geohash : 'Add location'}
+        title={currentLocations.length > 0 ? `${currentLocations.length} location(s)` : 'Add location'}
       >
         <Icon name="MapPin" size={16} />
       </button>

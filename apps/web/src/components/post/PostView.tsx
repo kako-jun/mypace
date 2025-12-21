@@ -307,11 +307,13 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     : event.content
   const themeProps = getThemeCardProps(themeColors)
 
-  // Extract location from tags
-  const gTag = event.tags.find((tag) => tag[0] === 'g')
-  const locationTag = event.tags.find((tag) => tag[0] === 'location')
-  const locationGeohash = gTag?.[1]
-  const locationName = locationTag?.[1]
+  // Extract locations from tags
+  const gTags = event.tags.filter((tag) => tag[0] === 'g')
+  const locationTags = event.tags.filter((tag) => tag[0] === 'location')
+  const locations = gTags.map((gTag, i) => ({
+    geohash: gTag[1],
+    name: locationTags[i]?.[1],
+  }))
 
   return (
     <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
@@ -338,7 +340,9 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
           />
         </div>
 
-        {locationGeohash && <PostLocation geohashStr={locationGeohash} name={locationName} />}
+        {locations.map((loc, i) => (
+          <PostLocation key={i} geohashStr={loc.geohash} name={loc.name} />
+        ))}
 
         {deletedId === event.id && <SuccessMessage>Deleted!</SuccessMessage>}
         {deletedId !== event.id && (

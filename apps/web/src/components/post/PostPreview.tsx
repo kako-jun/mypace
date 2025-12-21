@@ -16,7 +16,7 @@ interface PostPreviewProps {
   onStickerRotate?: (index: number, rotation: number) => void
   onStickerLayerChange?: (index: number, layer: StickerLayer) => void
   onStickerRemove?: (index: number) => void
-  location?: { geohash: string; name?: string } | null
+  locations?: { geohash: string; name?: string }[]
 }
 
 export default function PostPreview({
@@ -31,7 +31,7 @@ export default function PostPreview({
   onStickerRotate,
   onStickerLayerChange,
   onStickerRemove,
-  location,
+  locations = [],
 }: PostPreviewProps) {
   if (!content.trim()) return null
 
@@ -54,7 +54,9 @@ export default function PostPreview({
       <div className="preview-content">
         <PostContent content={content} emojis={emojis} />
       </div>
-      {location && <PostLocation geohashStr={location.geohash} name={location.name} />}
+      {locations.map((loc, i) => (
+        <PostLocation key={i} geohashStr={loc.geohash} name={loc.name} />
+      ))}
       {/* Footer skeleton - only shown when stickers exist */}
       {hasStickers && (
         <div className="preview-footer-skeleton">

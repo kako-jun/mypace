@@ -17,6 +17,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
   const [ogp, setOgp] = useState<OgpData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -28,6 +29,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
         const data = await response.json()
         if (mounted) {
           setOgp(data)
+          setImageError(false)
           setLoading(false)
         }
       } catch {
@@ -76,9 +78,9 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
 
   return (
     <ExternalLink href={url} className="embed-container embed-link">
-      {ogp.image && (
+      {ogp.image && !imageError && (
         <div className="embed-link-image">
-          <img src={ogp.image} alt="" loading="lazy" />
+          <img src={ogp.image} alt="" loading="lazy" onError={() => setImageError(true)} />
         </div>
       )}
       <div className="embed-link-content">
