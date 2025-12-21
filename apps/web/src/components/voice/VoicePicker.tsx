@@ -156,8 +156,9 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
         audio: {
           sampleRate: 48000,
           channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
         },
       })
       streamRef.current = stream
