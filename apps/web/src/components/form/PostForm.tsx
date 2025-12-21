@@ -7,7 +7,7 @@ import {
   getCurrentPubkey,
 } from '../../lib/nostr/events'
 import { navigateToUser } from '../../lib/utils'
-import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant } from '../../types'
+import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant, StickerLayer } from '../../types'
 import { publishEvent } from '../../lib/nostr/relay'
 import { ProfileSetup } from '../user'
 import {
@@ -104,9 +104,10 @@ export function PostForm({
     if (editingEvent && editingEvent.tags) {
       const stickerTags = editingEvent.tags.filter((tag) => tag[0] === 'sticker')
       const validQuadrants: StickerQuadrant[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+      const validLayers: StickerLayer[] = ['front', 'back']
       const restoredStickers: Sticker[] = stickerTags
-        .map((tag) => {
-          const [, url, x, y, size, rotation, quadrant] = tag
+        .map((tag): Sticker | null => {
+          const [, url, x, y, size, rotation, quadrant, layer] = tag
           if (!url) return null
           return {
             url,
@@ -117,6 +118,7 @@ export function PostForm({
             quadrant: (quadrant && validQuadrants.includes(quadrant as StickerQuadrant)
               ? quadrant
               : 'top-left') as StickerQuadrant,
+            layer: layer && validLayers.includes(layer as StickerLayer) ? (layer as StickerLayer) : undefined,
           }
         })
         .filter((s): s is Sticker => s !== null)
@@ -153,15 +155,22 @@ export function PostForm({
     setError('')
 
     try {
-      const stickerTags = stickers.map((s) => [
-        'sticker',
-        s.url,
-        `${Math.round(s.x)}`,
-        `${Math.round(s.y)}`,
-        `${Math.round(s.size)}`,
-        `${Math.round(s.rotation)}`,
-        s.quadrant,
-      ])
+      const stickerTags = stickers.map((s) => {
+        const tag = [
+          'sticker',
+          s.url,
+          `${Math.round(s.x)}`,
+          `${Math.round(s.y)}`,
+          `${Math.round(s.size)}`,
+          `${Math.round(s.rotation)}`,
+          s.quadrant,
+        ]
+        // Only add layer if it's 'back' (front is default)
+        if (s.layer === 'back') {
+          tag.push(s.layer)
+        }
+        return tag
+      })
 
       if (replyingTo) {
         const event = await createReplyEvent(content.trim(), replyingTo, undefined, stickerTags)
@@ -269,6 +278,12 @@ export function PostForm({
     setStickers(updatedStickers)
   }
 
+  const handleStickerLayerChange = (index: number, layer: StickerLayer) => {
+    const updatedStickers = [...stickers]
+    updatedStickers[index] = { ...updatedStickers[index], layer }
+    setStickers(updatedStickers)
+  }
+
   const handleFileImport = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
@@ -332,6 +347,7 @@ export function PostForm({
         onStickerMove={handleStickerMove}
         onStickerResize={handleStickerResize}
         onStickerRotate={handleStickerRotate}
+        onStickerLayerChange={handleStickerLayerChange}
       />
     )
   }
@@ -425,6 +441,7 @@ export function PostForm({
           onStickerMove={handleStickerMove}
           onStickerResize={handleStickerResize}
           onStickerRotate={handleStickerRotate}
+          onStickerLayerChange={handleStickerLayerChange}
         />
       )}
 

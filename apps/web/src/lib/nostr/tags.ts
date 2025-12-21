@@ -1,4 +1,4 @@
-import type { Event, StickerQuadrant } from '../../types'
+import type { Event, StickerQuadrant, StickerLayer } from '../../types'
 import { MYPACE_TAG } from './constants'
 
 // Get the root event tag from an event's tags
@@ -67,11 +67,18 @@ export function hasStickers(event: Event): boolean {
 }
 
 // Parse sticker tags from event
-// Format: ["sticker", "<url>", "<x>", "<y>", "<size>", "<rotation>", "<quadrant>"]
-export function parseStickers(
-  tags: string[][]
-): Array<{ url: string; x: number; y: number; size: number; rotation: number; quadrant: StickerQuadrant }> {
+// Format: ["sticker", "<url>", "<x>", "<y>", "<size>", "<rotation>", "<quadrant>", "<layer>"]
+export function parseStickers(tags: string[][]): Array<{
+  url: string
+  x: number
+  y: number
+  size: number
+  rotation: number
+  quadrant: StickerQuadrant
+  layer?: StickerLayer
+}> {
   const validQuadrants: StickerQuadrant[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+  const validLayers: StickerLayer[] = ['front', 'back']
   return tags
     .filter((t) => t[0] === 'sticker' && t.length >= 5)
     .map((t) => ({
@@ -81,6 +88,7 @@ export function parseStickers(
       size: Math.max(5, Math.min(100, parseInt(t[4], 10) || 15)),
       rotation: t[5] ? Math.max(0, Math.min(360, parseInt(t[5], 10) || 0)) : 0,
       quadrant: (t[6] && validQuadrants.includes(t[6] as StickerQuadrant) ? t[6] : 'top-left') as StickerQuadrant,
+      layer: (t[7] && validLayers.includes(t[7] as StickerLayer) ? t[7] : undefined) as StickerLayer | undefined,
     }))
     .filter((s) => s.url)
 }

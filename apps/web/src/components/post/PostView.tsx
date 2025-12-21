@@ -312,6 +312,9 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
       <BackButton onClick={handleBack} icon={isModal ? '×' : '←'} label={isModal ? 'CLOSE' : 'BACK'} />
 
       <article className={`post-card post-card-large ${themeProps.className}`} style={themeProps.style}>
+        {/* Back layer stickers (behind content) */}
+        <PostStickers stickers={stickers} layer="back" />
+
         <PostHeader
           pubkey={event.pubkey}
           createdAt={event.created_at}
@@ -360,7 +363,9 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
             )}
           </div>
         )}
-        <PostStickers stickers={stickers} />
+
+        {/* Front layer stickers (above content) */}
+        <PostStickers stickers={stickers} layer="front" />
       </article>
 
       {replies.count > 0 && (

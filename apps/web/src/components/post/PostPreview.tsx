@@ -1,7 +1,7 @@
 import { getThemeCardProps } from '../../lib/nostr/events'
 import { PostContent } from './PostContent'
 import { PostStickers } from './PostStickers'
-import type { ThemeColors, EmojiTag, Sticker, StickerQuadrant } from '../../types'
+import type { ThemeColors, EmojiTag, Sticker, StickerQuadrant, StickerLayer } from '../../types'
 
 interface PostPreviewProps {
   content: string
@@ -13,6 +13,7 @@ interface PostPreviewProps {
   onStickerMove?: (index: number, x: number, y: number, quadrant: StickerQuadrant) => void
   onStickerResize?: (index: number, size: number) => void
   onStickerRotate?: (index: number, rotation: number) => void
+  onStickerLayerChange?: (index: number, layer: StickerLayer) => void
 }
 
 export default function PostPreview({
@@ -25,6 +26,7 @@ export default function PostPreview({
   onStickerMove,
   onStickerResize,
   onStickerRotate,
+  onStickerLayerChange,
 }: PostPreviewProps) {
   if (!content.trim()) return null
 
@@ -62,6 +64,7 @@ export default function PostPreview({
         onStickerMove={onStickerMove}
         onStickerResize={onStickerResize}
         onStickerRotate={onStickerRotate}
+        onStickerLayerChange={onStickerLayerChange}
       />
     </div>
   )

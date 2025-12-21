@@ -118,6 +118,7 @@ export interface FilterPreset {
 
 // Sticker types
 export type StickerQuadrant = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+export type StickerLayer = 'front' | 'back'
 
 export interface Sticker {
   url: string // Image URL
@@ -126,4 +127,5 @@ export interface Sticker {
   size: number // Width (5-100%)
   rotation: number // Rotation angle (0-360 degrees)
   quadrant: StickerQuadrant // Anchor corner for positioning
+  layer?: StickerLayer // front (default) or back (behind text)
 }

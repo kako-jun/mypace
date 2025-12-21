@@ -79,6 +79,8 @@
 
 /* Thread section */
 .thread-section {
+  position: relative;
+  z-index: 1; /* Above back-layer stickers */
   margin-top: 0.75rem;
   padding-top: 0.5rem;
 }

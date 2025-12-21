@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import type { Sticker, StickerQuadrant } from '../../types'
+import type { Sticker, StickerQuadrant, StickerLayer } from '../../types'
 
 interface PostStickersProps {
   stickers: Sticker[]
   editable?: boolean
   truncated?: boolean // When true, only show top quadrant stickers
+  layer?: StickerLayer // Filter by layer: 'front' (default), 'back'
   onStickerMove?: (index: number, x: number, y: number, quadrant: StickerQuadrant) => void
   onStickerResize?: (index: number, size: number) => void
   onStickerRotate?: (index: number, rotation: number) => void
+  onStickerLayerChange?: (index: number, layer: StickerLayer) => void
 }
 
 // Get CSS position style based on quadrant
@@ -72,14 +74,30 @@ export function PostStickers({
   stickers,
   editable = false,
   truncated = false,
+  layer,
   onStickerMove,
   onStickerResize,
   onStickerRotate,
+  onStickerLayerChange,
 }: PostStickersProps) {
-  // Filter stickers based on truncated mode
-  const visibleStickers = truncated
-    ? stickers.filter((s) => s.quadrant === 'top-left' || s.quadrant === 'top-right' || !s.quadrant)
-    : stickers
+  // Filter stickers based on truncated mode and layer, preserving original indices
+  const visibleStickers = stickers
+    .map((sticker, originalIndex) => ({ sticker, originalIndex }))
+    .filter(({ sticker }) => {
+      // Filter by layer if specified
+      if (layer) {
+        const stickerLayer = sticker.layer || 'front' // default to front
+        if (stickerLayer !== layer) return false
+      }
+      // Filter by truncated mode
+      if (truncated) {
+        if (sticker.quadrant !== 'top-left' && sticker.quadrant !== 'top-right' && sticker.quadrant) {
+          return false
+        }
+      }
+      return true
+    })
+
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [dragMode, setDragMode] = useState<DragMode>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -134,6 +152,7 @@ export function PostStickers({
       const rect = container.getBoundingClientRect()
 
       if (dragMode === 'move' && onStickerMove) {
+        const { originalIndex: moveOriginalIndex } = visibleStickers[selectedIndex]
         // Calculate position as percentage from edges
         const xFromLeft = ((clientX - rect.left) / rect.width) * 100
         const yFromTop = ((clientY - rect.top) / rect.height) * 100
@@ -167,9 +186,9 @@ export function PostStickers({
           y = Math.max(0, Math.min(100, ((100 - yFromTop) / 50) * 100))
         }
 
-        onStickerMove(selectedIndex, x, y, quadrant)
+        onStickerMove(moveOriginalIndex, x, y, quadrant)
       } else if (dragMode === 'resize' && onStickerResize && dragStartRef.current) {
-        const sticker = visibleStickers[selectedIndex]
+        const { sticker, originalIndex } = visibleStickers[selectedIndex]
         // Calculate sticker center based on quadrant (x, y are 0-100% within quadrant)
         // Convert to global position: halfPos = (localPos / 100) * 50% of card
         const halfX = (sticker.x / 100) * 0.5
@@ -199,9 +218,9 @@ export function PostStickers({
         const distCurrent = Math.sqrt(Math.pow(clientX - stickerCenterX, 2) + Math.pow(clientY - stickerCenterY, 2))
         const scale = distCurrent / distStart
         const newSize = Math.max(5, Math.min(100, dragStartRef.current.value * scale))
-        onStickerResize(selectedIndex, newSize)
+        onStickerResize(originalIndex, newSize)
       } else if (dragMode === 'rotate' && onStickerRotate) {
-        const sticker = visibleStickers[selectedIndex]
+        const { sticker, originalIndex: rotateOriginalIndex } = visibleStickers[selectedIndex]
         // Calculate sticker center based on quadrant (x, y are 0-100% within quadrant)
         const halfX = (sticker.x / 100) * 0.5
         const halfY = (sticker.y / 100) * 0.5
@@ -226,7 +245,7 @@ export function PostStickers({
         }
         const angle = Math.atan2(clientY - stickerCenterY, clientX - stickerCenterX)
         const degrees = ((angle * 180) / Math.PI + 90 + 360) % 360
-        onStickerRotate(selectedIndex, Math.round(degrees))
+        onStickerRotate(rotateOriginalIndex, Math.round(degrees))
       }
     }
 
@@ -269,7 +288,7 @@ export function PostStickers({
     e.preventDefault()
     e.stopPropagation()
     const { clientX, clientY } = getPointerPosition(e)
-    dragStartRef.current = { x: clientX, y: clientY, value: visibleStickers[index].size }
+    dragStartRef.current = { x: clientX, y: clientY, value: visibleStickers[index].sticker.size }
     setDragMode('resize')
   }
 
@@ -280,13 +299,17 @@ export function PostStickers({
     setDragMode('rotate')
   }
 
+  // Determine base z-index based on layer prop
+  // back layer: 0 (behind content), front layer: 10 (above content)
+  const baseZIndex = layer === 'back' ? 0 : 10
+
   return (
     <div
       ref={containerRef}
       className="sticker-container"
       style={{ position: 'absolute', inset: 0, pointerEvents: editable ? 'auto' : 'none' }}
     >
-      {visibleStickers.map((sticker, index) => {
+      {visibleStickers.map(({ sticker, originalIndex }, index) => {
         const isSelected = selectedIndex === index
         const isDragging = isSelected && dragMode !== null
         const positionStyle = getPositionStyle(sticker)
@@ -297,7 +320,7 @@ export function PostStickers({
             className={`sticker-wrapper ${isSelected ? 'sticker-selected' : ''} ${isDragging ? 'sticker-dragging' : ''}`}
             style={{
               ...positionStyle,
-              zIndex: isSelected ? 100 : 10,
+              zIndex: isSelected ? 100 : baseZIndex,
             }}
             onClick={(e) => handleStickerClick(e, index)}
             onTouchEnd={(e) => handleStickerClick(e, index)}
@@ -347,6 +370,29 @@ export function PostStickers({
                   onMouseDown={handleRotateStart}
                   onTouchStart={handleRotateStart}
                 />
+
+                {/* Layer toggle switch (bottom center) - iOS style vertical */}
+                {onStickerLayerChange && (
+                  <>
+                    <div className="sticker-layer-line" />
+                    <div
+                      className={`sticker-layer-toggle ${sticker.layer === 'back' ? 'sticker-layer-back' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const newLayer = sticker.layer === 'back' ? 'front' : 'back'
+                        onStickerLayerChange(originalIndex, newLayer)
+                      }}
+                      onTouchEnd={(e) => {
+                        e.stopPropagation()
+                        const newLayer = sticker.layer === 'back' ? 'front' : 'back'
+                        onStickerLayerChange(originalIndex, newLayer)
+                      }}
+                      title={sticker.layer === 'back' ? 'Move to front' : 'Move to back'}
+                    >
+                      <div className="sticker-layer-knob" />
+                    </div>
+                  </>
+                )}
               </>
             )}
           </div>

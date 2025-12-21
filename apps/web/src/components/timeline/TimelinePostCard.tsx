@@ -103,6 +103,8 @@ export default function TimelinePostCard({
     hideConfirm()
   }
 
+  const isTruncated = hasTeaserTag(event)
+
   return (
     <div className="post-card-wrapper">
       <article
@@ -110,6 +112,9 @@ export default function TimelinePostCard({
         style={themeProps.style}
         onClick={handleCardClick}
       >
+        {/* Back layer stickers (behind content) */}
+        <PostStickers stickers={stickers} truncated={isTruncated} layer="back" />
+
         {repostedBy && (
           <div className="repost-label">
             <Icon name="Repeat2" size={14} /> {getDisplayName(repostedBy.pubkey)} reposted
@@ -179,7 +184,8 @@ export default function TimelinePostCard({
           />
         )}
 
-        <PostStickers stickers={stickers} truncated={hasTeaserTag(event)} />
+        {/* Front layer stickers (above content) */}
+        <PostStickers stickers={stickers} truncated={isTruncated} layer="front" />
       </article>
     </div>
   )

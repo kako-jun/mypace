@@ -73,6 +73,8 @@
 
 /* Post header */
 .post-header {
+  position: relative;
+  z-index: 1; /* Above back-layer stickers */
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -105,6 +107,8 @@
 
 /* Post content */
 .post-content {
+  position: relative;
+  z-index: 1; /* Above back-layer stickers */
   word-break: break-word;
   color: var(--text-secondary);
   font-family: var(--font-mono);
@@ -120,6 +124,8 @@
 
 /* Post footer */
 .post-footer {
+  position: relative;
+  z-index: 1; /* Above back-layer stickers */
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -141,6 +147,8 @@
 
 /* Repost label */
 .repost-label {
+  position: relative;
+  z-index: 1; /* Above back-layer stickers */
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -301,6 +309,77 @@
     top: -36px;
     height: 32px;
   }
+
+  .sticker-layer-toggle {
+    width: 20px;
+    height: 36px;
+    bottom: -52px;
+  }
+
+  .sticker-layer-knob {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sticker-layer-line {
+    bottom: -36px;
+    height: 32px;
+  }
+}
+
+/* Layer toggle switch (bottom center) - iOS style vertical */
+.sticker-layer-line {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  width: 2px;
+  height: 16px;
+  background: rgba(100, 116, 139, 0.6);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.sticker-layer-toggle {
+  position: absolute;
+  width: 16px;
+  height: 28px;
+  bottom: -42px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: pointer;
+  background: #3b82f6;
+  border-radius: 8px;
+  padding: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
+  z-index: 10;
+}
+
+.sticker-layer-toggle:hover {
+  background: #2563eb;
+}
+
+.sticker-layer-knob {
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(0);
+}
+
+/* Back layer: knob at bottom, different color */
+.sticker-layer-toggle.sticker-layer-back {
+  background: #6366f1;
+}
+
+.sticker-layer-toggle.sticker-layer-back:hover {
+  background: #4f46e5;
+}
+
+.sticker-layer-toggle.sticker-layer-back .sticker-layer-knob {
+  transform: translateY(12px);
 }
 
 @keyframes sticker-appear {

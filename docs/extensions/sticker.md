@@ -11,7 +11,7 @@
 ## タグ形式
 
 ```json
-["sticker", "<url>", "<x>", "<y>", "<size>", "<rotation>", "<quadrant>"]
+["sticker", "<url>", "<x>", "<y>", "<size>", "<rotation>", "<quadrant>", "<layer>"]
 ```
 
 - **url**: シール画像のURL
@@ -20,6 +20,7 @@
 - **size**: 幅（5-100%）
 - **rotation**: 回転角度（0-360度）
 - **quadrant**: 基準コーナー（`top-left`, `top-right`, `bottom-left`, `bottom-right`）
+- **layer**: レイヤー（`front`=テキストの前面, `back`=テキストの背面）※省略時はfront
 
 ## 象限システム
 
@@ -62,10 +63,12 @@ Kind 1に`sticker`タグを追加:
     ["t", "mypace"],
     ["client", "mypace"],
     ["sticker", "https://example.com/sale.png", "80", "10", "25", "0", "top-right"],
-    ["sticker", "https://example.com/limited.png", "5", "5", "18", "45", "top-left"]
+    ["sticker", "https://example.com/limited.png", "5", "5", "18", "45", "top-left", "back"]
   ]
 }
 ```
+
+上記の例では、`sale.png`は前面（デフォルト）、`limited.png`は背面に表示される。
 
 ## 表示ロジック
 
@@ -92,6 +95,7 @@ function parseStickers(tags: string[][]): Sticker[] {
 
 ```typescript
 type StickerQuadrant = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+type StickerLayer = 'front' | 'back'
 
 interface Sticker {
   url: string              // 画像URL
@@ -100,6 +104,7 @@ interface Sticker {
   size: number             // 幅（5-100%）
   rotation: number         // 回転角度（0-360度）
   quadrant: StickerQuadrant // 基準コーナー
+  layer?: StickerLayer     // レイヤー（front=前面, back=背面）※省略時はfront
 }
 ```
 
@@ -117,6 +122,7 @@ interface Sticker {
 - **バウンディングボックス**: 青い破線で囲まれる
 - **リサイズハンドル**: 四隅の青い丸をドラッグでサイズ変更
 - **回転ハンドル**: 上部中央の緑の丸をドラッグで回転
+- **レイヤー切り替え**: 下部中央のiOS風トグルスイッチで前面/背面を切り替え
 - **ドラッグ移動**: シール本体をドラッグで位置移動
 - **選択解除**: 外側クリックまたはESCキー
 
@@ -136,7 +142,23 @@ PostStickers (表示/編集共通)
 │   ├── sticker-bbox (バウンディングボックス)
 │   ├── sticker-handle-resize × 4 (四隅)
 │   ├── sticker-rotate-line (回転ライン)
-│   └── sticker-handle-rotate (回転ハンドル)
+│   ├── sticker-handle-rotate (回転ハンドル)
+│   ├── sticker-layer-line (レイヤーライン)
+│   └── sticker-layer-toggle (レイヤー切り替えスイッチ)
+```
+
+### 2層レンダリング
+
+投稿カードでは背面シールと前面シールを別々にレンダリング:
+
+```tsx
+<article className="post-card">
+  <PostStickers layer="back" />   {/* z-index: 0 */}
+  <PostHeader />                   {/* z-index: 1 */}
+  <PostContent />                  {/* z-index: 1 */}
+  <PostFooter />                   {/* z-index: 1 */}
+  <PostStickers layer="front" />  {/* z-index: 10 */}
+</article>
 ```
 
 ## 使用箇所

@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback } from 'react'
-import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant } from '../../types'
+import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant, StickerLayer } from '../../types'
 import { ImageDropZone, AttachedImages, PostPreview } from '../post'
 import { LongModeEditor, type LongModeEditorRef } from './LongModeEditor'
 import { Toggle, Avatar, TextButton, ErrorMessage, Icon } from '../ui'
@@ -35,6 +35,7 @@ interface PostFormLongModeProps {
   onStickerMove: (index: number, x: number, y: number, quadrant: StickerQuadrant) => void
   onStickerResize: (index: number, size: number) => void
   onStickerRotate: (index: number, rotation: number) => void
+  onStickerLayerChange: (index: number, layer: StickerLayer) => void
 }
 
 export function PostFormLongMode({
@@ -65,6 +66,7 @@ export function PostFormLongMode({
   onStickerMove,
   onStickerResize,
   onStickerRotate,
+  onStickerLayerChange,
 }: PostFormLongModeProps) {
   const longModeFormRef = useRef<HTMLFormElement>(null)
   const editorRef = useRef<LongModeEditorRef>(null)
@@ -186,6 +188,7 @@ export function PostFormLongMode({
             onStickerMove={onStickerMove}
             onStickerResize={onStickerResize}
             onStickerRotate={onStickerRotate}
+            onStickerLayerChange={onStickerLayerChange}
           />
         </div>
       )}
