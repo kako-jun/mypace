@@ -300,7 +300,7 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
 
   return (
     <div className="drawing-picker">
-      <button type="button" className="drawing-picker-toggle" onClick={handleOpen} title="Draw">
+      <button type="button" className="drawing-picker-button" onClick={handleOpen} title="Draw">
         <Icon name="Pencil" size={16} />
       </button>
 

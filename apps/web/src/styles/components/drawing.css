@@ -266,8 +266,8 @@
   position: relative;
 }
 
-/* Drawing toggle button in post form */
-.drawing-picker-toggle {
+/* Drawing button in post form - matches location-picker-toggle style */
+.drawing-picker-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -281,11 +281,11 @@
   transition: all 0.2s ease;
 }
 
-.drawing-picker-toggle:hover {
+.drawing-picker-button:hover {
   background: var(--surface-hover);
   transform: scale(1.05);
 }
 
-[data-theme='dark'] .drawing-picker-toggle {
+[data-theme='dark'] .drawing-picker-button {
   border-color: #666;
 }

@@ -262,8 +262,8 @@
   position: relative;
 }
 
-/* Voice toggle button in post form */
-.voice-picker-toggle {
+/* Voice button in post form - matches location-picker-toggle style */
+.voice-picker-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -277,11 +277,11 @@
   transition: all 0.2s ease;
 }
 
-.voice-picker-toggle:hover {
+.voice-picker-button:hover {
   background: var(--surface-hover);
   transform: scale(1.05);
 }
 
-[data-theme='dark'] .voice-picker-toggle {
+[data-theme='dark'] .voice-picker-button {
   border-color: #666;
 }

@@ -289,7 +289,7 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
 
   return (
     <div className="voice-picker">
-      <button type="button" className="voice-picker-toggle" onClick={handleOpen} title="Voice memo">
+      <button type="button" className="voice-picker-button" onClick={handleOpen} title="Voice memo">
         <Icon name="Mic" size={16} />
       </button>
 
