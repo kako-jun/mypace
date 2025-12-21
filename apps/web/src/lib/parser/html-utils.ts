@@ -56,8 +56,8 @@ export function removeImageLinks(html: string): string {
 export function processAudioUrls(html: string): string {
   const urlRegex = /(^|[\s>])(https?:\/\/[^\s<"]+\.(mp3|wav|ogg|m4a|webm|mp4)(\?[^\s<"]*)?)([\s<]|$)/gim
   return html.replace(urlRegex, (_match, before, url, ext, _query, after) => {
-    // webm can be audio or video - treat as audio (voice memos)
-    const isAudio = ['mp3', 'wav', 'ogg', 'm4a', 'webm'].includes(ext.toLowerCase()) || url.includes('/av/')
+    // For video extensions, check if it's from nostr.build/av (audio)
+    const isAudio = ['mp3', 'wav', 'ogg', 'm4a'].includes(ext.toLowerCase()) || url.includes('/av/')
     if (isAudio) {
       return `${before}<div class="content-audio-wrapper"><audio src="${url}" controls class="content-audio"></audio></div>${after}`
     } else {
