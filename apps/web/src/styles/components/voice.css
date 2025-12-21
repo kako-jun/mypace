@@ -1,0 +1,283 @@
+/* Voice Picker Modal */
+.voice-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.voice-picker-modal {
+  background: var(--surface-primary);
+  border: 2px solid #333;
+  border-radius: 0;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+}
+
+.voice-picker-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.voice-picker-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.voice-picker-timer {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+
+.voice-picker-timer.warning {
+  color: var(--text-danger);
+  animation: timer-pulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes timer-pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+
+.voice-picker-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-picker-close:hover {
+  color: var(--text-primary);
+}
+
+/* Content */
+.voice-picker-content {
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  background: var(--surface-secondary);
+}
+
+/* Waveform canvas */
+.voice-picker-waveform {
+  border: 2px solid #333;
+  border-radius: 0;
+  background: var(--surface-secondary);
+}
+
+/* Record button */
+.voice-picker-record-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 3px solid var(--text-muted);
+  background: var(--surface-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.voice-picker-record-button span {
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.voice-picker-record-button:hover {
+  border-color: #f33;
+  color: #f33;
+}
+
+.voice-picker-record-button:active,
+.voice-picker-record-button.recording {
+  border-color: #f33;
+  background: #f33;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.voice-picker-record-button.recording {
+  animation: pulse-recording 1s ease-in-out infinite;
+}
+
+@keyframes pulse-recording {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 15px rgba(255, 51, 51, 0);
+  }
+}
+
+/* Playback UI */
+.voice-picker-playback {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--surface-primary);
+  border: 2px solid #333;
+  border-radius: 0;
+  width: 100%;
+}
+
+.voice-picker-play-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--action-star);
+  background: var(--action-star);
+  color: #000;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.voice-picker-play-button:hover {
+  opacity: 0.9;
+}
+
+.voice-picker-playback-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.voice-picker-duration {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.voice-picker-format {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.voice-picker-rerecord {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.voice-picker-rerecord:hover {
+  background: var(--surface-tertiary);
+  color: var(--text-primary);
+}
+
+/* Error */
+.voice-picker-error {
+  padding: 0 1rem;
+  color: var(--text-danger);
+  font-size: 0.85rem;
+}
+
+/* Footer */
+.voice-picker-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.voice-picker-cancel {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.voice-picker-cancel:hover {
+  background: var(--surface-tertiary);
+}
+
+.voice-picker-complete {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  background: var(--action-star);
+  border: none;
+  color: #000;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.voice-picker-complete:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.voice-picker-complete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Voice button in post form */
+.voice-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-secondary);
+  border: 2px solid #333;
+  color: var(--text-primary);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.voice-button:hover {
+  transform: scale(1.05);
+  background: var(--surface-tertiary);
+}
+
+[data-theme='dark'] .voice-button {
+  border-color: #666;
+}

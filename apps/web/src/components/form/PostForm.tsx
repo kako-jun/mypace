@@ -26,6 +26,7 @@ import { StickerPicker } from '../sticker'
 import { SuperMentionPopup } from '../superMention'
 import { LocationPicker } from '../location'
 import { DrawingPicker } from '../drawing'
+import { VoicePicker } from '../voice'
 import { FormActions, ShortTextEditor, PostFormLongMode } from './index'
 import type { ShortTextEditorRef } from './ShortTextEditor'
 
@@ -72,6 +73,7 @@ export function PostForm({
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
   const [showLocationPicker, setShowLocationPicker] = useState(false)
   const [showDrawingPicker, setShowDrawingPicker] = useState(false)
+  const [showVoicePicker, setShowVoicePicker] = useState(false)
   const [location, setLocation] = useState<{ geohash: string; name?: string } | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const shortTextEditorRef = useRef<ShortTextEditorRef>(null)
@@ -458,6 +460,9 @@ export function PostForm({
         <button type="button" className="drawing-button" onClick={() => setShowDrawingPicker(true)} title="Draw">
           <Icon name="Pencil" size={16} />
         </button>
+        <button type="button" className="voice-button" onClick={() => setShowVoicePicker(true)} title="Voice memo">
+          <Icon name="Mic" size={16} />
+        </button>
         <button
           type="button"
           className="location-button"
@@ -537,6 +542,16 @@ export function PostForm({
             setShowDrawingPicker(false)
           }}
           onClose={() => setShowDrawingPicker(false)}
+        />
+      )}
+
+      {showVoicePicker && (
+        <VoicePicker
+          onComplete={(url) => {
+            insertImageUrl(url)
+            setShowVoicePicker(false)
+          }}
+          onClose={() => setShowVoicePicker(false)}
         />
       )}
     </form>

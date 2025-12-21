@@ -13,7 +13,7 @@
 .drawing-picker-modal {
   background: var(--surface-primary);
   border: 2px solid #333;
-  border-radius: 8px;
+  border-radius: 0;
   width: 100%;
   max-width: 400px;
   display: flex;
@@ -204,7 +204,7 @@
 
 .drawing-picker-canvas {
   border: 2px solid #333;
-  border-radius: 4px;
+  border-radius: 0;
   cursor: crosshair;
   touch-action: none;
   max-width: 100%;

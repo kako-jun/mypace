@@ -7,6 +7,7 @@ import { StickerPicker } from '../sticker'
 import { SuperMentionPopup } from '../superMention'
 import { LocationPicker } from '../location'
 import { DrawingPicker } from '../drawing'
+import { VoicePicker } from '../voice'
 import { FormActions } from './FormActions'
 
 interface PostFormLongModeProps {
@@ -80,6 +81,7 @@ export function PostFormLongMode({
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
   const [showLocationPicker, setShowLocationPicker] = useState(false)
   const [showDrawingPicker, setShowDrawingPicker] = useState(false)
+  const [showVoicePicker, setShowVoicePicker] = useState(false)
 
   const handleInsertToEditor = (text: string) => {
     editorRef.current?.insertText(text)
@@ -159,6 +161,9 @@ export function PostFormLongMode({
             <StickerPicker onAddSticker={onAddSticker} />
             <button type="button" className="drawing-button" onClick={() => setShowDrawingPicker(true)} title="Draw">
               <Icon name="Pencil" size={16} />
+            </button>
+            <button type="button" className="voice-button" onClick={() => setShowVoicePicker(true)} title="Voice memo">
+              <Icon name="Mic" size={16} />
             </button>
             <button
               type="button"
@@ -251,6 +256,16 @@ export function PostFormLongMode({
             setShowDrawingPicker(false)
           }}
           onClose={() => setShowDrawingPicker(false)}
+        />
+      )}
+
+      {showVoicePicker && (
+        <VoicePicker
+          onComplete={(url) => {
+            handleInsertToEditor(url)
+            setShowVoicePicker(false)
+          }}
+          onClose={() => setShowVoicePicker(false)}
         />
       )}
     </div>

@@ -629,7 +629,7 @@
 .location-picker-modal {
   background: var(--surface-primary);
   border: 2px solid #333;
-  border-radius: 8px;
+  border-radius: 0;
   width: 100%;
   max-width: 500px;
   max-height: 90vh;

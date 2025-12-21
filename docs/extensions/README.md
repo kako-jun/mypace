@@ -47,6 +47,7 @@ MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装し
 | Super Mention | [super-mention.md](./super-mention.md) | @@構文で万物への言及（Wikidata連携） |
 | Location | [location.md](./location.md) | NIP-52準拠のgeohash座標タグ |
 | Drawing | [drawing.md](./drawing.md) | Splatoon風お絵かき（42秒制限） |
+| Voice | [voice.md](./voice.md) | 押し続けて録音（10秒制限） |
 | Share Menu | [share.md](./share.md) | URL/Markdown共有・ダウンロード |
 | File Import | [file-import.md](./file-import.md) | ローカルファイルからエディタに読み込み |
 | 設定エクスポート | [settings-export.md](./settings-export.md) | テーマ・フィルタ設定の保存・復元 |

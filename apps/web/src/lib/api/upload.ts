@@ -19,15 +19,16 @@ interface NostrBuildResponse {
 export async function uploadImage(file: File): Promise<UploadResult> {
   const isImage = file.type.startsWith('image/')
   const isVideo = file.type.startsWith('video/')
+  const isAudio = file.type.startsWith('audio/')
 
   // Validate file type
-  if (!isImage && !isVideo) {
-    return { success: false, error: 'Please select an image or video file' }
+  if (!isImage && !isVideo && !isAudio) {
+    return { success: false, error: 'Please select an image, video, or audio file' }
   }
 
   // Validate file size
-  const maxSize = isVideo ? LIMITS.MAX_VIDEO_SIZE : LIMITS.MAX_IMAGE_SIZE
-  const sizeLabel = isVideo ? '10MB' : '5MB'
+  const maxSize = isVideo ? LIMITS.MAX_VIDEO_SIZE : isAudio ? LIMITS.MAX_AUDIO_SIZE : LIMITS.MAX_IMAGE_SIZE
+  const sizeLabel = isVideo ? '10MB' : isAudio ? '1MB' : '5MB'
   if (file.size > maxSize) {
     return { success: false, error: `File must be less than ${sizeLabel}` }
   }
