@@ -28,7 +28,7 @@ export async function uploadImage(file: File): Promise<UploadResult> {
 
   // Validate file size
   const maxSize = isVideo ? LIMITS.MAX_VIDEO_SIZE : isAudio ? LIMITS.MAX_AUDIO_SIZE : LIMITS.MAX_IMAGE_SIZE
-  const sizeLabel = isVideo ? '10MB' : isAudio ? '1MB' : '5MB'
+  const sizeLabel = isVideo ? '10MB' : isAudio ? '1MB' : '10MB'
   if (file.size > maxSize) {
     return { success: false, error: `File must be less than ${sizeLabel}` }
   }
