@@ -22,7 +22,9 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<number | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioUrlRef = useRef<string | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number | null>(null)
 
@@ -40,6 +42,12 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
       }
       if (audioRef.current) {
         audioRef.current.pause()
+      }
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current)
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
       }
     }
   }, [])
@@ -96,15 +104,20 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
 
       // Set up audio analyser for waveform
       const audioContext = new AudioContext()
+      audioContextRef.current = audioContext
       const source = audioContext.createMediaStreamSource(stream)
       const analyser = audioContext.createAnalyser()
       analyser.fftSize = 256
       source.connect(analyser)
       analyserRef.current = analyser
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm',
-      })
+      // Choose supported mimeType
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : MediaRecorder.isTypeSupported('audio/mp4')
+          ? 'audio/mp4'
+          : undefined
+      const mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
       mediaRecorderRef.current = mediaRecorder
 
       mediaRecorder.ondataavailable = (e) => {
@@ -114,7 +127,8 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
       }
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+        const actualMimeType = mediaRecorder.mimeType || 'audio/webm'
+        const blob = new Blob(chunksRef.current, { type: actualMimeType })
         setRecordedBlob(blob)
         stream.getTracks().forEach((track) => track.stop())
         if (animationRef.current) {
@@ -173,7 +187,9 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
     if (!recordedBlob) return
 
     if (!audioRef.current) {
-      audioRef.current = new Audio(URL.createObjectURL(recordedBlob))
+      const url = URL.createObjectURL(recordedBlob)
+      audioUrlRef.current = url
+      audioRef.current = new Audio(url)
       audioRef.current.onended = () => setIsPlaying(false)
     }
 
@@ -194,6 +210,14 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
       audioRef.current.pause()
       audioRef.current = null
     }
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current)
+      audioUrlRef.current = null
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close()
+      audioContextRef.current = null
+    }
     setIsPlaying(false)
   }
 
@@ -204,7 +228,8 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
     setError('')
 
     try {
-      const file = new File([recordedBlob], 'voice.webm', { type: 'audio/webm' })
+      const ext = recordedBlob.type.includes('mp4') ? 'mp4' : 'webm'
+      const file = new File([recordedBlob], `voice.${ext}`, { type: recordedBlob.type })
       const result = await uploadImage(file)
 
       if (result.success && result.url) {
@@ -253,8 +278,14 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
-                onTouchStart={handleMouseDown}
-                onTouchEnd={handleMouseUp}
+                onTouchStart={(e) => {
+                  e.preventDefault()
+                  handleMouseDown()
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault()
+                  handleMouseUp()
+                }}
               >
                 <Icon name="Mic" size={32} />
                 <span>{isRecording ? 'Recording...' : 'Hold to record'}</span>
