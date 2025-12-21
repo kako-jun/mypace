@@ -30,6 +30,7 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number | null>(null)
   const isRecordingRef = useRef(false)
+  const justReRecordedRef = useRef(false)
 
   // Cleanup function
   const cleanup = useCallback(() => {
@@ -194,15 +195,15 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
       setDuration(0)
 
       // Start timer
+      const startTime = Date.now()
       timerRef.current = window.setInterval(() => {
-        setDuration((prev) => {
-          if (prev >= MAX_DURATION - 1) {
-            stopRecording()
-            return MAX_DURATION
-          }
-          return prev + 1
-        })
-      }, 1000)
+        const elapsed = Math.floor((Date.now() - startTime) / 1000)
+        if (elapsed >= MAX_DURATION) {
+          stopRecording()
+        } else {
+          setDuration(elapsed)
+        }
+      }, 100)
 
       // Start waveform animation
       drawWaveform()
@@ -226,7 +227,7 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
   }, [])
 
   const handleMouseDown = () => {
-    if (!recordedBlob) {
+    if (!recordedBlob && !justReRecordedRef.current) {
       startRecording()
     }
   }
@@ -258,6 +259,12 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
   }
 
   const handleReRecord = () => {
+    // Prevent immediate recording after re-record
+    justReRecordedRef.current = true
+    setTimeout(() => {
+      justReRecordedRef.current = false
+    }, 300)
+
     setRecordedBlob(null)
     setDuration(0)
     if (audioRef.current) {
@@ -273,6 +280,22 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
       audioContextRef.current = null
     }
     setIsPlaying(false)
+
+    // Redraw initial red line on canvas
+    const canvas = canvasRef.current
+    if (canvas) {
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.fillStyle = '#000'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.lineWidth = 2
+        ctx.strokeStyle = '#f33'
+        ctx.beginPath()
+        ctx.moveTo(0, canvas.height / 2)
+        ctx.lineTo(canvas.width, canvas.height / 2)
+        ctx.stroke()
+      }
+    }
   }
 
   const handleUpload = async () => {
