@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Icon, Input, CloseButton } from '../ui'
 import Button from '../ui/Button'
 import '../../styles/components/sticker-picker.css'
@@ -9,6 +9,7 @@ import {
   type StickerHistoryItem,
 } from '../../lib/api'
 import { getCurrentPubkey } from '../../lib/nostr/events'
+import { useImageUpload } from '../../hooks'
 
 interface StickerPickerProps {
   onAddSticker: (sticker: { url: string }) => void
@@ -19,6 +20,8 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
   const [customUrl, setCustomUrl] = useState('')
   const [history, setHistory] = useState<StickerHistoryItem[]>([])
   const [loading, setLoading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { uploading, uploadFile } = useImageUpload()
 
   // Fetch history when popup opens
   useEffect(() => {
@@ -59,6 +62,16 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
     }
   }
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const result = await uploadFile(file)
+    if (result.url) {
+      handleSelectSticker(result.url)
+    }
+    e.target.value = ''
+  }
+
   return (
     <div className="sticker-picker">
       <button type="button" className="sticker-picker-toggle" onClick={() => setIsOpen(!isOpen)} title="Add sticker">
@@ -87,6 +100,22 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
               <Button size="sm" variant="primary" onClick={handleCustomAdd} disabled={!customUrl.trim()}>
                 Add
               </Button>
+              <button
+                type="button"
+                className="sticker-picker-upload"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                title="Upload from file"
+              >
+                {uploading ? '...' : <Icon name="Upload" size={16} />}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
             </div>
 
             <div className="sticker-picker-grid">

@@ -116,6 +116,30 @@
   min-width: 0;
 }
 
+.sticker-picker-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.sticker-picker-upload:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.sticker-picker-upload:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .sticker-picker-input::placeholder {
   color: var(--text-placeholder);
 }
