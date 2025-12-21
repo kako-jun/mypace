@@ -306,6 +306,43 @@ body.custom-theme .logo-pace {
   color: #888;
 }
 
+.super-mention-suggest-item-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.super-mention-suggest-item-wrapper:hover .super-mention-suggest-delete {
+  opacity: 1;
+}
+
+.super-mention-suggest-delete {
+  position: absolute;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-danger, #dc3545);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 1;
+}
+
+.super-mention-suggest-delete:hover {
+  background: var(--color-danger-hover, #c82333);
+}
+
+.super-mention-suggest-delete svg {
+  stroke: white;
+}
+
 .super-mention-q-badge {
   display: inline-block;
   margin-left: 1.5em;

@@ -173,6 +173,20 @@ export async function saveSuperMentionPath(
   if (!res.ok) throw new Error('Failed to save path')
 }
 
+// Delete super mention path from history (anyone can delete)
+export async function deleteSuperMentionPath(path: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/super-mention/delete`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 // Lookup wikidata_id for multiple paths (with cache)
 const wikidataCache = new Map<string, string>()
 
@@ -243,6 +257,20 @@ export async function saveStickerToHistory(url: string, pubkey?: string): Promis
     })
   } catch {
     // Silently fail
+  }
+}
+
+// Delete sticker from history (anyone can delete)
+export async function deleteStickerFromHistory(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/sticker/delete`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    })
+    return res.ok
+  } catch {
+    return false
   }
 }
 

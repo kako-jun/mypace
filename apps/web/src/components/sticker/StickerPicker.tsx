@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Icon, Input, CloseButton } from '../ui'
 import Button from '../ui/Button'
-import { getStickerHistory, saveStickerToHistory, type StickerHistoryItem } from '../../lib/api'
+import {
+  getStickerHistory,
+  saveStickerToHistory,
+  deleteStickerFromHistory,
+  type StickerHistoryItem,
+} from '../../lib/api'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 
 interface StickerPickerProps {
@@ -45,6 +50,14 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
     }
   }
 
+  const handleDelete = async (e: React.MouseEvent, url: string) => {
+    e.stopPropagation()
+    const success = await deleteStickerFromHistory(url)
+    if (success) {
+      setHistory((prev) => prev.filter((s) => s.url !== url))
+    }
+  }
+
   return (
     <div className="sticker-picker">
       <button type="button" className="sticker-picker-toggle" onClick={() => setIsOpen(!isOpen)} title="Add sticker">
@@ -81,14 +94,23 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
                 <div className="sticker-picker-empty">No stickers yet. Add one above!</div>
               )}
               {history.map((sticker) => (
-                <button
-                  key={sticker.url}
-                  type="button"
-                  className="sticker-picker-item"
-                  onClick={() => handleSelectSticker(sticker.url)}
-                >
-                  <img src={sticker.url} alt="sticker" />
-                </button>
+                <div key={sticker.url} className="sticker-picker-item-wrapper">
+                  <button
+                    type="button"
+                    className="sticker-picker-item"
+                    onClick={() => handleSelectSticker(sticker.url)}
+                  >
+                    <img src={sticker.url} alt="sticker" />
+                  </button>
+                  <button
+                    type="button"
+                    className="sticker-picker-delete"
+                    onClick={(e) => handleDelete(e, sticker.url)}
+                    title="Delete"
+                  >
+                    <Icon name="X" size={12} />
+                  </button>
+                </div>
               ))}
             </div>
           </div>

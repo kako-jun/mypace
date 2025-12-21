@@ -157,6 +157,14 @@
   background: var(--text-muted);
 }
 
+.sticker-picker-item-wrapper {
+  position: relative;
+}
+
+.sticker-picker-item-wrapper:hover .sticker-picker-delete {
+  opacity: 1;
+}
+
 .sticker-picker-item {
   display: flex;
   align-items: center;
@@ -170,6 +178,33 @@
 
 .sticker-picker-item:hover {
   transform: scale(1.2);
+}
+
+.sticker-picker-delete {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-danger, #dc3545);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 1;
+}
+
+.sticker-picker-delete:hover {
+  background: var(--color-danger-hover, #c82333);
+}
+
+.sticker-picker-delete svg {
+  stroke: white;
 }
 
 .sticker-picker-item img {

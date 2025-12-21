@@ -155,6 +155,12 @@ CREATE TABLE super_mention_paths (
 - `GET /api/wikidata/search?q=ハンチョウ&lang=ja` - Wikidata検索
 - `GET /api/super-mention/suggest?prefix=ハンチョウ` - サジェスト取得
 - `POST /api/super-mention/paths` - パス保存（使用時に自動）
+- `DELETE /api/super-mention/delete` - パス削除（誰でも削除可能）
+
+### 履歴の削除
+
+サジェストポップアップで、履歴アイテムにホバーすると×ボタンが表示される。
+クリックで履歴から削除される。認証不要で誰でも削除可能（コミュニティモデレーション）。
 
 ## URL参照
 

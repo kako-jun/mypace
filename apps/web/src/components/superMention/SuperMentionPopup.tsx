@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { searchWikidata, getSuperMentionSuggestions, saveSuperMentionPath } from '../../lib/api'
+import { searchWikidata, getSuperMentionSuggestions, saveSuperMentionPath, deleteSuperMentionPath } from '../../lib/api'
 import { SuggestItemView, type SuggestItem } from './index'
 import { CloseButton } from '../ui'
 
@@ -153,6 +153,14 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
     [onSelect, onClose]
   )
 
+  const handleDelete = useCallback(async (item: SuggestItem) => {
+    if (item.type !== 'history') return
+    const success = await deleteSuperMentionPath(item.path)
+    if (success) {
+      setItems((prev) => prev.filter((i) => !(i.type === 'history' && i.path === item.path)))
+    }
+  }, [])
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       switch (e.key) {
@@ -222,6 +230,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
               isSelected={index === selectedIndex}
               onSelect={handleSelect}
               onHover={() => setSelectedIndex(index)}
+              onDelete={item.type === 'history' ? handleDelete : undefined}
             />
           ))}
           {!loading && items.length === 0 && <div className="super-mention-suggest-empty">No results</div>}

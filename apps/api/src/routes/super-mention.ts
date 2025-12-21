@@ -45,6 +45,26 @@ superMention.post('/paths', async (c) => {
   }
 })
 
+// DELETE /api/super-mention/delete - パス削除（誰でも削除可能）
+superMention.delete('/delete', async (c) => {
+  const db = c.env.DB
+
+  try {
+    const body = await c.req.json<{ path: string }>()
+
+    if (!body.path) {
+      return c.json({ error: 'path required' }, 400)
+    }
+
+    await db.prepare('DELETE FROM super_mention_paths WHERE path = ?').bind(body.path).run()
+
+    return c.json({ success: true })
+  } catch (e) {
+    console.error('Delete path error:', e)
+    return c.json({ error: 'Failed to delete path' }, 500)
+  }
+})
+
 // GET /api/super-mention/suggest - パスのサジェスト
 superMention.get('/suggest', async (c) => {
   const db = c.env.DB

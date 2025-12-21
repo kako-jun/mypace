@@ -38,6 +38,26 @@ sticker.post('/save', async (c) => {
   }
 })
 
+// DELETE /api/sticker/delete - Delete sticker from history (anyone can delete)
+sticker.delete('/delete', async (c) => {
+  const db = c.env.DB
+
+  try {
+    const body = await c.req.json<{ url: string }>()
+
+    if (!body.url) {
+      return c.json({ error: 'url required' }, 400)
+    }
+
+    await db.prepare('DELETE FROM sticker_history WHERE url = ?').bind(body.url).run()
+
+    return c.json({ success: true })
+  } catch (e) {
+    console.error('Delete sticker error:', e)
+    return c.json({ error: 'Failed to delete sticker' }, 500)
+  }
+})
+
 // GET /api/sticker/history - Get sticker history
 sticker.get('/history', async (c) => {
   const db = c.env.DB

@@ -193,8 +193,14 @@ CREATE TABLE sticker_history (
 ```
 
 **APIエンドポイント:**
-- `GET /api/stickers/history` - 人気シール取得
-- `POST /api/stickers/history` - 使用履歴記録
+- `GET /api/sticker/history` - 人気シール取得
+- `POST /api/sticker/save` - 使用履歴記録
+- `DELETE /api/sticker/delete` - 履歴から削除（誰でも削除可能）
+
+### 履歴の削除
+
+シール選択モーダルで、履歴アイテムにホバーすると×ボタンが表示される。
+クリックで履歴から削除される。認証不要で誰でも削除可能（コミュニティモデレーション）。
 
 ## 将来の拡張
 
