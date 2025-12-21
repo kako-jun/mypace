@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { Icon, parseEmojiTags } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
-import { PostHeader, PostActions, EditDeleteButtons, ThreadReplies, PostContent, PostStickers } from '../post'
+import {
+  PostHeader,
+  PostActions,
+  EditDeleteButtons,
+  ThreadReplies,
+  PostContent,
+  PostStickers,
+  PostLocation,
+} from '../post'
 import { cachePost, cacheProfile, navigateToPostModal, navigateToUser, contentHasTag } from '../../lib/utils'
 import { parseStickers, hasTeaserTag } from '../../lib/nostr/tags'
 import { useDeleteConfirm } from '../../hooks'
@@ -72,6 +80,12 @@ export default function TimelinePostCard({
 
   const themeProps = getThemeCardProps(getEventThemeColors(event))
   const stickers = parseStickers(event.tags)
+
+  // Extract location from tags
+  const gTag = event.tags.find((tag) => tag[0] === 'g')
+  const locationTag = event.tags.find((tag) => tag[0] === 'location')
+  const locationGeohash = gTag?.[1]
+  const locationName = locationTag?.[1]
 
   // Filter replies by NG words, NG tags, and muted users
   const filteredReplies = replies?.replies
@@ -174,6 +188,8 @@ export default function TimelinePostCard({
             tags={event.tags}
           />
         </div>
+
+        {locationGeohash && <PostLocation geohashStr={locationGeohash} name={locationName} />}
 
         <div className="post-footer">
           <PostActions

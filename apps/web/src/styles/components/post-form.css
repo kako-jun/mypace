@@ -325,7 +325,29 @@
   transform: scale(1.05);
 }
 
-/* Top actions: avatar (left) + image upload + LONG button (right) */
+/* Row 1: avatar (left) + LONG button + minimize (right) */
+.post-form-row-1 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  flex-shrink: 0;
+}
+
+.post-form-spacer {
+  flex: 1;
+}
+
+/* Row 2: attachment buttons (file, @@, image, sticker, location) */
+.post-form-row-2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Legacy: keep for backwards compatibility */
 .post-form-top-actions {
   display: flex;
   align-items: center;
@@ -565,4 +587,306 @@
 .super-mention-button:hover {
   transform: scale(1.05);
   opacity: 0.9;
+}
+
+/* Location button */
+.location-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-secondary);
+  border: 2px solid #333;
+  color: var(--text-primary);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.location-button:hover {
+  transform: scale(1.05);
+  background: var(--surface-tertiary);
+}
+
+[data-theme='dark'] .location-button {
+  border-color: #666;
+}
+
+/* Location Picker Modal */
+.location-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.location-picker-modal {
+  background: var(--surface-primary);
+  border: 2px solid #333;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.location-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.location-picker-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.location-picker-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.location-picker-close:hover {
+  color: var(--text-primary);
+}
+
+.location-picker-search {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.location-picker-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  border: 2px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.location-picker-input:focus {
+  outline: none;
+  border-color: var(--action-star);
+}
+
+.location-picker-search-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--action-star);
+  border: none;
+  color: #000;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.location-picker-search-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.location-picker-search-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.location-picker-error {
+  padding: 0 1rem;
+  color: var(--text-danger);
+  font-size: 0.85rem;
+}
+
+.location-picker-results {
+  list-style: none;
+  margin: 0;
+  padding: 0 1rem;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.location-picker-results li {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.location-picker-results li:last-child {
+  border-bottom: none;
+}
+
+.location-picker-results button {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.location-picker-results button:hover {
+  background: var(--surface-secondary);
+}
+
+.location-picker-results button span {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.location-picker-map-controls {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.location-picker-map-controls button {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.location-picker-map-controls button.active {
+  background: var(--action-star);
+  color: #000;
+  border-color: var(--action-star);
+}
+
+.location-picker-map-controls button:hover:not(.active) {
+  background: var(--surface-tertiary);
+}
+
+.location-picker-map {
+  height: 250px;
+  margin: 0 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+}
+
+.location-picker-precision {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+
+.location-picker-precision label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.location-picker-precision select {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+
+.location-picker-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.location-picker-cancel {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.location-picker-cancel:hover {
+  background: var(--surface-tertiary);
+}
+
+.location-picker-confirm {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  background: var(--action-star);
+  border: none;
+  color: #000;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.location-picker-confirm:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.location-picker-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Location indicator in form */
+.location-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  max-width: 200px;
+}
+
+.location-indicator span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.location-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 0;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.location-remove:hover {
+  color: var(--text-danger);
 }

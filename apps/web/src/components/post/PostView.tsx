@@ -36,7 +36,7 @@ import {
   setInternalLinkClickHandler,
 } from '../../lib/parser'
 import { LightBox, triggerLightBox } from '../ui'
-import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers } from './index'
+import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers, PostLocation } from './index'
 import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage } from '../ui'
 import { useDeleteConfirm, usePostViewData } from '../../hooks'
 import type { Profile, ReactionData } from '../../types'
@@ -307,6 +307,12 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     : event.content
   const themeProps = getThemeCardProps(themeColors)
 
+  // Extract location from tags
+  const gTag = event.tags.find((tag) => tag[0] === 'g')
+  const locationTag = event.tags.find((tag) => tag[0] === 'location')
+  const locationGeohash = gTag?.[1]
+  const locationName = locationTag?.[1]
+
   return (
     <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
       <BackButton onClick={handleBack} icon={isModal ? '×' : '←'} label={isModal ? 'CLOSE' : 'BACK'} />
@@ -331,6 +337,9 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
             profiles={{ ...(profile ? { [event.pubkey]: profile } : {}), ...replyProfiles }}
           />
         </div>
+
+        {locationGeohash && <PostLocation geohashStr={locationGeohash} name={locationName} />}
+
         {deletedId === event.id && <SuccessMessage>Deleted!</SuccessMessage>}
         {deletedId !== event.id && (
           <div className="post-footer">

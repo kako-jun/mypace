@@ -5,6 +5,7 @@ import { LongModeEditor, type LongModeEditorRef } from './LongModeEditor'
 import { Toggle, Avatar, TextButton, ErrorMessage, Icon } from '../ui'
 import { StickerPicker } from '../sticker'
 import { SuperMentionPopup } from '../superMention'
+import { LocationPicker } from '../location'
 import { FormActions } from './FormActions'
 
 interface PostFormLongModeProps {
@@ -36,6 +37,8 @@ interface PostFormLongModeProps {
   onStickerResize: (index: number, size: number) => void
   onStickerRotate: (index: number, rotation: number) => void
   onStickerLayerChange: (index: number, layer: StickerLayer) => void
+  location: { geohash: string; name?: string } | null
+  onLocationChange: (location: { geohash: string; name?: string } | null) => void
 }
 
 export function PostFormLongMode({
@@ -67,11 +70,14 @@ export function PostFormLongMode({
   onStickerResize,
   onStickerRotate,
   onStickerLayerChange,
+  location,
+  onLocationChange,
 }: PostFormLongModeProps) {
   const longModeFormRef = useRef<HTMLFormElement>(null)
   const editorRef = useRef<LongModeEditorRef>(null)
   const fileImportRef = useRef<HTMLInputElement>(null)
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
+  const [showLocationPicker, setShowLocationPicker] = useState(false)
 
   const handleInsertToEditor = (text: string) => {
     editorRef.current?.insertText(text)
@@ -142,6 +148,28 @@ export function PostFormLongMode({
             </button>
             <ImageDropZone onImageUploaded={handleInsertToEditor} onError={onError} />
             <StickerPicker onAddSticker={onAddSticker} />
+            <button
+              type="button"
+              className="location-button"
+              onClick={() => setShowLocationPicker(true)}
+              title="Add location"
+            >
+              <Icon name="MapPin" size={16} />
+            </button>
+            {location && (
+              <div className="location-indicator">
+                <Icon name="MapPin" size={14} />
+                <span>{location.name || location.geohash}</span>
+                <button
+                  type="button"
+                  className="location-remove"
+                  onClick={() => onLocationChange(null)}
+                  title="Remove location"
+                >
+                  <Icon name="X" size={12} />
+                </button>
+              </div>
+            )}
             <div className="vim-toggle">
               <Toggle checked={vimMode} onChange={onVimModeChange} label="Vim" />
             </div>
@@ -195,6 +223,16 @@ export function PostFormLongMode({
 
       {showSuperMentionPopup && (
         <SuperMentionPopup onSelect={handleInsertToEditor} onClose={() => setShowSuperMentionPopup(false)} />
+      )}
+
+      {showLocationPicker && (
+        <LocationPicker
+          onSelect={(geohash, name) => {
+            onLocationChange({ geohash, name })
+            setShowLocationPicker(false)
+          }}
+          onClose={() => setShowLocationPicker(false)}
+        />
       )}
     </div>
   )

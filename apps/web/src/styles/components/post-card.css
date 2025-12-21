@@ -486,3 +486,32 @@
     transform: scale(1);
   }
 }
+
+/* Post location display */
+.post-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  margin-top: 0.5rem;
+  margin-left: 0.25rem;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.post-location:hover {
+  background: var(--surface-tertiary);
+  color: var(--text-primary);
+}
+
+.post-location span {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

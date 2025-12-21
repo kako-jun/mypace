@@ -24,6 +24,7 @@ import { Avatar, Icon, TextButton, ErrorMessage } from '../ui'
 import { setBoolean } from '../../lib/utils/storage'
 import { StickerPicker } from '../sticker'
 import { SuperMentionPopup } from '../superMention'
+import { LocationPicker } from '../location'
 import { FormActions, ShortTextEditor, PostFormLongMode } from './index'
 import type { ShortTextEditorRef } from './ShortTextEditor'
 
@@ -68,6 +69,8 @@ export function PostForm({
   const [minimized, setMinimized] = useState(false)
   const [stickers, setStickers] = useState<Sticker[]>([])
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
+  const [showLocationPicker, setShowLocationPicker] = useState(false)
+  const [location, setLocation] = useState<{ geohash: string; name?: string } | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const shortTextEditorRef = useRef<ShortTextEditorRef>(null)
   const fileImportRef = useRef<HTMLInputElement>(null)
@@ -99,9 +102,10 @@ export function PostForm({
     }
   }, [])
 
-  // 編集モード時にシールを復元
+  // 編集モード時にシールと座標を復元
   useEffect(() => {
     if (editingEvent && editingEvent.tags) {
+      // Restore stickers
       const stickerTags = editingEvent.tags.filter((tag) => tag[0] === 'sticker')
       const validQuadrants: StickerQuadrant[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
       const validLayers: StickerLayer[] = ['front', 'back']
@@ -123,8 +127,18 @@ export function PostForm({
         })
         .filter((s): s is Sticker => s !== null)
       setStickers(restoredStickers)
+
+      // Restore location
+      const gTag = editingEvent.tags.find((tag) => tag[0] === 'g')
+      const locationTag = editingEvent.tags.find((tag) => tag[0] === 'location')
+      if (gTag && gTag[1]) {
+        setLocation({ geohash: gTag[1], name: locationTag?.[1] })
+      } else {
+        setLocation(null)
+      }
     } else {
       setStickers([])
+      setLocation(null)
     }
   }, [editingEvent])
 
@@ -172,26 +186,40 @@ export function PostForm({
         return tag
       })
 
+      // Location tags (NIP-52 compliant)
+      const locationTags: string[][] = []
+      if (location) {
+        locationTags.push(['g', location.geohash])
+        if (location.name) {
+          locationTags.push(['location', location.name])
+        }
+      }
+
+      const extraTags = [...stickerTags, ...locationTags]
+
       if (replyingTo) {
-        const event = await createReplyEvent(content.trim(), replyingTo, undefined, stickerTags)
+        const event = await createReplyEvent(content.trim(), replyingTo, undefined, extraTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])
+        setLocation(null)
         onReplyComplete?.()
       } else if (editingEvent) {
         const deleteEvent = await createDeleteEvent([editingEvent.id])
         await publishEvent(deleteEvent)
-        const preserveTags = editingEvent.tags.filter((tag) => tag[0] !== 'sticker')
-        const event = await createTextNote(content.trim(), preserveTags, stickerTags)
+        const preserveTags = editingEvent.tags.filter((tag) => !['sticker', 'g', 'location'].includes(tag[0]))
+        const event = await createTextNote(content.trim(), preserveTags, extraTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])
+        setLocation(null)
         onEditComplete?.()
       } else {
-        const event = await createTextNote(content.trim(), undefined, stickerTags)
+        const event = await createTextNote(content.trim(), undefined, extraTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])
+        setLocation(null)
       }
 
       window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NEW_POST))
@@ -348,6 +376,8 @@ export function PostForm({
         onStickerResize={handleStickerResize}
         onStickerRotate={handleStickerRotate}
         onStickerLayerChange={handleStickerLayerChange}
+        location={location}
+        onLocationChange={setLocation}
       />
     )
   }
@@ -375,10 +405,25 @@ export function PostForm({
       {editingEvent && <div className="editing-label">Editing post...</div>}
       {replyingTo && <div className="replying-label">Replying to post...</div>}
 
-      <div className="post-form-top-actions">
+      <div className="post-form-row-1">
         <button type="button" className="post-form-avatar-button" onClick={handleAvatarClick}>
           <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
         </button>
+        <div className="post-form-spacer" />
+        <TextButton variant="primary" className="mode-toggle-corner" onClick={handleLongModeToggle}>
+          LONG ↗
+        </TextButton>
+        <button
+          type="button"
+          className="minimize-button"
+          onClick={() => setMinimized(true)}
+          aria-label="Minimize editor"
+        >
+          <Icon name="Minus" size={20} strokeWidth={3} />
+        </button>
+      </div>
+
+      <div className="post-form-row-2">
         {!content && (
           <>
             <button
@@ -408,17 +453,23 @@ export function PostForm({
         </button>
         <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
         <StickerPicker onAddSticker={handleAddSticker} />
-        <TextButton variant="primary" className="mode-toggle-corner" onClick={handleLongModeToggle}>
-          LONG ↗
-        </TextButton>
         <button
           type="button"
-          className="minimize-button"
-          onClick={() => setMinimized(true)}
-          aria-label="Minimize editor"
+          className="location-button"
+          onClick={() => setShowLocationPicker(true)}
+          title="Add location"
         >
-          <Icon name="Minus" size={20} strokeWidth={3} />
+          <Icon name="MapPin" size={16} />
         </button>
+        {location && (
+          <div className="location-indicator">
+            <Icon name="MapPin" size={14} />
+            <span>{location.name || location.geohash}</span>
+            <button type="button" className="location-remove" onClick={() => setLocation(null)} title="Remove location">
+              <Icon name="X" size={12} />
+            </button>
+          </div>
+        )}
       </div>
 
       <ShortTextEditor
@@ -461,6 +512,16 @@ export function PostForm({
         <SuperMentionPopup
           onSelect={(text) => shortTextEditorRef.current?.insertText(text)}
           onClose={() => setShowSuperMentionPopup(false)}
+        />
+      )}
+
+      {showLocationPicker && (
+        <LocationPicker
+          onSelect={(geohash, name) => {
+            setLocation({ geohash, name })
+            setShowLocationPicker(false)
+          }}
+          onClose={() => setShowLocationPicker(false)}
         />
       )}
     </form>
