@@ -230,40 +230,6 @@
   border-top: 1px solid var(--border-subtle);
 }
 
-.drawing-picker-cancel {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  background: var(--surface-secondary);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.drawing-picker-cancel:hover {
-  background: var(--surface-tertiary);
-}
-
-.drawing-picker-complete {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  background: var(--action-star);
-  border: none;
-  color: #000;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.drawing-picker-complete:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.drawing-picker-complete:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* Drawing Picker container */
 .drawing-picker {
   position: relative;

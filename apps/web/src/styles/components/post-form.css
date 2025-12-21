@@ -727,9 +727,14 @@
 
 .location-picker-search {
   display: flex;
+  align-items: stretch;
   gap: 0.5rem;
   padding: 1rem;
   padding-bottom: 0.5rem;
+}
+
+.location-picker-search .btn {
+  height: auto;
 }
 
 .location-picker-input {
@@ -745,29 +750,6 @@
 .location-picker-input:focus {
   outline: none;
   border-color: var(--action-star);
-}
-
-.location-picker-search-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--action-star);
-  border: none;
-  color: #000;
-  width: 36px;
-  height: 36px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.location-picker-search-button:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.location-picker-search-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .location-picker-error {
@@ -817,29 +799,12 @@
 
 .location-picker-map-controls {
   display: flex;
-  gap: 0.5rem;
+  justify-content: flex-end;
   padding: 0.5rem 1rem;
 }
 
-.location-picker-map-controls button {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.8rem;
-  background: var(--surface-secondary);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.location-picker-map-controls button.active {
-  background: var(--action-star);
-  color: #000;
-  border-color: var(--action-star);
-}
-
-.location-picker-map-controls button:hover:not(.active) {
-  background: var(--surface-tertiary);
+.location-picker-map-controls .toggle-label {
+  font-size: 0.9rem;
 }
 
 .location-picker-map-wrapper {
@@ -931,40 +896,6 @@
   gap: 0.5rem;
   padding: 1rem;
   border-top: 1px solid var(--border-subtle);
-}
-
-.location-picker-cancel {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  background: var(--surface-secondary);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.location-picker-cancel:hover {
-  background: var(--surface-tertiary);
-}
-
-.location-picker-confirm {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  background: var(--action-star);
-  border: none;
-  color: #000;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.location-picker-confirm:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.location-picker-confirm:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* Location indicator in form */

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import L from 'leaflet'
 import geohash from 'ngeohash'
-import { Icon, CloseButton } from '../ui'
+import { Icon, CloseButton, Toggle } from '../ui'
+import Button from '../ui/Button'
 import 'leaflet/dist/leaflet.css'
 
 interface LocationPickerProps {
@@ -17,12 +18,7 @@ interface NominatimResult {
   type: string
 }
 
-const GEOHASH_PRECISIONS = [
-  { chars: 6, label: 'Area', distance: '±610m' },
-  { chars: 7, label: 'Street', distance: '±76m' },
-  { chars: 8, label: 'Building', distance: '±19m' },
-  { chars: 9, label: 'Precise', distance: '±2m' },
-]
+const GEOHASH_PRECISION = 8 // Building level (±19m)
 
 export function LocationPicker({ onSelect, currentLocations = [] }: LocationPickerProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -32,7 +28,6 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
   const [error, setError] = useState('')
   const [centerLocation, setCenterLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [locationName, setLocationName] = useState<string>('')
-  const [precision, setPrecision] = useState(8)
   const [mapLayer, setMapLayer] = useState<'osm' | 'satellite'>('osm')
   const mapRef = useRef<L.Map | null>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
@@ -158,7 +153,7 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
 
   const handleConfirm = () => {
     if (!centerLocation) return
-    const hash = geohash.encode(centerLocation.lat, centerLocation.lng, precision)
+    const hash = geohash.encode(centerLocation.lat, centerLocation.lng, GEOHASH_PRECISION)
     onSelect(hash, locationName || undefined)
     handleClose()
   }
@@ -197,14 +192,9 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
                 placeholder="Search for a place..."
                 className="location-picker-input"
               />
-              <button
-                type="button"
-                onClick={handleSearch}
-                disabled={searching || !query.trim()}
-                className="location-picker-search-button"
-              >
+              <Button size="sm" variant="primary" onClick={handleSearch} disabled={searching || !query.trim()}>
                 {searching ? '...' : <Icon name="Search" size={16} />}
-              </button>
+              </Button>
             </div>
 
             {error && <div className="location-picker-error">{error}</div>}
@@ -223,16 +213,12 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
             )}
 
             <div className="location-picker-map-controls">
-              <button type="button" className={mapLayer === 'osm' ? 'active' : ''} onClick={() => setMapLayer('osm')}>
-                Map
-              </button>
-              <button
-                type="button"
-                className={mapLayer === 'satellite' ? 'active' : ''}
-                onClick={() => setMapLayer('satellite')}
-              >
-                Satellite
-              </button>
+              <Toggle
+                checked={mapLayer === 'satellite'}
+                onChange={(checked) => setMapLayer(checked ? 'satellite' : 'osm')}
+                size="small"
+                label="Satellite"
+              />
             </div>
 
             <div className="location-picker-map-wrapper">
@@ -246,29 +232,13 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
 
             <p className="location-picker-hint">Move the map to place the crosshair on your location</p>
 
-            <div className="location-picker-precision">
-              <label>Precision:</label>
-              <select value={precision} onChange={(e) => setPrecision(parseInt(e.target.value, 10))}>
-                {GEOHASH_PRECISIONS.map((p) => (
-                  <option key={p.chars} value={p.chars}>
-                    {p.label} ({p.distance})
-                  </option>
-                ))}
-              </select>
-            </div>
-
             <div className="location-picker-footer">
-              <button type="button" className="location-picker-cancel" onClick={handleClose}>
+              <Button size="md" variant="secondary" onClick={handleClose}>
                 Cancel
-              </button>
-              <button
-                type="button"
-                className="location-picker-confirm"
-                onClick={handleConfirm}
-                disabled={!centerLocation}
-              >
+              </Button>
+              <Button size="md" variant="primary" onClick={handleConfirm} disabled={!centerLocation}>
                 Add Location
-              </button>
+              </Button>
             </div>
           </div>
         </div>

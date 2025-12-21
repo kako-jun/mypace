@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Icon, CloseButton } from '../ui'
+import Button from '../ui/Button'
 import { uploadImage } from '../../lib/api/upload'
 import '../../styles/components/voice.css'
 
@@ -350,17 +351,12 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
             {error && <div className="voice-picker-error">{error}</div>}
 
             <div className="voice-picker-footer">
-              <button type="button" className="voice-picker-cancel" onClick={handleClose}>
+              <Button size="md" variant="secondary" onClick={handleClose}>
                 Cancel
-              </button>
-              <button
-                type="button"
-                className="voice-picker-complete"
-                onClick={handleUpload}
-                disabled={!recordedBlob || uploading}
-              >
+              </Button>
+              <Button size="md" variant="primary" onClick={handleUpload} disabled={!recordedBlob || uploading}>
                 {uploading ? 'Uploading...' : 'Add to Post'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

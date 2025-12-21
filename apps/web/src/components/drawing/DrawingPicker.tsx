@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Icon, CloseButton } from '../ui'
+import Button from '../ui/Button'
 import { uploadImage } from '../../lib/api'
 import '../../styles/components/drawing.css'
 
@@ -374,17 +375,12 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
             {error && <div className="drawing-picker-error">{error}</div>}
 
             <div className="drawing-picker-footer">
-              <button type="button" className="drawing-picker-cancel" onClick={handleClose}>
+              <Button size="md" variant="secondary" onClick={handleClose}>
                 Cancel
-              </button>
-              <button
-                type="button"
-                className="drawing-picker-complete"
-                onClick={handleComplete}
-                disabled={uploading || !hasDrawn}
-              >
+              </Button>
+              <Button size="md" variant="primary" onClick={handleComplete} disabled={uploading || !hasDrawn}>
                 {uploading ? 'Uploading...' : 'Done'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
