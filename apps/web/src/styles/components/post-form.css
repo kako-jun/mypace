@@ -755,10 +755,12 @@
 
 .location-picker-search .btn {
   height: auto;
+  flex-shrink: 0;
 }
 
 .location-picker-input {
   flex: 1;
+  min-width: 0;
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
   border: 2px solid var(--border-subtle);

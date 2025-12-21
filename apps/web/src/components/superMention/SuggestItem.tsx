@@ -1,4 +1,4 @@
-import { Check, Pin, Search, PenLine, X } from 'lucide-react'
+import { Check, Link, Pin, Search, PenLine, X } from 'lucide-react'
 import type { SuggestItem } from './types'
 
 interface SuggestItemProps {
@@ -67,7 +67,13 @@ export function SuggestItemView({ item, isSelected, onSelect, onHover, onDelete 
             title={item.wikidataId ? `Wikidata: ${item.wikidataId}` : undefined}
           >
             <span className="super-mention-suggest-icon">
-              {item.wikidataId ? <Check size={16} /> : <Pin size={16} />}
+              {item.wikidataId ? (
+                <Check size={16} />
+              ) : item.path.startsWith('/web/') ? (
+                <Link size={16} />
+              ) : (
+                <Pin size={16} />
+              )}
             </span>
             <span className="super-mention-suggest-content">
               <span className="super-mention-suggest-path">{item.path}</span>

@@ -335,9 +335,6 @@ body.custom-theme .logo-pace {
   width: 100%;
 }
 
-.super-mention-suggest-item-wrapper:hover .super-mention-suggest-delete {
-  opacity: 1;
-}
 
 .super-mention-suggest-delete {
   position: absolute;
@@ -352,8 +349,6 @@ body.custom-theme .logo-pace {
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s ease;
   z-index: 1;
 }
 
@@ -368,6 +363,7 @@ body.custom-theme .logo-pace {
   stroke: white;
   flex-shrink: 0;
 }
+
 
 .super-mention-q-badge {
   display: inline-block;

@@ -22,11 +22,6 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
   const containerRef = useRef<HTMLDivElement>(null)
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Focus input on mount
-  useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
-
   // Reset selectedIndex when items change
   useEffect(() => {
     setSelectedIndex(0)
