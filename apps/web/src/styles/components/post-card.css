@@ -324,6 +324,36 @@
   cursor: grabbing;
 }
 
+/* Delete button (top-left corner outside bbox) */
+.sticker-handle-delete {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: -28px;
+  left: -28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-danger, #dc3545);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.sticker-handle-delete:hover {
+  background: var(--color-danger-hover, #c82333);
+}
+
+.sticker-handle-delete svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+  stroke: white;
+  flex-shrink: 0;
+}
+
 /* Touch-friendly larger handles on mobile */
 @media (pointer: coarse) {
   .sticker-handle-resize {
@@ -376,6 +406,18 @@
   .sticker-layer-line {
     bottom: -36px;
     height: 32px;
+  }
+
+  .sticker-handle-delete {
+    width: 24px;
+    height: 24px;
+    top: -32px;
+    left: -32px;
+  }
+
+  .sticker-handle-delete svg {
+    width: 14px;
+    height: 14px;
   }
 }
 

@@ -123,6 +123,7 @@ interface Sticker {
 - **リサイズハンドル**: 四隅の青い丸をドラッグでサイズ変更
 - **回転ハンドル**: 上部中央の緑の丸をドラッグで回転
 - **レイヤー切り替え**: 下部中央のiOS風トグルスイッチで前面/背面を切り替え
+- **削除ボタン**: 左上の赤い×ボタンでシールを削除
 - **ドラッグ移動**: シール本体をドラッグで位置移動
 - **選択解除**: 外側クリックまたはESCキー
 
@@ -144,7 +145,8 @@ PostStickers (表示/編集共通)
 │   ├── sticker-rotate-line (回転ライン)
 │   ├── sticker-handle-rotate (回転ハンドル)
 │   ├── sticker-layer-line (レイヤーライン)
-│   └── sticker-layer-toggle (レイヤー切り替えスイッチ)
+│   ├── sticker-layer-toggle (レイヤー切り替えスイッチ)
+│   └── sticker-handle-delete (削除ボタン)
 ```
 
 ### 2層レンダリング

@@ -14,6 +14,7 @@ interface PostPreviewProps {
   onStickerResize?: (index: number, size: number) => void
   onStickerRotate?: (index: number, rotation: number) => void
   onStickerLayerChange?: (index: number, layer: StickerLayer) => void
+  onStickerRemove?: (index: number) => void
 }
 
 export default function PostPreview({
@@ -27,6 +28,7 @@ export default function PostPreview({
   onStickerResize,
   onStickerRotate,
   onStickerLayerChange,
+  onStickerRemove,
 }: PostPreviewProps) {
   if (!content.trim()) return null
 
@@ -65,6 +67,7 @@ export default function PostPreview({
         onStickerResize={onStickerResize}
         onStickerRotate={onStickerRotate}
         onStickerLayerChange={onStickerLayerChange}
+        onStickerRemove={onStickerRemove}
       />
     </div>
   )

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { X } from 'lucide-react'
 import type { Sticker, StickerQuadrant, StickerLayer } from '../../types'
 
 interface PostStickersProps {
@@ -10,6 +11,7 @@ interface PostStickersProps {
   onStickerResize?: (index: number, size: number) => void
   onStickerRotate?: (index: number, rotation: number) => void
   onStickerLayerChange?: (index: number, layer: StickerLayer) => void
+  onStickerRemove?: (index: number) => void
 }
 
 // Get CSS position style based on quadrant
@@ -79,6 +81,7 @@ export function PostStickers({
   onStickerResize,
   onStickerRotate,
   onStickerLayerChange,
+  onStickerRemove,
 }: PostStickersProps) {
   // Filter stickers based on truncated mode and layer, preserving original indices
   const visibleStickers = stickers
@@ -401,6 +404,36 @@ export function PostStickers({
                       <div className="sticker-layer-knob" />
                     </div>
                   </>
+                )}
+
+                {/* Delete button (top-left outside) */}
+                {onStickerRemove && (
+                  <button
+                    type="button"
+                    className="sticker-handle sticker-handle-delete"
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
+                    onTouchStart={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onStickerRemove(originalIndex)
+                      setSelectedIndex(null)
+                    }}
+                    onTouchEnd={(e) => {
+                      e.stopPropagation()
+                      e.preventDefault()
+                      onStickerRemove(originalIndex)
+                      setSelectedIndex(null)
+                    }}
+                    title="Delete sticker"
+                  >
+                    <X size={12} />
+                  </button>
                 )}
               </>
             )}

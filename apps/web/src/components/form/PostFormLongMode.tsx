@@ -3,7 +3,7 @@ import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant, StickerLay
 import { ImageDropZone, AttachedImages, PostPreview } from '../post'
 import { LongModeEditor, type LongModeEditorRef } from './LongModeEditor'
 import { Toggle, Avatar, TextButton, ErrorMessage, Icon } from '../ui'
-import { StickerPicker, StickerList } from '../sticker'
+import { StickerPicker } from '../sticker'
 import { SuperMentionPopup } from '../superMention'
 import { FormActions } from './FormActions'
 
@@ -160,7 +160,6 @@ export function PostFormLongMode({
           />
 
           <AttachedImages imageUrls={imageUrls} onRemove={onRemoveImage} />
-          <StickerList stickers={stickers} onRemove={onRemoveSticker} />
 
           <FormActions
             content={content}
@@ -189,6 +188,7 @@ export function PostFormLongMode({
             onStickerResize={onStickerResize}
             onStickerRotate={onStickerRotate}
             onStickerLayerChange={onStickerLayerChange}
+            onStickerRemove={onRemoveSticker}
           />
         </div>
       )}

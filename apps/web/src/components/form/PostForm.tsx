@@ -22,7 +22,7 @@ import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../../lib/constants'
 import { ImageDropZone, AttachedImages, PostPreview } from '../post'
 import { Avatar, Icon, TextButton, ErrorMessage } from '../ui'
 import { setBoolean } from '../../lib/utils/storage'
-import { StickerPicker, StickerList } from '../sticker'
+import { StickerPicker } from '../sticker'
 import { SuperMentionPopup } from '../superMention'
 import { FormActions, ShortTextEditor, PostFormLongMode } from './index'
 import type { ShortTextEditorRef } from './ShortTextEditor'
@@ -429,7 +429,6 @@ export function PostForm({
       />
 
       <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
-      <StickerList stickers={stickers} onRemove={handleRemoveSticker} />
 
       {showPreview && (
         <PostPreview
@@ -442,6 +441,7 @@ export function PostForm({
           onStickerResize={handleStickerResize}
           onStickerRotate={handleStickerRotate}
           onStickerLayerChange={handleStickerLayerChange}
+          onStickerRemove={handleRemoveSticker}
         />
       )}
 
