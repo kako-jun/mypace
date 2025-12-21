@@ -8,7 +8,7 @@ interface VoicePickerProps {
   onComplete: (url: string) => void
 }
 
-const MAX_DURATION = 10 // seconds
+const MAX_DURATION = 21 // seconds
 
 export function VoicePicker({ onComplete }: VoicePickerProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -65,9 +65,9 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
     return cleanup
   }, [cleanup])
 
-  // Initialize canvas with flat line when modal opens
+  // Initialize canvas with flat line when modal opens or after re-record
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen || recordedBlob) return
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
@@ -84,7 +84,7 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
     ctx.moveTo(0, canvas.height / 2)
     ctx.lineTo(canvas.width, canvas.height / 2)
     ctx.stroke()
-  }, [isOpen])
+  }, [isOpen, recordedBlob])
 
   const handleOpen = () => {
     setIsOpen(true)
@@ -152,7 +152,14 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
     chunksRef.current = []
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          sampleRate: 48000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
+      })
       streamRef.current = stream
 
       // Set up audio analyser for waveform
@@ -164,13 +171,21 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
       source.connect(analyser)
       analyserRef.current = analyser
 
-      // Choose supported mimeType
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm')
-        ? 'audio/webm'
-        : MediaRecorder.isTypeSupported('audio/mp4')
-          ? 'audio/mp4'
-          : undefined
-      const mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
+      // Choose supported mimeType with opus codec for better quality
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : MediaRecorder.isTypeSupported('audio/mp4')
+            ? 'audio/mp4'
+            : undefined
+      const recorderOptions: MediaRecorderOptions = {
+        audioBitsPerSecond: 128000,
+      }
+      if (mimeType) {
+        recorderOptions.mimeType = mimeType
+      }
+      const mediaRecorder = new MediaRecorder(stream, recorderOptions)
       mediaRecorderRef.current = mediaRecorder
 
       mediaRecorder.ondataavailable = (e) => {
@@ -280,22 +295,6 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
       audioContextRef.current = null
     }
     setIsPlaying(false)
-
-    // Redraw initial red line on canvas
-    const canvas = canvasRef.current
-    if (canvas) {
-      const ctx = canvas.getContext('2d')
-      if (ctx) {
-        ctx.fillStyle = '#000'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
-        ctx.lineWidth = 2
-        ctx.strokeStyle = '#f33'
-        ctx.beginPath()
-        ctx.moveTo(0, canvas.height / 2)
-        ctx.lineTo(canvas.width, canvas.height / 2)
-        ctx.stroke()
-      }
-    }
   }
 
   const handleUpload = async () => {
