@@ -296,7 +296,10 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
       setLoading(false)
     }
 
-    initEditor()
+    initEditor().catch((err) => {
+      console.error('Failed to initialize editor:', err)
+      setLoading(false)
+    })
 
     return () => {
       destroyed = true

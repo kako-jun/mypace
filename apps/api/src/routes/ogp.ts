@@ -12,14 +12,28 @@ ogp.get('/', async (c) => {
 
   try {
     // Validate URL
-    new URL(url)
+    const parsedUrl = new URL(url)
+
+    // Only allow http/https
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return c.json({ error: 'Invalid URL protocol' }, 400)
+    }
+
+    // Reject URLs with suspicious characters (backticks, etc.)
+    if (/[`<>{}|\\^~[\]]/.test(url)) {
+      return c.json({ error: 'Invalid URL characters' }, 400)
+    }
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
 
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'mypace-bot/1.0 (+https://mypace.pages.dev)',
         Accept: 'text/html',
       },
-    })
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId))
 
     if (!response.ok) {
       return c.json({ error: 'Failed to fetch URL' }, 502)
@@ -60,6 +74,12 @@ ogp.get('/', async (c) => {
       siteName,
     })
   } catch (e) {
+    if (e instanceof TypeError && e.message.includes('Invalid URL')) {
+      return c.json({ error: 'Invalid URL format' }, 400)
+    }
+    if (e instanceof DOMException && e.name === 'AbortError') {
+      return c.json({ error: 'Request timeout' }, 504)
+    }
     console.error('OGP fetch error:', e)
     return c.json({ error: 'Failed to fetch OGP' }, 500)
   }

@@ -126,7 +126,7 @@ export default function ExportSection({ themeColors, appTheme, onImport }: Expor
         <Button size="md" onClick={handleDownload}>
           Export
         </Button>
-        <Button size="md" variant="secondary" onClick={() => document.getElementById('settings-file-input')?.click()}>
+        <Button size="md" onClick={() => document.getElementById('settings-file-input')?.click()}>
           Import
         </Button>
         <input id="settings-file-input" type="file" accept=".json" onChange={handleFileSelect} hidden />
