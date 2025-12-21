@@ -18,7 +18,6 @@ export const ShortTextEditor = forwardRef<ShortTextEditorRef, ShortTextEditorPro
   ref
 ) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const prevContentRef = useRef(content)
 
   useImperativeHandle(ref, () => ({
     insertText: (text: string) => {
@@ -48,23 +47,20 @@ export const ShortTextEditor = forwardRef<ShortTextEditorRef, ShortTextEditorPro
         onInput={(e) => {
           const target = e.target as HTMLTextAreaElement
           const newValue = target.value
-          const prevValue = prevContentRef.current
 
           // Detect @@ input: check if @@ was just typed
-          if (onSuperMentionTrigger && newValue.length > prevValue.length) {
+          if (onSuperMentionTrigger) {
             const cursorPos = target.selectionStart
             const beforeCursor = newValue.slice(0, cursorPos)
             if (beforeCursor.endsWith('@@')) {
               // Remove the @@ that was just typed
               const withoutTrigger = newValue.slice(0, cursorPos - 2) + newValue.slice(cursorPos)
               onContentChange(withoutTrigger)
-              prevContentRef.current = withoutTrigger
               onSuperMentionTrigger()
               return
             }
           }
 
-          prevContentRef.current = newValue
           onContentChange(newValue)
         }}
         rows={3}
