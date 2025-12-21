@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { fetchUserProfile } from '../../lib/nostr/relay'
-import { fetchPinnedPost, setPinnedPost, unpinPost, fetchEvent } from '../../lib/api'
+import {
+  fetchPinnedPost,
+  setPinnedPost,
+  unpinPost,
+  fetchEvent,
+  fetchUserSerial,
+  type UserSerialData,
+} from '../../lib/api'
 import { getEventThemeColors } from '../../lib/nostr/events'
 import {
   getDisplayName,
@@ -71,6 +78,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const [editMode, setEditMode] = useState(false)
   const [pinnedEventId, setPinnedEventId] = useState<string | null>(null)
   const [pinnedEvent, setPinnedEvent] = useState<Event | null>(null)
+  const [serialData, setSerialData] = useState<UserSerialData | null>(null)
   const [, setThemeVersion] = useState(0)
 
   useEffect(() => {
@@ -135,6 +143,15 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     }
   }, [pubkey])
 
+  const loadSerial = useCallback(async () => {
+    try {
+      const data = await fetchUserSerial(pubkey)
+      setSerialData(data)
+    } catch (err) {
+      console.error('Failed to fetch serial:', err)
+    }
+  }, [pubkey])
+
   const handlePin = useCallback(
     async (event: Event) => {
       const success = await setPinnedPost(pubkey, event.id)
@@ -166,8 +183,9 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     setImageClickHandler(triggerLightBox)
     loadProfile()
     loadPinnedPost()
+    loadSerial()
     return () => clearImageClickHandler()
-  }, [pubkey, loadPinnedPost])
+  }, [pubkey, loadPinnedPost, loadSerial])
 
   useEffect(() => {
     if (profile?.nip05) {
@@ -278,6 +296,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
           nip05Verified={nip05Verified}
           npubCopied={npubCopied}
           postsCount={items.length}
+          serialData={serialData}
           onCopyNpub={handleCopyNpub}
           onEditClick={() => setEditMode(true)}
         />

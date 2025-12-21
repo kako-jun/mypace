@@ -55,6 +55,7 @@ MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装し
 | Filter Presets | [filter-presets.md](./filter-presets.md) | フィルタ設定の保存・切替 |
 | Smart Filter | [smart-filter.md](./smart-filter.md) | 広告/NSFWのサーバーサイドフィルタ |
 | Mute List | [mute-list.md](./mute-list.md) | 特定ユーザーのミュート |
+| User Serial | [user-serial.md](./user-serial.md) | 参加順の通し番号（Thanks #N） |
 
 ## データフロー
 

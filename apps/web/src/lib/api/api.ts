@@ -313,3 +313,20 @@ export async function unpinPost(pubkey: string): Promise<boolean> {
     return false
   }
 }
+
+// User serial (participation order)
+export interface UserSerialData {
+  serial: number | null
+  firstPostAt?: number
+  visible?: boolean
+}
+
+export async function fetchUserSerial(pubkey: string): Promise<UserSerialData> {
+  try {
+    const res = await fetch(`${API_BASE}/api/serial/${pubkey}`)
+    if (!res.ok) return { serial: null }
+    return res.json()
+  } catch {
+    return { serial: null }
+  }
+}

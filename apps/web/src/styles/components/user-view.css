@@ -591,3 +591,18 @@
   margin-bottom: 8px;
   padding-left: 4px;
 }
+
+/* ===== User Name Row (with Serial Badge) ===== */
+.user-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ===== Serial Badge ===== */
+.serial-badge {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

@@ -76,3 +76,17 @@ CREATE TABLE IF NOT EXISTS user_pins (
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_pins_event ON user_pins(event_id);
+
+-- User serial numbers table (participation order)
+CREATE TABLE IF NOT EXISTS user_serial (
+  pubkey TEXT PRIMARY KEY,
+  serial_number INTEGER UNIQUE NOT NULL,
+  first_post_id TEXT NOT NULL,
+  first_post_at INTEGER NOT NULL,
+  visible INTEGER DEFAULT 1,
+  created_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_serial_number ON user_serial(serial_number);
+CREATE INDEX IF NOT EXISTS idx_user_serial_first_post_at ON user_serial(first_post_at);
+CREATE INDEX IF NOT EXISTS idx_user_serial_visible ON user_serial(visible);

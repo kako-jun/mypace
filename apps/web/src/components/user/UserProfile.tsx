@@ -2,7 +2,9 @@ import { Icon, Avatar, TextButton, CopyButton, ExternalLink } from '../ui'
 import { getWebsites, getWebsiteIcon } from '../../lib/utils'
 import { nip19 } from 'nostr-tools'
 import type { LoadableProfile, ThemeColors } from '../../types'
+import type { UserSerialData } from '../../lib/api'
 import { getThemeCardProps } from '../../lib/nostr/events'
+import { SerialBadge } from './SerialBadge'
 
 interface UserProfileProps {
   profile: LoadableProfile
@@ -14,6 +16,7 @@ interface UserProfileProps {
   nip05Verified: boolean | null
   npubCopied: boolean
   postsCount: number
+  serialData: UserSerialData | null
   onCopyNpub: () => void
   onEditClick: () => void
 }
@@ -28,6 +31,7 @@ export function UserProfile({
   nip05Verified,
   npubCopied,
   postsCount,
+  serialData,
   onCopyNpub,
   onEditClick,
 }: UserProfileProps) {
@@ -54,7 +58,10 @@ export function UserProfile({
         <div className="user-profile-header">
           <Avatar src={avatarUrl} className="user-avatar" />
           <div className="user-info">
-            <h2 className="user-name">{displayName}</h2>
+            <div className="user-name-row">
+              <h2 className="user-name">{displayName}</h2>
+              {serialData?.serial && serialData.visible !== false && <SerialBadge serial={serialData.serial} />}
+            </div>
             {profile?.nip05 && (
               <span
                 className={`user-nip05 ${nip05Verified === true ? 'verified' : nip05Verified === false ? 'unverified' : ''}`}

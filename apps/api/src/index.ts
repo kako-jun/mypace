@@ -18,6 +18,7 @@ import {
   pins,
   wellKnown,
   raw,
+  serial,
 } from './routes'
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -47,6 +48,7 @@ app.route('/api/wikidata', wikidata)
 app.route('/api/super-mention', superMention)
 app.route('/api/sticker', sticker)
 app.route('/api/pins', pins)
+app.route('/api/serial', serial)
 
 // Well-known
 app.route('/.well-known', wellKnown)

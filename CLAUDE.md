@@ -87,6 +87,7 @@ apps/
 - NIP-19メンション（nostr:npub, nostr:nprofile → @ユーザー名リンク）
 - NIP-19投稿参照（nostr:note, nostr:nevent → 📝 noteリンク）
 - SEO対応（OGP、Twitter Card、robots.txt、sitemap.xml）
+- ユーザー通し番号（初回#mypace投稿順に番号付与、プロフィールに「Thanks #N」表示）
 
 ## Nostr Events
 

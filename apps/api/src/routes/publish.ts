@@ -3,6 +3,7 @@ import type { Event } from 'nostr-tools'
 import type { Bindings } from '../types'
 import { publishToRelays } from '../services/relay'
 import { cacheEvent } from '../services/cache'
+import { registerUserSerial } from './serial'
 
 const publish = new Hono<{ Bindings: Bindings }>()
 
@@ -33,6 +34,19 @@ publish.post('/', async (c) => {
       await cacheEvent(db, event)
     } catch (e) {
       console.error('Cache write error:', e)
+    }
+
+    // #mypaceタグ付きのkind:1投稿なら通し番号を登録
+    if (event.kind === 1) {
+      const tags = event.tags || []
+      const hasMypaceTag = tags.some((tag: string[]) => tag[0] === 't' && tag[1]?.toLowerCase() === 'mypace')
+      if (hasMypaceTag) {
+        try {
+          await registerUserSerial(db, event.pubkey, event.id, event.created_at)
+        } catch (e) {
+          console.error('Serial register error:', e)
+        }
+      }
     }
 
     return c.json({
