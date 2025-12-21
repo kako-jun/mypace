@@ -13,8 +13,8 @@ export const ALLOWED_IFRAME_DOMAINS = [
   'pages.dev',
 ]
 
-const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov']
-const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.aac', '.flac']
+const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov']
+const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.aac', '.flac', '.ogg']
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']
 
 export function isAllowedIframeDomain(url: string): boolean {

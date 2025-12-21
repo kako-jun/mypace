@@ -172,14 +172,16 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
       source.connect(analyser)
       analyserRef.current = analyser
 
-      // Choose supported mimeType with opus codec for better quality
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm')
-          ? 'audio/webm'
-          : MediaRecorder.isTypeSupported('audio/mp4')
-            ? 'audio/mp4'
-            : undefined
+      // Choose supported mimeType - prefer ogg for clear audio identification
+      const mimeType = MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')
+        ? 'audio/ogg;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/ogg')
+          ? 'audio/ogg'
+          : MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+            ? 'audio/webm;codecs=opus'
+            : MediaRecorder.isTypeSupported('audio/mp4')
+              ? 'audio/mp4'
+              : undefined
       const recorderOptions: MediaRecorderOptions = {
         audioBitsPerSecond: 128000,
       }
@@ -304,7 +306,7 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
     setError('')
 
     try {
-      const ext = recordedBlob.type.includes('mp4') ? 'mp4' : 'webm'
+      const ext = recordedBlob.type.includes('ogg') ? 'ogg' : recordedBlob.type.includes('mp4') ? 'm4a' : 'webm'
       const file = new File([recordedBlob], `voice.${ext}`, { type: recordedBlob.type })
       const result = await uploadImage(file)
 
