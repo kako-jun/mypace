@@ -325,7 +325,7 @@
   transform: scale(1.05);
 }
 
-/* Row 1: avatar (left) + LONG button + minimize (right) */
+/* Row 1: avatar, file import, @@, spacer, LONG/Vim, minimize */
 .post-form-row-1 {
   display: flex;
   align-items: center;
@@ -338,7 +338,7 @@
   flex: 1;
 }
 
-/* Row 2: attachment buttons (file, @@, image, sticker, location) */
+/* Row 2: creative buttons (camera, sticker, drawing, location) */
 .post-form-row-2 {
   display: flex;
   align-items: center;

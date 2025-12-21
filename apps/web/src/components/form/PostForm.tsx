@@ -25,6 +25,7 @@ import { setBoolean } from '../../lib/utils/storage'
 import { StickerPicker } from '../sticker'
 import { SuperMentionPopup } from '../superMention'
 import { LocationPicker } from '../location'
+import { DrawingPicker } from '../drawing'
 import { FormActions, ShortTextEditor, PostFormLongMode } from './index'
 import type { ShortTextEditorRef } from './ShortTextEditor'
 
@@ -70,6 +71,7 @@ export function PostForm({
   const [stickers, setStickers] = useState<Sticker[]>([])
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
   const [showLocationPicker, setShowLocationPicker] = useState(false)
+  const [showDrawingPicker, setShowDrawingPicker] = useState(false)
   const [location, setLocation] = useState<{ geohash: string; name?: string } | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const shortTextEditorRef = useRef<ShortTextEditorRef>(null)
@@ -409,21 +411,6 @@ export function PostForm({
         <button type="button" className="post-form-avatar-button" onClick={handleAvatarClick}>
           <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
         </button>
-        <div className="post-form-spacer" />
-        <TextButton variant="primary" className="mode-toggle-corner" onClick={handleLongModeToggle}>
-          LONG ↗
-        </TextButton>
-        <button
-          type="button"
-          className="minimize-button"
-          onClick={() => setMinimized(true)}
-          aria-label="Minimize editor"
-        >
-          <Icon name="Minus" size={20} strokeWidth={3} />
-        </button>
-      </div>
-
-      <div className="post-form-row-2">
         {!content && (
           <>
             <button
@@ -451,8 +438,26 @@ export function PostForm({
         >
           @@
         </button>
+        <div className="post-form-spacer" />
+        <TextButton variant="primary" className="mode-toggle-corner" onClick={handleLongModeToggle}>
+          LONG ↗
+        </TextButton>
+        <button
+          type="button"
+          className="minimize-button"
+          onClick={() => setMinimized(true)}
+          aria-label="Minimize editor"
+        >
+          <Icon name="Minus" size={20} strokeWidth={3} />
+        </button>
+      </div>
+
+      <div className="post-form-row-2">
         <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
         <StickerPicker onAddSticker={handleAddSticker} />
+        <button type="button" className="drawing-button" onClick={() => setShowDrawingPicker(true)} title="Draw">
+          <Icon name="Pencil" size={16} />
+        </button>
         <button
           type="button"
           className="location-button"
@@ -522,6 +527,16 @@ export function PostForm({
             setShowLocationPicker(false)
           }}
           onClose={() => setShowLocationPicker(false)}
+        />
+      )}
+
+      {showDrawingPicker && (
+        <DrawingPicker
+          onComplete={(url) => {
+            insertImageUrl(url)
+            setShowDrawingPicker(false)
+          }}
+          onClose={() => setShowDrawingPicker(false)}
         />
       )}
     </form>

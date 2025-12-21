@@ -6,6 +6,7 @@ import { Toggle, Avatar, TextButton, ErrorMessage, Icon } from '../ui'
 import { StickerPicker } from '../sticker'
 import { SuperMentionPopup } from '../superMention'
 import { LocationPicker } from '../location'
+import { DrawingPicker } from '../drawing'
 import { FormActions } from './FormActions'
 
 interface PostFormLongModeProps {
@@ -78,6 +79,7 @@ export function PostFormLongMode({
   const fileImportRef = useRef<HTMLInputElement>(null)
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
   const [showLocationPicker, setShowLocationPicker] = useState(false)
+  const [showDrawingPicker, setShowDrawingPicker] = useState(false)
 
   const handleInsertToEditor = (text: string) => {
     editorRef.current?.insertText(text)
@@ -115,7 +117,7 @@ export function PostFormLongMode({
           {editingEvent && <div className="editing-label">Editing post...</div>}
           {replyingTo && <div className="replying-label">Replying to post...</div>}
 
-          <div className="post-form-top-actions">
+          <div className="post-form-row-1">
             <button type="button" className="post-form-avatar-button" onClick={onAvatarClick}>
               <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
             </button>
@@ -146,8 +148,18 @@ export function PostFormLongMode({
             >
               @@
             </button>
+            <div className="post-form-spacer" />
+            <div className="vim-toggle">
+              <Toggle checked={vimMode} onChange={onVimModeChange} label="Vim" />
+            </div>
+          </div>
+
+          <div className="post-form-row-2">
             <ImageDropZone onImageUploaded={handleInsertToEditor} onError={onError} />
             <StickerPicker onAddSticker={onAddSticker} />
+            <button type="button" className="drawing-button" onClick={() => setShowDrawingPicker(true)} title="Draw">
+              <Icon name="Pencil" size={16} />
+            </button>
             <button
               type="button"
               className="location-button"
@@ -170,9 +182,6 @@ export function PostFormLongMode({
                 </button>
               </div>
             )}
-            <div className="vim-toggle">
-              <Toggle checked={vimMode} onChange={onVimModeChange} label="Vim" />
-            </div>
           </div>
 
           <LongModeEditor
@@ -232,6 +241,16 @@ export function PostFormLongMode({
             setShowLocationPicker(false)
           }}
           onClose={() => setShowLocationPicker(false)}
+        />
+      )}
+
+      {showDrawingPicker && (
+        <DrawingPicker
+          onComplete={(url) => {
+            handleInsertToEditor(url)
+            setShowDrawingPicker(false)
+          }}
+          onClose={() => setShowDrawingPicker(false)}
         />
       )}
     </div>

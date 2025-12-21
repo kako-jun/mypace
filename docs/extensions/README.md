@@ -43,6 +43,10 @@ MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装し
 
 | 機能 | ドキュメント | 概要 |
 |------|-------------|------|
+| Sticker | [sticker.md](./sticker.md) | 投稿カードにシール画像を自由配置 |
+| Super Mention | [super-mention.md](./super-mention.md) | @@構文で万物への言及（Wikidata連携） |
+| Location | [location.md](./location.md) | NIP-52準拠のgeohash座標タグ |
+| Drawing | [drawing.md](./drawing.md) | Splatoon風お絵かき（42秒制限） |
 | Share Menu | [share.md](./share.md) | URL/Markdown共有・ダウンロード |
 | File Import | [file-import.md](./file-import.md) | ローカルファイルからエディタに読み込み |
 | 設定エクスポート | [settings-export.md](./settings-export.md) | テーマ・フィルタ設定の保存・復元 |

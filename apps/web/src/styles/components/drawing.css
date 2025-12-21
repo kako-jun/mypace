@@ -1,0 +1,287 @@
+/* Drawing Picker Modal */
+.drawing-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.drawing-picker-modal {
+  background: var(--surface-primary);
+  border: 2px solid #333;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawing-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.drawing-picker-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.drawing-picker-timer {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.drawing-picker-timer.warning {
+  color: var(--text-danger);
+  animation: timer-pulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes timer-pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+
+.drawing-picker-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawing-picker-close:hover {
+  color: var(--text-primary);
+}
+
+/* Toolbar */
+.drawing-picker-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+
+.drawing-picker-colors {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.drawing-color-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border-subtle);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.drawing-color-button.black {
+  background: #000;
+}
+
+.drawing-color-button.gray {
+  background: #808080;
+}
+
+.drawing-color-button.white {
+  background: #fff;
+}
+
+.drawing-color-button:hover {
+  transform: scale(1.1);
+}
+
+.drawing-color-button.active {
+  border-color: var(--action-star);
+  box-shadow: 0 0 0 2px var(--action-star);
+}
+
+/* Pen sizes */
+.drawing-picker-sizes {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.drawing-size-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.drawing-size-button:hover {
+  background: var(--surface-tertiary);
+}
+
+.drawing-size-button.active {
+  border-color: var(--action-star);
+  background: var(--surface-tertiary);
+}
+
+.drawing-size-dot {
+  border-radius: 50%;
+  background: var(--text-primary);
+}
+
+.drawing-size-dot.small {
+  width: 4px;
+  height: 4px;
+}
+
+.drawing-size-dot.medium {
+  width: 10px;
+  height: 10px;
+}
+
+.drawing-size-dot.large {
+  width: 18px;
+  height: 18px;
+}
+
+/* Actions */
+.drawing-picker-actions {
+  display: flex;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.drawing-action-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.drawing-action-button:hover:not(:disabled) {
+  background: var(--surface-tertiary);
+  color: var(--text-primary);
+}
+
+.drawing-action-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Canvas */
+.drawing-picker-canvas-container {
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  background: var(--surface-secondary);
+}
+
+.drawing-picker-canvas {
+  border: 2px solid #333;
+  border-radius: 4px;
+  cursor: crosshair;
+  touch-action: none;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Error */
+.drawing-picker-error {
+  padding: 0 1rem;
+  color: var(--text-danger);
+  font-size: 0.85rem;
+}
+
+/* Footer */
+.drawing-picker-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.drawing-picker-cancel {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.drawing-picker-cancel:hover {
+  background: var(--surface-tertiary);
+}
+
+.drawing-picker-complete {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  background: var(--action-star);
+  border: none;
+  color: #000;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.drawing-picker-complete:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.drawing-picker-complete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Drawing button in post form */
+.drawing-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-secondary);
+  border: 2px solid #333;
+  color: var(--text-primary);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.drawing-button:hover {
+  transform: scale(1.05);
+  background: var(--surface-tertiary);
+}
+
+[data-theme='dark'] .drawing-button {
+  border-color: #666;
+}
