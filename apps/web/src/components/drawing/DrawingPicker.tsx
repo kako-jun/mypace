@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Icon } from '../ui'
+import { Icon, CloseButton } from '../ui'
 import { uploadImage } from '../../lib/api'
 
 interface DrawingPickerProps {
   onComplete: (url: string) => void
-  onClose: () => void
 }
 
 const CANVAS_WIDTH = 320
@@ -38,7 +37,8 @@ interface DrawAction {
   points: DrawPoint[]
 }
 
-export function DrawingPicker({ onComplete, onClose }: DrawingPickerProps) {
+export function DrawingPicker({ onComplete }: DrawingPickerProps) {
+  const [isOpen, setIsOpen] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [color, setColor] = useState<ColorKey>('black')
   const [size, setSize] = useState<SizeKey>('medium')
@@ -54,8 +54,28 @@ export function DrawingPicker({ onComplete, onClose }: DrawingPickerProps) {
   const historyRef = useRef<DrawAction[]>([])
   const currentStrokeRef = useRef<DrawPoint[]>([])
 
+  // Reset state when opening
+  const handleOpen = () => {
+    setIsOpen(true)
+    setColor('black')
+    setSize('medium')
+    setTimeLeft(TIME_LIMIT)
+    setIsTimerRunning(false)
+    setHasDrawn(false)
+    setHistoryLength(0)
+    setError('')
+    historyRef.current = []
+    currentStrokeRef.current = []
+  }
+
+  const handleClose = () => {
+    setIsOpen(false)
+    setIsTimerRunning(false)
+  }
+
   // Initialize canvas with white background
   useEffect(() => {
+    if (!isOpen) return
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
@@ -63,7 +83,7 @@ export function DrawingPicker({ onComplete, onClose }: DrawingPickerProps) {
 
     ctx.fillStyle = COLORS.white
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
-  }, [])
+  }, [isOpen])
 
   // Timer
   useEffect(() => {
@@ -93,7 +113,7 @@ export function DrawingPicker({ onComplete, onClose }: DrawingPickerProps) {
     ctx.fillStyle = COLORS.white
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
 
-    // Redraw all strokes
+    // Redraw all strokes with smooth curves
     for (const action of historyRef.current) {
       if (action.points.length < 2) continue
       ctx.strokeStyle = action.color
@@ -102,9 +122,21 @@ export function DrawingPicker({ onComplete, onClose }: DrawingPickerProps) {
       ctx.lineJoin = 'round'
       ctx.beginPath()
       ctx.moveTo(action.points[0].x, action.points[0].y)
+
+      // Use quadratic bezier curves for smooth lines
       for (let i = 1; i < action.points.length; i++) {
-        ctx.lineTo(action.points[i].x, action.points[i].y)
+        const prevPoint = action.points[i - 1]
+        const currentPoint = action.points[i]
+        const midPoint = {
+          x: (prevPoint.x + currentPoint.x) / 2,
+          y: (prevPoint.y + currentPoint.y) / 2,
+        }
+        ctx.quadraticCurveTo(prevPoint.x, prevPoint.y, midPoint.x, midPoint.y)
       }
+
+      // Draw line to the last point
+      const lastPoint = action.points[action.points.length - 1]
+      ctx.lineTo(lastPoint.x, lastPoint.y)
       ctx.stroke()
     }
   }, [])
@@ -168,17 +200,29 @@ export function DrawingPicker({ onComplete, onClose }: DrawingPickerProps) {
     const point = getCanvasPoint(e)
     if (!point) return
 
-    currentStrokeRef.current.push(point)
+    const points = currentStrokeRef.current
+    points.push(point)
 
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    ctx.lineTo(point.x, point.y)
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.moveTo(point.x, point.y)
+    // Use quadratic bezier curve for smooth lines
+    if (points.length >= 2) {
+      const lastPoint = points[points.length - 2]
+      const midPoint = {
+        x: (lastPoint.x + point.x) / 2,
+        y: (lastPoint.y + point.y) / 2,
+      }
+
+      ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, midPoint.x, midPoint.y)
+      ctx.stroke()
+
+      // Start new path from midpoint for next segment
+      ctx.beginPath()
+      ctx.moveTo(midPoint.x, midPoint.y)
+    }
   }
 
   const stopDrawing = () => {
@@ -236,6 +280,7 @@ export function DrawingPicker({ onComplete, onClose }: DrawingPickerProps) {
         throw new Error(result.error || 'Upload failed')
       }
       onComplete(result.url)
+      setIsOpen(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
@@ -245,7 +290,7 @@ export function DrawingPicker({ onComplete, onClose }: DrawingPickerProps) {
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
-      onClose()
+      handleClose()
     }
   }
 
@@ -254,89 +299,95 @@ export function DrawingPicker({ onComplete, onClose }: DrawingPickerProps) {
   }
 
   return (
-    <div className="drawing-picker-backdrop" onClick={handleBackdropClick}>
-      <div className="drawing-picker-modal">
-        <div className="drawing-picker-header">
-          <h3>Draw</h3>
-          <div className={`drawing-picker-timer ${timeLeft <= 10 ? 'warning' : ''}`}>{formatTime(timeLeft)}</div>
-          <button type="button" className="drawing-picker-close" onClick={onClose}>
-            <Icon name="X" size={20} />
-          </button>
-        </div>
+    <div className="drawing-picker">
+      <button type="button" className="drawing-picker-toggle" onClick={handleOpen} title="Draw">
+        <Icon name="Pencil" size={16} />
+      </button>
 
-        <div className="drawing-picker-toolbar">
-          <div className="drawing-picker-colors">
-            {(Object.keys(COLORS) as ColorKey[]).map((c) => (
-              <button
-                key={c}
-                type="button"
-                className={`drawing-color-button ${c} ${color === c ? 'active' : ''}`}
-                onClick={() => setColor(c)}
-                title={c}
+      {isOpen && (
+        <div className="drawing-picker-backdrop" onClick={handleBackdropClick}>
+          <div className="drawing-picker-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="drawing-picker-header">
+              <h3>Draw</h3>
+              <div className={`drawing-picker-timer ${timeLeft <= 10 ? 'warning' : ''}`}>{formatTime(timeLeft)}</div>
+              <CloseButton onClick={handleClose} size={20} />
+            </div>
+
+            <div className="drawing-picker-toolbar">
+              <div className="drawing-picker-colors">
+                {(Object.keys(COLORS) as ColorKey[]).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`drawing-color-button ${c} ${color === c ? 'active' : ''}`}
+                    onClick={() => setColor(c)}
+                    title={c}
+                  />
+                ))}
+              </div>
+              <div className="drawing-picker-sizes">
+                {(Object.keys(PEN_SIZES) as SizeKey[]).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className={`drawing-size-button ${s} ${size === s ? 'active' : ''}`}
+                    onClick={() => setSize(s)}
+                    title={s}
+                  >
+                    <span className={`drawing-size-dot ${s}`} />
+                  </button>
+                ))}
+              </div>
+              <div className="drawing-picker-actions">
+                <button
+                  type="button"
+                  className="drawing-action-button"
+                  onClick={handleUndo}
+                  disabled={historyLength === 0}
+                  title="Undo"
+                >
+                  <Icon name="Undo2" size={18} />
+                </button>
+                <button type="button" className="drawing-action-button" onClick={handleClear} title="Clear">
+                  <Icon name="Trash2" size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="drawing-picker-canvas-container">
+              <canvas
+                ref={canvasRef}
+                width={CANVAS_WIDTH}
+                height={CANVAS_HEIGHT}
+                className="drawing-picker-canvas"
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
               />
-            ))}
-          </div>
-          <div className="drawing-picker-sizes">
-            {(Object.keys(PEN_SIZES) as SizeKey[]).map((s) => (
-              <button
-                key={s}
-                type="button"
-                className={`drawing-size-button ${s} ${size === s ? 'active' : ''}`}
-                onClick={() => setSize(s)}
-                title={s}
-              >
-                <span className={`drawing-size-dot ${s}`} />
+            </div>
+
+            {error && <div className="drawing-picker-error">{error}</div>}
+
+            <div className="drawing-picker-footer">
+              <button type="button" className="drawing-picker-cancel" onClick={handleClose}>
+                Cancel
               </button>
-            ))}
-          </div>
-          <div className="drawing-picker-actions">
-            <button
-              type="button"
-              className="drawing-action-button"
-              onClick={handleUndo}
-              disabled={historyLength === 0}
-              title="Undo"
-            >
-              <Icon name="Undo2" size={18} />
-            </button>
-            <button type="button" className="drawing-action-button" onClick={handleClear} title="Clear">
-              <Icon name="Trash2" size={18} />
-            </button>
+              <button
+                type="button"
+                className="drawing-picker-complete"
+                onClick={handleComplete}
+                disabled={uploading || !hasDrawn}
+              >
+                {uploading ? 'Uploading...' : 'Done'}
+              </button>
+            </div>
           </div>
         </div>
-
-        <div className="drawing-picker-canvas-container">
-          <canvas
-            ref={canvasRef}
-            width={CANVAS_WIDTH}
-            height={CANVAS_HEIGHT}
-            className="drawing-picker-canvas"
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={stopDrawing}
-          />
-        </div>
-
-        {error && <div className="drawing-picker-error">{error}</div>}
-
-        <div className="drawing-picker-footer">
-          <button type="button" className="drawing-picker-cancel" onClick={onClose}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="drawing-picker-complete"
-            onClick={handleComplete}
-            disabled={uploading || !hasDrawn}
-          >
-            {uploading ? 'Uploading...' : 'Done'}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

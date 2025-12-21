@@ -71,9 +71,6 @@ export function PostForm({
   const [minimized, setMinimized] = useState(false)
   const [stickers, setStickers] = useState<Sticker[]>([])
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
-  const [showLocationPicker, setShowLocationPicker] = useState(false)
-  const [showDrawingPicker, setShowDrawingPicker] = useState(false)
-  const [showVoicePicker, setShowVoicePicker] = useState(false)
   const [location, setLocation] = useState<{ geohash: string; name?: string } | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const shortTextEditorRef = useRef<ShortTextEditorRef>(null)
@@ -457,29 +454,9 @@ export function PostForm({
       <div className="post-form-row-2">
         <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
         <StickerPicker onAddSticker={handleAddSticker} />
-        <button type="button" className="drawing-button" onClick={() => setShowDrawingPicker(true)} title="Draw">
-          <Icon name="Pencil" size={16} />
-        </button>
-        <button type="button" className="voice-button" onClick={() => setShowVoicePicker(true)} title="Voice memo">
-          <Icon name="Mic" size={16} />
-        </button>
-        <button
-          type="button"
-          className="location-button"
-          onClick={() => setShowLocationPicker(true)}
-          title="Add location"
-        >
-          <Icon name="MapPin" size={16} />
-        </button>
-        {location && (
-          <div className="location-indicator">
-            <Icon name="MapPin" size={14} />
-            <span>{location.name || location.geohash}</span>
-            <button type="button" className="location-remove" onClick={() => setLocation(null)} title="Remove location">
-              <Icon name="X" size={12} />
-            </button>
-          </div>
-        )}
+        <DrawingPicker onComplete={insertImageUrl} />
+        <VoicePicker onComplete={insertImageUrl} />
+        <LocationPicker onSelect={(geohash, name) => setLocation({ geohash, name })} currentLocation={location} />
       </div>
 
       <ShortTextEditor
@@ -503,6 +480,7 @@ export function PostForm({
           onStickerRotate={handleStickerRotate}
           onStickerLayerChange={handleStickerLayerChange}
           onStickerRemove={handleRemoveSticker}
+          location={location}
         />
       )}
 
@@ -522,36 +500,6 @@ export function PostForm({
         <SuperMentionPopup
           onSelect={(text) => shortTextEditorRef.current?.insertText(text)}
           onClose={() => setShowSuperMentionPopup(false)}
-        />
-      )}
-
-      {showLocationPicker && (
-        <LocationPicker
-          onSelect={(geohash, name) => {
-            setLocation({ geohash, name })
-            setShowLocationPicker(false)
-          }}
-          onClose={() => setShowLocationPicker(false)}
-        />
-      )}
-
-      {showDrawingPicker && (
-        <DrawingPicker
-          onComplete={(url) => {
-            insertImageUrl(url)
-            setShowDrawingPicker(false)
-          }}
-          onClose={() => setShowDrawingPicker(false)}
-        />
-      )}
-
-      {showVoicePicker && (
-        <VoicePicker
-          onComplete={(url) => {
-            insertImageUrl(url)
-            setShowVoicePicker(false)
-          }}
-          onClose={() => setShowVoicePicker(false)}
         />
       )}
     </form>

@@ -10,7 +10,15 @@ import {
   getSuperMentionClickHandler,
   getInternalLinkClickHandler,
 } from './callbacks'
-import { escapeHtml, sanitizeHtml, processLinks, processImageUrls, removeImageLinks } from './html-utils'
+import {
+  escapeHtml,
+  sanitizeHtml,
+  processLinks,
+  processImageUrls,
+  removeImageLinks,
+  processAudioUrls,
+  removeMediaLinks,
+} from './html-utils'
 import { extractAlignments, restoreAlignments } from './alignment'
 import { processFontSyntax } from './font-syntax'
 import { extractCodeBlocks, restoreCodeBlocks } from './code-blocks'
@@ -82,6 +90,8 @@ export function renderContent(
   // 7. Process additional elements
   html = processImageUrls(html)
   html = removeImageLinks(html)
+  html = processAudioUrls(html)
+  html = removeMediaLinks(html)
   html = processNostrMentions(html, profiles)
   html = processHashtags(html)
   html = processSuperMentions(html, wikidataMap)

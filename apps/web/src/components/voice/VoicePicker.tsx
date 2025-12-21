@@ -1,15 +1,15 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Icon } from '../ui'
+import { Icon, CloseButton } from '../ui'
 import { uploadImage } from '../../lib/api/upload'
 
 interface VoicePickerProps {
   onComplete: (url: string) => void
-  onClose: () => void
 }
 
 const MAX_DURATION = 10 // seconds
 
-export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
+export function VoicePicker({ onComplete }: VoicePickerProps) {
+  const [isOpen, setIsOpen] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null)
   const [duration, setDuration] = useState(0)
@@ -27,30 +27,58 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
   const audioContextRef = useRef<AudioContext | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number | null>(null)
+  const isRecordingRef = useRef(false)
+
+  // Cleanup function
+  const cleanup = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
+    }
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current)
+      animationRef.current = null
+    }
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current)
+      audioUrlRef.current = null
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close()
+      audioContextRef.current = null
+    }
+  }, [])
 
   // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop())
-      }
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-      }
-      if (audioRef.current) {
-        audioRef.current.pause()
-      }
-      if (audioUrlRef.current) {
-        URL.revokeObjectURL(audioUrlRef.current)
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close()
-      }
-    }
-  }, [])
+    return cleanup
+  }, [cleanup])
+
+  const handleOpen = () => {
+    setIsOpen(true)
+    setRecordedBlob(null)
+    setDuration(0)
+    setIsPlaying(false)
+    setError('')
+  }
+
+  const handleClose = () => {
+    cleanup()
+    setIsOpen(false)
+    setIsRecording(false)
+    setRecordedBlob(null)
+    setDuration(0)
+    setIsPlaying(false)
+    setError('')
+  }
 
   const drawWaveform = useCallback(() => {
     const canvas = canvasRef.current
@@ -89,10 +117,11 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
     ctx.lineTo(canvas.width, canvas.height / 2)
     ctx.stroke()
 
-    if (isRecording) {
+    // Use ref instead of state to check recording status
+    if (isRecordingRef.current) {
       animationRef.current = requestAnimationFrame(drawWaveform)
     }
-  }, [isRecording])
+  }, [])
 
   const startRecording = async () => {
     setError('')
@@ -138,6 +167,7 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
 
       mediaRecorder.start()
       setIsRecording(true)
+      isRecordingRef.current = true
       setDuration(0)
 
       // Start timer
@@ -160,6 +190,7 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
   }
 
   const stopRecording = useCallback(() => {
+    isRecordingRef.current = false
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop()
       setIsRecording(false)
@@ -234,6 +265,7 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
 
       if (result.success && result.url) {
         onComplete(result.url)
+        handleClose()
       } else {
         setError(result.error || 'Upload failed')
       }
@@ -247,7 +279,7 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
-      onClose()
+      handleClose()
     }
   }
 
@@ -256,76 +288,82 @@ export function VoicePicker({ onComplete, onClose }: VoicePickerProps) {
   }
 
   return (
-    <div className="voice-picker-backdrop" onClick={handleBackdropClick}>
-      <div className="voice-picker-modal">
-        <div className="voice-picker-header">
-          <h3>Voice Memo</h3>
-          <span className={`voice-picker-timer ${duration >= MAX_DURATION - 3 && isRecording ? 'warning' : ''}`}>
-            {formatTime(duration)} / {formatTime(MAX_DURATION)}
-          </span>
-          <button type="button" className="voice-picker-close" onClick={onClose}>
-            <Icon name="X" size={20} />
-          </button>
-        </div>
+    <div className="voice-picker">
+      <button type="button" className="voice-picker-toggle" onClick={handleOpen} title="Voice memo">
+        <Icon name="Mic" size={16} />
+      </button>
 
-        <div className="voice-picker-content">
-          {!recordedBlob ? (
-            <>
-              <canvas ref={canvasRef} className="voice-picker-waveform" width={280} height={60} />
+      {isOpen && (
+        <div className="voice-picker-backdrop" onClick={handleBackdropClick}>
+          <div className="voice-picker-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="voice-picker-header">
+              <h3>Voice Memo</h3>
+              <span className={`voice-picker-timer ${duration >= MAX_DURATION - 3 && isRecording ? 'warning' : ''}`}>
+                {formatTime(duration)} / {formatTime(MAX_DURATION)}
+              </span>
+              <CloseButton onClick={handleClose} size={20} />
+            </div>
+
+            <div className="voice-picker-content">
+              {!recordedBlob ? (
+                <>
+                  <canvas ref={canvasRef} className="voice-picker-waveform" width={280} height={60} />
+                  <button
+                    type="button"
+                    className={`voice-picker-record-button ${isRecording ? 'recording' : ''}`}
+                    onMouseDown={handleMouseDown}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                    onTouchStart={(e) => {
+                      e.preventDefault()
+                      handleMouseDown()
+                    }}
+                    onTouchEnd={(e) => {
+                      e.preventDefault()
+                      handleMouseUp()
+                    }}
+                  >
+                    <Icon name="Mic" size={32} />
+                    <span>{isRecording ? 'Recording...' : 'Hold to record'}</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="voice-picker-playback">
+                    <button type="button" className="voice-picker-play-button" onClick={handlePlayPause}>
+                      <Icon name={isPlaying ? 'Pause' : 'Play'} size={24} />
+                    </button>
+                    <div className="voice-picker-playback-info">
+                      <span className="voice-picker-duration">{formatTime(duration)}</span>
+                      <span className="voice-picker-format">WebM Audio</span>
+                    </div>
+                  </div>
+                  <button type="button" className="voice-picker-rerecord" onClick={handleReRecord}>
+                    <Icon name="RefreshCw" size={16} />
+                    Re-record
+                  </button>
+                </>
+              )}
+            </div>
+
+            {error && <div className="voice-picker-error">{error}</div>}
+
+            <div className="voice-picker-footer">
+              <button type="button" className="voice-picker-cancel" onClick={handleClose}>
+                Cancel
+              </button>
               <button
                 type="button"
-                className={`voice-picker-record-button ${isRecording ? 'recording' : ''}`}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                onTouchStart={(e) => {
-                  e.preventDefault()
-                  handleMouseDown()
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault()
-                  handleMouseUp()
-                }}
+                className="voice-picker-complete"
+                onClick={handleUpload}
+                disabled={!recordedBlob || uploading}
               >
-                <Icon name="Mic" size={32} />
-                <span>{isRecording ? 'Recording...' : 'Hold to record'}</span>
+                {uploading ? 'Uploading...' : 'Add to Post'}
               </button>
-            </>
-          ) : (
-            <>
-              <div className="voice-picker-playback">
-                <button type="button" className="voice-picker-play-button" onClick={handlePlayPause}>
-                  <Icon name={isPlaying ? 'Pause' : 'Play'} size={24} />
-                </button>
-                <div className="voice-picker-playback-info">
-                  <span className="voice-picker-duration">{formatTime(duration)}</span>
-                  <span className="voice-picker-format">WebM Audio</span>
-                </div>
-              </div>
-              <button type="button" className="voice-picker-rerecord" onClick={handleReRecord}>
-                <Icon name="RefreshCw" size={16} />
-                Re-record
-              </button>
-            </>
-          )}
+            </div>
+          </div>
         </div>
-
-        {error && <div className="voice-picker-error">{error}</div>}
-
-        <div className="voice-picker-footer">
-          <button type="button" className="voice-picker-cancel" onClick={onClose}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="voice-picker-complete"
-            onClick={handleUpload}
-            disabled={!recordedBlob || uploading}
-          >
-            {uploading ? 'Uploading...' : 'Add to Post'}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

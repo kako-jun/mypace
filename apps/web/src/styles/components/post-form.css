@@ -339,11 +339,13 @@
 }
 
 /* Row 2: creative buttons (camera, sticker, drawing, location) */
+/* Aligned with file-import button in row 1 (after avatar 40px + gap 8px) */
 .post-form-row-2 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+  margin-left: 48px;
   flex-shrink: 0;
 }
 
@@ -589,29 +591,43 @@
   opacity: 0.9;
 }
 
-/* Location button */
-.location-button {
+/* Location Picker container */
+.location-picker {
+  position: relative;
+}
+
+/* Location toggle button */
+.location-picker-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-secondary);
-  border: 2px solid #333;
-  color: var(--text-primary);
   width: 32px;
   height: 32px;
-  padding: 0;
-  border-radius: 4px;
+  padding: 4px;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-primary, #333);
+  border-radius: 0;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: all 0.2s ease;
 }
 
-.location-button:hover {
+.location-picker-toggle:hover {
+  background: var(--surface-hover);
   transform: scale(1.05);
-  background: var(--surface-tertiary);
 }
 
-[data-theme='dark'] .location-button {
+.location-picker-toggle.active {
+  background: var(--action-star);
+  color: #000;
+  border-color: var(--action-star);
+}
+
+[data-theme='dark'] .location-picker-toggle {
   border-color: #666;
+}
+
+[data-theme='dark'] .location-picker-toggle.active {
+  border-color: var(--action-star);
 }
 
 /* Location Picker Modal */
@@ -784,11 +800,65 @@
   background: var(--surface-tertiary);
 }
 
+.location-picker-map-wrapper {
+  position: relative;
+  margin: 0 1rem;
+}
+
 .location-picker-map {
   height: 250px;
-  margin: 0 1rem;
   border: 1px solid var(--border-subtle);
   border-radius: 4px;
+}
+
+/* Crosshair overlay */
+.location-picker-crosshair {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.crosshair-h {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 0, 0, 0.7);
+  transform: translateY(-50%);
+}
+
+.crosshair-v {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 0, 0, 0.7);
+  transform: translateX(-50%);
+}
+
+.crosshair-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 0, 0, 0.9);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: transparent;
+}
+
+.location-picker-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0.5rem 1rem;
 }
 
 .location-picker-precision {

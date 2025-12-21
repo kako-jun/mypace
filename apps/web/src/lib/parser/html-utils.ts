@@ -51,3 +51,24 @@ export function processImageUrls(html: string): string {
 export function removeImageLinks(html: string): string {
   return html.replace(/<a[^>]*>(\s*<span class="content-image-wrapper">.*?<\/span>\s*)<\/a>/gi, '$1')
 }
+
+// Process audio URLs (standalone URLs that are audio files)
+export function processAudioUrls(html: string): string {
+  const urlRegex = /(^|[\s>])(https?:\/\/[^\s<"]+\.(mp3|wav|ogg|m4a|webm|mp4)(\?[^\s<"]*)?)([\s<]|$)/gim
+  return html.replace(urlRegex, (_match, before, url, ext, _query, after) => {
+    // For video extensions, check if it's from nostr.build/av (audio)
+    const isAudio = ['mp3', 'wav', 'ogg', 'm4a'].includes(ext.toLowerCase()) || url.includes('/av/')
+    if (isAudio) {
+      return `${before}<div class="content-audio-wrapper"><audio src="${url}" controls class="content-audio"></audio></div>${after}`
+    } else {
+      return `${before}<div class="content-video-wrapper"><video src="${url}" controls class="content-video"></video></div>${after}`
+    }
+  })
+}
+
+// Remove links that wrap audio/video (marked auto-links media URLs)
+export function removeMediaLinks(html: string): string {
+  html = html.replace(/<a[^>]*>(\s*<div class="content-audio-wrapper">.*?<\/div>\s*)<\/a>/gi, '$1')
+  html = html.replace(/<a[^>]*>(\s*<div class="content-video-wrapper">.*?<\/div>\s*)<\/a>/gi, '$1')
+  return html
+}

@@ -79,9 +79,6 @@ export function PostFormLongMode({
   const editorRef = useRef<LongModeEditorRef>(null)
   const fileImportRef = useRef<HTMLInputElement>(null)
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
-  const [showLocationPicker, setShowLocationPicker] = useState(false)
-  const [showDrawingPicker, setShowDrawingPicker] = useState(false)
-  const [showVoicePicker, setShowVoicePicker] = useState(false)
 
   const handleInsertToEditor = (text: string) => {
     editorRef.current?.insertText(text)
@@ -159,34 +156,12 @@ export function PostFormLongMode({
           <div className="post-form-row-2">
             <ImageDropZone onImageUploaded={handleInsertToEditor} onError={onError} />
             <StickerPicker onAddSticker={onAddSticker} />
-            <button type="button" className="drawing-button" onClick={() => setShowDrawingPicker(true)} title="Draw">
-              <Icon name="Pencil" size={16} />
-            </button>
-            <button type="button" className="voice-button" onClick={() => setShowVoicePicker(true)} title="Voice memo">
-              <Icon name="Mic" size={16} />
-            </button>
-            <button
-              type="button"
-              className="location-button"
-              onClick={() => setShowLocationPicker(true)}
-              title="Add location"
-            >
-              <Icon name="MapPin" size={16} />
-            </button>
-            {location && (
-              <div className="location-indicator">
-                <Icon name="MapPin" size={14} />
-                <span>{location.name || location.geohash}</span>
-                <button
-                  type="button"
-                  className="location-remove"
-                  onClick={() => onLocationChange(null)}
-                  title="Remove location"
-                >
-                  <Icon name="X" size={12} />
-                </button>
-              </div>
-            )}
+            <DrawingPicker onComplete={handleInsertToEditor} />
+            <VoicePicker onComplete={handleInsertToEditor} />
+            <LocationPicker
+              onSelect={(geohash, name) => onLocationChange({ geohash, name })}
+              currentLocation={location}
+            />
           </div>
 
           <LongModeEditor
@@ -231,42 +206,13 @@ export function PostFormLongMode({
             onStickerRotate={onStickerRotate}
             onStickerLayerChange={onStickerLayerChange}
             onStickerRemove={onRemoveSticker}
+            location={location}
           />
         </div>
       )}
 
       {showSuperMentionPopup && (
         <SuperMentionPopup onSelect={handleInsertToEditor} onClose={() => setShowSuperMentionPopup(false)} />
-      )}
-
-      {showLocationPicker && (
-        <LocationPicker
-          onSelect={(geohash, name) => {
-            onLocationChange({ geohash, name })
-            setShowLocationPicker(false)
-          }}
-          onClose={() => setShowLocationPicker(false)}
-        />
-      )}
-
-      {showDrawingPicker && (
-        <DrawingPicker
-          onComplete={(url) => {
-            handleInsertToEditor(url)
-            setShowDrawingPicker(false)
-          }}
-          onClose={() => setShowDrawingPicker(false)}
-        />
-      )}
-
-      {showVoicePicker && (
-        <VoicePicker
-          onComplete={(url) => {
-            handleInsertToEditor(url)
-            setShowVoicePicker(false)
-          }}
-          onClose={() => setShowVoicePicker(false)}
-        />
       )}
     </div>
   )

@@ -361,6 +361,33 @@
   font-weight: 500;
 }
 
+/* Content audio */
+.content-audio-wrapper {
+  display: block;
+  margin: 0.75rem 0;
+}
+
+.content-audio {
+  width: 100%;
+  max-width: 320px;
+  height: 40px;
+  border-radius: 8px;
+}
+
+/* Content video */
+.content-video-wrapper {
+  display: block;
+  margin: 0.75rem 0;
+}
+
+.content-video {
+  width: 100%;
+  max-width: 400px;
+  max-height: 300px;
+  border-radius: 8px;
+  background: #000;
+}
+
 /* Alignment syntax */
 .align-left {
   text-align: left;
