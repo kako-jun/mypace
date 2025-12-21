@@ -1,6 +1,9 @@
 import { Hono } from 'hono'
 import type { D1Database } from '@cloudflare/workers-types'
+import type { Filter } from 'nostr-tools'
+import { SimplePool } from 'nostr-tools/pool'
 import type { Bindings } from '../types'
+import { MYPACE_TAG, RELAYS } from '../constants'
 
 const serial = new Hono<{ Bindings: Bindings }>()
 
@@ -145,33 +148,47 @@ serial.post('/visibility', async (c) => {
 })
 
 // POST /api/serial/init - 既存ユーザーの初期化（管理用）
+// Nostrリレーから過去の#mypace投稿を取得して番号を付与
 serial.post('/init', async (c) => {
   const db = c.env.DB
+  const pool = new SimplePool()
 
   try {
-    // #mypaceタグを持つkind:1投稿を持つユーザーを、最初の投稿時刻順に取得
-    const mypaceUsers = await db
-      .prepare(
-        `SELECT pubkey, MIN(created_at) as first_post_at,
-                (SELECT id FROM events e2 WHERE e2.pubkey = e1.pubkey AND e2.kind = 1
-                 AND e2.tags LIKE '%"mypace"%' ORDER BY created_at ASC LIMIT 1) as first_post_id
-         FROM events e1
-         WHERE kind = 1 AND tags LIKE '%"mypace"%'
-         GROUP BY pubkey
-         ORDER BY first_post_at ASC`
-      )
-      .all<{ pubkey: string; first_post_at: number; first_post_id: string }>()
+    // Nostrリレーから#mypaceタグを持つ全投稿を取得
+    const filter: Filter = {
+      kinds: [1],
+      '#t': [MYPACE_TAG],
+      limit: 5000, // 十分な数を取得
+    }
 
-    const users = mypaceUsers.results || []
+    console.log('Fetching #mypace posts from relays...')
+    const events = await pool.querySync(RELAYS, filter)
+    console.log(`Fetched ${events.length} events from relays`)
+
+    // ユーザーごとに最初の投稿を集計
+    const userFirstPost = new Map<string, { id: string; created_at: number }>()
+
+    for (const event of events) {
+      const existing = userFirstPost.get(event.pubkey)
+      if (!existing || event.created_at < existing.created_at) {
+        userFirstPost.set(event.pubkey, {
+          id: event.id,
+          created_at: event.created_at,
+        })
+      }
+    }
+
+    // 最初の投稿時刻順でソート
+    const sortedUsers = Array.from(userFirstPost.entries()).sort((a, b) => a[1].created_at - b[1].created_at)
+
+    console.log(`Found ${sortedUsers.length} unique users`)
+
     let registered = 0
     let skipped = 0
 
-    for (const user of users) {
+    for (const [pubkey, { id: firstPostId, created_at: firstPostAt }] of sortedUsers) {
       // 既に登録済みかチェック
-      const existing = await db
-        .prepare('SELECT serial_number FROM user_serial WHERE pubkey = ?')
-        .bind(user.pubkey)
-        .first()
+      const existing = await db.prepare('SELECT serial_number FROM user_serial WHERE pubkey = ?').bind(pubkey).first()
 
       if (existing) {
         skipped++
@@ -185,7 +202,7 @@ serial.post('/init', async (c) => {
           `INSERT INTO user_serial (pubkey, serial_number, first_post_id, first_post_at, visible, created_at)
            VALUES (?, (SELECT COALESCE(MAX(serial_number), 0) + 1 FROM user_serial), ?, ?, 1, ?)`
         )
-        .bind(user.pubkey, user.first_post_id, user.first_post_at, now)
+        .bind(pubkey, firstPostId, firstPostAt, now)
         .run()
 
       registered++
@@ -193,13 +210,16 @@ serial.post('/init', async (c) => {
 
     return c.json({
       success: true,
-      total: users.length,
+      totalEvents: events.length,
+      totalUsers: sortedUsers.length,
       registered,
       skipped,
     })
   } catch (e) {
     console.error('Serial init error:', e)
     return c.json({ error: 'Failed to initialize serials' }, 500)
+  } finally {
+    pool.close(RELAYS)
   }
 })
 
