@@ -173,6 +173,17 @@ body.custom-theme .logo-pace {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
+/* Super mention URL should keep its black outline */
+.light-text .markdown-content a.content-super-mention-url {
+  color: #fd0;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 0 3px rgba(0, 0, 0, 0.7);
+}
+
 .light-text .markdown-content blockquote {
   border-color: rgba(255, 255, 255, 0.3);
   color: rgba(255, 255, 255, 0.85);
@@ -188,6 +199,17 @@ body.custom-theme .logo-pace {
 .dark-text .inline-code,
 .dark-text .markdown-content a {
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Super mention URL should keep its black outline */
+.dark-text .markdown-content a.content-super-mention-url {
+  color: #fd0;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 0 3px rgba(0, 0, 0, 0.7);
 }
 
 /* Light text adjustments */

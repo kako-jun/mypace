@@ -14,6 +14,9 @@ export { isVideoUrl, isAllowedIframeDomain, ALLOWED_IFRAME_DOMAINS } from './uti
 
 const URL_REGEX = /https?:\/\/[^\s<"]+/gi
 
+// Super mention URL regex (@@domain.com/path format)
+const SUPER_MENTION_URL_REGEX = /@@([\w][\w.-]*\.[a-z]{2,}(?:\/[^\s<"]*)?)/gi
+
 export function detectEmbed(url: string): EmbedInfo | null {
   if (isImageUrl(url)) return null
 
@@ -88,6 +91,20 @@ export function extractEmbeds(content: string): EmbedInfo[] {
     seenUrls.add(cleanUrl)
 
     const embed = detectEmbed(cleanUrl)
+    if (embed) {
+      embeds.push(embed)
+    }
+  }
+
+  // Also extract super mention URLs (@@domain.com/path)
+  let match
+  while ((match = SUPER_MENTION_URL_REGEX.exec(content)) !== null) {
+    const domain = match[1].replace(/[.,;:!?)\]}>）」』】]+$/, '')
+    const fullUrl = `https://${domain}`
+    if (seenUrls.has(fullUrl)) continue
+    seenUrls.add(fullUrl)
+
+    const embed = detectEmbed(fullUrl)
     if (embed) {
       embeds.push(embed)
     }
