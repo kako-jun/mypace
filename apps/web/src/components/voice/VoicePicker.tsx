@@ -151,6 +151,12 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
     setError('')
     chunksRef.current = []
 
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -232,14 +238,16 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
 
   const stopRecording = useCallback(() => {
     isRecordingRef.current = false
+    setIsRecording(false)
+
+    // Always clear timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop()
-      setIsRecording(false)
-
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-        timerRef.current = null
-      }
     }
   }, [])
 
