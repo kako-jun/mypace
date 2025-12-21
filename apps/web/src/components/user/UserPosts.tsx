@@ -1,6 +1,6 @@
 import { Fragment, useCallback } from 'react'
 import { TimelinePostCard, TimelineActionButton } from '../timeline'
-import { SuccessMessage } from '../ui'
+import { SuccessMessage, Icon } from '../ui'
 import { navigateToEdit, navigateToReply, getDisplayName, getAvatarUrl } from '../../lib/utils'
 import type {
   Event,
@@ -27,6 +27,8 @@ interface UserPostsProps {
   repostingId: string | null
   copiedId: string | null
   deletedId: string | null
+  pinnedEventId: string | null
+  pinnedEvent: Event | null
   gaps: GapInfo[]
   hasMore: boolean
   loadingMore: boolean
@@ -37,6 +39,8 @@ interface UserPostsProps {
   onDeleteConfirm: (event: Event) => void
   onShareOption: (eventId: string, content: string, option: ShareOption) => void
   onCopied: (eventId: string) => void
+  onPin: (event: Event) => void
+  onUnpin: () => void
   loadOlderEvents: () => Promise<void>
   fillGap: (gapId: string) => Promise<void>
 }
@@ -54,6 +58,8 @@ export function UserPosts({
   repostingId,
   copiedId,
   deletedId,
+  pinnedEventId,
+  pinnedEvent,
   gaps,
   hasMore,
   loadingMore,
@@ -63,6 +69,8 @@ export function UserPosts({
   onRepost,
   onDeleteConfirm,
   onShareOption,
+  onPin,
+  onUnpin,
   loadOlderEvents,
   fillGap,
 }: UserPostsProps) {
@@ -84,52 +92,71 @@ export function UserPosts({
     return getAvatarUrl(eventProfile)
   }
 
+  // Filter out pinned post from regular timeline
+  const regularItems = pinnedEventId ? items.filter((item) => item.event.id !== pinnedEventId) : items
+
+  const renderPostCard = (event: Event, isPinnedSection = false) => {
+    const isMyPost = myPubkey === event.pubkey
+    const gapAfterThis = gaps.find((g) => g.afterEventId === event.id)
+
+    if (deletedId === event.id) {
+      return (
+        <article key={event.id} className="post-card">
+          <SuccessMessage>Deleted!</SuccessMessage>
+        </article>
+      )
+    }
+
+    return (
+      <Fragment key={event.id}>
+        <TimelinePostCard
+          event={event}
+          isMyPost={isMyPost}
+          myPubkey={myPubkey}
+          profiles={{ ...profiles, [authorPubkey]: authorProfile ?? null }}
+          reactions={reactions[event.id]}
+          replies={replies[event.id]}
+          reposts={reposts[event.id]}
+          likingId={likingId}
+          repostingId={repostingId}
+          copiedId={copiedId}
+          isPinned={pinnedEventId === event.id}
+          showPinButton={isMyPost}
+          onEdit={() => handleEdit(event)}
+          onDeleteConfirm={() => onDeleteConfirm(event)}
+          onLike={() => onLike(event)}
+          onUnlike={() => onUnlike(event)}
+          onReply={() => handleReplyClick(event)}
+          onRepost={() => onRepost(event)}
+          onPin={() => onPin(event)}
+          onUnpin={onUnpin}
+          onShareOption={onShareOption}
+          getDisplayName={getDisplayNameForEvent}
+          getAvatarUrl={getAvatarUrlForEvent}
+        />
+        {!isPinnedSection && gapAfterThis && (
+          <TimelineActionButton onClick={() => fillGap(gapAfterThis.id)} disabled={loadingGap === gapAfterThis.id}>
+            {loadingGap === gapAfterThis.id ? 'Loading...' : 'Load More'}
+          </TimelineActionButton>
+        )}
+      </Fragment>
+    )
+  }
+
   return (
     <div className="timeline">
-      {items.map((item) => {
-        const event = item.event
-        const isMyPost = myPubkey === event.pubkey
-        const gapAfterThis = gaps.find((g) => g.afterEventId === event.id)
+      {/* Pinned post section */}
+      {pinnedEvent && (
+        <div className="pinned-post-section">
+          <div className="pinned-post-label">
+            <Icon name="Pin" size={14} /> Pinned
+          </div>
+          {renderPostCard(pinnedEvent, true)}
+        </div>
+      )}
 
-        if (deletedId === event.id) {
-          return (
-            <article key={event.id} className="post-card">
-              <SuccessMessage>Deleted!</SuccessMessage>
-            </article>
-          )
-        }
-
-        return (
-          <Fragment key={event.id}>
-            <TimelinePostCard
-              event={event}
-              isMyPost={isMyPost}
-              myPubkey={myPubkey}
-              profiles={{ ...profiles, [authorPubkey]: authorProfile ?? null }}
-              reactions={reactions[event.id]}
-              replies={replies[event.id]}
-              reposts={reposts[event.id]}
-              likingId={likingId}
-              repostingId={repostingId}
-              copiedId={copiedId}
-              onEdit={() => handleEdit(event)}
-              onDeleteConfirm={() => onDeleteConfirm(event)}
-              onLike={() => onLike(event)}
-              onUnlike={() => onUnlike(event)}
-              onReply={() => handleReplyClick(event)}
-              onRepost={() => onRepost(event)}
-              onShareOption={onShareOption}
-              getDisplayName={getDisplayNameForEvent}
-              getAvatarUrl={getAvatarUrlForEvent}
-            />
-            {gapAfterThis && (
-              <TimelineActionButton onClick={() => fillGap(gapAfterThis.id)} disabled={loadingGap === gapAfterThis.id}>
-                {loadingGap === gapAfterThis.id ? 'Loading...' : 'Load More'}
-              </TimelineActionButton>
-            )}
-          </Fragment>
-        )
-      })}
+      {/* Regular posts */}
+      {regularItems.map((item) => renderPostCard(item.event, false))}
       {items.length === 0 && <p className="empty">No posts yet</p>}
       {items.length > 0 && hasMore && (
         <TimelineActionButton onClick={loadOlderEvents} disabled={loadingMore}>

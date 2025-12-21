@@ -20,6 +20,8 @@ interface TimelinePostCardProps {
   likingId: string | null
   repostingId: string | null
   copiedId: string | null
+  isPinned?: boolean
+  showPinButton?: boolean
   ngWords?: string[]
   ngTags?: string[]
   mutedPubkeys?: string[]
@@ -29,6 +31,8 @@ interface TimelinePostCardProps {
   onUnlike: (event: Event) => void
   onReply: (event: Event) => void
   onRepost: (event: Event) => void
+  onPin?: (event: Event) => void
+  onUnpin?: () => void
   onShareOption: (eventId: string, content: string, option: ShareOption) => void
   getDisplayName: (pubkey: string) => string
   getAvatarUrl: (pubkey: string) => string | null
@@ -46,6 +50,8 @@ export default function TimelinePostCard({
   likingId,
   repostingId,
   copiedId,
+  isPinned = false,
+  showPinButton = false,
   ngWords = [],
   ngTags = [],
   mutedPubkeys = [],
@@ -55,6 +61,8 @@ export default function TimelinePostCard({
   onUnlike,
   onReply,
   onRepost,
+  onPin,
+  onUnpin,
   onShareOption,
   getDisplayName,
   getAvatarUrl,
@@ -105,6 +113,15 @@ export default function TimelinePostCard({
 
   const isTruncated = hasTeaserTag(event)
 
+  const handlePinClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (isPinned) {
+      onUnpin?.()
+    } else {
+      onPin?.(event)
+    }
+  }
+
   return (
     <div className="post-card-wrapper">
       <article
@@ -112,6 +129,22 @@ export default function TimelinePostCard({
         style={themeProps.style}
         onClick={handleCardClick}
       >
+        {/* Pin indicator/button at top center */}
+        {/* Pinned: visible to everyone (clickable only for owner) */}
+        {/* Not pinned + owner: visible only to owner */}
+        {(isPinned || showPinButton) && (
+          <button
+            type="button"
+            className={`post-pin-button ${isPinned ? 'pinned' : ''}`}
+            onClick={showPinButton ? handlePinClick : undefined}
+            disabled={!showPinButton}
+            aria-label={isPinned ? 'Pinned post' : 'Pin this post'}
+            title={isPinned ? (showPinButton ? 'Unpin' : 'Pinned') : 'Pin to profile'}
+          >
+            <Icon name="Pin" size={16} />
+          </button>
+        )}
+
         {/* Back layer stickers (behind content) */}
         <PostStickers stickers={stickers} truncated={isTruncated} layer="back" />
 

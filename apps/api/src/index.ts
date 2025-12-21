@@ -15,6 +15,7 @@ import {
   wikidata,
   superMention,
   sticker,
+  pins,
   wellKnown,
   raw,
 } from './routes'
@@ -45,6 +46,7 @@ app.route('/api/tweet', tweet)
 app.route('/api/wikidata', wikidata)
 app.route('/api/super-mention', superMention)
 app.route('/api/sticker', sticker)
+app.route('/api/pins', pins)
 
 // Well-known
 app.route('/.well-known', wellKnown)

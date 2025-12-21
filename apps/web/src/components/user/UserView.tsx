@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { fetchUserProfile } from '../../lib/nostr/relay'
+import { fetchPinnedPost, setPinnedPost, unpinPost, fetchEvent } from '../../lib/api'
 import { getEventThemeColors } from '../../lib/nostr/events'
 import {
   getDisplayName,
@@ -68,6 +69,8 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const [npubCopied, setNpubCopied] = useState(false)
   const [nip05Verified, setNip05Verified] = useState<boolean | null>(null)
   const [editMode, setEditMode] = useState(false)
+  const [pinnedEventId, setPinnedEventId] = useState<string | null>(null)
+  const [pinnedEvent, setPinnedEvent] = useState<Event | null>(null)
   const [, setThemeVersion] = useState(0)
 
   useEffect(() => {
@@ -111,6 +114,46 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     }
   }
 
+  const loadPinnedPost = useCallback(async () => {
+    try {
+      const data = await fetchPinnedPost(pubkey)
+      setPinnedEventId(data.eventId)
+      // Fetch the actual event data if pinned
+      if (data.eventId) {
+        try {
+          const eventData = await fetchEvent(data.eventId)
+          setPinnedEvent(eventData.event)
+        } catch {
+          // Event might be deleted or unavailable
+          setPinnedEvent(null)
+        }
+      } else {
+        setPinnedEvent(null)
+      }
+    } catch (err) {
+      console.error('Failed to fetch pinned post:', err)
+    }
+  }, [pubkey])
+
+  const handlePin = useCallback(
+    async (event: Event) => {
+      const success = await setPinnedPost(pubkey, event.id)
+      if (success) {
+        setPinnedEventId(event.id)
+        setPinnedEvent(event)
+      }
+    },
+    [pubkey]
+  )
+
+  const handleUnpin = useCallback(async () => {
+    const success = await unpinPost(pubkey)
+    if (success) {
+      setPinnedEventId(null)
+      setPinnedEvent(null)
+    }
+  }, [pubkey])
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -122,8 +165,9 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     setInternalLinkClickHandler((path) => navigateTo(path))
     setImageClickHandler(triggerLightBox)
     loadProfile()
+    loadPinnedPost()
     return () => clearImageClickHandler()
-  }, [pubkey])
+  }, [pubkey, loadPinnedPost])
 
   useEffect(() => {
     if (profile?.nip05) {
@@ -252,6 +296,8 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
         repostingId={repostingId}
         copiedId={copiedId}
         deletedId={deletedId}
+        pinnedEventId={pinnedEventId}
+        pinnedEvent={pinnedEvent}
         gaps={gaps}
         hasMore={hasMore}
         loadingMore={loadingMore}
@@ -262,6 +308,8 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
         onDeleteConfirm={handleDeleteConfirm}
         onShareOption={handleShareOption}
         onCopied={(id) => setCopiedId(id)}
+        onPin={handlePin}
+        onUnpin={handleUnpin}
         loadOlderEvents={loadOlderEvents}
         fillGap={fillGap}
       />

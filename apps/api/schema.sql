@@ -67,3 +67,12 @@ CREATE INDEX IF NOT EXISTS idx_sticker_first_used_by ON sticker_history(first_us
 
 -- Migration: Add first_used_by column (run manually if table exists)
 -- ALTER TABLE sticker_history ADD COLUMN first_used_by TEXT;
+
+-- User pinned posts table
+CREATE TABLE IF NOT EXISTS user_pins (
+  pubkey TEXT PRIMARY KEY,
+  event_id TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_pins_event ON user_pins(event_id);

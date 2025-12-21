@@ -245,3 +245,43 @@ export async function saveStickerToHistory(url: string, pubkey?: string): Promis
     // Silently fail
   }
 }
+
+// Pinned posts
+export interface PinnedPostData {
+  eventId: string | null
+  createdAt?: number
+}
+
+export async function fetchPinnedPost(pubkey: string): Promise<PinnedPostData> {
+  try {
+    const res = await fetch(`${API_BASE}/api/pins/${pubkey}`)
+    if (!res.ok) return { eventId: null }
+    return res.json()
+  } catch {
+    return { eventId: null }
+  }
+}
+
+export async function setPinnedPost(pubkey: string, eventId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/pins`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pubkey, eventId }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+export async function unpinPost(pubkey: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/pins/${pubkey}`, {
+      method: 'DELETE',
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}

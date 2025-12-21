@@ -575,3 +575,19 @@
   background: var(--action-delete);
   color: #fff;
 }
+
+/* ===== Pinned Post Section ===== */
+.pinned-post-section {
+  margin-bottom: 24px;
+}
+
+.pinned-post-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  padding-left: 4px;
+}

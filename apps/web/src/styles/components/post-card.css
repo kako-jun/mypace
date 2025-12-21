@@ -71,6 +71,58 @@
   transform: translate(-10px, -10px);
 }
 
+/* Pin button at top center */
+.post-pin-button {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  outline: none;
+}
+
+.post-pin-button:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  transform: translateX(-50%) scale(1.1);
+}
+
+/* Pinned state - clickable (owner) */
+.post-pin-button.pinned:not(:disabled) {
+  background: var(--btn-primary-bg);
+  color: #fff;
+}
+
+.post-pin-button.pinned:hover:not(:disabled) {
+  background: var(--btn-primary-bg);
+  transform: translateX(-50%) scale(1.1);
+  opacity: 0.9;
+}
+
+/* Pinned state - non-clickable (non-owner viewing) */
+.post-pin-button.pinned:disabled {
+  background: var(--text-muted);
+  color: #fff;
+  cursor: default;
+}
+
+/* Unpinned disabled state */
+.post-pin-button:disabled:not(.pinned) {
+  cursor: default;
+}
+
 /* Post header */
 .post-header {
   position: relative;
