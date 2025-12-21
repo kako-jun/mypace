@@ -311,7 +311,9 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
       const result = await uploadImage(file)
 
       if (result.success && result.url) {
-        onComplete(result.url)
+        // Add audio marker for webm files so they're treated as audio
+        const audioUrl = result.url.endsWith('.webm') ? `${result.url}?audio` : result.url
+        onComplete(audioUrl)
         handleClose()
       } else {
         setError(result.error || 'Upload failed')

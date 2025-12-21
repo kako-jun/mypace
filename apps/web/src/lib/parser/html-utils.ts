@@ -57,7 +57,11 @@ export function processAudioUrls(html: string): string {
   const urlRegex = /(^|[\s>])(https?:\/\/[^\s<"]+\.(mp3|wav|ogg|m4a|webm|mp4)(\?[^\s<"]*)?)([\s<]|$)/gim
   return html.replace(urlRegex, (_match, before, url, ext, _query, after) => {
     // Audio extensions (ogg is typically audio, video uses .ogv)
-    const isAudio = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].includes(ext.toLowerCase()) || url.includes('/av/')
+    // Also check for ?audio marker (used by VoicePicker for webm audio)
+    const isAudio =
+      ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].includes(ext.toLowerCase()) ||
+      url.includes('/av/') ||
+      url.includes('?audio')
     if (isAudio) {
       return `${before}<div class="content-audio-wrapper"><audio src="${url}" controls class="content-audio"></audio></div>${after}`
     } else {
