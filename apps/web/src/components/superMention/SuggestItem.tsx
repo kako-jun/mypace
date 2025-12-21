@@ -13,6 +13,15 @@ function getWikipediaUrl(wikidataId: string): string {
   return `https://www.wikidata.org/wiki/Special:GoToLinkedPage/jawiki/${wikidataId}`
 }
 
+function isUrlLike(path: string): boolean {
+  try {
+    const url = new URL(`https://${path}`)
+    return url.hostname.includes('.')
+  } catch {
+    return false
+  }
+}
+
 function WikidataQBadge({ id }: { id: string }) {
   return (
     <a
@@ -67,13 +76,7 @@ export function SuggestItemView({ item, isSelected, onSelect, onHover, onDelete 
             title={item.wikidataId ? `Wikidata: ${item.wikidataId}` : undefined}
           >
             <span className="super-mention-suggest-icon">
-              {item.wikidataId ? (
-                <Check size={16} />
-              ) : item.path.startsWith('/web/') ? (
-                <Link size={16} />
-              ) : (
-                <Pin size={16} />
-              )}
+              {item.wikidataId ? <Check size={16} /> : isUrlLike(item.path) ? <Link size={16} /> : <Pin size={16} />}
             </span>
             <span className="super-mention-suggest-content">
               <span className="super-mention-suggest-path">{item.path}</span>
