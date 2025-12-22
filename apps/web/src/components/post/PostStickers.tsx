@@ -332,7 +332,7 @@ export function PostStickers({
               src={sticker.url}
               alt=""
               className="post-sticker"
-              style={{ width: '100%', height: 'auto' }}
+              style={{ width: '100%', height: 'auto', pointerEvents: editable ? 'auto' : 'none' }}
               loading="lazy"
               draggable={false}
               onMouseDown={(e) => handleMoveStart(e, index)}

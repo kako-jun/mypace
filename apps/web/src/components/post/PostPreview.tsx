@@ -54,7 +54,7 @@ export default function PostPreview({
       />
       {/* Header skeleton - only shown when stickers exist */}
       {hasStickers && (
-        <div className="preview-header-skeleton">
+        <div className="preview-header-skeleton" style={editableStickers ? { pointerEvents: 'none' } : undefined}>
           <div className="preview-avatar-skeleton" />
           <div className="preview-author-skeleton">
             <div className="preview-name-skeleton" />
@@ -62,7 +62,7 @@ export default function PostPreview({
           </div>
         </div>
       )}
-      <div className="preview-content">
+      <div className="preview-content" style={editableStickers ? { pointerEvents: 'none' } : undefined}>
         <PostContent content={content} emojis={emojis} />
       </div>
       {locations.map((loc, i) => (
@@ -70,7 +70,7 @@ export default function PostPreview({
       ))}
       {/* Footer skeleton - only shown when stickers exist */}
       {hasStickers && (
-        <div className="preview-footer-skeleton">
+        <div className="preview-footer-skeleton" style={editableStickers ? { pointerEvents: 'none' } : undefined}>
           <div className="preview-action-skeleton" />
           <div className="preview-action-skeleton" />
           <div className="preview-action-skeleton" />
