@@ -1,0 +1,202 @@
+/* Upload History Page */
+
+.upload-history-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.upload-history-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.upload-history-back {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.upload-history-back:hover {
+  color: var(--text-primary);
+}
+
+.upload-history-header h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.upload-history-notice {
+  background: var(--surface-secondary);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.upload-history-notice p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.upload-history-notice-small {
+  margin-top: 0.5rem !important;
+  font-size: 0.75rem !important;
+  color: var(--text-muted) !important;
+}
+
+.upload-history-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+}
+
+.upload-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.upload-history-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--surface-secondary);
+  border-radius: 8px;
+}
+
+.upload-history-item-preview {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-history-item-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-history-item-icon {
+  font-size: 1.5rem;
+}
+
+.upload-history-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-history-item-filename {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upload-history-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.upload-history-item-type {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  padding: 0.1rem 0.35rem;
+  background: var(--surface-tertiary);
+  border-radius: 4px;
+}
+
+.upload-history-item-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.upload-history-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.upload-history-copy-btn,
+.upload-history-delete-link {
+  font-size: 0.8rem;
+  text-decoration: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.upload-history-copy-btn {
+  background: var(--surface-tertiary);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+.upload-history-copy-btn:hover {
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.upload-history-delete-link {
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  background: none;
+}
+
+.upload-history-delete-link:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.upload-history-remove-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.upload-history-remove-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-tertiary);
+}
+
+@media (max-width: 480px) {
+  .upload-history-item {
+    flex-wrap: wrap;
+  }
+
+  .upload-history-item-info {
+    width: calc(100% - 60px - 0.75rem);
+  }
+
+  .upload-history-item-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+  }
+}

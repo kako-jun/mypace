@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   getStoredSecretKey,
   getPublicKeyFromSecret,
@@ -35,6 +36,7 @@ import { CloseButton } from '../ui'
 import type { ThemeColors } from '../../types'
 
 export function Settings() {
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'settings' | 'account' | 'about'>('settings')
   const [nsec, setNsec] = useState('')
@@ -204,6 +206,19 @@ export function Settings() {
           <ProfileSection displayName={displayName} pictureUrl={pictureUrl} onClose={() => setOpen(false)} />
 
           <KeysSection nsec={nsec} npub={npub} usingNip07={usingNip07} />
+
+          <div className="settings-section">
+            <h3>UPLOADS</h3>
+            <button
+              className="profile-edit-link"
+              onClick={() => {
+                setOpen(false)
+                navigate('/upload-history')
+              }}
+            >
+              Upload History
+            </button>
+          </div>
         </div>
 
         <div style={{ display: activeTab === 'about' ? 'block' : 'none' }}>

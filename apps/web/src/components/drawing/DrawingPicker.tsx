@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Icon, CloseButton } from '../ui'
 import Button from '../ui/Button'
 import { uploadImage } from '../../lib/api'
+import { addUploadToHistory } from '../../lib/utils'
 import '../../styles/components/drawing.css'
 
 interface DrawingPickerProps {
@@ -307,6 +308,8 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
       if (!result.success || !result.url) {
         throw new Error(result.error || 'Upload failed')
       }
+      // Save to upload history
+      addUploadToHistory(result.url, file.name, file.type)
       onComplete(result.url)
       setIsOpen(false)
     } catch (err) {
