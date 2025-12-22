@@ -1,2 +1,2 @@
 export * from './api'
-export { uploadImage, type UploadResult } from './upload'
+export { uploadImage, deleteFromNostrBuild, type UploadResult, type DeleteResult } from './upload'

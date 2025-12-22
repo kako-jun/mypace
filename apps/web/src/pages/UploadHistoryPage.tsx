@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetchUploadHistory, deleteUploadFromHistory, type UploadHistoryItem } from '../lib/api'
+import { fetchUploadHistory, deleteUploadFromHistory, deleteFromNostrBuild, type UploadHistoryItem } from '../lib/api'
 import { copyToClipboard } from '../lib/utils'
 import { getCurrentPubkey } from '../lib/nostr/events'
 import { BackButton } from '../components/ui'
@@ -11,6 +11,8 @@ export function UploadHistoryPage() {
   const [history, setHistory] = useState<UploadHistoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [pubkey, setPubkey] = useState<string>('')
 
   useEffect(() => {
@@ -33,13 +35,32 @@ export function UploadHistoryPage() {
     await copyToClipboard(url)
   }
 
-  const handleRemove = async (url: string) => {
+  const handleRemoveFromHistory = async (url: string) => {
     if (!pubkey) return
     const success = await deleteUploadFromHistory(pubkey, url)
     if (success) {
       setHistory(history.filter((item) => item.url !== url))
     }
     setConfirmDelete(null)
+  }
+
+  const handleDeleteFromNostrBuild = async (url: string) => {
+    setDeleting(url)
+    setDeleteError(null)
+
+    const result = await deleteFromNostrBuild(url)
+
+    if (result.success) {
+      // Also remove from history
+      if (pubkey) {
+        await deleteUploadFromHistory(pubkey, url)
+      }
+      setHistory(history.filter((item) => item.url !== url))
+    } else {
+      setDeleteError(result.error || 'Failed to delete')
+    }
+
+    setDeleting(null)
   }
 
   const formatDate = (timestamp: number) => {
@@ -72,10 +93,8 @@ export function UploadHistoryPage() {
       <BackButton onClick={() => navigate(-1)} />
 
       <div className="upload-history-notice">
-        <p>
-          nostr.buildにアップロードしたファイルの履歴です。
-          CopyでURLをコピーし、Deleteから削除ページでURLを貼り付けてください。
-        </p>
+        <p>nostr.buildにアップロードしたファイルの履歴です。Deleteでファイルを削除できます。</p>
+        {deleteError && <p className="upload-history-error">{deleteError}</p>}
       </div>
 
       {loading ? (
@@ -110,14 +129,14 @@ export function UploadHistoryPage() {
                 <button className="upload-history-copy-btn" onClick={() => handleCopyUrl(item.url)} title="Copy URL">
                   Copy
                 </button>
-                <a
-                  href="https://nostr.build/delete/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="upload-history-delete-link"
+                <button
+                  className="upload-history-delete-btn"
+                  onClick={() => handleDeleteFromNostrBuild(item.url)}
+                  disabled={deleting === item.url}
+                  title="Delete from nostr.build"
                 >
-                  Delete
-                </a>
+                  {deleting === item.url ? '...' : 'Delete'}
+                </button>
                 <button
                   className="upload-history-remove-btn"
                   onClick={() => setConfirmDelete(item.url)}
@@ -141,7 +160,7 @@ export function UploadHistoryPage() {
               <button className="upload-history-confirm-cancel" onClick={() => setConfirmDelete(null)}>
                 Cancel
               </button>
-              <button className="upload-history-confirm-ok" onClick={() => handleRemove(confirmDelete)}>
+              <button className="upload-history-confirm-ok" onClick={() => handleRemoveFromHistory(confirmDelete)}>
                 Remove
               </button>
             </div>

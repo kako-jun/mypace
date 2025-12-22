@@ -3,6 +3,7 @@ import { getErrorMessage } from '../utils'
 import { LIMITS } from '../constants'
 
 const UPLOAD_URL = 'https://nostr.build/api/v2/upload/files'
+const DELETE_API_BASE = 'https://nostr.build/api/v2/nip96/upload'
 
 export interface UploadResult {
   success: boolean
@@ -63,5 +64,76 @@ export async function uploadImage(file: File): Promise<UploadResult> {
     }
   } catch (e) {
     return { success: false, error: getErrorMessage(e, 'Failed to upload') }
+  }
+}
+
+/**
+ * Extract SHA-256 hash from nostr.build URL
+ * URL format: https://image.nostr.build/<hash>.<ext> or https://nostr.build/i/<hash>.<ext>
+ */
+function extractHashFromUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url)
+    // Get the last path segment (e.g., "abc123.png")
+    const pathname = urlObj.pathname
+    const filename = pathname.split('/').pop()
+    if (!filename) return null
+
+    // Remove extension to get hash
+    const hash = filename.replace(/\.[^.]+$/, '')
+
+    // Validate it looks like a SHA-256 hash (64 hex characters)
+    if (/^[a-f0-9]{64}$/i.test(hash)) {
+      return hash
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+export interface DeleteResult {
+  success: boolean
+  error?: string
+}
+
+export async function deleteFromNostrBuild(url: string): Promise<DeleteResult> {
+  const hash = extractHashFromUrl(url)
+  if (!hash) {
+    return { success: false, error: 'Could not extract file hash from URL' }
+  }
+
+  const deleteUrl = `${DELETE_API_BASE}/${hash}`
+
+  try {
+    // Create NIP-98 auth event for DELETE
+    const authEvent = await createNip98AuthEvent(deleteUrl, 'DELETE')
+    const authHeader = btoa(JSON.stringify(authEvent))
+
+    const response = await fetch(deleteUrl, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Nostr ${authHeader}`,
+      },
+    })
+
+    if (response.ok) {
+      return { success: true }
+    }
+
+    // Try to get error message from response
+    const text = await response.text()
+    console.error('Delete response:', response.status, text)
+
+    if (response.status === 403) {
+      return { success: false, error: 'Permission denied - you may not own this file' }
+    }
+    if (response.status === 404) {
+      return { success: false, error: 'File not found' }
+    }
+
+    return { success: false, error: `Delete failed (${response.status})` }
+  } catch (e) {
+    return { success: false, error: getErrorMessage(e, 'Failed to delete') }
   }
 }
