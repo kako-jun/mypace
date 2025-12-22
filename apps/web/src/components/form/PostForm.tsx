@@ -18,6 +18,7 @@ import {
   removeImageUrl,
   getStoredVimMode,
   getStoredAppTheme,
+  normalizeContent,
 } from '../../lib/utils'
 import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../../lib/constants'
 import { ImageDropZone, AttachedImages, AttachedLocations, PostPreview } from '../post'
@@ -161,8 +162,9 @@ export function PostForm({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!content.trim() || posting || !hasProfile) return
-    if (content.length > LIMITS.MAX_POST_LENGTH) {
+    const normalizedContent = normalizeContent(content)
+    if (!normalizedContent || posting || !hasProfile) return
+    if (normalizedContent.length > LIMITS.MAX_POST_LENGTH) {
       setError(`Content exceeds ${LIMITS.MAX_POST_LENGTH} characters`)
       return
     }
@@ -200,7 +202,7 @@ export function PostForm({
       const extraTags = [...stickerTags, ...locationTags]
 
       if (replyingTo) {
-        const event = await createReplyEvent(content.trim(), replyingTo, undefined, extraTags)
+        const event = await createReplyEvent(normalizedContent, replyingTo, undefined, extraTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])
@@ -210,14 +212,14 @@ export function PostForm({
         const deleteEvent = await createDeleteEvent([editingEvent.id])
         await publishEvent(deleteEvent)
         const preserveTags = editingEvent.tags.filter((tag) => !['sticker', 'g', 'location'].includes(tag[0]))
-        const event = await createTextNote(content.trim(), preserveTags, extraTags)
+        const event = await createTextNote(normalizedContent, preserveTags, extraTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])
         setLocations([])
         onEditComplete?.()
       } else {
-        const event = await createTextNote(content.trim(), undefined, extraTags)
+        const event = await createTextNote(normalizedContent, undefined, extraTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])

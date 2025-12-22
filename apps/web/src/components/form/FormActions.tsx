@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
 import { TextButton } from '../ui'
 import { LIMITS } from '../../lib/constants'
+import { normalizeContent } from '../../lib/utils'
 
 interface FormActionsProps {
   content: string
@@ -21,6 +23,7 @@ export function FormActions({
   onCancel,
 }: FormActionsProps) {
   const isSpecialMode = editingEvent || replyingTo
+  const normalizedLength = useMemo(() => normalizeContent(content).length, [content])
 
   const getButtonText = () => {
     if (posting) {
@@ -43,9 +46,9 @@ export function FormActions({
         >
           {showPreview ? 'HIDE' : 'PREVIEW'}
         </TextButton>
-        <span className={`char-count ${content.length > LIMITS.FOLD_THRESHOLD ? 'char-count-fold' : ''}`}>
-          {content.length}/{LIMITS.MAX_POST_LENGTH}
-          {content.length > LIMITS.FOLD_THRESHOLD && ' (folded)'}
+        <span className={`char-count ${normalizedLength > LIMITS.FOLD_THRESHOLD ? 'char-count-fold' : ''}`}>
+          {normalizedLength}/{LIMITS.MAX_POST_LENGTH}
+          {normalizedLength > LIMITS.FOLD_THRESHOLD && ' (folded)'}
         </span>
       </div>
       <div className="post-actions-right">

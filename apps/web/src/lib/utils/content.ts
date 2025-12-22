@@ -1,4 +1,17 @@
 /**
+ * Normalize content by trimming trailing spaces from each line
+ * and removing leading/trailing whitespace from the entire content.
+ * This helps users stay within the character limit.
+ */
+export function normalizeContent(content: string): string {
+  return content
+    .split('\n')
+    .map((line) => line.trimEnd())
+    .join('\n')
+    .trim()
+}
+
+/**
  * Check if content contains a hashtag or super mention (Japanese-aware)
  */
 export function contentHasTag(content: string, tag: string): boolean {
