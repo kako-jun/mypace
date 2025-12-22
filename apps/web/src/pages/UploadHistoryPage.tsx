@@ -12,7 +12,7 @@ export function UploadHistoryPage() {
   const [loading, setLoading] = useState(true)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleteMessage, setDeleteMessage] = useState<string | null>(null)
   const [pubkey, setPubkey] = useState<string>('')
 
   useEffect(() => {
@@ -46,18 +46,19 @@ export function UploadHistoryPage() {
 
   const handleDeleteFromNostrBuild = async (url: string) => {
     setDeleting(url)
-    setDeleteError(null)
+    setDeleteMessage(null)
 
     const result = await deleteFromNostrBuild(url)
 
     if (result.success) {
-      // Also remove from history
+      // Remove from history
       if (pubkey) {
         await deleteUploadFromHistory(pubkey, url)
       }
       setHistory(history.filter((item) => item.url !== url))
+      setDeleteMessage('Deleted (cache may take a few minutes to clear)')
     } else {
-      setDeleteError(result.error || 'Failed to delete')
+      setDeleteMessage(`Error: ${result.error || 'Failed to delete'}`)
     }
 
     setDeleting(null)
@@ -94,7 +95,7 @@ export function UploadHistoryPage() {
 
       <div className="upload-history-notice">
         <p>nostr.buildにアップロードしたファイルの履歴です。Deleteでファイルを削除できます。</p>
-        {deleteError && <p className="upload-history-error">{deleteError}</p>}
+        {deleteMessage && <p className="upload-history-message">{deleteMessage}</p>}
       </div>
 
       {loading ? (

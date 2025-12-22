@@ -95,6 +95,7 @@ function extractHashFromUrl(url: string): string | null {
 export interface DeleteResult {
   success: boolean
   error?: string
+  message?: string
 }
 
 export async function deleteFromNostrBuild(url: string): Promise<DeleteResult> {
@@ -117,22 +118,25 @@ export async function deleteFromNostrBuild(url: string): Promise<DeleteResult> {
       },
     })
 
-    if (response.ok) {
-      return { success: true }
-    }
-
-    // Try to get error message from response
     const text = await response.text()
-    console.error('Delete response:', response.status, text)
+    console.log('Delete response:', response.status, text)
 
     if (response.status === 403) {
-      return { success: false, error: 'Permission denied - you may not own this file' }
+      return { success: false, error: '403: Permission denied' }
     }
     if (response.status === 404) {
-      return { success: false, error: 'File not found' }
+      return { success: false, error: '404: File not found' }
+    }
+    if (response.status === 401) {
+      return { success: false, error: '401: Unauthorized' }
     }
 
-    return { success: false, error: `Delete failed (${response.status})` }
+    if (response.ok) {
+      // Show what server returned
+      return { success: true, message: `${response.status}: ${text.slice(0, 100)}` }
+    }
+
+    return { success: false, error: `${response.status}: ${text.slice(0, 100)}` }
   } catch (e) {
     return { success: false, error: getErrorMessage(e, 'Failed to delete') }
   }

@@ -20,9 +20,11 @@
   line-height: 1.5;
 }
 
-.upload-history-error {
-  color: #e74c3c !important;
+.upload-history-message {
   margin-top: 0.5rem !important;
+  font-family: monospace;
+  font-size: 0.8rem;
+  word-break: break-all;
 }
 
 .upload-history-empty {
