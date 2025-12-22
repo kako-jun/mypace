@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { Icon } from '../ui'
 import { useImageUpload, useDragDrop } from '../../hooks'
 import { ImageCropper } from '../image'
+import { isAnimatedImage } from '../../lib/utils'
 
 interface ImageDropZoneProps {
   onImageUploaded: (url: string) => void
@@ -22,10 +23,16 @@ export default function ImageDropZone({ onImageUploaded, onError }: ImageDropZon
     }
   }
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = async (file: File) => {
     // Only show cropper for images, not videos
     if (file.type.startsWith('image/')) {
-      setPendingFile(file)
+      // Skip cropper for animated images to preserve animation
+      const isAnimated = await isAnimatedImage(file)
+      if (isAnimated) {
+        processUpload(file)
+      } else {
+        setPendingFile(file)
+      }
     } else {
       processUpload(file)
     }

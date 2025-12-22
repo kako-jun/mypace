@@ -36,6 +36,21 @@ export function ImageCropper({ file, onCropComplete, onCancel }: ImageCropperPro
     }
 
     const image = imgRef.current
+
+    // Check if crop covers the full image (no actual cropping)
+    // Use a small tolerance for floating point comparison
+    const isFullImage =
+      completedCrop.x <= 1 &&
+      completedCrop.y <= 1 &&
+      Math.abs(completedCrop.width - image.width) <= 2 &&
+      Math.abs(completedCrop.height - image.height) <= 2
+
+    if (isFullImage) {
+      // No cropping needed, preserve original (keeps animation for GIF/APNG/WEBP)
+      onCropComplete(file)
+      return
+    }
+
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     if (!ctx) return

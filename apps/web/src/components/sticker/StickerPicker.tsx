@@ -11,6 +11,7 @@ import {
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import { useImageUpload } from '../../hooks'
 import { ImageCropper } from '../image'
+import { isAnimatedImage } from '../../lib/utils'
 
 interface StickerPickerProps {
   onAddSticker: (sticker: { url: string }) => void
@@ -64,11 +65,21 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
     }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setPendingFile(file)
     e.target.value = ''
+
+    // Skip cropper for animated images to preserve animation
+    const isAnimated = await isAnimatedImage(file)
+    if (isAnimated) {
+      const result = await uploadFile(file)
+      if (result.url) {
+        handleSelectSticker(result.url)
+      }
+    } else {
+      setPendingFile(file)
+    }
   }
 
   const handleCropComplete = async (croppedFile: File) => {
