@@ -1,4 +1,15 @@
 /**
+ * Helper to get ASCII string from bytes
+ */
+function getString(bytes: Uint8Array, offset: number, length: number): string {
+  let result = ''
+  for (let i = 0; i < length && offset + i < bytes.length; i++) {
+    result += String.fromCharCode(bytes[offset + i])
+  }
+  return result
+}
+
+/**
  * Detect if an image file contains animation
  * Supports GIF, WEBP, and APNG
  */
@@ -6,17 +17,10 @@ export async function isAnimatedImage(file: File): Promise<boolean> {
   const buffer = await file.arrayBuffer()
   const bytes = new Uint8Array(buffer)
 
-  if (file.type === 'image/gif') {
-    return isAnimatedGif(bytes)
-  }
-
-  if (file.type === 'image/webp') {
-    return isAnimatedWebp(bytes)
-  }
-
-  if (file.type === 'image/png') {
-    return isAnimatedPng(bytes)
-  }
+  // Check by file content, not just MIME type
+  if (isAnimatedGif(bytes)) return true
+  if (isAnimatedWebp(bytes)) return true
+  if (isAnimatedPng(bytes)) return true
 
   return false
 }
@@ -26,6 +30,11 @@ export async function isAnimatedImage(file: File): Promise<boolean> {
  * Look for multiple image descriptors (0x2C) or NETSCAPE extension
  */
 function isAnimatedGif(bytes: Uint8Array): boolean {
+  // GIF signature: GIF87a or GIF89a
+  if (bytes.length < 6) return false
+  const sig = getString(bytes, 0, 3)
+  if (sig !== 'GIF') return false
+
   let imageCount = 0
 
   for (let i = 0; i < bytes.length - 1; i++) {
@@ -37,7 +46,7 @@ function isAnimatedGif(bytes: Uint8Array): boolean {
 
     // Check for NETSCAPE2.0 application extension (loop indicator)
     if (bytes[i] === 0x21 && bytes[i + 1] === 0xff && i + 14 < bytes.length) {
-      const ext = String.fromCharCode(...bytes.slice(i + 3, i + 14))
+      const ext = getString(bytes, i + 3, 11)
       if (ext === 'NETSCAPE2.0') return true
     }
   }
@@ -53,15 +62,14 @@ function isAnimatedWebp(bytes: Uint8Array): boolean {
   // WEBP starts with RIFF....WEBP
   if (bytes.length < 12) return false
 
-  const riff = String.fromCharCode(...bytes.slice(0, 4))
-  const webp = String.fromCharCode(...bytes.slice(8, 12))
+  const riff = getString(bytes, 0, 4)
+  const webp = getString(bytes, 8, 4)
 
   if (riff !== 'RIFF' || webp !== 'WEBP') return false
 
   // Look for ANIM chunk
   for (let i = 12; i < bytes.length - 4; i++) {
-    const chunk = String.fromCharCode(...bytes.slice(i, i + 4))
-    if (chunk === 'ANIM') return true
+    if (getString(bytes, i, 4) === 'ANIM') return true
   }
 
   return false
@@ -82,8 +90,7 @@ function isAnimatedPng(bytes: Uint8Array): boolean {
 
   // Look for acTL chunk (animation control)
   for (let i = 8; i < bytes.length - 4; i++) {
-    const chunk = String.fromCharCode(...bytes.slice(i, i + 4))
-    if (chunk === 'acTL') return true
+    if (getString(bytes, i, 4) === 'acTL') return true
   }
 
   return false
