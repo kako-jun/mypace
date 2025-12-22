@@ -10,6 +10,7 @@ import {
 } from '../../lib/api'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import { useImageUpload } from '../../hooks'
+import { ImageCropper } from '../image'
 
 interface StickerPickerProps {
   onAddSticker: (sticker: { url: string }) => void
@@ -20,6 +21,7 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
   const [customUrl, setCustomUrl] = useState('')
   const [history, setHistory] = useState<StickerHistoryItem[]>([])
   const [loading, setLoading] = useState(false)
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { uploading, uploadFile } = useImageUpload()
 
@@ -62,14 +64,23 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
     }
   }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const result = await uploadFile(file)
+    setPendingFile(file)
+    e.target.value = ''
+  }
+
+  const handleCropComplete = async (croppedFile: File) => {
+    setPendingFile(null)
+    const result = await uploadFile(croppedFile)
     if (result.url) {
       handleSelectSticker(result.url)
     }
-    e.target.value = ''
+  }
+
+  const handleCropCancel = () => {
+    setPendingFile(null)
   }
 
   return (
@@ -145,6 +156,9 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
             </div>
           </div>
         </div>
+      )}
+      {pendingFile && (
+        <ImageCropper file={pendingFile} onCropComplete={handleCropComplete} onCancel={handleCropCancel} />
       )}
     </div>
   )
