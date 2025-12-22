@@ -9,9 +9,10 @@ interface KeysSectionProps {
   nsec: string
   npub: string
   usingNip07: boolean
+  onNavigateUploadHistory: () => void
 }
 
-export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps) {
+export default function KeysSection({ nsec, npub, usingNip07, onNavigateUploadHistory }: KeysSectionProps) {
   const [showNsec, setShowNsec] = useState(false)
   const [importValue, setImportValue] = useState('')
   const [copied, triggerCopied] = useTemporaryFlag()
@@ -57,20 +58,28 @@ export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps
 
   if (usingNip07) {
     return (
-      <SettingsSection>
-        <p className="info">Using NIP-07 extension</p>
-        <div className="key-display">
-          <label>Your npub:</label>
-          <div className="npub-row">
-            <code>{npub}</code>
-            <div className="npub-row-buttons">
-              <Button size="md" onClick={handleCopyNpub}>
-                {npubCopied ? 'Copied!' : 'Copy'}
-              </Button>
+      <>
+        <SettingsSection>
+          <p className="info">Using NIP-07 extension</p>
+          <div className="key-display">
+            <label>Your npub:</label>
+            <div className="npub-row">
+              <code>{npub}</code>
+              <div className="npub-row-buttons">
+                <Button size="md" onClick={handleCopyNpub}>
+                  {npubCopied ? 'Copied!' : 'Copy'}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </SettingsSection>
+        </SettingsSection>
+
+        <SettingsSection title="Uploads">
+          <button className="profile-edit-link" onClick={onNavigateUploadHistory}>
+            Upload History
+          </button>
+        </SettingsSection>
+      </>
     )
   }
 
@@ -106,6 +115,12 @@ export default function KeysSection({ nsec, npub, usingNip07 }: KeysSectionProps
             </div>
           </div>
         )}
+      </SettingsSection>
+
+      <SettingsSection title="Uploads">
+        <button className="profile-edit-link" onClick={onNavigateUploadHistory}>
+          Upload History
+        </button>
       </SettingsSection>
 
       <SettingsSection title="Import Key">

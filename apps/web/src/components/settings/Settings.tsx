@@ -22,7 +22,7 @@ import {
   importMuteList,
 } from '../../lib/utils'
 import { STORAGE_KEYS, CUSTOM_EVENTS } from '../../lib/constants'
-import { TextButton, SettingsSection } from '../ui'
+import { TextButton } from '../ui'
 import {
   ProfileSection,
   ThemeSection,
@@ -205,19 +205,15 @@ export function Settings() {
         <div style={{ display: activeTab === 'account' ? 'block' : 'none' }}>
           <ProfileSection displayName={displayName} pictureUrl={pictureUrl} onClose={() => setOpen(false)} />
 
-          <SettingsSection title="Uploads">
-            <button
-              className="profile-edit-link"
-              onClick={() => {
-                setOpen(false)
-                navigate('/upload-history')
-              }}
-            >
-              Upload History
-            </button>
-          </SettingsSection>
-
-          <KeysSection nsec={nsec} npub={npub} usingNip07={usingNip07} />
+          <KeysSection
+            nsec={nsec}
+            npub={npub}
+            usingNip07={usingNip07}
+            onNavigateUploadHistory={() => {
+              setOpen(false)
+              navigate('/upload-history')
+            }}
+          />
         </div>
 
         <div style={{ display: activeTab === 'about' ? 'block' : 'none' }}>
