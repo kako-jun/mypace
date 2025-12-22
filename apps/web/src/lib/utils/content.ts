@@ -1,14 +1,14 @@
 /**
- * Normalize content by trimming trailing spaces from each line
- * and removing leading/trailing whitespace from the entire content.
- * This helps users stay within the character limit.
+ * Normalize content by trimming trailing ASCII spaces/tabs from each line
+ * and removing leading/trailing ASCII whitespace from the entire content.
+ * Preserves full-width spaces (U+3000) which are intentional in Japanese text.
  */
 export function normalizeContent(content: string): string {
   return content
     .split('\n')
-    .map((line) => line.trimEnd())
+    .map((line) => line.replace(/[ \t]+$/, '')) // Only trim ASCII spaces and tabs
     .join('\n')
-    .trim()
+    .replace(/^[\n\r ]+|[\n\r ]+$/g, '') // Only trim newlines and ASCII spaces at start/end
 }
 
 /**
