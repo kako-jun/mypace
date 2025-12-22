@@ -16,6 +16,7 @@ import {
   superMention,
   sticker,
   pins,
+  uploads,
   wellKnown,
   raw,
   serial,
@@ -48,6 +49,7 @@ app.route('/api/wikidata', wikidata)
 app.route('/api/super-mention', superMention)
 app.route('/api/sticker', sticker)
 app.route('/api/pins', pins)
+app.route('/api/uploads', uploads)
 app.route('/api/serial', serial)
 
 // Well-known

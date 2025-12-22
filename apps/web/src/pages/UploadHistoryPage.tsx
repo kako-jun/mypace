@@ -1,26 +1,50 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { getUploadHistory, removeUploadFromHistory, type UploadHistoryItem, copyToClipboard } from '../lib/utils'
+import { useNavigate } from 'react-router-dom'
+import { fetchUploadHistory, deleteUploadFromHistory, type UploadHistoryItem } from '../lib/api'
+import { copyToClipboard } from '../lib/utils'
+import { getCurrentPubkey } from '../lib/nostr/events'
+import { BackButton } from '../components/ui'
 import '../styles/pages/upload-history.css'
 
 export function UploadHistoryPage() {
+  const navigate = useNavigate()
   const [history, setHistory] = useState<UploadHistoryItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [pubkey, setPubkey] = useState<string>('')
 
   useEffect(() => {
-    setHistory(getUploadHistory())
+    const loadHistory = async () => {
+      try {
+        const pk = await getCurrentPubkey()
+        setPubkey(pk)
+        const uploads = await fetchUploadHistory(pk)
+        setHistory(uploads)
+      } catch {
+        // Failed to load
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadHistory()
   }, [])
-
-  const handleRemove = (url: string) => {
-    removeUploadFromHistory(url)
-    setHistory(getUploadHistory())
-  }
 
   const handleCopyUrl = async (url: string) => {
     await copyToClipboard(url)
   }
 
+  const handleRemove = async (url: string) => {
+    if (!pubkey) return
+    const success = await deleteUploadFromHistory(pubkey, url)
+    if (success) {
+      setHistory(history.filter((item) => item.url !== url))
+    }
+    setConfirmDelete(null)
+  }
+
   const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp)
+    // API returns Unix timestamp in seconds
+    const date = new Date(timestamp * 1000)
     return date.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: '2-digit',
@@ -45,24 +69,20 @@ export function UploadHistoryPage() {
 
   return (
     <div className="upload-history-page">
-      <div className="upload-history-header">
-        <Link to="/" className="upload-history-back">
-          ← Back
-        </Link>
-        <h1>Upload History</h1>
-      </div>
+      <BackButton onClick={() => navigate(-1)} />
 
       <div className="upload-history-notice">
         <p>
           nostr.buildにアップロードしたファイルの履歴です。
           CopyでURLをコピーし、Deleteから削除ページでURLを貼り付けてください。
         </p>
-        <p className="upload-history-notice-small">
-          ※ ×ボタンはこのリストから削除するだけで、nostr.build上のファイルは消えません。
-        </p>
       </div>
 
-      {history.length === 0 ? (
+      {loading ? (
+        <div className="upload-history-empty">
+          <p>Loading...</p>
+        </div>
+      ) : history.length === 0 ? (
         <div className="upload-history-empty">
           <p>アップロード履歴がありません</p>
         </div>
@@ -100,8 +120,8 @@ export function UploadHistoryPage() {
                 </a>
                 <button
                   className="upload-history-remove-btn"
-                  onClick={() => handleRemove(item.url)}
-                  title="Remove from list"
+                  onClick={() => setConfirmDelete(item.url)}
+                  title="Remove from history"
                 >
                   ×
                 </button>
@@ -109,6 +129,24 @@ export function UploadHistoryPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {confirmDelete && (
+        <>
+          <div className="upload-history-confirm-backdrop" onClick={() => setConfirmDelete(null)} />
+          <div className="upload-history-confirm-dialog">
+            <p>このURLを履歴から削除すると、nostr.buildからファイルを削除するための情報を失います。</p>
+            <p className="upload-history-confirm-warning">本当に削除しますか？</p>
+            <div className="upload-history-confirm-buttons">
+              <button className="upload-history-confirm-cancel" onClick={() => setConfirmDelete(null)}>
+                Cancel
+              </button>
+              <button className="upload-history-confirm-ok" onClick={() => handleRemove(confirmDelete)}>
+                Remove
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   )

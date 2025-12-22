@@ -48,6 +48,8 @@ MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装し
 | Location | [location.md](./location.md) | NIP-52準拠のgeohash座標タグ |
 | Drawing | [drawing.md](./drawing.md) | Splatoon風お絵かき（42秒制限） |
 | Voice | [voice.md](./voice.md) | 押し続けて録音（10秒制限） |
+| Image Crop | [image-crop.md](./image-crop.md) | アップロード前の画像トリミング |
+| Upload History | [upload-history.md](./upload-history.md) | nostr.build削除支援の履歴管理 |
 | Share Menu | [share.md](./share.md) | URL/Markdown共有・ダウンロード |
 | File Import | [file-import.md](./file-import.md) | ローカルファイルからエディタに読み込み |
 | 設定エクスポート | [settings-export.md](./settings-export.md) | テーマ・フィルタ設定の保存・復元 |

@@ -330,3 +330,53 @@ export async function fetchUserSerial(pubkey: string): Promise<UserSerialData> {
     return { serial: null }
   }
 }
+
+// Upload history
+export interface UploadHistoryItem {
+  url: string
+  filename: string
+  type: 'image' | 'video' | 'audio'
+  uploadedAt: number
+}
+
+export async function fetchUploadHistory(pubkey: string): Promise<UploadHistoryItem[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/uploads/${pubkey}`)
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.uploads || []
+  } catch {
+    return []
+  }
+}
+
+export async function saveUploadToHistory(
+  pubkey: string,
+  url: string,
+  filename: string,
+  type: 'image' | 'video' | 'audio'
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/uploads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pubkey, url, filename, type }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+export async function deleteUploadFromHistory(pubkey: string, url: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/uploads`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pubkey, url }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}

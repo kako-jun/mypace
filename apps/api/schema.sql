@@ -90,3 +90,17 @@ CREATE TABLE IF NOT EXISTS user_serial (
 CREATE INDEX IF NOT EXISTS idx_user_serial_number ON user_serial(serial_number);
 CREATE INDEX IF NOT EXISTS idx_user_serial_first_post_at ON user_serial(first_post_at);
 CREATE INDEX IF NOT EXISTS idx_user_serial_visible ON user_serial(visible);
+
+-- Upload history table (for nostr.build file tracking)
+CREATE TABLE IF NOT EXISTS upload_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  pubkey TEXT NOT NULL,
+  url TEXT NOT NULL,
+  filename TEXT NOT NULL,
+  type TEXT NOT NULL,              -- 'image', 'video', 'audio'
+  uploaded_at INTEGER NOT NULL,
+  UNIQUE(pubkey, url)
+);
+
+CREATE INDEX IF NOT EXISTS idx_upload_history_pubkey ON upload_history(pubkey);
+CREATE INDEX IF NOT EXISTS idx_upload_history_uploaded_at ON upload_history(uploaded_at DESC);

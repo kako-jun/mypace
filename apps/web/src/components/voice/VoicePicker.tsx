@@ -2,7 +2,8 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { Icon, CloseButton } from '../ui'
 import Button from '../ui/Button'
 import { uploadImage } from '../../lib/api/upload'
-import { addUploadToHistory } from '../../lib/utils'
+import { saveUploadToHistory } from '../../lib/api'
+import { getCurrentPubkey } from '../../lib/nostr/events'
 import '../../styles/components/voice.css'
 
 interface VoicePickerProps {
@@ -320,8 +321,13 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
       const result = await uploadImage(file)
 
       if (result.success && result.url) {
-        // Save to upload history
-        addUploadToHistory(result.url, file.name, file.type)
+        // Save to upload history (D1)
+        try {
+          const pubkey = await getCurrentPubkey()
+          saveUploadToHistory(pubkey, result.url, file.name, 'audio')
+        } catch {
+          // Silently fail
+        }
         // Add audio marker for webm files so they're treated as audio
         const audioUrl = result.url.endsWith('.webm') ? `${result.url}?audio` : result.url
         onComplete(audioUrl)

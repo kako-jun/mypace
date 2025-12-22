@@ -106,14 +106,16 @@ export function ImageCropper({ file, onCropComplete, onCancel }: ImageCropperPro
               className="image-cropper-image"
               onLoad={(e) => {
                 const img = e.currentTarget
-                // Set initial completedCrop for full image
-                setCompletedCrop({
-                  unit: 'px',
+                // Set initial crop to full image (both visual and data)
+                const fullCrop = {
+                  unit: 'px' as const,
                   x: 0,
                   y: 0,
                   width: img.width,
                   height: img.height,
-                })
+                }
+                setCrop(fullCrop)
+                setCompletedCrop(fullCrop)
               }}
             />
           </ReactCrop>

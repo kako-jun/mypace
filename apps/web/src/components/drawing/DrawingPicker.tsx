@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Icon, CloseButton } from '../ui'
 import Button from '../ui/Button'
-import { uploadImage } from '../../lib/api'
-import { addUploadToHistory } from '../../lib/utils'
+import { uploadImage, saveUploadToHistory } from '../../lib/api'
+import { getCurrentPubkey } from '../../lib/nostr/events'
 import '../../styles/components/drawing.css'
 
 interface DrawingPickerProps {
@@ -308,8 +308,13 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
       if (!result.success || !result.url) {
         throw new Error(result.error || 'Upload failed')
       }
-      // Save to upload history
-      addUploadToHistory(result.url, file.name, file.type)
+      // Save to upload history (D1)
+      try {
+        const pubkey = await getCurrentPubkey()
+        saveUploadToHistory(pubkey, result.url, file.name, 'image')
+      } catch {
+        // Silently fail
+      }
       onComplete(result.url)
       setIsOpen(false)
     } catch (err) {

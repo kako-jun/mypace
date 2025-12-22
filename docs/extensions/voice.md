@@ -14,7 +14,7 @@
 |------|-----|
 | 操作 | ボタン押し続けで録音、離すと停止 |
 | 最大時間 | 10秒 |
-| 出力形式 | WebM (audio/webm) |
+| 出力形式 | OGG (audio/ogg) ※iOS非対応時はWebM |
 | アップロード先 | nostr.build |
 | 認証 | NIP-98 |
 
@@ -80,16 +80,20 @@
 
 ```typescript
 const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-const mediaRecorder = new MediaRecorder(stream, {
-  mimeType: 'audio/webm',
-})
+
+// OGG形式を優先、非対応時はWebMにフォールバック
+const mimeType = MediaRecorder.isTypeSupported('audio/ogg')
+  ? 'audio/ogg'
+  : 'audio/webm'
+
+const mediaRecorder = new MediaRecorder(stream, { mimeType })
 
 mediaRecorder.start()
 // ... 録音中 ...
 mediaRecorder.stop()
 
 mediaRecorder.ondataavailable = (e) => {
-  const blob = new Blob([e.data], { type: 'audio/webm' })
+  const blob = new Blob([e.data], { type: mimeType })
   // アップロード処理
 }
 ```
@@ -127,8 +131,9 @@ Row2: [カメラ] [シール] [お絵かき] [録音] [座標]
 
 ## 削除について
 
-- nostr.buildにアップロードしたファイルは削除不可
-- 投稿前に確認が必要
+- nostr.buildにアップロードしたファイルは削除可能
+- 削除には [Upload History](./upload-history.md) 機能を使用
+- アップロード履歴からURLをコピーし、nostr.buildの削除ページで削除
 
 ## 他クライアントでの表示
 
