@@ -120,6 +120,13 @@ export function UploadHistoryPage() {
 
               <div className="upload-history-item-info">
                 <div className="upload-history-item-filename">{item.filename}</div>
+                <button
+                  className="upload-history-item-url"
+                  onClick={() => handleCopyUrl(item.url)}
+                  title="Click to copy URL"
+                >
+                  {item.url}
+                </button>
                 <div className="upload-history-item-meta">
                   <span className="upload-history-item-type">{item.type}</span>
                   <span className="upload-history-item-date">{formatDate(item.uploadedAt)}</span>

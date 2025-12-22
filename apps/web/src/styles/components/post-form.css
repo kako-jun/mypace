@@ -504,6 +504,8 @@
 }
 
 .preview-content {
+  position: relative;
+  z-index: 5; /* Between back stickers (0) and front stickers (10) */
   font-family: var(--font-mono);
   font-size: 0.95rem;
   color: var(--text-secondary);
@@ -511,6 +513,8 @@
 
 /* Preview skeleton - matches actual post card structure for sticker positioning */
 .preview-header-skeleton {
+  position: relative;
+  z-index: 5; /* Same as content - between back (0) and front (10) stickers */
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -550,6 +554,8 @@
 }
 
 .preview-footer-skeleton {
+  position: relative;
+  z-index: 5; /* Same as content - between back (0) and front (10) stickers */
   display: flex;
   align-items: center;
   gap: 0.5rem;

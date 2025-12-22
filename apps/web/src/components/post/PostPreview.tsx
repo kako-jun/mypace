@@ -41,6 +41,17 @@ export default function PostPreview({
 
   return (
     <div className={`post-preview ${themeProps.className}`} style={transparentBackground ? {} : themeProps.style}>
+      {/* Back layer stickers - behind content */}
+      <PostStickers
+        stickers={stickers}
+        layer="back"
+        editable={editableStickers}
+        onStickerMove={onStickerMove}
+        onStickerResize={onStickerResize}
+        onStickerRotate={onStickerRotate}
+        onStickerLayerChange={onStickerLayerChange}
+        onStickerRemove={onStickerRemove}
+      />
       {/* Header skeleton - only shown when stickers exist */}
       {hasStickers && (
         <div className="preview-header-skeleton">
@@ -66,8 +77,10 @@ export default function PostPreview({
           <div className="preview-action-skeleton" />
         </div>
       )}
+      {/* Front layer stickers - above content */}
       <PostStickers
         stickers={stickers}
+        layer="front"
         editable={editableStickers}
         onStickerMove={onStickerMove}
         onStickerResize={onStickerResize}
