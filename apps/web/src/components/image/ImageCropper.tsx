@@ -11,21 +11,9 @@ interface ImageCropperProps {
   onCancel: () => void
 }
 
-// Snap threshold in percentage
-const SNAP_THRESHOLD = 3
-
-// Initial crop: full image
-const INITIAL_CROP: Crop = {
-  unit: '%',
-  x: 0,
-  y: 0,
-  width: 100,
-  height: 100,
-}
-
 export function ImageCropper({ file, onCropComplete, onCancel }: ImageCropperProps) {
   const [imageSrc, setImageSrc] = useState<string | null>(null)
-  const [crop, setCrop] = useState<Crop>(INITIAL_CROP)
+  const [crop, setCrop] = useState<Crop>()
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
   const imgRef = useRef<HTMLImageElement>(null)
 
@@ -34,40 +22,7 @@ export function ImageCropper({ file, onCropComplete, onCancel }: ImageCropperPro
     const reader = new FileReader()
     reader.onload = () => setImageSrc(reader.result as string)
     reader.readAsDataURL(file)
-    // Reset crop when file changes
-    setCrop(INITIAL_CROP)
   }, [file])
-
-  // Snap crop to edges
-  const snapCrop = useCallback((c: Crop): Crop => {
-    const snapped = { ...c }
-
-    // Snap left edge
-    if (c.x < SNAP_THRESHOLD) {
-      snapped.x = 0
-    }
-    // Snap top edge
-    if (c.y < SNAP_THRESHOLD) {
-      snapped.y = 0
-    }
-    // Snap right edge
-    if (c.x + c.width > 100 - SNAP_THRESHOLD) {
-      snapped.width = 100 - snapped.x
-    }
-    // Snap bottom edge
-    if (c.y + c.height > 100 - SNAP_THRESHOLD) {
-      snapped.height = 100 - snapped.y
-    }
-
-    return snapped
-  }, [])
-
-  const handleCropChange = useCallback(
-    (c: Crop) => {
-      setCrop(snapCrop(c))
-    },
-    [snapCrop]
-  )
 
   const handleCropComplete = useCallback((c: PixelCrop) => {
     setCompletedCrop(c)
@@ -140,7 +95,7 @@ export function ImageCropper({ file, onCropComplete, onCancel }: ImageCropperPro
         <div className="image-cropper-content">
           <ReactCrop
             crop={crop}
-            onChange={handleCropChange}
+            onChange={(c) => setCrop(c)}
             onComplete={handleCropComplete}
             className="image-cropper-react-crop"
           >
@@ -164,7 +119,7 @@ export function ImageCropper({ file, onCropComplete, onCancel }: ImageCropperPro
           </ReactCrop>
         </div>
 
-        <div className="image-cropper-hint">Drag to select area. Edges snap automatically.</div>
+        <div className="image-cropper-hint">Drag to select crop area</div>
 
         <div className="image-cropper-footer">
           <Button size="md" variant="secondary" onClick={onCancel}>
