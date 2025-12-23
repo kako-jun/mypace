@@ -100,6 +100,13 @@ apps/
 | 7 | ステラ反応（NIP-25、stellaタグで数量管理） |
 | 27235 | HTTP認証（NIP-98） |
 
+## Scripts
+
+```bash
+# Nostrイベント削除（kind 5送信）
+cd apps/web && pnpm exec tsx scripts/delete-events.ts <nsec> <event_id> [...]
+```
+
 ## Development
 
 - pnpmモノレポ構成
