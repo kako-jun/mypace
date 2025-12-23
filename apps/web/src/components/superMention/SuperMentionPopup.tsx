@@ -144,13 +144,50 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
     const path = normalizePath(query)
     const insertText = `@@${path}`
 
-    saveSuperMentionPath(path, selectedWikidata?.id, selectedWikidata?.label, selectedWikidata?.description).catch(
-      () => {}
-    )
+    // Check if selectedWikidata is still valid for the current path
+    // (path should start with the wikidata label for derived paths like "ハンチョウ/20巻")
+    let wikidataToSave: SelectedWikidata | null = null
+    if (selectedWikidata) {
+      const normalizedLabel = normalizePath(selectedWikidata.label).toLowerCase()
+      const normalizedQuery = path.toLowerCase()
+      if (normalizedQuery === normalizedLabel || normalizedQuery.startsWith(normalizedLabel + '/')) {
+        wikidataToSave = selectedWikidata
+      }
+    }
+
+    // If no valid selectedWikidata, try to find a matching Wikidata item from search results
+    if (!wikidataToSave) {
+      const normalizedQuery = path.toLowerCase()
+      for (const item of items) {
+        if (item.type === 'wikidata') {
+          const normalizedLabel = normalizePath(item.path).toLowerCase()
+          if (normalizedQuery === normalizedLabel || normalizedQuery.startsWith(normalizedLabel + '/')) {
+            wikidataToSave = {
+              id: item.id,
+              label: item.path,
+              description: item.description,
+            }
+            break
+          }
+        } else if (item.type === 'history' && item.wikidataId) {
+          const normalizedLabel = item.path.toLowerCase()
+          if (normalizedQuery === normalizedLabel || normalizedQuery.startsWith(normalizedLabel + '/')) {
+            wikidataToSave = {
+              id: item.wikidataId,
+              label: item.path,
+              description: item.description,
+            }
+            break
+          }
+        }
+      }
+    }
+
+    saveSuperMentionPath(path, wikidataToSave?.id, wikidataToSave?.label, wikidataToSave?.description).catch(() => {})
 
     onSelect(insertText)
     onClose()
-  }, [query, selectedWikidata, onSelect, onClose])
+  }, [query, selectedWikidata, items, onSelect, onClose])
 
   const handleDelete = useCallback(async (item: SuggestItem) => {
     if (item.type !== 'history') return
