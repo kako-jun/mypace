@@ -40,9 +40,9 @@
   --border-card: #333;
 
   /* ===== Derived: Button ===== */
-  --btn-primary-bg: var(--fg);
-  --btn-primary-text: var(--bg);
-  --btn-primary-hover: color-mix(in srgb, var(--fg) 70%, var(--bg) 30%);
+  --btn-primary-bg: #2563eb;
+  --btn-primary-text: #fff;
+  --btn-primary-hover: #1d4ed8;
   --btn-secondary-bg: var(--bg);
   --btn-secondary-border: var(--border);
   --btn-secondary-text: var(--fg);
@@ -113,9 +113,9 @@
   --border-card: var(--border);
 
   /* ===== Derived: Button ===== */
-  --btn-primary-bg: var(--fg);
-  --btn-primary-text: var(--bg);
-  --btn-primary-hover: color-mix(in srgb, var(--fg) 70%, var(--bg) 30%);
+  --btn-primary-bg: #3b82f6;
+  --btn-primary-text: #fff;
+  --btn-primary-hover: #2563eb;
   --btn-secondary-bg: var(--bg);
   --btn-secondary-border: var(--border);
   --btn-secondary-text: var(--fg);

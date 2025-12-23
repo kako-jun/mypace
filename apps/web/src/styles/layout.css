@@ -326,13 +326,23 @@ body.long-mode-active .main-content {
 }
 
 .error-box button {
+  --btn-corner: 8px;
   background: #c44;
   color: #fff;
   border: none;
-  border-radius: 16px;
   padding: 0.5rem 1rem;
   cursor: pointer;
   transition: transform 0.15s ease;
+  clip-path: polygon(
+    var(--btn-corner) 0,
+    calc(100% - var(--btn-corner)) 0,
+    100% var(--btn-corner),
+    100% calc(100% - var(--btn-corner)),
+    calc(100% - var(--btn-corner)) 100%,
+    var(--btn-corner) 100%,
+    0 calc(100% - var(--btn-corner)),
+    0 var(--btn-corner)
+  );
 }
 
 .error-box button:hover {
