@@ -413,6 +413,11 @@ body.custom-theme .logo-pace {
   justify-content: center;
 }
 
+body.long-mode-active .super-mention-popup-backdrop {
+  align-items: center;
+  padding: 1rem;
+}
+
 .super-mention-popup {
   position: relative;
   background: var(--surface-primary);
@@ -425,6 +430,11 @@ body.custom-theme .logo-pace {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+body.long-mode-active .super-mention-popup {
+  border-bottom: 2px solid #333;
+  max-height: calc(100vh - 2rem);
 }
 
 .super-mention-popup-header {

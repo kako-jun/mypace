@@ -52,6 +52,11 @@
   justify-content: center;
 }
 
+body.long-mode-active .sticker-picker-backdrop {
+  align-items: center;
+  padding: 1rem;
+}
+
 .sticker-picker-modal {
   position: relative;
   background: var(--surface-primary);
@@ -62,6 +67,11 @@
   width: calc(100vw - 2rem);
   max-height: 70vh;
   overflow-y: auto;
+}
+
+body.long-mode-active .sticker-picker-modal {
+  border-bottom: 2px solid #333;
+  max-height: calc(100vh - 2rem);
 }
 
 .sticker-picker-header {

@@ -719,6 +719,11 @@
   padding-bottom: 0;
 }
 
+body.long-mode-active .location-picker-backdrop {
+  align-items: center;
+  padding-bottom: 1rem;
+}
+
 .location-picker-modal {
   background: var(--surface-primary);
   border: 2px solid #333;
@@ -729,6 +734,10 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
+
+body.long-mode-active .location-picker-modal {
+  max-height: calc(100vh - 2rem);
 }
 
 .location-picker-header {

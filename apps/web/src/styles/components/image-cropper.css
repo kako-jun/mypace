@@ -13,6 +13,14 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  padding: 1rem;
+  padding-bottom: 0;
+  box-sizing: border-box;
+}
+
+body.long-mode-active .image-cropper-backdrop {
+  align-items: center;
+  padding-bottom: 1rem;
 }
 
 .image-cropper-modal {
@@ -22,9 +30,16 @@
   border-bottom: none;
   padding: 1rem;
   max-width: 500px;
-  width: calc(100vw - 2rem);
+  width: 100%;
   max-height: 80vh;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+body.long-mode-active .image-cropper-modal {
+  border-bottom: 2px solid #333;
+  max-height: calc(100vh - 2rem);
 }
 
 .image-cropper-header {
