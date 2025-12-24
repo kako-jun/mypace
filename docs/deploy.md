@@ -69,7 +69,7 @@ Production environment variables are set in Cloudflare Pages dashboard:
 ┌─────────────────────────────────────────┐
 │           Cloudflare Pages              │
 │  apps/web → Static SPA              │
-│  https://mypace.pages.dev               │
+│  https://mypace.llll-ll.com             │
 └────────────────────┬────────────────────┘
                      │
                      ▼

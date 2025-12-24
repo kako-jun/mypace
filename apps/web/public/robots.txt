@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mypace.pages.dev/sitemap.xml
+Sitemap: https://mypace.llll-ll.com/sitemap.xml

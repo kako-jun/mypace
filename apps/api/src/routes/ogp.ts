@@ -35,7 +35,7 @@ ogp.get('/', async (c) => {
 
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'mypace-bot/1.0 (+https://mypace.pages.dev)',
+        'User-Agent': 'mypace-bot/1.0 (+https://mypace.llll-ll.com)',
         Accept: 'text/html',
       },
       signal: controller.signal,
