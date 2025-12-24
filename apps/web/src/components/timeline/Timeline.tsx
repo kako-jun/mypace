@@ -1,4 +1,4 @@
-import { useState, useCallback, Fragment, useEffect } from 'react'
+import { useState, useCallback, Fragment, useEffect, memo } from 'react'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import '../../styles/components/timeline.css'
 import { setHashtagClickHandler, setSuperMentionClickHandler, setInternalLinkClickHandler } from '../../lib/parser'
@@ -26,7 +26,11 @@ interface TimelineProps {
   filters?: SearchFilters
 }
 
-export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_FILTERS }: TimelineProps) {
+export const Timeline = memo(function Timeline({
+  onEditStart,
+  onReplyStart,
+  filters = DEFAULT_SEARCH_FILTERS,
+}: TimelineProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const [, setThemeVersion] = useState(0)
@@ -313,4 +317,4 @@ export function Timeline({ onEditStart, onReplyStart, filters = DEFAULT_SEARCH_F
       {filteredItems.length > 0 && !hasMore && <p className="timeline-end">End of timeline</p>}
     </div>
   )
-}
+})

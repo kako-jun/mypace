@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { PostForm } from '../components/form'
 import { Timeline } from '../components/timeline'
@@ -113,38 +113,38 @@ export function HomePage({ filters: propFilters }: HomePageProps = {}) {
     }
   }
 
-  const handleEditStart = (event: Event) => {
+  const handleEditStart = useCallback((event: Event) => {
     setEditingEvent(event)
     setReplyingTo(null)
     // Use full content for editing (expand teaser)
     setContent(getFullContentForEdit(event))
-  }
+  }, [])
 
-  const handleEditCancel = () => {
+  const handleEditCancel = useCallback(() => {
     setEditingEvent(null)
     setContent('')
-  }
+  }, [])
 
-  const handleEditComplete = () => {
+  const handleEditComplete = useCallback(() => {
     setEditingEvent(null)
     setContent('')
-  }
+  }, [])
 
-  const handleReplyStart = (event: Event) => {
+  const handleReplyStart = useCallback((event: Event) => {
     setReplyingTo(event)
     setEditingEvent(null)
     setContent('')
-  }
+  }, [])
 
-  const handleReplyCancel = () => {
+  const handleReplyCancel = useCallback(() => {
     setReplyingTo(null)
     setContent('')
-  }
+  }, [])
 
-  const handleReplyComplete = () => {
+  const handleReplyComplete = useCallback(() => {
     setReplyingTo(null)
     setContent('')
-  }
+  }, [])
 
   if (longMode) {
     return (
