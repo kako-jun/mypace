@@ -413,16 +413,8 @@ export function PostForm({
       className={`post-form ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
       onSubmit={handleSubmit}
     >
-      {editingEvent && (
-        <div className="editing-label">
-          <Icon name="edit" size={16} /> Editing
-        </div>
-      )}
-      {replyingTo && (
-        <div className="replying-label">
-          <Icon name="reply" size={16} /> Reply
-        </div>
-      )}
+      {editingEvent && <div className="editing-label">Editing</div>}
+      {replyingTo && <div className="replying-label">Reply</div>}
 
       <div className="post-form-row-1">
         <button type="button" className="post-form-avatar-button" onClick={handleAvatarClick}>
