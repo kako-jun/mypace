@@ -115,18 +115,17 @@ export function ImageCropper({ file, onCropComplete, onCancel }: ImageCropperPro
                   src={imageSrc}
                   alt="Crop preview"
                   className="image-cropper-image"
-                  onLoad={(e) => {
-                    const img = e.currentTarget
-                    // Set initial crop to full image (both visual and data)
-                    const fullCrop = {
-                      unit: 'px' as const,
+                  onLoad={() => {
+                    // Use percentage-based crop for initial 100% selection
+                    // This works correctly regardless of image layout timing
+                    // react-image-crop will calculate correct pixel values via onComplete
+                    setCrop({
+                      unit: '%',
                       x: 0,
                       y: 0,
-                      width: img.width,
-                      height: img.height,
-                    }
-                    setCrop(fullCrop)
-                    setCompletedCrop(fullCrop)
+                      width: 100,
+                      height: 100,
+                    })
                     setImageLoaded(true)
                   }}
                 />
