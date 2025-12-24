@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import type { EditorView, ViewUpdate } from '@codemirror/view'
+import Button from '../ui/Button'
 import '../../styles/components/long-mode-editor.css'
 
 interface LongModeEditorProps {
@@ -30,6 +31,8 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
   const onSuperMentionTriggerRef = useRef<(() => void) | undefined>(onSuperMentionTrigger)
   const [isVimActive, setIsVimActive] = useState(vimMode)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   onChangeRef.current = onChange
   onWriteRef.current = onWrite
@@ -58,6 +61,8 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
     if (!editorRef.current) return
 
     let destroyed = false
+    setError(null)
+    setLoading(true)
 
     const initEditor = async () => {
       const [
@@ -298,6 +303,7 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
 
     initEditor().catch((err) => {
       console.error('Failed to initialize editor:', err)
+      setError('Failed to load editor')
       setLoading(false)
     })
 
@@ -308,7 +314,7 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
         viewRef.current = null
       }
     }
-  }, [vimMode, darkTheme, placeholder])
+  }, [vimMode, darkTheme, placeholder, retryCount])
 
   // Clear editor when value becomes empty (after posting)
   useEffect(() => {
@@ -323,8 +329,16 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
   return (
     <div className="long-mode-editor-wrapper">
       {loading && <div className="editor-loading">Loading editor...</div>}
-      <div ref={editorRef} className="long-mode-editor" style={{ display: loading ? 'none' : 'block' }} />
-      {isVimActive && !loading && <div className="vim-mode-indicator">VIM</div>}
+      {error && !loading && (
+        <div className="editor-error">
+          <p>{error}</p>
+          <Button variant="secondary" size="sm" onClick={() => setRetryCount((c) => c + 1)}>
+            Retry
+          </Button>
+        </div>
+      )}
+      <div ref={editorRef} className="long-mode-editor" style={{ display: loading || error ? 'none' : 'block' }} />
+      {isVimActive && !loading && !error && <div className="vim-mode-indicator">VIM</div>}
     </div>
   )
 })

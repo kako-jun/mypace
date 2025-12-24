@@ -145,6 +145,13 @@ export function PostForm({
     }
   }, [editingEvent])
 
+  // Expand minimized editor when replying or editing
+  useEffect(() => {
+    if (replyingTo || editingEvent) {
+      setMinimized(false)
+    }
+  }, [replyingTo, editingEvent])
+
   const handleVimModeChange = (enabled: boolean) => {
     setVimMode(enabled)
     setBoolean(STORAGE_KEYS.VIM_MODE, enabled)
@@ -406,8 +413,16 @@ export function PostForm({
       className={`post-form ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
       onSubmit={handleSubmit}
     >
-      {editingEvent && <div className="editing-label">Editing post...</div>}
-      {replyingTo && <div className="replying-label">Replying to post...</div>}
+      {editingEvent && (
+        <div className="editing-label">
+          <Icon name="edit" size={16} /> Editing
+        </div>
+      )}
+      {replyingTo && (
+        <div className="replying-label">
+          <Icon name="reply" size={16} /> Reply
+        </div>
+      )}
 
       <div className="post-form-row-1">
         <button type="button" className="post-form-avatar-button" onClick={handleAvatarClick}>
