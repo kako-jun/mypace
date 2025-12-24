@@ -43,6 +43,7 @@ interface DrawAction {
 export function DrawingPicker({ onComplete }: DrawingPickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [color, setColor] = useState<ColorKey>('black')
   const [size, setSize] = useState<SizeKey>('medium')
   const [, setIsDrawing] = useState(false)
@@ -275,43 +276,95 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
     document.removeEventListener('touchend', handleDocumentTouchEnd)
   }, [color, size, handleDocumentTouchMove])
 
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault()
-    if (timeLeft <= 0) return
+  const startDrawingFromEvent = useCallback(
+    (e: MouseEvent | TouchEvent) => {
+      if (timeLeft <= 0) return
 
-    // Start timer on first draw
-    if (!isTimerRunning && !hasDrawn) {
-      setIsTimerRunning(true)
-      setHasDrawn(true)
+      // Check if click is within container
+      const container = containerRef.current
+      if (!container) return
+      const rect = container.getBoundingClientRect()
+
+      let clientX: number
+      let clientY: number
+      if ('touches' in e) {
+        const touch = e.touches[0]
+        if (!touch) return
+        clientX = touch.clientX
+        clientY = touch.clientY
+      } else {
+        clientX = e.clientX
+        clientY = e.clientY
+      }
+
+      // Only start drawing if click is within container bounds
+      if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) {
+        return
+      }
+
+      e.preventDefault()
+
+      // Start timer on first draw
+      if (!isTimerRunning && !hasDrawn) {
+        setIsTimerRunning(true)
+        setHasDrawn(true)
+      }
+
+      const point = getCanvasPoint(e, true)
+      if (!point) return
+
+      setIsDrawing(true)
+      currentStrokeRef.current = [point]
+
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      ctx.strokeStyle = COLORS[color]
+      ctx.lineWidth = PEN_SIZES[size]
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      ctx.beginPath()
+      ctx.moveTo(point.x, point.y)
+
+      // Add document-level listeners
+      if ('touches' in e) {
+        document.addEventListener('touchmove', handleDocumentTouchMove, { passive: false })
+        document.addEventListener('touchend', handleDocumentTouchEnd)
+      } else {
+        document.addEventListener('mousemove', handleDocumentMouseMove)
+        document.addEventListener('mouseup', handleDocumentMouseUp)
+      }
+    },
+    [
+      timeLeft,
+      isTimerRunning,
+      hasDrawn,
+      color,
+      size,
+      handleDocumentMouseMove,
+      handleDocumentMouseUp,
+      handleDocumentTouchMove,
+      handleDocumentTouchEnd,
+    ]
+  )
+
+  // Document-level mousedown/touchstart listeners
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleMouseDown = (e: MouseEvent) => startDrawingFromEvent(e)
+    const handleTouchStart = (e: TouchEvent) => startDrawingFromEvent(e)
+
+    document.addEventListener('mousedown', handleMouseDown)
+    document.addEventListener('touchstart', handleTouchStart, { passive: false })
+
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown)
+      document.removeEventListener('touchstart', handleTouchStart)
     }
-
-    const point = getCanvasPoint(e, true)
-    if (!point) return
-
-    setIsDrawing(true)
-    currentStrokeRef.current = [point]
-
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    ctx.strokeStyle = COLORS[color]
-    ctx.lineWidth = PEN_SIZES[size]
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    ctx.beginPath()
-    ctx.moveTo(point.x, point.y)
-
-    // Add document-level listeners
-    if ('touches' in e) {
-      document.addEventListener('touchmove', handleDocumentTouchMove, { passive: false })
-      document.addEventListener('touchend', handleDocumentTouchEnd)
-    } else {
-      document.addEventListener('mousemove', handleDocumentMouseMove)
-      document.addEventListener('mouseup', handleDocumentMouseUp)
-    }
-  }
+  }, [isOpen, startDrawingFromEvent])
 
   const handleUndo = () => {
     if (historyRef.current.length === 0) return
@@ -455,14 +508,12 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
               </button>
             </div>
 
-            <div className="drawing-picker-canvas-container">
+            <div ref={containerRef} className="drawing-picker-canvas-container">
               <canvas
                 ref={canvasRef}
                 width={CANVAS_WIDTH}
                 height={CANVAS_HEIGHT}
                 className={`drawing-picker-canvas ${timeLeft <= 0 ? 'disabled' : ''}`}
-                onMouseDown={startDrawing}
-                onTouchStart={startDrawing}
               />
               {!hasDrawn && timeLeft > 0 && <div className="drawing-picker-overlay">Draw here to start</div>}
               {timeLeft <= 0 && <div className="drawing-picker-overlay">Time's up</div>}
