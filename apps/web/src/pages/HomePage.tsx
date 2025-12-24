@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { PostForm } from '../components/form'
 import { Timeline } from '../components/timeline'
@@ -19,7 +19,7 @@ export function HomePage({ filters: propFilters }: HomePageProps = {}) {
   const [searchParams] = useSearchParams()
 
   // Use prop filters if provided, otherwise parse from URL
-  const activeFilters = propFilters || parseSearchParams(searchParams)
+  const activeFilters = useMemo(() => propFilters || parseSearchParams(searchParams), [propFilters, searchParams])
   const [longMode, setLongMode] = useState(false)
   const [content, setContent] = useState(() => getString(STORAGE_KEYS.DRAFT))
   const [showPreview, setShowPreview] = useState(false)

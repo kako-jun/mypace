@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { CloseButton } from '../ui'
+import { CloseButton, Portal } from '../ui'
 import Button from '../ui/Button'
 import '../../styles/components/image-cropper.css'
 
@@ -92,58 +92,60 @@ export function ImageCropper({ file, onCropComplete, onCancel }: ImageCropperPro
   }, [completedCrop, file, onCropComplete])
 
   return (
-    <div className="image-cropper-backdrop" onClick={onCancel}>
-      <div className="image-cropper-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="image-cropper-header">
-          <h3>Crop Image</h3>
-          <CloseButton onClick={onCancel} size={20} />
-        </div>
+    <Portal>
+      <div className="image-cropper-backdrop" onClick={onCancel}>
+        <div className="image-cropper-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="image-cropper-header">
+            <h3>Crop Image</h3>
+            <CloseButton onClick={onCancel} size={20} />
+          </div>
 
-        {!imageLoaded && <div className="image-cropper-loading">Loading...</div>}
+          {!imageLoaded && <div className="image-cropper-loading">Loading...</div>}
 
-        <div className="image-cropper-content" style={{ display: imageLoaded ? 'flex' : 'none' }}>
-          {imageSrc && (
-            <ReactCrop
-              crop={crop}
-              onChange={(c) => setCrop(c)}
-              onComplete={handleCropComplete}
-              className="image-cropper-react-crop"
-            >
-              <img
-                ref={imgRef}
-                src={imageSrc}
-                alt="Crop preview"
-                className="image-cropper-image"
-                onLoad={(e) => {
-                  const img = e.currentTarget
-                  // Set initial crop to full image (both visual and data)
-                  const fullCrop = {
-                    unit: 'px' as const,
-                    x: 0,
-                    y: 0,
-                    width: img.width,
-                    height: img.height,
-                  }
-                  setCrop(fullCrop)
-                  setCompletedCrop(fullCrop)
-                  setImageLoaded(true)
-                }}
-              />
-            </ReactCrop>
-          )}
-        </div>
+          <div className="image-cropper-content" style={{ display: imageLoaded ? 'flex' : 'none' }}>
+            {imageSrc && (
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={handleCropComplete}
+                className="image-cropper-react-crop"
+              >
+                <img
+                  ref={imgRef}
+                  src={imageSrc}
+                  alt="Crop preview"
+                  className="image-cropper-image"
+                  onLoad={(e) => {
+                    const img = e.currentTarget
+                    // Set initial crop to full image (both visual and data)
+                    const fullCrop = {
+                      unit: 'px' as const,
+                      x: 0,
+                      y: 0,
+                      width: img.width,
+                      height: img.height,
+                    }
+                    setCrop(fullCrop)
+                    setCompletedCrop(fullCrop)
+                    setImageLoaded(true)
+                  }}
+                />
+              </ReactCrop>
+            )}
+          </div>
 
-        {imageLoaded && <div className="image-cropper-hint">Drag to select crop area</div>}
+          {imageLoaded && <div className="image-cropper-hint">Drag to select crop area</div>}
 
-        <div className="image-cropper-footer">
-          <Button size="md" variant="secondary" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button size="md" variant="primary" onClick={handleConfirm} disabled={!imageLoaded}>
-            Add
-          </Button>
+          <div className="image-cropper-footer">
+            <Button size="md" variant="secondary" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button size="md" variant="primary" onClick={handleConfirm} disabled={!imageLoaded}>
+              Add
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </Portal>
   )
 }

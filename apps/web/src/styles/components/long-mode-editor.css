@@ -51,6 +51,13 @@
   background: #3390ff !important;
 }
 
+/* CodeMirror panels container - must be below popup backdrops (z-index: 1000) */
+.cm-panels,
+.cm-panels-bottom,
+.cm-panels-top {
+  z-index: 10 !important;
+}
+
 /* Vim status panel (from @replit/codemirror-vim) */
 .cm-vim-panel {
   background: rgba(0, 0, 0, 0.6) !important;
@@ -59,7 +66,6 @@
   font-size: 0.75rem !important;
   padding: 0.3rem 0.5rem !important;
   border-radius: 0 0 8px 8px;
-  z-index: 50;
 }
 
 .cm-vim-panel input {
@@ -82,7 +88,6 @@
   padding: 0.2rem 0.4rem;
   border-radius: 3px;
   pointer-events: none;
-  z-index: 50;
 }
 
 .editor-loading {

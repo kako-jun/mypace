@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import L from 'leaflet'
 import geohash from 'ngeohash'
-import { Icon, CloseButton, Toggle } from '../ui'
+import { Icon, CloseButton, Toggle, Portal } from '../ui'
 import Button from '../ui/Button'
 import 'leaflet/dist/leaflet.css'
 
@@ -176,82 +176,84 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
       </button>
 
       {isOpen && (
-        <div className="location-picker-backdrop" onClick={handleBackdropClick}>
-          <div className="location-picker-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="location-picker-header">
-              <h3>Add Location</h3>
-              <CloseButton onClick={handleClose} size={20} />
-            </div>
+        <Portal>
+          <div className="location-picker-backdrop" onClick={handleBackdropClick}>
+            <div className="location-picker-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="location-picker-header">
+                <h3>Add Location</h3>
+                <CloseButton onClick={handleClose} size={20} />
+              </div>
 
-            <div className="location-picker-search">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Search for a place..."
-                className="location-picker-input"
-              />
-              <Button size="sm" variant="primary" onClick={handleSearch} disabled={searching || !query.trim()}>
-                {searching ? '...' : <Icon name="Search" size={16} />}
-              </Button>
-            </div>
+              <div className="location-picker-search">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Search for a place..."
+                  className="location-picker-input"
+                />
+                <Button size="sm" variant="primary" onClick={handleSearch} disabled={searching || !query.trim()}>
+                  {searching ? '...' : <Icon name="Search" size={16} />}
+                </Button>
+              </div>
 
-            {error && <div className="location-picker-error">{error}</div>}
+              {error && <div className="location-picker-error">{error}</div>}
 
-            {results.length > 0 && (
-              <ul className="location-picker-results">
-                {results.map((result) => (
-                  <li key={result.place_id}>
-                    <button type="button" onClick={() => handleSelectResult(result)}>
-                      <Icon name="MapPin" size={14} />
-                      <span>{result.display_name}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+              {results.length > 0 && (
+                <ul className="location-picker-results">
+                  {results.map((result) => (
+                    <li key={result.place_id}>
+                      <button type="button" onClick={() => handleSelectResult(result)}>
+                        <Icon name="MapPin" size={14} />
+                        <span>{result.display_name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
 
-            <div className="location-picker-map-controls">
-              <Toggle
-                checked={mapLayer === 'satellite'}
-                onChange={(checked) => setMapLayer(checked ? 'satellite' : 'osm')}
-                size="small"
-                label="Satellite"
-              />
-            </div>
+              <div className="location-picker-map-controls">
+                <Toggle
+                  checked={mapLayer === 'satellite'}
+                  onChange={(checked) => setMapLayer(checked ? 'satellite' : 'osm')}
+                  size="small"
+                  label="Satellite"
+                />
+              </div>
 
-            <div className="location-picker-map-wrapper">
-              <div ref={mapContainerRef} className="location-picker-map" />
-              <div className="location-picker-crosshair">
-                <div className="crosshair-h" />
-                <div className="crosshair-v" />
-                <div className="crosshair-center" />
+              <div className="location-picker-map-wrapper">
+                <div ref={mapContainerRef} className="location-picker-map" />
+                <div className="location-picker-crosshair">
+                  <div className="crosshair-h" />
+                  <div className="crosshair-v" />
+                  <div className="crosshair-center" />
+                </div>
+              </div>
+
+              <p className="location-picker-hint">Move the map to place the crosshair on your location</p>
+
+              <div className="location-picker-name">
+                <input
+                  type="text"
+                  value={locationName}
+                  onChange={(e) => setLocationName(e.target.value)}
+                  placeholder="Location name (optional)"
+                  className="location-picker-name-input"
+                />
+              </div>
+
+              <div className="location-picker-footer">
+                <Button size="md" variant="secondary" onClick={handleClose}>
+                  Cancel
+                </Button>
+                <Button size="md" variant="primary" onClick={handleConfirm} disabled={!centerLocation}>
+                  Add
+                </Button>
               </div>
             </div>
-
-            <p className="location-picker-hint">Move the map to place the crosshair on your location</p>
-
-            <div className="location-picker-name">
-              <input
-                type="text"
-                value={locationName}
-                onChange={(e) => setLocationName(e.target.value)}
-                placeholder="Location name (optional)"
-                className="location-picker-name-input"
-              />
-            </div>
-
-            <div className="location-picker-footer">
-              <Button size="md" variant="secondary" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button size="md" variant="primary" onClick={handleConfirm} disabled={!centerLocation}>
-                Add
-              </Button>
-            </div>
           </div>
-        </div>
+        </Portal>
       )}
     </div>
   )

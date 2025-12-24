@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Icon, CloseButton } from '../ui'
+import { Icon, CloseButton, Portal } from '../ui'
 import Button from '../ui/Button'
 import { uploadImage } from '../../lib/api/upload'
 import { saveUploadToHistory } from '../../lib/api'
@@ -360,70 +360,72 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
       </button>
 
       {isOpen && (
-        <div className="voice-picker-backdrop" onClick={handleBackdropClick}>
-          <div className="voice-picker-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="voice-picker-header">
-              <h3>Voice Memo</h3>
-              <span className={`voice-picker-timer ${duration >= MAX_DURATION - 3 && isRecording ? 'warning' : ''}`}>
-                {formatTime(duration)} / {formatTime(MAX_DURATION)}
-              </span>
-              <CloseButton onClick={handleClose} size={20} />
-            </div>
+        <Portal>
+          <div className="voice-picker-backdrop" onClick={handleBackdropClick}>
+            <div className="voice-picker-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="voice-picker-header">
+                <h3>Voice Memo</h3>
+                <span className={`voice-picker-timer ${duration >= MAX_DURATION - 3 && isRecording ? 'warning' : ''}`}>
+                  {formatTime(duration)} / {formatTime(MAX_DURATION)}
+                </span>
+                <CloseButton onClick={handleClose} size={20} />
+              </div>
 
-            <div className="voice-picker-content">
-              {!recordedBlob ? (
-                <>
-                  <canvas ref={canvasRef} className="voice-picker-waveform" width={280} height={60} />
-                  <button
-                    type="button"
-                    className={`voice-picker-record-button ${isRecording ? 'recording' : ''}`}
-                    onMouseDown={handleMouseDown}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp}
-                    onTouchStart={(e) => {
-                      e.preventDefault()
-                      handleMouseDown()
-                    }}
-                    onTouchEnd={(e) => {
-                      e.preventDefault()
-                      handleMouseUp()
-                    }}
-                  >
-                    <Icon name="Mic" size={32} />
-                    <span>{isRecording ? 'Recording...' : 'Hold to record'}</span>
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="voice-picker-playback">
-                    <button type="button" className="voice-picker-play-button" onClick={handlePlayPause}>
-                      <Icon name={isPlaying ? 'Pause' : 'Play'} size={24} />
+              <div className="voice-picker-content">
+                {!recordedBlob ? (
+                  <>
+                    <canvas ref={canvasRef} className="voice-picker-waveform" width={280} height={60} />
+                    <button
+                      type="button"
+                      className={`voice-picker-record-button ${isRecording ? 'recording' : ''}`}
+                      onMouseDown={handleMouseDown}
+                      onMouseUp={handleMouseUp}
+                      onMouseLeave={handleMouseUp}
+                      onTouchStart={(e) => {
+                        e.preventDefault()
+                        handleMouseDown()
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault()
+                        handleMouseUp()
+                      }}
+                    >
+                      <Icon name="Mic" size={32} />
+                      <span>{isRecording ? 'Recording...' : 'Hold to record'}</span>
                     </button>
-                    <div className="voice-picker-playback-info">
-                      <span className="voice-picker-duration">{formatTime(duration)}</span>
-                      <span className="voice-picker-format">WebM Audio</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="voice-picker-playback">
+                      <button type="button" className="voice-picker-play-button" onClick={handlePlayPause}>
+                        <Icon name={isPlaying ? 'Pause' : 'Play'} size={24} />
+                      </button>
+                      <div className="voice-picker-playback-info">
+                        <span className="voice-picker-duration">{formatTime(duration)}</span>
+                        <span className="voice-picker-format">WebM Audio</span>
+                      </div>
                     </div>
-                  </div>
-                  <button type="button" className="voice-picker-rerecord" onClick={handleReRecord}>
-                    <Icon name="RefreshCw" size={16} />
-                    Re-record
-                  </button>
-                </>
-              )}
-            </div>
+                    <button type="button" className="voice-picker-rerecord" onClick={handleReRecord}>
+                      <Icon name="RefreshCw" size={16} />
+                      Re-record
+                    </button>
+                  </>
+                )}
+              </div>
 
-            {error && <div className="voice-picker-error">{error}</div>}
+              {error && <div className="voice-picker-error">{error}</div>}
 
-            <div className="voice-picker-footer">
-              <Button size="md" variant="secondary" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button size="md" variant="primary" onClick={handleUpload} disabled={!recordedBlob || uploading}>
-                {uploading ? 'Uploading...' : 'Add'}
-              </Button>
+              <div className="voice-picker-footer">
+                <Button size="md" variant="secondary" onClick={handleClose}>
+                  Cancel
+                </Button>
+                <Button size="md" variant="primary" onClick={handleUpload} disabled={!recordedBlob || uploading}>
+                  {uploading ? 'Uploading...' : 'Add'}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </Portal>
       )}
     </div>
   )

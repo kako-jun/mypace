@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Icon, CloseButton } from '../ui'
+import { Icon, CloseButton, Portal } from '../ui'
 import Button from '../ui/Button'
 import { uploadImage, saveUploadToHistory } from '../../lib/api'
 import { getCurrentPubkey } from '../../lib/nostr/events'
@@ -455,82 +455,84 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
       </button>
 
       {isOpen && (
-        <div className="drawing-picker-backdrop" onClick={handleBackdropClick}>
-          <div className="drawing-picker-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="drawing-picker-header">
-              <h3>Draw</h3>
-              <div className={`drawing-picker-timer ${timeLeft <= 10 ? 'warning' : ''}`}>{formatTime(timeLeft)}</div>
-              <CloseButton onClick={handleClose} size={20} />
-            </div>
-
-            <div className="drawing-picker-toolbar">
-              <div className="drawing-picker-colors">
-                {(Object.keys(COLORS) as ColorKey[]).map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className={`drawing-color-button ${c} ${color === c ? 'active' : ''}`}
-                    onClick={() => setColor(c)}
-                    title={c}
-                  />
-                ))}
+        <Portal>
+          <div className="drawing-picker-backdrop" onClick={handleBackdropClick}>
+            <div className="drawing-picker-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="drawing-picker-header">
+                <h3>Draw</h3>
+                <div className={`drawing-picker-timer ${timeLeft <= 10 ? 'warning' : ''}`}>{formatTime(timeLeft)}</div>
+                <CloseButton onClick={handleClose} size={20} />
               </div>
-              <div className="drawing-picker-sizes">
-                {(Object.keys(PEN_SIZES) as SizeKey[]).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    className={`drawing-size-button ${s} ${size === s ? 'active' : ''}`}
-                    onClick={() => setSize(s)}
-                    title={s}
-                  >
-                    <span className={`drawing-size-dot ${s}`} />
-                  </button>
-                ))}
+
+              <div className="drawing-picker-toolbar">
+                <div className="drawing-picker-colors">
+                  {(Object.keys(COLORS) as ColorKey[]).map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`drawing-color-button ${c} ${color === c ? 'active' : ''}`}
+                      onClick={() => setColor(c)}
+                      title={c}
+                    />
+                  ))}
+                </div>
+                <div className="drawing-picker-sizes">
+                  {(Object.keys(PEN_SIZES) as SizeKey[]).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      className={`drawing-size-button ${s} ${size === s ? 'active' : ''}`}
+                      onClick={() => setSize(s)}
+                      title={s}
+                    >
+                      <span className={`drawing-size-dot ${s}`} />
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="drawing-action-button"
+                  onClick={handleFill}
+                  disabled={timeLeft <= 0}
+                  title="Fill"
+                >
+                  <Icon name="Droplet" size={18} />
+                </button>
+                <button
+                  type="button"
+                  className="drawing-action-button"
+                  onClick={handleUndo}
+                  disabled={historyLength === 0 || timeLeft <= 0}
+                  title="Undo"
+                >
+                  <Icon name="Undo2" size={18} />
+                </button>
               </div>
-              <button
-                type="button"
-                className="drawing-action-button"
-                onClick={handleFill}
-                disabled={timeLeft <= 0}
-                title="Fill"
-              >
-                <Icon name="Droplet" size={18} />
-              </button>
-              <button
-                type="button"
-                className="drawing-action-button"
-                onClick={handleUndo}
-                disabled={historyLength === 0 || timeLeft <= 0}
-                title="Undo"
-              >
-                <Icon name="Undo2" size={18} />
-              </button>
-            </div>
 
-            <div ref={containerRef} className="drawing-picker-canvas-container">
-              <canvas
-                ref={canvasRef}
-                width={CANVAS_WIDTH}
-                height={CANVAS_HEIGHT}
-                className={`drawing-picker-canvas ${timeLeft <= 0 ? 'disabled' : ''}`}
-              />
-              {!hasDrawn && timeLeft > 0 && <div className="drawing-picker-overlay">Draw here to start</div>}
-              {timeLeft <= 0 && <div className="drawing-picker-overlay">Time's up</div>}
-            </div>
+              <div ref={containerRef} className="drawing-picker-canvas-container">
+                <canvas
+                  ref={canvasRef}
+                  width={CANVAS_WIDTH}
+                  height={CANVAS_HEIGHT}
+                  className={`drawing-picker-canvas ${timeLeft <= 0 ? 'disabled' : ''}`}
+                />
+                {!hasDrawn && timeLeft > 0 && <div className="drawing-picker-overlay">Draw here to start</div>}
+                {timeLeft <= 0 && <div className="drawing-picker-overlay">Time's up</div>}
+              </div>
 
-            {error && <div className="drawing-picker-error">{error}</div>}
+              {error && <div className="drawing-picker-error">{error}</div>}
 
-            <div className="drawing-picker-footer">
-              <Button size="md" variant="secondary" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button size="md" variant="primary" onClick={handleComplete} disabled={uploading || !hasDrawn}>
-                {uploading ? 'Uploading...' : 'Add'}
-              </Button>
+              <div className="drawing-picker-footer">
+                <Button size="md" variant="secondary" onClick={handleClose}>
+                  Cancel
+                </Button>
+                <Button size="md" variant="primary" onClick={handleComplete} disabled={uploading || !hasDrawn}>
+                  {uploading ? 'Uploading...' : 'Add'}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </Portal>
       )}
     </div>
   )

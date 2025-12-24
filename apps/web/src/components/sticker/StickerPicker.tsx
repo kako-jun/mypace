@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Icon, Input, CloseButton } from '../ui'
+import { Icon, Input, CloseButton, Portal } from '../ui'
 import Button from '../ui/Button'
 import '../../styles/components/sticker-picker.css'
 import {
@@ -101,72 +101,74 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
       </button>
 
       {isOpen && (
-        <div className="sticker-picker-backdrop" onClick={() => setIsOpen(false)}>
-          <div className="sticker-picker-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="sticker-picker-header">
-              <h3>Select Sticker</h3>
-              <CloseButton onClick={() => setIsOpen(false)} size={20} />
-            </div>
+        <Portal>
+          <div className="sticker-picker-backdrop" onClick={() => setIsOpen(false)}>
+            <div className="sticker-picker-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="sticker-picker-header">
+                <h3>Select Sticker</h3>
+                <CloseButton onClick={() => setIsOpen(false)} size={20} />
+              </div>
 
-            <div className="sticker-picker-custom">
-              <div className="sticker-picker-input-row">
-                <Icon name="Image" size={16} className="sticker-picker-icon" />
-                <Input
-                  value={customUrl}
-                  onChange={setCustomUrl}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Image URL..."
-                  className="sticker-picker-input"
+              <div className="sticker-picker-custom">
+                <div className="sticker-picker-input-row">
+                  <Icon name="Image" size={16} className="sticker-picker-icon" />
+                  <Input
+                    value={customUrl}
+                    onChange={setCustomUrl}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Image URL..."
+                    className="sticker-picker-input"
+                  />
+                </div>
+                <Button size="sm" variant="primary" onClick={handleCustomAdd} disabled={!customUrl.trim()}>
+                  Add
+                </Button>
+                <button
+                  type="button"
+                  className="sticker-picker-upload"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  title="Upload from file"
+                >
+                  {uploading ? '...' : <Icon name="Upload" size={16} />}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
                 />
               </div>
-              <Button size="sm" variant="primary" onClick={handleCustomAdd} disabled={!customUrl.trim()}>
-                Add
-              </Button>
-              <button
-                type="button"
-                className="sticker-picker-upload"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                title="Upload from file"
-              >
-                {uploading ? '...' : <Icon name="Upload" size={16} />}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-              />
-            </div>
 
-            <div className="sticker-picker-grid">
-              {loading && history.length === 0 && <div className="sticker-picker-loading">Loading...</div>}
-              {!loading && history.length === 0 && (
-                <div className="sticker-picker-empty">No stickers yet. Add one above!</div>
-              )}
-              {history.map((sticker) => (
-                <div key={sticker.url} className="sticker-picker-item-wrapper">
-                  <button
-                    type="button"
-                    className="sticker-picker-item"
-                    onClick={() => handleSelectSticker(sticker.url)}
-                  >
-                    <img src={sticker.url} alt="sticker" />
-                  </button>
-                  <button
-                    type="button"
-                    className="sticker-picker-delete"
-                    onClick={(e) => handleDelete(e, sticker.url)}
-                    title="Delete"
-                  >
-                    <Icon name="X" size={12} />
-                  </button>
-                </div>
-              ))}
+              <div className="sticker-picker-grid">
+                {loading && history.length === 0 && <div className="sticker-picker-loading">Loading...</div>}
+                {!loading && history.length === 0 && (
+                  <div className="sticker-picker-empty">No stickers yet. Add one above!</div>
+                )}
+                {history.map((sticker) => (
+                  <div key={sticker.url} className="sticker-picker-item-wrapper">
+                    <button
+                      type="button"
+                      className="sticker-picker-item"
+                      onClick={() => handleSelectSticker(sticker.url)}
+                    >
+                      <img src={sticker.url} alt="sticker" />
+                    </button>
+                    <button
+                      type="button"
+                      className="sticker-picker-delete"
+                      onClick={(e) => handleDelete(e, sticker.url)}
+                      title="Delete"
+                    >
+                      <Icon name="X" size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </Portal>
       )}
       {pendingFile && (
         <ImageCropper file={pendingFile} onCropComplete={handleCropComplete} onCancel={handleCropCancel} />

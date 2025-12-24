@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { searchWikidata, getSuperMentionSuggestions, saveSuperMentionPath, deleteSuperMentionPath } from '../../lib/api'
 import { SuggestItemView, type SuggestItem } from './index'
-import { CloseButton } from '../ui'
+import { CloseButton, Portal } from '../ui'
 import Button from '../ui/Button'
 
 interface SuperMentionPopupProps {
@@ -238,51 +238,53 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
   }
 
   return (
-    <div className="super-mention-popup-backdrop" onClick={handleBackdropClick}>
-      <div className="super-mention-popup">
-        <div className="super-mention-popup-header">
-          <h3>Super Mention</h3>
-          <CloseButton onClick={onClose} size={20} />
-        </div>
-        <div className="super-mention-popup-search">
-          <div className="super-mention-popup-input-group">
-            <span className="super-mention-popup-prefix">@@</span>
-            <input
-              ref={inputRef}
-              type="text"
-              className="super-mention-popup-input"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Search..."
-            />
+    <Portal>
+      <div className="super-mention-popup-backdrop" onClick={handleBackdropClick}>
+        <div className="super-mention-popup">
+          <div className="super-mention-popup-header">
+            <h3>Super Mention</h3>
+            <CloseButton onClick={onClose} size={20} />
+          </div>
+          <div className="super-mention-popup-search">
+            <div className="super-mention-popup-input-group">
+              <span className="super-mention-popup-prefix">@@</span>
+              <input
+                ref={inputRef}
+                type="text"
+                className="super-mention-popup-input"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Search..."
+              />
+            </div>
+          </div>
+          <div ref={containerRef} className="super-mention-popup-list">
+            {loading && items.length === 0 && <div className="super-mention-suggest-loading">Searching...</div>}
+            {items.map((item, index) => (
+              <SuggestItemView
+                key={
+                  item.type === 'wikidata' ? `wd-${item.id}` : item.type === 'history' ? `hist-${item.path}` : 'custom'
+                }
+                item={item}
+                isSelected={index === selectedIndex}
+                onSelect={handleSelect}
+                onHover={() => setSelectedIndex(index)}
+                onDelete={item.type === 'history' ? handleDelete : undefined}
+              />
+            ))}
+            {!loading && items.length === 0 && <div className="super-mention-suggest-empty">No results</div>}
+          </div>
+          <div className="super-mention-popup-footer">
+            <Button size="md" variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button size="md" variant="primary" onClick={handleConfirm} disabled={!query.trim()}>
+              Add
+            </Button>
           </div>
         </div>
-        <div ref={containerRef} className="super-mention-popup-list">
-          {loading && items.length === 0 && <div className="super-mention-suggest-loading">Searching...</div>}
-          {items.map((item, index) => (
-            <SuggestItemView
-              key={
-                item.type === 'wikidata' ? `wd-${item.id}` : item.type === 'history' ? `hist-${item.path}` : 'custom'
-              }
-              item={item}
-              isSelected={index === selectedIndex}
-              onSelect={handleSelect}
-              onHover={() => setSelectedIndex(index)}
-              onDelete={item.type === 'history' ? handleDelete : undefined}
-            />
-          ))}
-          {!loading && items.length === 0 && <div className="super-mention-suggest-empty">No results</div>}
-        </div>
-        <div className="super-mention-popup-footer">
-          <Button size="md" variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button size="md" variant="primary" onClick={handleConfirm} disabled={!query.trim()}>
-            Add
-          </Button>
-        </div>
       </div>
-    </div>
+    </Portal>
   )
 }
