@@ -45,7 +45,7 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [color, setColor] = useState<ColorKey>('black')
   const [size, setSize] = useState<SizeKey>('medium')
-  const [isDrawing, setIsDrawing] = useState(false)
+  const [, setIsDrawing] = useState(false)
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT)
   const [isTimerRunning, setIsTimerRunning] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -74,6 +74,7 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
   const handleClose = () => {
     setIsOpen(false)
     setIsTimerRunning(false)
+    setIsDrawing(false)
   }
 
   // Initialize canvas with white background
@@ -151,7 +152,10 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
     }
   }, [])
 
-  const getCanvasPoint = (e: React.MouseEvent | React.TouchEvent): DrawPoint | null => {
+  const getCanvasPoint = (
+    e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent,
+    clamp = false
+  ): DrawPoint | null => {
     const canvas = canvasRef.current
     if (!canvas) return null
 
@@ -159,20 +163,117 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
     const scaleX = CANVAS_WIDTH / rect.width
     const scaleY = CANVAS_HEIGHT / rect.height
 
+    let clientX: number
+    let clientY: number
+
     if ('touches' in e) {
       const touch = e.touches[0]
       if (!touch) return null
-      return {
-        x: (touch.clientX - rect.left) * scaleX,
-        y: (touch.clientY - rect.top) * scaleY,
-      }
+      clientX = touch.clientX
+      clientY = touch.clientY
     } else {
-      return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY,
-      }
+      clientX = e.clientX
+      clientY = e.clientY
     }
+
+    let x = (clientX - rect.left) * scaleX
+    let y = (clientY - rect.top) * scaleY
+
+    if (clamp) {
+      x = Math.max(0, Math.min(CANVAS_WIDTH, x))
+      y = Math.max(0, Math.min(CANVAS_HEIGHT, y))
+    }
+
+    return { x, y }
   }
+
+  const drawWithPoint = useCallback(
+    (point: DrawPoint) => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      const points = currentStrokeRef.current
+      points.push(point)
+
+      // Use quadratic bezier curve for smooth lines
+      if (points.length >= 2) {
+        const lastPoint = points[points.length - 2]
+        const midPoint = {
+          x: (lastPoint.x + point.x) / 2,
+          y: (lastPoint.y + point.y) / 2,
+        }
+
+        ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, midPoint.x, midPoint.y)
+        ctx.stroke()
+
+        // Start new path from midpoint for next segment
+        ctx.beginPath()
+        ctx.moveTo(midPoint.x, midPoint.y)
+      }
+    },
+    [color, size]
+  )
+
+  const handleDocumentMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (timeLeft <= 0) return
+      const point = getCanvasPoint(e, true)
+      if (!point) return
+      drawWithPoint(point)
+    },
+    [timeLeft, drawWithPoint]
+  )
+
+  const handleDocumentMouseUp = useCallback(() => {
+    setIsDrawing(false)
+
+    // Save stroke to history
+    if (currentStrokeRef.current.length > 0) {
+      historyRef.current.push({
+        type: 'stroke',
+        color: COLORS[color],
+        size: PEN_SIZES[size],
+        points: [...currentStrokeRef.current],
+      })
+      setHistoryLength(historyRef.current.length)
+      currentStrokeRef.current = []
+    }
+
+    document.removeEventListener('mousemove', handleDocumentMouseMove)
+    document.removeEventListener('mouseup', handleDocumentMouseUp)
+  }, [color, size, handleDocumentMouseMove])
+
+  const handleDocumentTouchMove = useCallback(
+    (e: TouchEvent) => {
+      e.preventDefault()
+      if (timeLeft <= 0) return
+      const point = getCanvasPoint(e, true)
+      if (!point) return
+      drawWithPoint(point)
+    },
+    [timeLeft, drawWithPoint]
+  )
+
+  const handleDocumentTouchEnd = useCallback(() => {
+    setIsDrawing(false)
+
+    // Save stroke to history
+    if (currentStrokeRef.current.length > 0) {
+      historyRef.current.push({
+        type: 'stroke',
+        color: COLORS[color],
+        size: PEN_SIZES[size],
+        points: [...currentStrokeRef.current],
+      })
+      setHistoryLength(historyRef.current.length)
+      currentStrokeRef.current = []
+    }
+
+    document.removeEventListener('touchmove', handleDocumentTouchMove)
+    document.removeEventListener('touchend', handleDocumentTouchEnd)
+  }, [color, size, handleDocumentTouchMove])
 
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault()
@@ -184,7 +285,7 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
       setHasDrawn(true)
     }
 
-    const point = getCanvasPoint(e)
+    const point = getCanvasPoint(e, true)
     if (!point) return
 
     setIsDrawing(true)
@@ -201,54 +302,14 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
     ctx.lineJoin = 'round'
     ctx.beginPath()
     ctx.moveTo(point.x, point.y)
-  }
 
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault()
-    if (!isDrawing || timeLeft <= 0) return
-
-    const point = getCanvasPoint(e)
-    if (!point) return
-
-    const points = currentStrokeRef.current
-    points.push(point)
-
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    // Use quadratic bezier curve for smooth lines
-    if (points.length >= 2) {
-      const lastPoint = points[points.length - 2]
-      const midPoint = {
-        x: (lastPoint.x + point.x) / 2,
-        y: (lastPoint.y + point.y) / 2,
-      }
-
-      ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, midPoint.x, midPoint.y)
-      ctx.stroke()
-
-      // Start new path from midpoint for next segment
-      ctx.beginPath()
-      ctx.moveTo(midPoint.x, midPoint.y)
-    }
-  }
-
-  const stopDrawing = () => {
-    if (!isDrawing) return
-    setIsDrawing(false)
-
-    // Save stroke to history
-    if (currentStrokeRef.current.length > 0) {
-      historyRef.current.push({
-        type: 'stroke',
-        color: COLORS[color],
-        size: PEN_SIZES[size],
-        points: [...currentStrokeRef.current],
-      })
-      setHistoryLength(historyRef.current.length)
-      currentStrokeRef.current = []
+    // Add document-level listeners
+    if ('touches' in e) {
+      document.addEventListener('touchmove', handleDocumentTouchMove, { passive: false })
+      document.addEventListener('touchend', handleDocumentTouchEnd)
+    } else {
+      document.addEventListener('mousemove', handleDocumentMouseMove)
+      document.addEventListener('mouseup', handleDocumentMouseUp)
     }
   }
 
@@ -401,12 +462,7 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
                 height={CANVAS_HEIGHT}
                 className={`drawing-picker-canvas ${timeLeft <= 0 ? 'disabled' : ''}`}
                 onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
                 onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchEnd={stopDrawing}
               />
               {!hasDrawn && timeLeft > 0 && <div className="drawing-picker-overlay">Draw here to start</div>}
               {timeLeft <= 0 && <div className="drawing-picker-overlay">Time's up</div>}
