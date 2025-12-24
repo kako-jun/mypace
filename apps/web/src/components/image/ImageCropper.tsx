@@ -116,17 +116,18 @@ export function ImageCropper({ file, onCropComplete, onCancel }: ImageCropperPro
                   alt="Crop preview"
                   className="image-cropper-image"
                   onLoad={() => {
-                    // Use percentage-based crop for initial 100% selection
-                    // This works correctly regardless of image layout timing
-                    // react-image-crop will calculate correct pixel values via onComplete
-                    setCrop({
-                      unit: '%',
-                      x: 0,
-                      y: 0,
-                      width: 100,
-                      height: 100,
+                    // Delay crop setting to ensure image is fully laid out
+                    // This prevents the overlay from appearing before the crop selection
+                    requestAnimationFrame(() => {
+                      setCrop({
+                        unit: '%',
+                        x: 0,
+                        y: 0,
+                        width: 100,
+                        height: 100,
+                      })
+                      setImageLoaded(true)
                     })
-                    setImageLoaded(true)
                   }}
                 />
               </ReactCrop>
