@@ -20,7 +20,7 @@
 .embed-youtube {
   position: relative;
   aspect-ratio: 16 / 9;
-  max-width: 100%;
+  width: 100%;
 }
 
 .embed-youtube iframe {
@@ -101,6 +101,7 @@
 .embed-iframe {
   position: relative;
   aspect-ratio: 16 / 9;
+  width: 100%;
   min-height: 300px;
   max-height: 600px;
   transition: max-height 0.3s ease;
