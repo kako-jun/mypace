@@ -252,13 +252,7 @@
   align-items: center;
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
   flex-shrink: 0;
-}
-
-.post-form:focus-within .post-actions {
-  opacity: 1;
 }
 
 .post-actions-left {
