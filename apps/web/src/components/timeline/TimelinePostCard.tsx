@@ -184,7 +184,7 @@ export default function TimelinePostCard({
           const replyToPubkey = pTag[1]
           return (
             <div className="reply-to-label">
-              <Icon name="CornerDownRight" size={14} />
+              <span>Reply</span>
               <span>→ @{getDisplayName(replyToPubkey)}</span>
             </div>
           )
