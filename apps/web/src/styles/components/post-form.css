@@ -62,6 +62,14 @@
 .replying-label {
   color: var(--action-repost);
   background: color-mix(in srgb, var(--action-repost) 15%, transparent);
+  max-width: 100%;
+}
+
+.replying-label .reply-to-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
 }
 
 /* Long mode */

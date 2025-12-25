@@ -110,7 +110,8 @@ body.custom-theme .logo-pace {
 }
 
 
-.post-card.themed-card .repost-label {
+.post-card.themed-card .repost-label,
+.post-card.themed-card .reply-to-label {
   color: inherit;
   opacity: 0.7;
 }

@@ -171,6 +171,25 @@ export default function TimelinePostCard({
           </div>
         )}
 
+        {/* Reply-to indicator */}
+        {(() => {
+          // Check if this is a reply by looking for 'e' tags with 'root' or 'reply' marker
+          const replyTag = event.tags.find((tag) => tag[0] === 'e' && (tag[3] === 'reply' || tag[3] === 'root'))
+          if (!replyTag) return null
+
+          // Get the first 'p' tag as the reply target
+          const pTag = event.tags.find((tag) => tag[0] === 'p')
+          if (!pTag) return null
+
+          const replyToPubkey = pTag[1]
+          return (
+            <div className="reply-to-label">
+              <Icon name="CornerDownRight" size={14} />
+              <span>→ @{getDisplayName(replyToPubkey)}</span>
+            </div>
+          )
+        })()}
+
         <PostHeader
           pubkey={event.pubkey}
           createdAt={event.created_at}

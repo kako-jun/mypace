@@ -9,6 +9,7 @@ import { LocationPicker } from '../location'
 import { DrawingPicker } from '../drawing'
 import { VoicePicker } from '../voice'
 import { FormActions } from './FormActions'
+import { getCachedProfile, getDisplayName } from '../../lib/utils'
 
 interface PostFormLongModeProps {
   content: string
@@ -114,7 +115,14 @@ export function PostFormLongMode({
           onSubmit={onSubmit}
         >
           {editingEvent && <div className="editing-label">Editing post...</div>}
-          {replyingTo && <div className="replying-label">Replying to post...</div>}
+          {replyingTo && (
+            <div className="replying-label">
+              <span>Reply</span>
+              <span className="reply-to-name">
+                → @{getDisplayName(getCachedProfile(replyingTo.pubkey), replyingTo.pubkey)}
+              </span>
+            </div>
+          )}
 
           <div className="post-form-row-1">
             <button type="button" className="post-form-avatar-button" onClick={onAvatarClick}>

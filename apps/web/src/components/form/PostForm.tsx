@@ -19,6 +19,8 @@ import {
   getStoredVimMode,
   getStoredAppTheme,
   normalizeContent,
+  getCachedProfile,
+  getDisplayName,
 } from '../../lib/utils'
 import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../../lib/constants'
 import { ImageDropZone, AttachedImages, AttachedLocations, PostPreview } from '../post'
@@ -414,7 +416,14 @@ export function PostForm({
       onSubmit={handleSubmit}
     >
       {editingEvent && <div className="editing-label">Editing</div>}
-      {replyingTo && <div className="replying-label">Reply</div>}
+      {replyingTo && (
+        <div className="replying-label">
+          <span>Reply</span>
+          <span className="reply-to-name">
+            → @{getDisplayName(getCachedProfile(replyingTo.pubkey), replyingTo.pubkey)}
+          </span>
+        </div>
+      )}
 
       <div className="post-form-row-1">
         <button type="button" className="post-form-avatar-button" onClick={handleAvatarClick}>
