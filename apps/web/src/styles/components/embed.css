@@ -372,7 +372,8 @@ html[data-theme="dark"] .embed-twitter {
 .embed-youtube-shorts {
   position: relative;
   aspect-ratio: 9 / 16;
-  max-width: 320px;
+  width: 320px;
+  max-width: 100%;
   max-height: 570px;
   margin: 0 auto;
 }
