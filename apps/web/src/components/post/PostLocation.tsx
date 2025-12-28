@@ -6,18 +6,43 @@ interface PostLocationProps {
   name?: string
 }
 
-function getStaticMapUrl(hash: string): string {
+interface TileData {
+  url: string
+  offsetX: number // percentage offset within tile (0-100)
+  offsetY: number
+}
+
+function getTileData(hash: string): TileData | null {
   try {
     const { latitude, longitude } = geohash.decode(hash)
-    // Use OpenStreetMap Static Map API - centers on coordinates with marker
-    return `https://staticmap.openstreetmap.de/staticmap.php?center=${latitude},${longitude}&zoom=15&size=200x130&maptype=mapnik&markers=${latitude},${longitude},red-pushpin`
+    const zoom = 16 // Higher zoom for better precision
+    const n = Math.pow(2, zoom)
+
+    // Calculate tile coordinates
+    const xFloat = ((longitude + 180) / 360) * n
+    const yFloat =
+      ((1 - Math.log(Math.tan((latitude * Math.PI) / 180) + 1 / Math.cos((latitude * Math.PI) / 180)) / Math.PI) / 2) *
+      n
+
+    const x = Math.floor(xFloat)
+    const y = Math.floor(yFloat)
+
+    // Calculate offset within tile (0-100%)
+    const offsetX = (xFloat - x) * 100
+    const offsetY = (yFloat - y) * 100
+
+    return {
+      url: `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`,
+      offsetX,
+      offsetY,
+    }
   } catch {
-    return ''
+    return null
   }
 }
 
 export function PostLocation({ geohashStr, name }: PostLocationProps) {
-  const mapUrl = getStaticMapUrl(geohashStr)
+  const tileData = getTileData(geohashStr)
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -35,7 +60,21 @@ export function PostLocation({ geohashStr, name }: PostLocationProps) {
 
   return (
     <button type="button" className="post-location" onClick={handleClick} title="View on map">
-      {mapUrl && <img src={mapUrl} alt="" className="post-location-map" />}
+      {tileData && (
+        <div className="post-location-map-container">
+          <img
+            src={tileData.url}
+            alt=""
+            className="post-location-map"
+            style={{
+              transform: `translate(${50 - tileData.offsetX}%, ${50 - tileData.offsetY}%)`,
+            }}
+          />
+          <div className="post-location-marker">
+            <Icon name="MapPin" size={24} />
+          </div>
+        </div>
+      )}
       <div className="post-location-info">
         <Icon name="MapPin" size={14} />
         <span>{name || geohashStr}</span>
