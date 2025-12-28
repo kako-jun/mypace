@@ -9,14 +9,8 @@ interface PostLocationProps {
 function getStaticMapUrl(hash: string): string {
   try {
     const { latitude, longitude } = geohash.decode(hash)
-    const zoom = 15
-    const n = Math.pow(2, zoom)
-    const x = Math.floor(((longitude + 180) / 360) * n)
-    const y = Math.floor(
-      ((1 - Math.log(Math.tan((latitude * Math.PI) / 180) + 1 / Math.cos((latitude * Math.PI) / 180)) / Math.PI) / 2) *
-        n
-    )
-    return `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`
+    // Use OpenStreetMap Static Map API - centers on coordinates with marker
+    return `https://staticmap.openstreetmap.de/staticmap.php?center=${latitude},${longitude}&zoom=15&size=200x130&maptype=mapnik&markers=${latitude},${longitude},red-pushpin`
   } catch {
     return ''
   }
