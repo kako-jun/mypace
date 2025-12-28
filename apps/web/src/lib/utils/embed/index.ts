@@ -88,7 +88,11 @@ export function detectEmbed(url: string): EmbedInfo | null {
 }
 
 export function extractEmbeds(content: string): EmbedInfo[] {
-  const urls = content.match(URL_REGEX) || []
+  // Remove code blocks before extracting URLs (```...``` and `...`)
+  const contentWithoutCode = content
+    .replace(/```[\s\S]*?```/g, '') // fenced code blocks
+    .replace(/`[^`\n]+`/g, '') // inline code
+  const urls = contentWithoutCode.match(URL_REGEX) || []
   const embeds: EmbedInfo[] = []
   const seenUrls = new Set<string>()
 
@@ -105,7 +109,7 @@ export function extractEmbeds(content: string): EmbedInfo[] {
 
   // Also extract super mention URLs (@@domain.com/path)
   let match
-  while ((match = SUPER_MENTION_URL_REGEX.exec(content)) !== null) {
+  while ((match = SUPER_MENTION_URL_REGEX.exec(contentWithoutCode)) !== null) {
     const domain = match[1].replace(/[.,;:!?)\]}>）」』】]+$/, '')
     const fullUrl = `https://${domain}`
     if (seenUrls.has(fullUrl)) continue
