@@ -36,6 +36,7 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
   const [languageFilter, setLanguageFilter] = useState(filters.lang)
   const [hideAds, setHideAds] = useState(filters.hideAds ?? true)
   const [hideNSFW, setHideNSFW] = useState(filters.hideNSFW ?? true)
+  const [hideNPC, setHideNPC] = useState(filters.hideNPC ?? false)
 
   // Load presets on mount
   useEffect(() => {
@@ -54,6 +55,7 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     setLanguageFilter(filters.lang)
     setHideAds(filters.hideAds ?? true)
     setHideNSFW(filters.hideNSFW ?? true)
+    setHideNPC(filters.hideNPC ?? false)
     setSelectedPresetId('')
   }, [filters])
 
@@ -74,7 +76,8 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     ngWordsInput !== filters.ngWords.join(', ') ||
     languageFilter !== filters.lang ||
     hideAds !== (filters.hideAds ?? true) ||
-    hideNSFW !== (filters.hideNSFW ?? true)
+    hideNSFW !== (filters.hideNSFW ?? true) ||
+    hideNPC !== (filters.hideNPC ?? false)
 
   // Parse input to array
   const parseInput = (input: string): string[] => {
@@ -97,6 +100,7 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     lang: languageFilter,
     hideAds,
     hideNSFW,
+    hideNPC,
   })
 
   // Apply filters
@@ -119,6 +123,7 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     setLanguageFilter('')
     setHideAds(true)
     setHideNSFW(true)
+    setHideNPC(false)
     saveFiltersToStorage(DEFAULT_SEARCH_FILTERS)
     navigate('/')
     onClose?.()
@@ -148,6 +153,7 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     setLanguageFilter(f.lang)
     setHideAds(f.hideAds ?? true)
     setHideNSFW(f.hideNSFW ?? true)
+    setHideNPC(f.hideNPC ?? false)
   }
 
   return (
@@ -196,9 +202,11 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
       <SmartFilter
         hideAds={hideAds}
         hideNSFW={hideNSFW}
+        hideNPC={hideNPC}
         languageFilter={languageFilter}
         onHideAdsChange={setHideAds}
         onHideNSFWChange={setHideNSFW}
+        onHideNPCChange={setHideNPC}
         onLanguageChange={setLanguageFilter}
       />
 

@@ -106,6 +106,7 @@ export interface SearchFilters {
   // Smart filters (server-side)
   hideAds: boolean // Hide advertisements/spam
   hideNSFW: boolean // Hide adult content
+  hideNPC: boolean // Hide NPC posts (kind 42000)
 }
 
 // Filter preset types

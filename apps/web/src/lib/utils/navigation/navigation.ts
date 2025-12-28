@@ -67,6 +67,7 @@ export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
   // Smart filters default to ON (hide by default)
   hideAds: true,
   hideNSFW: true,
+  hideNPC: false, // NPC posts shown by default
 }
 
 // Save filters to localStorage
@@ -114,6 +115,8 @@ export function buildSearchUrl(filters: Partial<SearchFilters>): string {
   // Smart filters: only add param when OFF (default is ON)
   if (!f.hideAds) params.set('ads', 'show')
   if (!f.hideNSFW) params.set('nsfw', 'show')
+  // NPC filter: only add param when ON (default is OFF)
+  if (f.hideNPC) params.set('npc', 'hide')
 
   const queryString = params.toString()
   return queryString ? `/?${queryString}` : '/'
@@ -137,6 +140,7 @@ export function parseSearchParams(searchParams: URLSearchParams): SearchFilters 
   const lang = searchParams.get('lang') || ''
   const adsParam = searchParams.get('ads')
   const nsfwParam = searchParams.get('nsfw')
+  const npcParam = searchParams.get('npc')
 
   // Determine mode and parse tags based on separator
   let tags: string[] = []
@@ -180,6 +184,8 @@ export function parseSearchParams(searchParams: URLSearchParams): SearchFilters 
     // Smart filters: default ON, param 'show' means OFF
     hideAds: adsParam !== 'show',
     hideNSFW: nsfwParam !== 'show',
+    // NPC filter: default OFF, param 'hide' means ON
+    hideNPC: npcParam === 'hide',
   }
 }
 

@@ -79,6 +79,7 @@ export const Timeline = memo(function Timeline({
     lang = '',
     hideAds = true,
     hideNSFW = true,
+    hideNPC = false,
   } = filters
 
   const {
@@ -243,6 +244,11 @@ export const Timeline = memo(function Timeline({
   // Filter by NG tags (exclude posts containing any NG tag)
   if (filterNgTags && filterNgTags.length > 0) {
     filteredItems = filteredItems.filter((item) => !filterNgTags.some((tag) => contentHasTag(item.event.content, tag)))
+  }
+
+  // Filter by NPC (exclude kind 42000 posts)
+  if (hideNPC) {
+    filteredItems = filteredItems.filter((item) => item.event.kind !== 42000)
   }
 
   // Filter by mute list (exclude posts from muted users)

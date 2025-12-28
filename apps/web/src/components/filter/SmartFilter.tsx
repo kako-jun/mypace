@@ -6,25 +6,29 @@ import { LANGUAGES } from '../../lib/constants'
 interface SmartFilterProps {
   hideAds: boolean
   hideNSFW: boolean
+  hideNPC: boolean
   languageFilter: string
   onHideAdsChange: (value: boolean) => void
   onHideNSFWChange: (value: boolean) => void
+  onHideNPCChange: (value: boolean) => void
   onLanguageChange: (value: string) => void
 }
 
 export function SmartFilter({
   hideAds,
   hideNSFW,
+  hideNPC,
   languageFilter,
   onHideAdsChange,
   onHideNSFWChange,
+  onHideNPCChange,
   onLanguageChange,
 }: SmartFilterProps) {
   const [showPopup, setShowPopup] = useState(false)
   const popupRef = useRef<HTMLDivElement>(null)
 
   // Count active smart filters
-  const smartFilterCount = [hideAds, hideNSFW, languageFilter !== ''].filter(Boolean).length
+  const smartFilterCount = [hideAds, hideNSFW, hideNPC, languageFilter !== ''].filter(Boolean).length
 
   // Close popup when clicking outside
   useEffect(() => {
@@ -63,6 +67,11 @@ export function SmartFilter({
             <Toggle checked={hideNSFW} onChange={onHideNSFWChange} size="small" />
             <Icon name="EyeOff" size={14} />
             <span className="smart-filter-label">Hide NSFW</span>
+          </div>
+          <div className="smart-filter-item" onClick={() => onHideNPCChange(!hideNPC)}>
+            <Toggle checked={hideNPC} onChange={onHideNPCChange} size="small" />
+            <Icon name="Bot" size={14} />
+            <span className="smart-filter-label">Hide NPC</span>
           </div>
           <div className="smart-filter-divider" />
           <div className="smart-filter-item">
