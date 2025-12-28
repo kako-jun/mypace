@@ -21,14 +21,14 @@
 
 /* Parent post section (shown when viewing a reply) */
 .parent-post-section {
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
 }
 
 .parent-post-heading {
   font-size: 1rem;
   font-weight: 500;
   color: var(--text-secondary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .parent-post-card {
