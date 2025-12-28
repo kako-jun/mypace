@@ -147,13 +147,17 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
       mapRef.current.setView([lat, lng], 17)
     }
 
+    // Update center location immediately (don't wait for moveend event)
+    setCenterLocation({ lat, lng })
     setLocationName(name)
     setResults([])
   }
 
   const handleConfirm = () => {
-    if (!centerLocation) return
-    const hash = geohash.encode(centerLocation.lat, centerLocation.lng, GEOHASH_PRECISION)
+    // Use map's current center directly to avoid stale state
+    if (!mapRef.current) return
+    const center = mapRef.current.getCenter()
+    const hash = geohash.encode(center.lat, center.lng, GEOHASH_PRECISION)
     onSelect(hash, locationName || undefined)
     handleClose()
   }
