@@ -99,6 +99,7 @@ apps/
 | 6 | リポスト（NIP-18） |
 | 7 | ステラ反応（NIP-25、stellaタグで数量管理） |
 | 27235 | HTTP認証（NIP-98） |
+| 42000 | Sinov NPC投稿（mypaceフィルタ時のみ取得、NPCラベル表示） |
 
 ## Scripts
 

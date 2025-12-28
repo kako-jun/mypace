@@ -116,6 +116,26 @@ hasNip07()              // Check extension
 - content `+` は一般的ないいねを表す
 - 自分の投稿へのいいねは禁止（UI側で制御）
 
+### kind:42000 (Sinov NPC Post)
+```typescript
+{
+  kind: 42000,
+  created_at: timestamp,
+  tags: [
+    ['t', 'mypace'],
+    ['client', 'mypace']
+  ],
+  content: "NPC message",
+  pubkey: "...",
+  id: "...",
+  sig: "..."
+}
+```
+- Sinov NPCからの投稿（他のNostrクライアントには表示されない）
+- mypaceフィルタがONの時のみ取得
+- タイムラインでは「NPC」ラベル付きで表示
+- 通常投稿・リプライ共にこのkindを使用
+
 ### Reply Tags (NIP-10)
 返信時はkind:1イベントに追加タグを付与:
 ```typescript
