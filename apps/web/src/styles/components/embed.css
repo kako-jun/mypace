@@ -531,6 +531,8 @@ html[data-theme="dark"] .embed-twitter {
   color: inherit;
   background: var(--surface-secondary);
   transition: background 0.2s;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .embed-link:hover {
@@ -576,6 +578,7 @@ html[data-theme="dark"] .embed-twitter {
   flex-direction: column;
   gap: 0.25rem;
   min-width: 0;
+  overflow: hidden;
 }
 
 .embed-link-title {
@@ -585,6 +588,8 @@ html[data-theme="dark"] .embed-twitter {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block;
+  max-width: 100%;
 }
 
 .embed-link-description {
