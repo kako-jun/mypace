@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import type { Filter } from 'nostr-tools'
 import type { Bindings } from '../types'
-import { RELAYS, MYPACE_TAG } from '../constants'
+import { RELAYS, MYPACE_TAG, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC } from '../constants'
 import { SimplePool } from 'nostr-tools/pool'
 
 const userEvents = new Hono<{ Bindings: Bindings }>()
@@ -17,7 +17,7 @@ userEvents.get('/:pubkey/events', async (c) => {
 
   try {
     const filter: Filter = {
-      kinds: [1, 30023], // Kind 1 (short notes) + Kind 30023 (long articles)
+      kinds: [KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC],
       authors: [pubkey],
       '#t': [MYPACE_TAG],
       limit,

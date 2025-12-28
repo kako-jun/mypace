@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
-import { RELAYS } from '../constants'
+import { RELAYS, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC } from '../constants'
 import { SimplePool } from 'nostr-tools/pool'
 
 const replies = new Hono<{ Bindings: Bindings }>()
@@ -12,8 +12,8 @@ replies.get('/:eventId', async (c) => {
   const pool = new SimplePool()
 
   try {
-    // Kind 1 (short notes) + Kind 30023 (long articles) as replies
-    const events = await pool.querySync(RELAYS, { kinds: [1, 30023], '#e': [eventId] })
+    // Kind 1 (short notes) + Kind 30023 (long articles) + Kind 42000 (Sinov NPC) as replies
+    const events = await pool.querySync(RELAYS, { kinds: [KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC], '#e': [eventId] })
     // ルートへの返信のみフィルタ
     const replyList = events.filter((e) => {
       const eTags = e.tags.filter((t) => t[0] === 'e')

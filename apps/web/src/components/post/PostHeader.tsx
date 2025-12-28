@@ -48,12 +48,14 @@ export default function PostHeader({
 
   const nameContent = emojis.length > 0 ? <EmojiText text={displayName} emojis={emojis} /> : displayName
 
-  // Show "Blog" label for kind 30023 (long-form content)
+  // Show labels for special event kinds
   const isBlogPost = eventKind === 30023
+  const isNpcPost = eventKind === 42000
   const timestampContent = (
     <>
       {formatTimestamp(createdAt)}
       {isBlogPost && <span className="kind-label kind-label-blog"> · Blog</span>}
+      {isNpcPost && <span className="kind-label kind-label-npc"> · NPC</span>}
     </>
   )
 

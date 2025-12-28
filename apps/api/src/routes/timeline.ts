@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import type { Filter } from 'nostr-tools'
 import type { Bindings } from '../types'
-import { MYPACE_TAG, RELAYS } from '../constants'
+import { MYPACE_TAG, RELAYS, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC } from '../constants'
 import { getCachedEvents, cacheEvents } from '../services/cache'
 import { filterByLanguage } from '../filters/language'
 import { filterBySmartFilters } from '../filters/smart-filter'
@@ -20,14 +20,16 @@ timeline.get('/', async (c) => {
   // Smart filters: default to hide (hideAds=1, hideNSFW=1)
   const hideAds = c.req.query('hideAds') !== '0'
   const hideNSFW = c.req.query('hideNSFW') !== '0'
-  // Parse kinds parameter (default: 1 only, add 30023 if blog=1)
+  // Parse kinds parameter
+  // Kind 42000 (Sinov NPC) is only included when mypace filter is active
   const kindsParam = c.req.query('kinds')
+  const defaultKinds = showAll ? [KIND_NOTE, KIND_LONG_FORM] : [KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC]
   const kinds = kindsParam
     ? kindsParam
         .split(',')
         .map((k) => parseInt(k, 10))
         .filter((k) => !isNaN(k))
-    : [1, 30023] // Default to both
+    : defaultKinds
 
   // まずキャッシュから取得（TTL内のもののみ）
   try {
