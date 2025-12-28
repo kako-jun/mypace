@@ -70,17 +70,17 @@ export function detectEmbed(url: string): EmbedInfo | null {
     return { type: 'audio', url }
   }
 
+  // Exclude internal mypace URLs from embed (internal routing takes priority)
+  if (/^https?:\/\/mypace\.llll-ll\.com(\/|$)/i.test(url)) {
+    return null
+  }
+
   if (isAllowedIframeDomain(url)) {
     return { type: 'iframe', url, iframeSrc: url }
   }
 
   // Exclude Wikipedia URLs from OGP (super mention Q badge links)
   if (/^https?:\/\/([\w-]+\.)?wikipedia\.org\//i.test(url)) {
-    return null
-  }
-
-  // Exclude internal mypace URLs from OGP
-  if (/^https?:\/\/mypace\.llll-ll\.com\//i.test(url)) {
     return null
   }
 

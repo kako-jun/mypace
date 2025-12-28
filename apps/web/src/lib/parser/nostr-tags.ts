@@ -15,8 +15,10 @@ export function processHashtags(html: string): string {
 }
 
 // Super mention regex (@@label format)
+// Character ranges: \w (alphanumeric), hiragana, katakana, CJK, CJK punctuation,
+// geometric shapes (■▲), miscellaneous symbols (☆★), and common URL chars
 const SUPER_MENTION_REGEX =
-  /(^|[\s>])@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
+  /(^|[\s>])@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\u2600-\u26FF\-:.?=&%#,/]+)/g
 
 const PROTOCOL_PREFIX = /^https?:\/\//i
 
