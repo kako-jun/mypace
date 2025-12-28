@@ -19,32 +19,28 @@
   line-height: 1;
 }
 
-/* Parent post card (shown when viewing a reply) */
-.parent-post-card {
-  position: relative;
-  padding: 0.75rem 1rem;
+/* Parent post section (shown when viewing a reply) */
+.parent-post-section {
+  margin-bottom: 1rem;
+}
+
+.parent-post-heading {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
+}
+
+.parent-post-card {
+  padding: 0.75rem 1rem;
   background: var(--surface-primary);
   border: 2px solid #000;
-  border-left: 4px solid var(--action-reply);
   cursor: pointer;
   transition: opacity 0.15s ease;
 }
 
 .parent-post-card:hover {
   opacity: 0.85;
-}
-
-.parent-post-card::before {
-  content: 'Reply to';
-  position: absolute;
-  top: -0.5rem;
-  left: 0.75rem;
-  padding: 0 0.25rem;
-  background: var(--bg-primary);
-  font-size: 0.7rem;
-  color: var(--action-reply);
-  font-weight: 500;
 }
 
 .parent-post-card .post-header {
@@ -62,12 +58,10 @@
 .parent-post-content {
   font-size: 0.9rem !important;
   line-height: 1.4 !important;
-  max-height: 3em !important;
+  max-height: 1.4em !important;
   overflow: hidden !important;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
 }
 
 .post-card-large {

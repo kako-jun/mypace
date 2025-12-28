@@ -328,26 +328,29 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
       {/* Parent post (if this is a reply) */}
       {parentEvent && (
-        <div
-          className={`parent-post-card ${parentThemeProps.className}`}
-          style={parentThemeProps.style}
-          onClick={() => navigateToPost(parentEvent.id)}
-          onKeyDown={(e) => e.key === 'Enter' && navigateToPost(parentEvent.id)}
-          role="button"
-          tabIndex={0}
-        >
-          <PostHeader
-            pubkey={parentEvent.pubkey}
-            createdAt={parentEvent.created_at}
-            displayName={getDisplayName(parentProfile, parentEvent.pubkey)}
-            avatarUrl={getAvatarUrl(parentProfile)}
-            isProfileLoading={!parentProfile}
-            emojis={parentProfile?.emojis}
-            eventKind={parentEvent.kind}
-            avatarSize="small"
-          />
-          <div className="post-content parent-post-content">
-            <PostContent content={parentEvent.content} truncate emojis={parseEmojiTags(parentEvent.tags)} />
+        <div className="parent-post-section">
+          <h3 className="parent-post-heading">Reply to</h3>
+          <div
+            className={`parent-post-card ${parentThemeProps.className}`}
+            style={parentThemeProps.style}
+            onClick={() => navigateToPost(parentEvent.id)}
+            onKeyDown={(e) => e.key === 'Enter' && navigateToPost(parentEvent.id)}
+            role="button"
+            tabIndex={0}
+          >
+            <PostHeader
+              pubkey={parentEvent.pubkey}
+              createdAt={parentEvent.created_at}
+              displayName={getDisplayName(parentProfile, parentEvent.pubkey)}
+              avatarUrl={getAvatarUrl(parentProfile)}
+              isProfileLoading={!parentProfile}
+              emojis={parentProfile?.emojis}
+              eventKind={parentEvent.kind}
+              avatarSize="small"
+            />
+            <div className="post-content parent-post-content">
+              <PostContent content={parentEvent.content} emojis={parseEmojiTags(parentEvent.tags)} />
+            </div>
           </div>
         </div>
       )}
