@@ -89,6 +89,8 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     replies,
     reposts,
     replyProfiles,
+    parentEvent,
+    parentProfile,
     setReactions,
     setReposts,
   } = usePostViewData(eventId)
@@ -316,9 +318,36 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     name: locationTags[i]?.[1],
   }))
 
+  // Parent post theme props
+  const parentThemeColors = parentEvent ? getEventThemeColors(parentEvent) : null
+  const parentThemeProps = getThemeCardProps(parentThemeColors)
+
   return (
     <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
       <BackButton onClick={handleBack} icon={isModal ? '×' : '←'} label={isModal ? 'CLOSE' : 'BACK'} />
+
+      {/* Parent post (if this is a reply) */}
+      {parentEvent && (
+        <div
+          className={`parent-post-card ${parentThemeProps.className}`}
+          style={parentThemeProps.style}
+          onClick={() => navigateToPost(parentEvent.id)}
+        >
+          <PostHeader
+            pubkey={parentEvent.pubkey}
+            createdAt={parentEvent.created_at}
+            displayName={getDisplayName(parentProfile, parentEvent.pubkey)}
+            avatarUrl={getAvatarUrl(parentProfile)}
+            isProfileLoading={!parentProfile}
+            emojis={parentProfile?.emojis}
+            eventKind={parentEvent.kind}
+            avatarSize="small"
+          />
+          <div className="post-content parent-post-content">
+            <PostContent content={parentEvent.content} truncate emojis={parseEmojiTags(parentEvent.tags)} />
+          </div>
+        </div>
+      )}
 
       <article className={`post-card post-card-large ${themeProps.className}`} style={themeProps.style}>
         {/* Back layer stickers (behind content) */}

@@ -63,6 +63,7 @@ body.custom-theme .logo-pace {
 
 .post-card.themed-card .post-content,
 .reply-card.themed-card .post-content,
+.parent-post-card.themed-card .post-content,
 .themed-card .preview-content {
   color: inherit;
   text-shadow: inherit;
@@ -142,12 +143,14 @@ body.custom-theme .logo-pace {
 }
 
 .light-text .author-name,
-.light-text .reply-header .author-name {
+.light-text .reply-header .author-name,
+.parent-post-card.light-text .author-name {
   color: #ffffff;
 }
 
 .light-text .timestamp,
-.light-text .reply-header .timestamp {
+.light-text .reply-header .timestamp,
+.parent-post-card.light-text .timestamp {
   color: rgba(255, 255, 255, 0.7);
 }
 
@@ -195,12 +198,14 @@ body.custom-theme .logo-pace {
 
 /* Dark text adjustments */
 .dark-text .author-name,
-.dark-text .reply-header .author-name {
+.dark-text .reply-header .author-name,
+.parent-post-card.dark-text .author-name {
   color: #333;
 }
 
 .dark-text .timestamp,
-.dark-text .reply-header .timestamp {
+.dark-text .reply-header .timestamp,
+.parent-post-card.dark-text .timestamp {
   color: rgba(0, 0, 0, 0.6);
 }
 

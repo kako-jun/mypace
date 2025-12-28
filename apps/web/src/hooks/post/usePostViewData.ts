@@ -14,6 +14,8 @@ interface PostViewData {
   replies: { count: number; replies: Event[] }
   reposts: { count: number; myRepost: boolean }
   replyProfiles: { [pubkey: string]: Profile | null }
+  parentEvent: Event | null
+  parentProfile: Profile | null
   setReactions: React.Dispatch<React.SetStateAction<ReactionData>>
   setReposts: React.Dispatch<React.SetStateAction<{ count: number; myRepost: boolean }>>
 }
@@ -36,6 +38,8 @@ export function usePostViewData(eventId: string): PostViewData {
   const [replies, setReplies] = useState<{ count: number; replies: Event[] }>({ count: 0, replies: [] })
   const [reposts, setReposts] = useState({ count: 0, myRepost: false })
   const [replyProfiles, setReplyProfiles] = useState<{ [pubkey: string]: Profile | null }>({})
+  const [parentEvent, setParentEvent] = useState<Event | null>(null)
+  const [parentProfile, setParentProfile] = useState<Profile | null>(null)
 
   const loadPost = useCallback(async () => {
     setError('')
@@ -97,6 +101,20 @@ export function usePostViewData(eventId: string): PostViewData {
         } catch {}
       }
       setReplyProfiles(profiles)
+
+      // Fetch parent event if this is a reply
+      const replyTag = eventData.tags.find((tag) => tag[0] === 'e' && (tag[3] === 'reply' || tag[3] === 'root'))
+      if (replyTag) {
+        const parentId = replyTag[1]
+        try {
+          const parent = await fetchEventById(parentId)
+          if (parent) {
+            setParentEvent(parent)
+            const parentUserProfile = await fetchUserProfile(parent.pubkey)
+            if (parentUserProfile) setParentProfile(parentUserProfile)
+          }
+        } catch {}
+      }
     } catch (err) {
       setError(getErrorMessage(err, 'Failed to load post'))
     } finally {
@@ -118,6 +136,8 @@ export function usePostViewData(eventId: string): PostViewData {
     replies,
     reposts,
     replyProfiles,
+    parentEvent,
+    parentProfile,
     setReactions,
     setReposts,
   }
