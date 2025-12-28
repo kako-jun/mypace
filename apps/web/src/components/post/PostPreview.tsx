@@ -65,8 +65,8 @@ export default function PostPreview({
       <div className="preview-content" style={editableStickers ? { pointerEvents: 'none' } : undefined}>
         <PostContent content={content} emojis={emojis} />
       </div>
-      {locations.map((loc, i) => (
-        <PostLocation key={i} geohashStr={loc.geohash} name={loc.name} />
+      {locations.map((loc) => (
+        <PostLocation key={loc.geohash} geohashStr={loc.geohash} name={loc.name} />
       ))}
       {/* Footer skeleton - only shown when stickers exist */}
       {hasStickers && (

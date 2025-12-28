@@ -211,8 +211,8 @@ export default function TimelinePostCard({
           />
         </div>
 
-        {locations.map((loc, i) => (
-          <PostLocation key={i} geohashStr={loc.geohash} name={loc.name} />
+        {locations.map((loc) => (
+          <PostLocation key={loc.geohash} geohashStr={loc.geohash} name={loc.name} />
         ))}
 
         <div className="post-footer">
