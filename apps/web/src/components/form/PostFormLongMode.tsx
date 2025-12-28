@@ -114,7 +114,26 @@ export function PostFormLongMode({
           className={`post-form long-mode ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
           onSubmit={onSubmit}
         >
-          {editingEvent && <div className="editing-label">Editing post...</div>}
+          {editingEvent &&
+            (() => {
+              // Check if the event being edited is a reply (has e tag with root/reply marker)
+              const replyTag = editingEvent.tags?.find((t) => t[0] === 'e' && (t[3] === 'reply' || t[3] === 'root'))
+              const replyPubkey = editingEvent.tags?.find((t) => t[0] === 'p')?.[1]
+              if (replyTag && replyPubkey) {
+                return (
+                  <>
+                    <div className="replying-label">
+                      <span>Reply</span>
+                      <span className="reply-to-name">
+                        → @{getDisplayName(getCachedProfile(replyPubkey), replyPubkey)}
+                      </span>
+                    </div>
+                    <div className="editing-label">Editing post...</div>
+                  </>
+                )
+              }
+              return <div className="editing-label">Editing post...</div>
+            })()}
           {replyingTo && (
             <div className="replying-label">
               <span>Reply</span>

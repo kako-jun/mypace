@@ -220,7 +220,7 @@ export function PostForm({
       } else if (editingEvent) {
         const deleteEvent = await createDeleteEvent([editingEvent.id])
         await publishEvent(deleteEvent)
-        const preserveTags = editingEvent.tags.filter((tag) => !['sticker', 'g', 'location'].includes(tag[0]))
+        const preserveTags = editingEvent.tags.filter((tag) => !['sticker', 'g', 'location', 'teaser'].includes(tag[0]))
         const event = await createTextNote(normalizedContent, preserveTags, extraTags)
         await publishEvent(event)
         onContentChange('')
@@ -415,7 +415,24 @@ export function PostForm({
       className={`post-form ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
       onSubmit={handleSubmit}
     >
-      {editingEvent && <div className="editing-label">Editing</div>}
+      {editingEvent &&
+        (() => {
+          // Check if the event being edited is a reply (has e tag with root/reply marker)
+          const replyTag = editingEvent.tags?.find((t) => t[0] === 'e' && (t[3] === 'reply' || t[3] === 'root'))
+          const replyPubkey = editingEvent.tags?.find((t) => t[0] === 'p')?.[1]
+          if (replyTag && replyPubkey) {
+            return (
+              <>
+                <div className="replying-label">
+                  <span>Reply</span>
+                  <span className="reply-to-name">→ @{getDisplayName(getCachedProfile(replyPubkey), replyPubkey)}</span>
+                </div>
+                <div className="editing-label">Editing</div>
+              </>
+            )
+          }
+          return <div className="editing-label">Editing</div>
+        })()}
       {replyingTo && (
         <div className="replying-label">
           <span>Reply</span>
