@@ -179,9 +179,10 @@ export const Timeline = memo(function Timeline({
   // Handle super mention clicks - add ref path to filter
   const handleSuperMentionClick = useCallback(
     (path: string) => {
-      // Add ref path to current search filters (use tags filter for now)
-      if (!filterTags.includes(path)) {
-        navigateTo(buildSearchUrl({ ...filters, tags: [...filterTags, path] }))
+      // Add / prefix for super mention search (contentHasTag expects /label format)
+      const searchTag = path.startsWith('/') ? path : `/${path}`
+      if (!filterTags.includes(searchTag)) {
+        navigateTo(buildSearchUrl({ ...filters, tags: [...filterTags, searchTag] }))
       }
     },
     [filters, filterTags]
