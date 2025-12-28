@@ -62,6 +62,16 @@
   overflow: hidden !important;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block;
+}
+
+/* Ensure text-overflow works by making inner content inline */
+.parent-post-content > * {
+  display: inline;
+}
+
+.parent-post-content br {
+  display: none;
 }
 
 .post-card-large {
