@@ -33,6 +33,11 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
   const mapContainerRef = useRef<HTMLDivElement>(null)
 
   const handleOpen = () => {
+    // Clean up previous map if exists
+    if (mapRef.current) {
+      mapRef.current.remove()
+      mapRef.current = null
+    }
     setIsOpen(true)
     setQuery('')
     setResults([])
