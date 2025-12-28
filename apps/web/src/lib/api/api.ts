@@ -26,7 +26,11 @@ export async function fetchTimeline(
   if (language) params.set('lang', language)
   // Set kinds parameter based on showSNS and showBlog
   const kindsList: number[] = []
-  if (showSNS) kindsList.push(1)
+  if (showSNS) {
+    kindsList.push(1)
+    // Kind 42000 (Sinov NPC) is included when mypace filter is active
+    if (mypaceOnly) kindsList.push(42000)
+  }
   if (showBlog) kindsList.push(30023)
   if (kindsList.length > 0) {
     params.set('kinds', kindsList.join(','))
