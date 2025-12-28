@@ -62,6 +62,7 @@ body.custom-theme .logo-pace {
 }
 
 .post-card.themed-card .post-content,
+.reply-card.themed-card .post-content,
 .themed-card .preview-content {
   color: inherit;
   text-shadow: inherit;
@@ -140,11 +141,13 @@ body.custom-theme .logo-pace {
     1px 1px 3px rgba(0, 0, 0, 0.7);
 }
 
-.light-text .author-name {
+.light-text .author-name,
+.light-text .reply-header .author-name {
   color: #ffffff;
 }
 
-.light-text .timestamp {
+.light-text .timestamp,
+.light-text .reply-header .timestamp {
   color: rgba(255, 255, 255, 0.7);
 }
 
@@ -191,6 +194,16 @@ body.custom-theme .logo-pace {
 }
 
 /* Dark text adjustments */
+.dark-text .author-name,
+.dark-text .reply-header .author-name {
+  color: #333;
+}
+
+.dark-text .timestamp,
+.dark-text .reply-header .timestamp {
+  color: rgba(0, 0, 0, 0.6);
+}
+
 .dark-text .preview-label {
   color: #666;
 }
