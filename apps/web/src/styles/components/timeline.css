@@ -14,6 +14,7 @@
   break-inside: avoid;
   margin-bottom: 1rem;
   direction: ltr;
+  contain: layout paint;
 }
 
 /* Timeline Action Wrapper - layout for timeline buttons */
