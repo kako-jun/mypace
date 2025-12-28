@@ -332,6 +332,9 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
           className={`parent-post-card ${parentThemeProps.className}`}
           style={parentThemeProps.style}
           onClick={() => navigateToPost(parentEvent.id)}
+          onKeyDown={(e) => e.key === 'Enter' && navigateToPost(parentEvent.id)}
+          role="button"
+          tabIndex={0}
         >
           <PostHeader
             pubkey={parentEvent.pubkey}

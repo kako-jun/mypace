@@ -43,6 +43,8 @@ export function usePostViewData(eventId: string): PostViewData {
 
   const loadPost = useCallback(async () => {
     setError('')
+    setParentEvent(null)
+    setParentProfile(null)
     try {
       const pubkey = await getCurrentPubkey()
       setMyPubkey(pubkey)
