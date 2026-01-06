@@ -228,10 +228,12 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
               const beforeCursor = newDoc.slice(0, cursorPos)
               if (beforeCursor.endsWith('@@')) {
                 // Remove the @@ that was just typed
-                const withoutTrigger = newDoc.slice(0, cursorPos - 2) + newDoc.slice(cursorPos)
+                const newPos = cursorPos - 2
                 update.view.dispatch({
-                  changes: { from: cursorPos - 2, to: cursorPos, insert: '' },
+                  changes: { from: newPos, to: cursorPos, insert: '' },
+                  selection: { anchor: newPos, head: newPos },
                 })
+                const withoutTrigger = newDoc.slice(0, newPos) + newDoc.slice(cursorPos)
                 onChangeRef.current?.(withoutTrigger)
                 onSuperMentionTriggerRef.current()
                 return

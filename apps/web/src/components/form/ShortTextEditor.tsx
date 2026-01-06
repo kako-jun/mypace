@@ -56,6 +56,13 @@ export const ShortTextEditor = forwardRef<ShortTextEditorRef, ShortTextEditorPro
               // Remove the @@ that was just typed
               const withoutTrigger = newValue.slice(0, cursorPos - 2) + newValue.slice(cursorPos)
               onContentChange(withoutTrigger)
+              // Update cursor position after removing @@
+              setTimeout(() => {
+                if (textareaRef.current) {
+                  const newPos = cursorPos - 2
+                  textareaRef.current.setSelectionRange(newPos, newPos)
+                }
+              }, 0)
               onSuperMentionTrigger()
               return
             }
