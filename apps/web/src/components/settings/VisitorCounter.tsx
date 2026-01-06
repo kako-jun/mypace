@@ -43,7 +43,7 @@ export function VisitorCounter() {
 
   return (
     <div className="visitor-counter" ref={containerRef}>
-      <nostalgic-counter id="mypace-84d8f852" type="total"></nostalgic-counter>
+      <nostalgic-counter id="mypace-84d8f852" type="total"></nostalgic-counter> visits
     </div>
   )
 }
