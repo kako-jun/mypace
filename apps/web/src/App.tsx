@@ -19,6 +19,11 @@ export default function App() {
     initializeNavigation(navigate, location)
   }, [navigate, location])
 
+  // 訪問者カウントをインクリメント（非表示、1日1回制限あり）
+  useEffect(() => {
+    fetch('https://api.nostalgic.llll-ll.com/visit?action=increment&id=mypace-84d8f852').catch(() => {})
+  }, [])
+
   // Check for background location (modal mode)
   const state = location.state as { backgroundLocation?: Location } | null
   const backgroundLocation = state?.backgroundLocation
