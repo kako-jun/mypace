@@ -596,3 +596,22 @@
 .notice-list li:last-child {
   margin-bottom: 0;
 }
+
+/* Visitor Counter */
+.visitor-counter {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Version Display */
+.version-display {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

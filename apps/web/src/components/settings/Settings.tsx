@@ -32,6 +32,8 @@ import {
   FilterSection,
   type ImportedSettings,
 } from './index'
+import { VisitorCounter } from './VisitorCounter'
+import { VersionDisplay } from './VersionDisplay'
 import { CloseButton } from '../ui'
 import type { ThemeColors } from '../../types'
 
@@ -218,6 +220,8 @@ export function Settings() {
 
         <div style={{ display: activeTab === 'about' ? 'block' : 'none' }}>
           <ShareSection />
+          <VisitorCounter />
+          <VersionDisplay />
         </div>
       </div>
     </>
