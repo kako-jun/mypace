@@ -203,6 +203,14 @@
   border: none;
   border-radius: 12px;
   padding: 12px;
+  /* Reset inherited text styles */
+  text-shadow: none;
+  -webkit-text-stroke: 0;
+}
+
+.embed-twitter * {
+  text-shadow: none !important;
+  -webkit-text-stroke: 0 !important;
 }
 
 .embed-twitter .react-tweet-theme {
