@@ -1,15 +1,8 @@
 {
   "version": 1,
-  "include": ["/*"],
-  "exclude": [
-    "/sitemap.xml",
-    "/robots.txt",
-    "/favicon.ico",
-    "/icons/*",
-    "/assets/*",
-    "/*.png",
-    "/*.webp",
-    "/*.svg",
-    "/*.ico"
-  ]
+  "include": [
+    "/post/*",
+    "/user/*"
+  ],
+  "exclude": []
 }

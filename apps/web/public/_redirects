@@ -1,1 +1,2 @@
-/*    /index.html   200
+# SPA fallback is handled by _routes.json and functions
+# Do not add /* /index.html 200 here as it breaks Functions

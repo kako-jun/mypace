@@ -1,10 +1,10 @@
-# Dynamic OGP (作業中)
+# Dynamic OGP
 
 投稿ページ・ユーザーページの動的OGP生成機能。
 
 ## 現状
 
-**動作していない**。クローラーがアクセスしてもホームのOGPが返される。
+**動作確認済み**。クローラーがアクセスすると動的OGPが返される。
 
 ## 実装
 
@@ -26,16 +26,10 @@ functions/
 /bot|crawler|spider|slurp|archiver|facebookexternalhit|twitterbot|linkedinbot|whatsapp|slack|discord|telegram|line|skype|viber|kakao|preview|fetch|embed|card|link|meta|curl|wget|http|url/i
 ```
 
-## Cloudflare設定の変更
+## Cloudflare設定
 
 ### ビルドコマンド
 
-変更前：
-```
-pnpm install && pnpm -C apps/web build
-```
-
-変更後：
 ```
 pnpm install && pnpm -C apps/web build && cp -r apps/web/functions . && npm install --prefix functions
 ```
@@ -50,31 +44,59 @@ compatibility_date = "2024-01-01"
 pages_build_output_dir = "apps/web/dist"
 ```
 
-### 出力ディレクトリ
+### _routes.json
 
-ダッシュボードでは `dist` のまま（変更不可）。`wrangler.toml` で `apps/web/dist` を指定。
+`apps/web/public/_routes.json` でFunctionsルートを指定：
 
-## 試したこと
+```json
+{
+  "version": 1,
+  "include": [
+    "/post/*",
+    "/user/*"
+  ],
+  "exclude": []
+}
+```
 
-1. **wrangler.tomlをルートに配置** → Cloudflareがファイルを認識し、`pages_build_output_dir` を読み込むようになった
+**重要**: `include`に指定したパスでのみFunctionsが実行される。
 
-2. **ビルドコマンドでfunctionsをコピー** → `cp -r apps/web/functions .` でルートにコピー
+### _redirects
 
-3. **functions/package.json追加** → `nostr-tools` の依存関係エラーを解決
+`apps/web/public/_redirects` にはSPAフォールバックを**書かない**：
 
-4. **クローラー検出パターン拡張** → より多くのUser-Agentを検出するように
+```
+# SPA fallback is handled by _routes.json and functions
+# Do not add /* /index.html 200 here as it breaks Functions
+```
 
-## 問題点
+**理由**: `/* /index.html 200` があると、Functionsより先にSPAフォールバックが適用されてしまう。
 
-- ローカルのcurlでは正しいOGPが返される
-- 外部のOGP確認ツール（WebFetch含む）ではホームのOGPが返される
-- 原因不明
+## 動作の流れ
 
-## 次のステップ
+1. クローラーが `/post/{id}` にアクセス
+2. `_routes.json` の `include` にマッチ → Functionsが実行される
+3. `functions/post/[id].ts` がUser-Agentをチェック
+4. クローラーなら動的OGPを生成して返す
+5. クローラーでなければ `context.next()` → SPAのindex.htmlが返る
 
-- [ ] ビルド完了後に再テスト
-- [ ] 動作しない場合、Cloudflare Workersルートでの実装を検討
-- [ ] または、mypace-apiでOGP生成を行う方法を検討
+## ローカルテスト
+
+```bash
+# ビルド
+cd apps/web && pnpm build
+
+# functionsをルートにコピー（Cloudflareビルド時と同じ構成）
+cd ../..
+cp -r apps/web/functions .
+cd functions && npm install && cd ..
+
+# wranglerで起動
+npx wrangler pages dev apps/web/dist
+
+# クローラーとしてテスト
+curl -A "curl/test" "http://localhost:8788/post/{EVENT_ID}"
+```
 
 ## 関連
 

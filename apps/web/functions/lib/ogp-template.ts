@@ -7,7 +7,7 @@ export interface OGPMetadata {
   type?: 'website' | 'article' | 'profile'
 }
 
-// Base HTML template (copy from index.html but with dynamic OGP tags)
+// Minimal HTML template for crawlers (OGP metadata only)
 export function generateHTML(ogp: OGPMetadata): string {
   const { title, description, url, image = 'https://mypace.llll-ll.com/static/ogp.webp', type = 'website' } = ogp
 
@@ -16,7 +16,6 @@ export function generateHTML(ogp: OGPMetadata): string {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="view-transition" content="same-origin" />
     <meta name="theme-color" content="#FFCB3D" />
 
     <!-- SEO -->
@@ -46,19 +45,12 @@ export function generateHTML(ogp: OGPMetadata): string {
     <meta name="robots" content="index, follow" />
     <meta name="googlebot" content="index, follow" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic&family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="icon" type="image/webp" href="/favicon.webp" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.webp" />
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/webp" href="https://mypace.llll-ll.com/favicon.webp" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <h1>${escapeHtml(title)}</h1>
+    <p>${escapeHtml(description)}</p>
+    <p><a href="${escapeHtml(url)}">View on MY PACE</a></p>
   </body>
 </html>
 `
