@@ -1,9 +1,9 @@
 import { useRef, useState, useCallback } from 'react'
 import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant, StickerLayer, Profile } from '../../types'
-import { ImageDropZone, AttachedImages, AttachedLocations, PostPreview } from '../post'
+import { AttachedImages, AttachedLocations, PostPreview } from '../post'
 import { LongModeEditor, type LongModeEditorRef } from './LongModeEditor'
 import { Toggle, Avatar, TextButton, ErrorMessage, Icon } from '../ui'
-import { StickerPicker } from '../sticker'
+import { ImagePicker } from '../sticker'
 import { SuperMentionPopup } from '../superMention'
 import { LocationPicker } from '../location'
 import { DrawingPicker } from '../drawing'
@@ -179,8 +179,7 @@ export function PostFormLongMode({
           </div>
 
           <div className="post-form-row-2">
-            <ImageDropZone onImageUploaded={handleInsertToEditor} onError={onError} />
-            <StickerPicker onAddSticker={onAddSticker} />
+            <ImagePicker onEmbed={handleInsertToEditor} onAddSticker={onAddSticker} onError={onError} />
             <DrawingPicker onComplete={handleInsertToEditor} />
             <VoicePicker onComplete={handleInsertToEditor} />
             <LocationPicker

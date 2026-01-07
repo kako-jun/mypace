@@ -22,10 +22,10 @@ import {
   getDisplayName,
 } from '../../lib/utils'
 import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../../lib/constants'
-import { ImageDropZone, AttachedImages, AttachedLocations, PostPreview } from '../post'
+import { AttachedImages, AttachedLocations, PostPreview } from '../post'
 import { Avatar, Icon, TextButton, ErrorMessage } from '../ui'
 import { setBoolean } from '../../lib/utils/storage'
-import { StickerPicker } from '../sticker'
+import { ImagePicker } from '../sticker'
 import { SuperMentionPopup } from '../superMention'
 import { LocationPicker } from '../location'
 import { DrawingPicker } from '../drawing'
@@ -501,7 +501,7 @@ export function PostForm({
       </div>
 
       <div className="post-form-row-2">
-        <ImageDropZone onImageUploaded={insertImageUrl} onError={setError} />
+        <ImagePicker onEmbed={insertImageUrl} onAddSticker={handleAddSticker} onError={setError} />
         <button
           type="button"
           className="super-mention-button"
@@ -510,7 +510,6 @@ export function PostForm({
         >
           @@
         </button>
-        <StickerPicker onAddSticker={handleAddSticker} />
         <DrawingPicker onComplete={insertImageUrl} />
         <VoicePicker onComplete={insertImageUrl} />
         <LocationPicker
