@@ -33,6 +33,7 @@ export default function App() {
       <Routes location={backgroundLocation || location}>
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/intent/post" element={<HomePage />} />
           <Route path="/post/:id" element={<PostPage />} />
           <Route path="/user/:pubkey" element={<UserPage />} />
           <Route path="/tag/:tags" element={<TagPage />} />

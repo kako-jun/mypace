@@ -7,7 +7,7 @@ import { setImageClickHandler, clearImageClickHandler } from '../lib/parser'
 import { getString, setString, removeItem, getUIThemeColors, applyThemeColors, parseSearchParams } from '../lib/utils'
 import { fetchEventById } from '../lib/nostr/relay'
 import { getFullContentForEdit } from '../lib/nostr/tags'
-import { STORAGE_KEYS, CUSTOM_EVENTS, TIMEOUTS } from '../lib/constants'
+import { STORAGE_KEYS, CUSTOM_EVENTS, TIMEOUTS, LIMITS } from '../lib/constants'
 import type { Event, SearchFilters } from '../types'
 
 interface HomePageProps {
@@ -69,10 +69,11 @@ export function HomePage({ filters: propFilters }: HomePageProps = {}) {
     applyThemeColors(getUIThemeColors())
   }, [])
 
-  // Handle edit/reply URL parameters or restore from localStorage
+  // Handle edit/reply/share URL parameters or restore from localStorage
   useEffect(() => {
     const editId = searchParams.get('edit')
     const replyId = searchParams.get('reply')
+    const shareText = searchParams.get('text')
 
     if (editId) {
       fetchEventById(editId).then((event) => {
@@ -91,6 +92,13 @@ export function HomePage({ filters: propFilters }: HomePageProps = {}) {
           setContent('')
         }
       })
+    } else if (shareText) {
+      // Intent share: set text from URL parameter (truncate if too long)
+      const truncated =
+        shareText.length > LIMITS.MAX_POST_LENGTH ? shareText.slice(0, LIMITS.MAX_POST_LENGTH) : shareText
+      setContent(truncated)
+      setEditingEvent(null)
+      setReplyingTo(null)
     } else {
       // Restore reply target from localStorage if no URL params
       const savedReplyToId = getString(STORAGE_KEYS.DRAFT_REPLY_TO)
