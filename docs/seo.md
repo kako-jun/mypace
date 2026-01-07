@@ -18,22 +18,34 @@ MY PACEはSEO最適化とソーシャルメディア共有のために、以下�
 
 ユーザーページと投稿ページでは、**Cloudflare Pages Functions**を使用してページごとに異なるOGPカードを生成します。
 
-### 実装
+### 仕組み
 
-#### ディレクトリ構造
+すべてのリクエストに対して、OGPメタタグを動的に置換したHTMLを返します。
+
+1. Functionsがリクエストを受け取る
+2. APIからプロフィール/投稿データを取得
+3. ビルド済み`index.html`を読み込む
+4. OGPメタタグ部分を動的に置換
+5. 置換後のHTMLを返す
+
+**ポイント:**
+- User-Agent判定は不要（クローラーもブラウザも同じHTMLを受け取る）
+- クローラーは`<head>`内のOGPメタタグを読み取る
+- ブラウザはJavaScriptを実行してSPAとして動作
+
+### ディレクトリ構造
 
 ```
 apps/web/functions/
-  lib/
-    ogp-template.ts    # HTML生成ユーティリティ
   user/
     [npub].ts          # ユーザーページOGP
   post/
     [id].ts            # 投稿ページOGP
   tsconfig.json
+  package.json
 ```
 
-#### ユーザーページ (`/user/[npub]`)
+### ユーザーページ (`/user/[npub]`)
 
 **生成されるOGP:**
 - **Title**: `{displayName} - MY PACE`
@@ -45,7 +57,7 @@ apps/web/functions/
 - `/api/profiles?pubkeys={pubkey}` からプロフィール取得
 - npubをhex pubkeyにデコードして使用
 
-#### 投稿ページ (`/post/[id]`)
+### 投稿ページ (`/post/[id]`)
 
 **生成されるOGP:**
 - **Title**: `{displayName}の投稿 - MY PACE`
@@ -57,25 +69,6 @@ apps/web/functions/
 - `/api/events/{id}` からイベント取得
 - `/api/profiles?pubkeys={pubkey}` から投稿者プロフィール取得
 
-### クローラー検出
-
-User-Agentを検出して、クローラーの場合のみサーバーサイドでHTMLを生成:
-
-```typescript
-const isCrawler = /bot|crawler|spider|slurp|archiver|facebookexternalhit|twitterbot|linkedinbot|whatsapp/i.test(userAgent)
-```
-
-**検出対象:**
-- Googlebot, Bingbot等の検索エンジン
-- Facebookexternalhit (Facebook)
-- Twitterbot (X/Twitter)
-- LinkedInBot
-- WhatsApp等のメッセージアプリ
-
-**通常アクセス:**
-- `context.next()` でSPAにフォールスルー
-- React Routerが通常通りルーティング
-
 ### キャッシュ戦略
 
 ```http
@@ -84,11 +77,11 @@ Cache-Control: public, max-age=300
 
 - **5分間のHTTPキャッシュ**: Cloudflare Edgeでキャッシュ
 - プロフィール・投稿の更新を適度に反映
-- クローラーのアクセス負荷を軽減
+- アクセス負荷を軽減
 
 ### エラーハンドリング
 
-以下の場合はSPAにフォールバック:
+以下の場合は静的な`index.html`（デフォルトOGP）にフォールバック:
 - npub/イベントIDのデコード失敗
 - API通信エラー
 - データ未取得
@@ -117,14 +110,14 @@ Cloudflare Pages Functionsは自動的にデプロイされます:
 ```bash
 pnpm deploy
 # または
-pnpm -C apps/web deploy
+cd apps/web && npx wrangler pages deploy dist
 ```
 
 ## 検証
 
 OGPカードの確認:
 - [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/)
-- [Twitter Card Validator](https://cards-dev.twitter.com/validator)
+- [OGP確認（ラッコツールズ）](https://rakko.tools/tools/9/)
 - [LinkedIn Post Inspector](https://www.linkedin.com/post-inspector/)
 
 ## 制限事項

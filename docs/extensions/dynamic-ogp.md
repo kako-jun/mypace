@@ -4,7 +4,22 @@
 
 ## 現状
 
-**動作確認済み**。クローラーがアクセスすると動的OGPが返される。
+**動作確認済み**。すべてのリクエストで動的OGPが返される。
+
+## 仕組み
+
+すべてのリクエストに対して、OGPメタタグを動的に置換したHTMLを返す：
+
+1. Functionsがリクエストを受け取る
+2. APIからプロフィール/投稿データを取得
+3. ビルド済み`index.html`を読み込む（`context.env.ASSETS.fetch()`）
+4. OGPメタタグ部分を正規表現で置換
+5. 置換後のHTMLを返す
+
+**ポイント:**
+- User-Agent判定は不要（クローラーもブラウザも同じHTMLを受け取る）
+- クローラーは`<head>`内のOGPメタタグを読み取る
+- ブラウザはJavaScriptを実行してSPAとして動作
 
 ## 実装
 
@@ -14,34 +29,10 @@
 
 ```
 functions/
-  lib/ogp-template.ts  # HTML生成
   post/[id].ts         # 投稿ページOGP
   user/[npub].ts       # ユーザーページOGP
   package.json         # nostr-tools依存関係
-```
-
-### クローラー検出パターン
-
-```typescript
-/bot|crawler|spider|slurp|archiver|facebookexternalhit|twitterbot|linkedinbot|whatsapp|slack|discord|telegram|line|skype|viber|kakao|preview|fetch|embed|card|link|meta|curl|wget|http|url/i
-```
-
-## Cloudflare設定
-
-### ビルドコマンド
-
-```
-pnpm install && pnpm -C apps/web build && cp -r apps/web/functions . && npm install --prefix functions
-```
-
-### wrangler.toml
-
-プロジェクトルートに `wrangler.toml` を追加：
-
-```toml
-name = "mypace"
-compatibility_date = "2024-01-01"
-pages_build_output_dir = "apps/web/dist"
+  tsconfig.json
 ```
 
 ### _routes.json
@@ -72,30 +63,24 @@ pages_build_output_dir = "apps/web/dist"
 
 **理由**: `/* /index.html 200` があると、Functionsより先にSPAフォールバックが適用されてしまう。
 
-## 動作の流れ
+## デプロイ
 
-1. クローラーが `/post/{id}` にアクセス
-2. `_routes.json` の `include` にマッチ → Functionsが実行される
-3. `functions/post/[id].ts` がUser-Agentをチェック
-4. クローラーなら動的OGPを生成して返す
-5. クローラーでなければ `context.next()` → SPAのindex.htmlが返る
+```bash
+cd apps/web
+pnpm build
+npx wrangler pages deploy dist
+```
 
 ## ローカルテスト
 
 ```bash
-# ビルド
-cd apps/web && pnpm build
+cd apps/web
+pnpm build
+pnpm preview  # または npx wrangler pages dev dist
 
-# functionsをルートにコピー（Cloudflareビルド時と同じ構成）
-cd ../..
-cp -r apps/web/functions .
-cd functions && npm install && cd ..
-
-# wranglerで起動
-npx wrangler pages dev apps/web/dist
-
-# クローラーとしてテスト
-curl -A "curl/test" "http://localhost:8788/post/{EVENT_ID}"
+# テスト
+curl "http://localhost:8788/user/{NPUB}"
+curl "http://localhost:8788/post/{EVENT_ID}"
 ```
 
 ## 関連
