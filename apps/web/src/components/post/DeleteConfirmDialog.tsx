@@ -1,18 +1,33 @@
+import { createPortal } from 'react-dom'
+import { CloseButton, TextButton } from '../ui'
+
 interface DeleteConfirmDialogProps {
+  position: { top: number; left: number }
   onConfirm: () => void
   onCancel: () => void
 }
 
-export default function DeleteConfirmDialog({ onConfirm, onCancel }: DeleteConfirmDialogProps) {
-  return (
-    <div className="delete-confirm" role="dialog" aria-label="Confirm delete">
-      <span className="delete-confirm-text">Delete?</span>
-      <button className="delete-confirm-yes" onClick={onConfirm} aria-label="Confirm delete">
-        Yes
-      </button>
-      <button className="delete-confirm-no" onClick={onCancel} aria-label="Cancel delete">
-        No
-      </button>
-    </div>
+export default function DeleteConfirmDialog({ position, onConfirm, onCancel }: DeleteConfirmDialogProps) {
+  return createPortal(
+    <>
+      <div className="delete-confirm-overlay" onClick={onCancel} />
+      <div
+        className="delete-confirm-popup"
+        style={{ top: position.top, left: position.left }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="delete-confirm-header">
+          <span className="delete-confirm-title">Delete?</span>
+          <CloseButton onClick={onCancel} size={16} />
+        </div>
+        <div className="delete-confirm-actions">
+          <TextButton variant="warning" onClick={onConfirm}>
+            Yes
+          </TextButton>
+          <TextButton onClick={onCancel}>No</TextButton>
+        </div>
+      </div>
+    </>,
+    document.body
   )
 }

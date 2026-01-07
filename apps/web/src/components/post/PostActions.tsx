@@ -71,13 +71,13 @@ export default function PostActions({
   const isLiking = likingId === eventId
   const reactors = reactions?.reactors || []
 
-  // Update popup position when shown (to the right of the stella button)
+  // Update popup position when shown (above the stella button, centered)
   useEffect(() => {
     if (showReactorsPopup && buttonWrapperRef.current) {
       const rect = buttonWrapperRef.current.getBoundingClientRect()
       setPopupPosition({
         top: rect.top + window.scrollY,
-        left: rect.right + window.scrollX + 8, // 8px gap to the right of stella
+        left: rect.left + rect.width / 2 + window.scrollX,
       })
     } else {
       // Reset position when closed
@@ -156,13 +156,13 @@ export default function PostActions({
     }
   }, [showShareMenu])
 
-  // Repost confirm position calculation (to the right of the button, like ReactorsPopup)
+  // Repost confirm position calculation (above the button, centered)
   useEffect(() => {
     if (showRepostConfirm && repostButtonRef.current) {
       const rect = repostButtonRef.current.getBoundingClientRect()
       setRepostConfirmPosition({
         top: rect.top + window.scrollY,
-        left: rect.right + window.scrollX + 8, // 8px gap to the right
+        left: rect.left + rect.width / 2 + window.scrollX,
       })
     } else {
       setRepostConfirmPosition(null)

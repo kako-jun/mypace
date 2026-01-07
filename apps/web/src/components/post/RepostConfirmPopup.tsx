@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { CloseButton } from '../ui'
+import { CloseButton, TextButton } from '../ui'
 
 interface RepostConfirmPopupProps {
   position: { top: number; left: number }
@@ -21,12 +21,10 @@ export default function RepostConfirmPopup({ position, onConfirm, onClose }: Rep
           <CloseButton onClick={onClose} size={16} />
         </div>
         <div className="repost-confirm-actions">
-          <button className="repost-confirm-yes" onClick={onConfirm}>
+          <TextButton variant="primary" onClick={onConfirm}>
             Yes
-          </button>
-          <button className="repost-confirm-no" onClick={onClose}>
-            No
-          </button>
+          </TextButton>
+          <TextButton onClick={onClose}>No</TextButton>
         </div>
       </div>
     </>,

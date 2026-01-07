@@ -39,7 +39,7 @@ export default function ShareMenu({ position, onSelect, onClose }: ShareMenuProp
         {!showContentMenu ? (
           <>
             <div className="share-menu-header">
-              <span className="share-menu-title">Share</span>
+              <span className="share-menu-title">Share?</span>
               <CloseButton onClick={() => onClose()} size={16} />
             </div>
             <div className="share-menu-options">

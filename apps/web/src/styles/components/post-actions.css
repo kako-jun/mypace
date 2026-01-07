@@ -106,42 +106,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9999;
+  z-index: 50;
 }
 
-/* Reactors popup - speech bubble style (rendered via portal, right of star) */
+/* Reactors popup - appears above button (same style as share-menu) */
 .reactors-popup {
   position: absolute;
+  transform: translate(-50%, -100%);
+  margin-top: -12px;
   background: var(--surface-primary);
   border: 2px solid var(--border-card);
   padding: 1rem;
-  z-index: 10000;
+  z-index: 51;
   min-width: 240px;
   max-height: 300px;
   overflow-y: auto;
-}
-
-/* Speech bubble arrow pointing left */
-.reactors-popup::after {
-  content: '';
-  position: absolute;
-  left: -10px;
-  top: 12px;
-  border-width: 8px 10px 8px 0;
-  border-style: solid;
-  border-color: transparent var(--border-card) transparent transparent;
-}
-
-/* Inner arrow for background color */
-.reactors-popup::before {
-  content: '';
-  position: absolute;
-  left: -7px;
-  top: 14px;
-  border-width: 6px 8px 6px 0;
-  border-style: solid;
-  border-color: transparent var(--surface-primary) transparent transparent;
-  z-index: 1;
 }
 
 .reactors-popup-header {
@@ -326,10 +305,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9999;
+  z-index: 50;
 }
 
-/* Share menu - speech bubble style pointing down (appears above button) */
+/* Share menu - appears above button */
 .share-menu {
   position: absolute;
   transform: translate(-50%, -100%);
@@ -337,33 +316,8 @@
   background: var(--surface-primary);
   border: 2px solid var(--border-card);
   padding: 0.75rem;
-  z-index: 10000;
+  z-index: 51;
   min-width: 200px;
-}
-
-/* Speech bubble arrow pointing down */
-.share-menu::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 10px 8px 0 8px;
-  border-style: solid;
-  border-color: var(--border-card) transparent transparent transparent;
-}
-
-/* Inner arrow for background color */
-.share-menu::before {
-  content: '';
-  position: absolute;
-  bottom: -7px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 8px 6px 0 6px;
-  border-style: solid;
-  border-color: var(--surface-primary) transparent transparent transparent;
-  z-index: 1;
 }
 
 .share-menu-header {
@@ -452,40 +406,19 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9999;
+  z-index: 50;
 }
 
-/* Repost confirm popup - speech bubble style (rendered via portal, right of button) */
+/* Repost confirm popup - appears above button (same style as share-menu) */
 .repost-confirm-popup {
   position: absolute;
+  transform: translate(-50%, -100%);
+  margin-top: -12px;
   background: var(--surface-primary);
   border: 2px solid var(--border-card);
   padding: 0.75rem;
-  z-index: 10000;
+  z-index: 51;
   min-width: 140px;
-}
-
-/* Speech bubble arrow pointing left */
-.repost-confirm-popup::after {
-  content: '';
-  position: absolute;
-  left: -10px;
-  top: 12px;
-  border-width: 8px 10px 8px 0;
-  border-style: solid;
-  border-color: transparent var(--border-card) transparent transparent;
-}
-
-/* Inner arrow for background color */
-.repost-confirm-popup::before {
-  content: '';
-  position: absolute;
-  left: -7px;
-  top: 14px;
-  border-width: 6px 8px 6px 0;
-  border-style: solid;
-  border-color: transparent var(--surface-primary) transparent transparent;
-  z-index: 1;
 }
 
 .repost-confirm-header {
@@ -500,40 +433,11 @@
 .repost-confirm-title {
   font-size: 0.875rem;
   font-weight: bold;
-  color: #2ecc71;
+  color: var(--text-primary);
 }
 
 .repost-confirm-actions {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
-}
-
-.repost-confirm-yes,
-.repost-confirm-no {
-  background: none;
-  border: 1px solid var(--border-card);
-  font-size: 0.875rem;
-  cursor: pointer;
-  padding: 0.35rem 0.75rem;
-  border-radius: 4px;
-  transition: background 0.2s ease;
-  outline: none;
-}
-
-.repost-confirm-yes {
-  color: #2ecc71;
-  border-color: #2ecc71;
-}
-
-.repost-confirm-yes:hover {
-  background: rgba(46, 204, 113, 0.15);
-}
-
-.repost-confirm-no {
-  color: var(--text-muted);
-}
-
-.repost-confirm-no:hover {
-  background: var(--surface-hover);
 }

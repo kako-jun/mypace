@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { forwardRef, type ReactNode } from 'react'
 
 interface Props {
   children: ReactNode
@@ -11,27 +11,37 @@ interface Props {
   title?: string
 }
 
-export default function TextButton({
-  children,
-  onClick,
-  disabled = false,
-  type = 'button',
-  variant = 'default',
-  className = '',
-  'aria-label': ariaLabel,
-  title,
-}: Props) {
-  const variantClass = variant !== 'default' ? `text-outlined-${variant}` : ''
-  return (
-    <button
-      type={type}
-      className={`text-outlined text-outlined-button ${variantClass} ${className}`.trim()}
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={ariaLabel}
-      title={title}
-    >
-      {children}
-    </button>
-  )
-}
+const TextButton = forwardRef<HTMLButtonElement, Props>(
+  (
+    {
+      children,
+      onClick,
+      disabled = false,
+      type = 'button',
+      variant = 'default',
+      className = '',
+      'aria-label': ariaLabel,
+      title,
+    },
+    ref
+  ) => {
+    const variantClass = variant !== 'default' ? `text-outlined-${variant}` : ''
+    return (
+      <button
+        ref={ref}
+        type={type}
+        className={`text-outlined text-outlined-button ${variantClass} ${className}`.trim()}
+        onClick={onClick}
+        disabled={disabled}
+        aria-label={ariaLabel}
+        title={title}
+      >
+        {children}
+      </button>
+    )
+  }
+)
+
+TextButton.displayName = 'TextButton'
+
+export default TextButton

@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from 'react'
 import { TextButton } from '../ui'
 import DeleteConfirmDialog from './DeleteConfirmDialog'
 import '../../styles/components/edit-delete.css'
@@ -17,18 +18,39 @@ export default function EditDeleteButtons({
   onDeleteConfirm,
   onDeleteCancel,
 }: EditDeleteButtonsProps) {
-  if (isConfirming) {
-    return <DeleteConfirmDialog onConfirm={onDeleteConfirm} onCancel={onDeleteCancel} />
-  }
+  const deleteButtonRef = useRef<HTMLButtonElement>(null)
+  const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null)
+
+  // Calculate popup position when confirming
+  useEffect(() => {
+    if (isConfirming && deleteButtonRef.current) {
+      const rect = deleteButtonRef.current.getBoundingClientRect()
+      setPopupPosition({
+        top: rect.top + window.scrollY,
+        left: rect.left + rect.width / 2 + window.scrollX,
+      })
+    } else {
+      setPopupPosition(null)
+    }
+  }, [isConfirming])
 
   return (
     <>
       <TextButton variant="primary" className="edit-button" onClick={onEdit} aria-label="Edit this post">
         EDIT
       </TextButton>
-      <TextButton variant="warning" className="delete-button" onClick={onDelete} aria-label="Delete this post">
+      <TextButton
+        variant="warning"
+        className="delete-button"
+        onClick={onDelete}
+        aria-label="Delete this post"
+        ref={deleteButtonRef}
+      >
         DELETE
       </TextButton>
+      {isConfirming && popupPosition && (
+        <DeleteConfirmDialog position={popupPosition} onConfirm={onDeleteConfirm} onCancel={onDeleteCancel} />
+      )}
     </>
   )
 }
