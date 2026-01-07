@@ -501,7 +501,6 @@ export function PostForm({
       </div>
 
       <div className="post-form-row-2">
-        <ImagePicker onEmbed={insertImageUrl} onAddSticker={handleAddSticker} onError={setError} />
         <button
           type="button"
           className="super-mention-button"
@@ -510,6 +509,7 @@ export function PostForm({
         >
           @@
         </button>
+        <ImagePicker onEmbed={insertImageUrl} onAddSticker={handleAddSticker} onError={setError} />
         <DrawingPicker onComplete={insertImageUrl} />
         <VoicePicker onComplete={insertImageUrl} />
         <LocationPicker
