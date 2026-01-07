@@ -45,6 +45,21 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
     }
   }, [selectedIndex, items])
 
+  // Parse query into keywords (space/comma separated for AND search)
+  const parseKeywords = (q: string): string[] => {
+    return q
+      .split(/[\s,]+/)
+      .map((w) => w.trim().toLowerCase())
+      .filter((w) => w.length > 0)
+  }
+
+  // Check if item matches all keywords (AND search)
+  const matchesAllKeywords = (item: { path: string; description?: string }, keywords: string[]): boolean => {
+    if (keywords.length === 0) return true
+    const searchText = `${item.path} ${item.description || ''}`.toLowerCase()
+    return keywords.every((kw) => searchText.includes(kw))
+  }
+
   // Search logic
   useEffect(() => {
     if (searchTimeoutRef.current) {
@@ -69,32 +84,48 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
       return
     }
 
+    // Parse keywords for AND search
+    const keywords = parseKeywords(query)
+    const firstKeyword = keywords[0] || query
+
     // Search with query
     setLoading(true)
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const historyResults = await getSuperMentionSuggestions(query, undefined, 10)
+        // Search using first keyword for API efficiency
+        const historyResults = await getSuperMentionSuggestions(firstKeyword, undefined, 30)
         const newItems: SuggestItem[] = []
 
+        // Filter history results by all keywords (AND)
         for (const s of historyResults) {
-          newItems.push({
-            type: 'history',
+          const item = {
             path: s.path,
             description: s.wikidataDescription || '',
-            wikidataId: s.wikidataId || undefined,
-          })
+          }
+          if (matchesAllKeywords(item, keywords)) {
+            newItems.push({
+              type: 'history',
+              path: s.path,
+              description: s.wikidataDescription || '',
+              wikidataId: s.wikidataId || undefined,
+            })
+          }
         }
 
-        const wikidataResults = await searchWikidata(query, 'ja')
+        // Search Wikidata and filter by all keywords (AND)
+        const wikidataResults = await searchWikidata(firstKeyword, 'ja')
         const historyIds = new Set(historyResults.map((h) => h.wikidataId).filter(Boolean))
         for (const w of wikidataResults) {
           if (!historyIds.has(w.id)) {
-            newItems.push({
-              type: 'wikidata',
-              id: w.id,
-              path: w.label,
-              description: w.description,
-            })
+            const item = { path: w.label, description: w.description }
+            if (matchesAllKeywords(item, keywords)) {
+              newItems.push({
+                type: 'wikidata',
+                id: w.id,
+                path: w.label,
+                description: w.description,
+              })
+            }
           }
         }
 

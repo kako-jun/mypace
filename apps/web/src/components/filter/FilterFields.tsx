@@ -10,7 +10,6 @@ interface FilterFieldsProps {
   onNgWordsChange: (value: string) => void
   onNgTagsChange: (value: string) => void
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
-  inputRef: React.RefObject<HTMLInputElement | null>
 }
 
 export function FilterFields({
@@ -23,7 +22,6 @@ export function FilterFields({
   onNgWordsChange,
   onNgTagsChange,
   onKeyDown,
-  inputRef,
 }: FilterFieldsProps) {
   return (
     <>
@@ -35,7 +33,6 @@ export function FilterFields({
           <div className="filter-search-row">
             <Icon name="Search" size={16} className="filter-search-icon" />
             <Input
-              ref={inputRef}
               value={searchQuery}
               placeholder="Keyword..."
               onChange={onSearchQueryChange}

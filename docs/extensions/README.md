@@ -54,6 +54,7 @@ MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装し
 | File Import | [file-import.md](./file-import.md) | ローカルファイルからエディタに読み込み |
 | 設定エクスポート | [settings-export.md](./settings-export.md) | テーマ・フィルタ設定の保存・復元 |
 | Kind Filter | [kind-filter.md](./kind-filter.md) | SNS/ブログの表示切替 |
+| Text Filter | [text-filter.md](./text-filter.md) | OK/NGワード・タグでフィルタ |
 | Filter Presets | [filter-presets.md](./filter-presets.md) | フィルタ設定の保存・切替 |
 | Smart Filter | [smart-filter.md](./smart-filter.md) | 広告/NSFWのサーバーサイドフィルタ |
 | Mute List | [mute-list.md](./mute-list.md) | 特定ユーザーのミュート |

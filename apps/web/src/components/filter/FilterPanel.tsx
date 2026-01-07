@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Button from '../ui/Button'
 import Toggle from '../ui/Toggle'
@@ -19,7 +19,6 @@ interface FilterPanelProps {
 
 export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH_FILTERS }: FilterPanelProps) {
   const navigate = useNavigate()
-  const inputRef = useRef<HTMLInputElement>(null)
 
   // Preset state
   const [presets, setPresets] = useState<FilterPreset[]>([])
@@ -58,12 +57,6 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     setHideNPC(filters.hideNPC ?? false)
     setSelectedPresetId('')
   }, [filters])
-
-  useEffect(() => {
-    if (isPopup && inputRef.current) {
-      inputRef.current.focus()
-    }
-  }, [isPopup])
 
   // Track if form is dirty
   const isDirty =
@@ -222,7 +215,6 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
         onNgWordsChange={setNgWordsInput}
         onNgTagsChange={setNgTagsInput}
         onKeyDown={handleKeyDown}
-        inputRef={inputRef}
       />
 
       <div className="filter-actions">

@@ -227,10 +227,19 @@ export const Timeline = memo(function Timeline({
     )
   }
 
-  // Filter by OK word (case-insensitive, searches content only)
+  // Filter by OK words (case-insensitive, searches content only)
+  // Multiple words can be separated by spaces or commas (OR logic)
   if (query) {
-    const lowerQuery = query.toLowerCase()
-    filteredItems = filteredItems.filter((item) => item.event.content.toLowerCase().includes(lowerQuery))
+    const okWords = query
+      .split(/[\s,]+/)
+      .map((w) => w.trim().toLowerCase())
+      .filter((w) => w.length > 0)
+    if (okWords.length > 0) {
+      filteredItems = filteredItems.filter((item) => {
+        const lowerContent = item.event.content.toLowerCase()
+        return okWords.some((word) => lowerContent.includes(word))
+      })
+    }
   }
 
   // Filter by NG words (exclude posts containing any NG word in content)

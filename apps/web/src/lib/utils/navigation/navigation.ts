@@ -143,6 +143,7 @@ export function parseSearchParams(searchParams: URLSearchParams): SearchFilters 
   const npcParam = searchParams.get('npc')
 
   // Determine mode and parse tags based on separator
+  // + means AND mode, space/comma means OR mode
   let tags: string[] = []
   let mode: FilterMode = 'and'
   if (tagsParam) {
@@ -152,14 +153,13 @@ export function parseSearchParams(searchParams: URLSearchParams): SearchFilters 
         .map((t) => decodeURIComponent(t.trim()))
         .filter(Boolean)
       mode = 'and'
-    } else if (tagsParam.includes(',')) {
+    } else {
+      // Split by space or comma (OR mode)
       tags = tagsParam
-        .split(',')
+        .split(/[\s,]+/)
         .map((t) => decodeURIComponent(t.trim()))
         .filter(Boolean)
       mode = 'or'
-    } else {
-      tags = [decodeURIComponent(tagsParam)]
     }
   }
 
