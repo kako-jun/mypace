@@ -9,7 +9,7 @@ XやFacebookの「シェア」ボタンと同様に、外部サイトから「MY
 ## Intent URL
 
 ```
-https://mypace.world/intent/post?text=シェアしたいテキスト
+https://mypace.llll-ll.com/intent/post?text=シェアしたいテキスト
 ```
 
 ### Parameters
@@ -28,7 +28,7 @@ https://mypace.world/intent/post?text=シェアしたいテキスト
 ### HTML（静的）
 
 ```html
-<a href="https://mypace.world/intent/post?text=記事タイトル%20https://example.com/article">
+<a href="https://mypace.llll-ll.com/intent/post?text=記事タイトル%20https://example.com/article">
   MY PACEでシェア
 </a>
 ```
@@ -40,7 +40,7 @@ https://mypace.world/intent/post?text=シェアしたいテキスト
 ```javascript
 function shareToMypace() {
   const text = `${document.title} ${location.href}`
-  const url = `https://mypace.world/intent/post?text=${encodeURIComponent(text)}`
+  const url = `https://mypace.llll-ll.com/intent/post?text=${encodeURIComponent(text)}`
   window.open(url, '_blank')
 }
 ```
@@ -56,7 +56,7 @@ function shareToMypace(customText) {
   const text = customText
     ? `${customText} ${location.href}`
     : `${document.title} ${location.href}`
-  const url = `https://mypace.world/intent/post?text=${encodeURIComponent(text)}`
+  const url = `https://mypace.llll-ll.com/intent/post?text=${encodeURIComponent(text)}`
   window.open(url, '_blank')
 }
 
