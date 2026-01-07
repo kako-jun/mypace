@@ -54,7 +54,6 @@ export default function ThreadReplies({
                     emojis={parseEmojiTags(reply.tags)}
                     profiles={profiles}
                     truncate={true}
-                    forceTruncate={true}
                     tags={reply.tags}
                     onReadMore={() => navigateToPost(reply.id)}
                   />
