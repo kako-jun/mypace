@@ -35,7 +35,7 @@ export const CUSTOM_EVENTS = {
 
 // Supported languages for filtering
 export const LANGUAGES = [
-  { code: '', label: 'All' },
+  { code: '', label: 'All Languages' },
   { code: 'ja', label: '日本語' },
   { code: 'en', label: 'English' },
   { code: 'zh', label: '中文' },
