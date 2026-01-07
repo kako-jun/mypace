@@ -199,8 +199,10 @@
 /* Twitter Embed (react-tweet) */
 .embed-twitter {
   min-height: 100px;
-  background: transparent;
+  background: #000;
   border: none;
+  border-radius: 12px;
+  padding: 12px;
 }
 
 .embed-twitter .react-tweet-theme {
@@ -217,8 +219,8 @@
 .embed-twitter.embed-error,
 .embed-twitter.embed-fallback {
   padding: 1rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: #000;
+  border: 1px solid #2f3336;
 }
 
 .embed-twitter.embed-error a,
@@ -227,13 +229,13 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  color: var(--text-secondary);
+  color: #71767b;
   text-decoration: none;
 }
 
 .embed-twitter.embed-error a:hover,
 .embed-twitter-link:hover {
-  color: var(--accent-color);
+  color: #1d9bf0;
 }
 
 /* Twitter fallback content */
@@ -265,16 +267,16 @@
 
 .embed-twitter-name {
   font-weight: 600;
-  color: var(--text-primary);
+  color: #e7e9ea;
 }
 
 .embed-twitter-handle {
-  color: var(--text-secondary);
+  color: #71767b;
   font-size: 0.875rem;
 }
 
 .embed-twitter-text {
-  color: var(--text-primary);
+  color: #e7e9ea;
   margin: 0.5rem 0;
   line-height: 1.5;
   white-space: pre-wrap;
@@ -284,7 +286,7 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  color: var(--text-tertiary);
+  color: #71767b;
   font-size: 0.75rem;
   margin-top: 0.5rem;
 }
@@ -293,12 +295,18 @@
   color: #1da1f2;
 }
 
-/* react-tweet dark mode support */
-html[data-theme="dark"] .embed-twitter {
-  --tweet-bg-color: var(--surface-primary);
-  --tweet-border: 1px solid var(--border-color);
-  --tweet-color: var(--text-primary);
-  --tweet-color-secondary: var(--text-secondary);
+/* react-tweet: always use dark theme (X corporate style) */
+.embed-twitter {
+  --tweet-bg-color: #000;
+  --tweet-bg-color-hover: #16181c;
+  --tweet-border: 1px solid #2f3336;
+  --tweet-color: #e7e9ea;
+  --tweet-color-secondary: #71767b;
+  --tweet-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --tweet-font-color: #e7e9ea;
+  --tweet-font-color-secondary: #71767b;
+  --tweet-link-color: #1d9bf0;
+  --tweet-link-color-hover: #1a8cd8;
 }
 
 /* Instagram Embed */

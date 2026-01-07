@@ -36,12 +36,7 @@ export default function TwitterEmbed({ tweetId, url }: TwitterEmbedProps) {
 
   if (!loaded) {
     return (
-      <EmbedPlaceholder
-        embedType="twitter"
-        iconName="Twitter"
-        text="Click to load tweet"
-        onClick={() => setLoaded(true)}
-      />
+      <EmbedPlaceholder embedType="twitter" iconName="X" text="Click to load post" onClick={() => setLoaded(true)} />
     )
   }
 
@@ -61,14 +56,14 @@ export default function TwitterEmbed({ tweetId, url }: TwitterEmbedProps) {
               </div>
               <p className="embed-twitter-text">{tweetData.text}</p>
               <div className="embed-twitter-footer">
-                <Icon name="Twitter" size={14} />
+                <Icon name="X" size={14} />
                 <span>View on X</span>
               </div>
             </div>
           </ExternalLink>
         ) : (
           <ExternalLink href={url} className="embed-twitter-link">
-            <Icon name="Twitter" size={16} /> View tweet on X
+            <Icon name="X" size={16} /> View post on X
           </ExternalLink>
         )}
       </div>
