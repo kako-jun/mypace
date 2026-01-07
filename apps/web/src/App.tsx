@@ -7,6 +7,7 @@ import { UserPage } from './pages/UserPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { TagPage } from './pages/TagPage'
 import { UploadHistoryPage } from './pages/UploadHistoryPage'
+import { EmbedPage } from './pages/EmbedPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PostModal } from './components/post'
 import { initializeNavigation } from './lib/utils'
@@ -32,6 +33,9 @@ export default function App() {
   return (
     <>
       <Routes location={backgroundLocation || location}>
+        {/* Embed page - no Layout */}
+        <Route path="/embed/:noteId" element={<EmbedPage />} />
+
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/intent/post" element={<HomePage />} />
