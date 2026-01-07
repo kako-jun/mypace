@@ -71,13 +71,13 @@ export default function PostActions({
   const isLiking = likingId === eventId
   const reactors = reactions?.reactors || []
 
-  // Update popup position when shown (above the stella button, centered)
+  // Update popup position when shown (above-right of the stella button)
   useEffect(() => {
     if (showReactorsPopup && buttonWrapperRef.current) {
       const rect = buttonWrapperRef.current.getBoundingClientRect()
       setPopupPosition({
         top: rect.top + window.scrollY,
-        left: rect.left + rect.width / 2 + window.scrollX,
+        left: rect.right + window.scrollX,
       })
     } else {
       // Reset position when closed

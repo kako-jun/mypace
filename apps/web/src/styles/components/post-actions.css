@@ -106,18 +106,18 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 50;
+  z-index: 10;
 }
 
-/* Reactors popup - appears above button (same style as share-menu) */
+/* Reactors popup - appears above-right of button (to avoid going off-screen on left) */
 .reactors-popup {
   position: absolute;
-  transform: translate(-50%, -100%);
+  transform: translate(0, -100%);
   margin-top: -12px;
   background: var(--surface-primary);
   border: 2px solid var(--border-card);
   padding: 1rem;
-  z-index: 51;
+  z-index: 11;
   min-width: 240px;
   max-height: 300px;
   overflow-y: auto;
@@ -305,7 +305,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 50;
+  z-index: 10;
 }
 
 /* Share menu - appears above button */
@@ -316,7 +316,7 @@
   background: var(--surface-primary);
   border: 2px solid var(--border-card);
   padding: 0.75rem;
-  z-index: 51;
+  z-index: 11;
   min-width: 200px;
 }
 
@@ -406,7 +406,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 50;
+  z-index: 10;
 }
 
 /* Repost confirm popup - appears above button (same style as share-menu) */
@@ -417,7 +417,7 @@
   background: var(--surface-primary);
   border: 2px solid var(--border-card);
   padding: 0.75rem;
-  z-index: 51;
+  z-index: 11;
   min-width: 140px;
 }
 
