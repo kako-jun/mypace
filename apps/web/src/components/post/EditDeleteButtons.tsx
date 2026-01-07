@@ -26,13 +26,17 @@ export default function EditDeleteButtons({
     if (isConfirming && deleteButtonRef.current) {
       const rect = deleteButtonRef.current.getBoundingClientRect()
       setPopupPosition({
-        top: rect.top + window.scrollY,
-        left: rect.left + rect.width / 2 + window.scrollX,
+        top: rect.top,
+        left: rect.left + rect.width / 2,
       })
+      // Close popup on scroll
+      const handleScroll = () => onDeleteCancel()
+      window.addEventListener('scroll', handleScroll, { passive: true })
+      return () => window.removeEventListener('scroll', handleScroll)
     } else {
       setPopupPosition(null)
     }
-  }, [isConfirming])
+  }, [isConfirming, onDeleteCancel])
 
   return (
     <>

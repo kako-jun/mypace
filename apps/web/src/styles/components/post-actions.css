@@ -111,7 +111,7 @@
 
 /* Reactors popup - appears above-right of button (to avoid going off-screen on left) */
 .reactors-popup {
-  position: absolute;
+  position: fixed;
   transform: translate(0, -100%);
   margin-top: -12px;
   background: var(--surface-primary);
@@ -310,7 +310,7 @@
 
 /* Share menu - appears above button */
 .share-menu {
-  position: absolute;
+  position: fixed;
   transform: translate(-50%, -100%);
   margin-top: -12px;
   background: var(--surface-primary);
@@ -411,7 +411,7 @@
 
 /* Repost confirm popup - appears above button (same style as share-menu) */
 .repost-confirm-popup {
-  position: absolute;
+  position: fixed;
   transform: translate(-50%, -100%);
   margin-top: -12px;
   background: var(--surface-primary);

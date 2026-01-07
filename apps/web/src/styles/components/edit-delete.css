@@ -20,7 +20,7 @@
 }
 
 .delete-confirm-popup {
-  position: absolute;
+  position: fixed;
   transform: translate(-50%, -100%);
   margin-top: -12px;
   background: var(--surface-primary);

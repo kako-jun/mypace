@@ -76,9 +76,13 @@ export default function PostActions({
     if (showReactorsPopup && buttonWrapperRef.current) {
       const rect = buttonWrapperRef.current.getBoundingClientRect()
       setPopupPosition({
-        top: rect.top + window.scrollY,
-        left: rect.right + window.scrollX,
+        top: rect.top,
+        left: rect.right,
       })
+      // Close popup on scroll (position: fixed doesn't follow scroll)
+      const handleScroll = () => setShowReactorsPopup(false)
+      window.addEventListener('scroll', handleScroll, { passive: true })
+      return () => window.removeEventListener('scroll', handleScroll)
     } else {
       // Reset position when closed
       setPopupPosition(null)
@@ -148,9 +152,13 @@ export default function PostActions({
     if (showShareMenu && shareButtonRef.current) {
       const rect = shareButtonRef.current.getBoundingClientRect()
       setShareMenuPosition({
-        top: rect.top + window.scrollY,
-        left: rect.left + rect.width / 2 + window.scrollX,
+        top: rect.top,
+        left: rect.left + rect.width / 2,
       })
+      // Close menu on scroll
+      const handleScroll = () => setShowShareMenu(false)
+      window.addEventListener('scroll', handleScroll, { passive: true })
+      return () => window.removeEventListener('scroll', handleScroll)
     } else {
       setShareMenuPosition(null)
     }
@@ -161,9 +169,13 @@ export default function PostActions({
     if (showRepostConfirm && repostButtonRef.current) {
       const rect = repostButtonRef.current.getBoundingClientRect()
       setRepostConfirmPosition({
-        top: rect.top + window.scrollY,
-        left: rect.left + rect.width / 2 + window.scrollX,
+        top: rect.top,
+        left: rect.left + rect.width / 2,
       })
+      // Close popup on scroll
+      const handleScroll = () => setShowRepostConfirm(false)
+      window.addEventListener('scroll', handleScroll, { passive: true })
+      return () => window.removeEventListener('scroll', handleScroll)
     } else {
       setRepostConfirmPosition(null)
     }
