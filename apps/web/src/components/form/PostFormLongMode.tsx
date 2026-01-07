@@ -164,13 +164,6 @@ export function PostFormLongMode({
                 />
               </>
             )}
-            <div className="post-form-spacer" />
-            <div className="vim-toggle">
-              <Toggle checked={vimMode} onChange={onVimModeChange} label="Vim" />
-            </div>
-          </div>
-
-          <div className="post-form-row-2">
             <button
               type="button"
               className="super-mention-button"
@@ -179,6 +172,13 @@ export function PostFormLongMode({
             >
               @@
             </button>
+            <div className="post-form-spacer" />
+            <div className="vim-toggle">
+              <Toggle checked={vimMode} onChange={onVimModeChange} label="Vim" />
+            </div>
+          </div>
+
+          <div className="post-form-row-2">
             <ImagePicker onEmbed={handleInsertToEditor} onAddSticker={onAddSticker} onError={onError} />
             <DrawingPicker onComplete={handleInsertToEditor} />
             <VoicePicker onComplete={handleInsertToEditor} />

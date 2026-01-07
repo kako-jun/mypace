@@ -486,6 +486,14 @@ export function PostForm({
             />
           </>
         )}
+        <button
+          type="button"
+          className="super-mention-button"
+          onClick={() => setShowSuperMentionPopup(true)}
+          title="Super Mention (@@)"
+        >
+          @@
+        </button>
         <div className="post-form-spacer" />
         <TextButton variant="primary" className="mode-toggle-corner" onClick={handleLongModeToggle}>
           LONG ↗
@@ -501,14 +509,6 @@ export function PostForm({
       </div>
 
       <div className="post-form-row-2">
-        <button
-          type="button"
-          className="super-mention-button"
-          onClick={() => setShowSuperMentionPopup(true)}
-          title="Super Mention (@@)"
-        >
-          @@
-        </button>
         <ImagePicker onEmbed={insertImageUrl} onAddSticker={handleAddSticker} onError={setError} />
         <DrawingPicker onComplete={insertImageUrl} />
         <VoicePicker onComplete={insertImageUrl} />
