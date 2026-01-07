@@ -3,12 +3,7 @@
    =========================================== */
 
 .embed-page {
-  min-height: 100vh;
-  padding: 1rem;
   background: transparent;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
 }
 
 /* Override post-card styles for embed */
