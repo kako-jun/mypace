@@ -146,104 +146,110 @@ export default function TimelinePostCard({
         style={themeProps.style}
         onClick={handleCardClick}
       >
-        {/* Pin indicator/button at top center */}
-        {/* Pinned: visible to everyone (clickable only for owner) */}
-        {/* Not pinned + owner: visible only to owner */}
-        {(isPinned || showPinButton) && (
-          <button
-            type="button"
-            className={`post-pin-button ${isPinned ? 'pinned' : ''}`}
-            onClick={showPinButton ? handlePinClick : undefined}
-            disabled={!showPinButton}
-            aria-label={isPinned ? 'Pinned post' : 'Pin this post'}
-            title={isPinned ? (showPinButton ? 'Unpin' : 'Pinned') : 'Pin to profile'}
-          >
-            <Icon name="Pin" size={16} />
-          </button>
-        )}
-
-        {/* Back layer stickers (behind content) */}
-        <PostStickers stickers={stickers} truncated={isTruncated} layer="back" />
-
-        {repostedBy && (
-          <div className="repost-label">
-            <Icon name="Repeat2" size={14} /> {getDisplayName(repostedBy.pubkey)} reposted
-          </div>
-        )}
-
-        {/* Reply-to indicator */}
-        {(() => {
-          // Check if this is a reply by looking for 'e' tags with 'root' or 'reply' marker
-          const replyTag = event.tags.find((tag) => tag[0] === 'e' && (tag[3] === 'reply' || tag[3] === 'root'))
-          if (!replyTag) return null
-
-          // Get the first 'p' tag as the reply target
-          const pTag = event.tags.find((tag) => tag[0] === 'p')
-          if (!pTag) return null
-
-          const replyToPubkey = pTag[1]
-          return (
-            <div className="reply-to-label">
-              <span>Reply</span>
-              <span>→ @{getDisplayName(replyToPubkey)}</span>
-            </div>
-          )
-        })()}
-
-        <PostHeader
-          pubkey={event.pubkey}
-          createdAt={event.created_at}
-          displayName={getDisplayName(event.pubkey)}
-          avatarUrl={getAvatarUrl(event.pubkey)}
-          isProfileLoading={profiles[event.pubkey] === undefined}
-          emojis={profiles[event.pubkey]?.emojis}
-          eventKind={event.kind}
-        />
-
-        <div className="post-content">
-          <PostContent
-            content={event.content}
-            truncate
-            emojis={parseEmojiTags(event.tags)}
-            profiles={profiles}
-            onReadMore={() => navigateToPostModal(event.id)}
-            tags={event.tags}
-          />
-        </div>
-
-        {locations.map((loc) => (
-          <PostLocation key={loc.geohash} geohashStr={loc.geohash} name={loc.name} />
-        ))}
-
-        <div className="post-footer">
-          <PostActions
-            isMyPost={isMyPost}
-            reactions={reactions}
-            replies={replies}
-            reposts={reposts}
-            likingId={likingId}
-            repostingId={repostingId}
-            eventId={event.id}
-            copied={copiedId === event.id}
-            myPubkey={myPubkey}
-            getDisplayName={getDisplayName}
-            onLike={() => onLike(event)}
-            onUnlike={() => onUnlike(event)}
-            onReply={() => onReply(event)}
-            onRepost={() => onRepost(event)}
-            onShareOption={(option) => onShareOption(event.id, event.content, option)}
-            onNavigateToProfile={navigateToUser}
-          />
-
-          {isMyPost && (
-            <EditDeleteButtons
-              isConfirming={isConfirming(event.id)}
-              onEdit={() => onEdit(event)}
-              onDelete={() => showConfirm(event.id)}
-              onDeleteConfirm={handleDeleteConfirmClick}
-              onDeleteCancel={hideConfirm}
-            />
+        {/* Sticker area: contains everything except ThreadReplies so stickers don't shift when replies expand */}
+        <div className="post-card-sticker-area">
+          {/* Pin indicator/button at top center */}
+          {/* Pinned: visible to everyone (clickable only for owner) */}
+          {/* Not pinned + owner: visible only to owner */}
+          {(isPinned || showPinButton) && (
+            <button
+              type="button"
+              className={`post-pin-button ${isPinned ? 'pinned' : ''}`}
+              onClick={showPinButton ? handlePinClick : undefined}
+              disabled={!showPinButton}
+              aria-label={isPinned ? 'Pinned post' : 'Pin this post'}
+              title={isPinned ? (showPinButton ? 'Unpin' : 'Pinned') : 'Pin to profile'}
+            >
+              <Icon name="Pin" size={16} />
+            </button>
           )}
+
+          {/* Back layer stickers (behind content) */}
+          <PostStickers stickers={stickers} truncated={isTruncated} layer="back" />
+
+          {repostedBy && (
+            <div className="repost-label">
+              <Icon name="Repeat2" size={14} /> {getDisplayName(repostedBy.pubkey)} reposted
+            </div>
+          )}
+
+          {/* Reply-to indicator */}
+          {(() => {
+            // Check if this is a reply by looking for 'e' tags with 'root' or 'reply' marker
+            const replyTag = event.tags.find((tag) => tag[0] === 'e' && (tag[3] === 'reply' || tag[3] === 'root'))
+            if (!replyTag) return null
+
+            // Get the first 'p' tag as the reply target
+            const pTag = event.tags.find((tag) => tag[0] === 'p')
+            if (!pTag) return null
+
+            const replyToPubkey = pTag[1]
+            return (
+              <div className="reply-to-label">
+                <span>Reply</span>
+                <span>→ @{getDisplayName(replyToPubkey)}</span>
+              </div>
+            )
+          })()}
+
+          <PostHeader
+            pubkey={event.pubkey}
+            createdAt={event.created_at}
+            displayName={getDisplayName(event.pubkey)}
+            avatarUrl={getAvatarUrl(event.pubkey)}
+            isProfileLoading={profiles[event.pubkey] === undefined}
+            emojis={profiles[event.pubkey]?.emojis}
+            eventKind={event.kind}
+          />
+
+          <div className="post-content">
+            <PostContent
+              content={event.content}
+              truncate
+              emojis={parseEmojiTags(event.tags)}
+              profiles={profiles}
+              onReadMore={() => navigateToPostModal(event.id)}
+              tags={event.tags}
+            />
+          </div>
+
+          {locations.map((loc) => (
+            <PostLocation key={loc.geohash} geohashStr={loc.geohash} name={loc.name} />
+          ))}
+
+          <div className="post-footer">
+            <PostActions
+              isMyPost={isMyPost}
+              reactions={reactions}
+              replies={replies}
+              reposts={reposts}
+              likingId={likingId}
+              repostingId={repostingId}
+              eventId={event.id}
+              copied={copiedId === event.id}
+              myPubkey={myPubkey}
+              getDisplayName={getDisplayName}
+              onLike={() => onLike(event)}
+              onUnlike={() => onUnlike(event)}
+              onReply={() => onReply(event)}
+              onRepost={() => onRepost(event)}
+              onShareOption={(option) => onShareOption(event.id, event.content, option)}
+              onNavigateToProfile={navigateToUser}
+            />
+
+            {isMyPost && (
+              <EditDeleteButtons
+                isConfirming={isConfirming(event.id)}
+                onEdit={() => onEdit(event)}
+                onDelete={() => showConfirm(event.id)}
+                onDeleteConfirm={handleDeleteConfirmClick}
+                onDeleteCancel={hideConfirm}
+              />
+            )}
+          </div>
+
+          {/* Front layer stickers (above content) */}
+          <PostStickers stickers={stickers} truncated={isTruncated} layer="front" />
         </div>
 
         {filteredReplies.length > 0 && (
@@ -256,9 +262,6 @@ export default function TimelinePostCard({
             getAvatarUrl={getAvatarUrl}
           />
         )}
-
-        {/* Front layer stickers (above content) */}
-        <PostStickers stickers={stickers} truncated={isTruncated} layer="front" />
       </article>
     </div>
   )

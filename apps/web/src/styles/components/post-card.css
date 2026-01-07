@@ -58,6 +58,11 @@
   transition: filter 0.15s ease-out;
 }
 
+/* Sticker area: position reference for stickers, excludes ThreadReplies */
+.post-card-sticker-area {
+  position: relative;
+}
+
 .post-card-wrapper:hover {
   filter: drop-shadow(10px 10px 0 #000);
 }
