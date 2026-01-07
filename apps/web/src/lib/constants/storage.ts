@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   APP_THEME: 'mypace_app_theme',
   VIM_MODE: 'mypace_vim_mode',
   DRAFT: 'mypace_draft',
+  DRAFT_REPLY_TO: 'mypace_draft_reply_to',
   SEARCH_FILTERS: 'mypace_search_filters',
   FILTER_PRESETS: 'mypace_filter_presets',
   MUTE_LIST: 'mypace_mute_list',

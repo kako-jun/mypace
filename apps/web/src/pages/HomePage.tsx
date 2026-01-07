@@ -35,8 +35,15 @@ export function HomePage({ filters: propFilters }: HomePageProps = {}) {
     draftTimerRef.current = setTimeout(() => {
       if (content.trim()) {
         setString(STORAGE_KEYS.DRAFT, content)
+        // Save reply target id if replying
+        if (replyingTo) {
+          setString(STORAGE_KEYS.DRAFT_REPLY_TO, replyingTo.id)
+        } else {
+          removeItem(STORAGE_KEYS.DRAFT_REPLY_TO)
+        }
       } else {
         removeItem(STORAGE_KEYS.DRAFT)
+        removeItem(STORAGE_KEYS.DRAFT_REPLY_TO)
       }
     }, TIMEOUTS.DRAFT_SAVE_DELAY)
 
@@ -45,11 +52,14 @@ export function HomePage({ filters: propFilters }: HomePageProps = {}) {
         clearTimeout(draftTimerRef.current)
       }
     }
-  }, [content])
+  }, [content, replyingTo])
 
   // Clear draft when a new post is successfully published
   useEffect(() => {
-    const handleNewPost = () => removeItem(STORAGE_KEYS.DRAFT)
+    const handleNewPost = () => {
+      removeItem(STORAGE_KEYS.DRAFT)
+      removeItem(STORAGE_KEYS.DRAFT_REPLY_TO)
+    }
     window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
     return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
   }, [])
@@ -59,7 +69,7 @@ export function HomePage({ filters: propFilters }: HomePageProps = {}) {
     applyThemeColors(getUIThemeColors())
   }, [])
 
-  // Handle edit/reply URL parameters
+  // Handle edit/reply URL parameters or restore from localStorage
   useEffect(() => {
     const editId = searchParams.get('edit')
     const replyId = searchParams.get('reply')
@@ -81,6 +91,21 @@ export function HomePage({ filters: propFilters }: HomePageProps = {}) {
           setContent('')
         }
       })
+    } else {
+      // Restore reply target from localStorage if no URL params
+      const savedReplyToId = getString(STORAGE_KEYS.DRAFT_REPLY_TO)
+      if (savedReplyToId) {
+        fetchEventById(savedReplyToId).then((event) => {
+          if (event) {
+            setReplyingTo(event)
+          } else {
+            // Reply target not found, clear draft to prevent accidental non-reply post
+            removeItem(STORAGE_KEYS.DRAFT)
+            removeItem(STORAGE_KEYS.DRAFT_REPLY_TO)
+            setContent('')
+          }
+        })
+      }
     }
   }, [searchParams])
 
