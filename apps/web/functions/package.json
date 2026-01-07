@@ -1,0 +1,7 @@
+{
+  "name": "mypace-functions",
+  "version": "1.0.0",
+  "dependencies": {
+    "nostr-tools": "^2.10.4"
+  }
+}
