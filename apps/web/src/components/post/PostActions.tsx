@@ -2,6 +2,7 @@ import { useMemo, useRef, useCallback, useState, useEffect } from 'react'
 import { Icon } from '../ui'
 import '../../styles/components/post-actions.css'
 import ReactorsPopup from './ReactorsPopup'
+import RepostConfirmPopup from './RepostConfirmPopup'
 import ShareMenu, { type ShareOption } from './ShareMenu'
 import { MAX_STELLA_PER_USER } from '../../lib/nostr/events'
 import type { ReactionData, ReplyData, RepostData } from '../../types'
@@ -59,6 +60,11 @@ export default function PostActions({
   const [showShareMenu, setShowShareMenu] = useState(false)
   const shareButtonRef = useRef<HTMLDivElement>(null)
   const [shareMenuPosition, setShareMenuPosition] = useState<{ top: number; left: number } | null>(null)
+
+  // Repost confirm state
+  const [showRepostConfirm, setShowRepostConfirm] = useState(false)
+  const repostButtonRef = useRef<HTMLDivElement>(null)
+  const [repostConfirmPosition, setRepostConfirmPosition] = useState<{ top: number; left: number } | null>(null)
 
   const myStella = reactions?.myStella || 0
   const canAddMoreStella = myStella < MAX_STELLA_PER_USER
@@ -150,6 +156,19 @@ export default function PostActions({
     }
   }, [showShareMenu])
 
+  // Repost confirm position calculation (to the right of the button, like ReactorsPopup)
+  useEffect(() => {
+    if (showRepostConfirm && repostButtonRef.current) {
+      const rect = repostButtonRef.current.getBoundingClientRect()
+      setRepostConfirmPosition({
+        top: rect.top + window.scrollY,
+        left: rect.right + window.scrollX + 8, // 8px gap to the right
+      })
+    } else {
+      setRepostConfirmPosition(null)
+    }
+  }, [showRepostConfirm])
+
   const handleShareClick = useCallback(() => {
     setShowShareMenu(true)
   }, [])
@@ -169,6 +188,20 @@ export default function PostActions({
     },
     [onShareOption]
   )
+
+  // Repost handlers
+  const handleRepostClick = useCallback(() => {
+    setShowRepostConfirm(true)
+  }, [])
+
+  const handleRepostConfirm = useCallback(() => {
+    setShowRepostConfirm(false)
+    onRepost()
+  }, [onRepost])
+
+  const handleRepostCancel = useCallback(() => {
+    setShowRepostConfirm(false)
+  }, [])
 
   // Render count with loading/normal states
   const renderCount = (
@@ -262,15 +295,24 @@ export default function PostActions({
         {renderCount(replies)}
       </button>
 
-      <button
-        className={`icon-button repost-button ${reposts?.myRepost ? 'reposted' : ''}`}
-        onClick={onRepost}
-        disabled={repostingId === eventId || reposts?.myRepost}
-        aria-label={reposts?.myRepost ? 'Reposted' : 'Repost this post'}
-      >
-        <Icon name="Repeat2" size={20} />
-        {renderCount(reposts)}
-      </button>
+      <div className="repost-button-wrapper" ref={repostButtonRef}>
+        <button
+          className={`icon-button repost-button ${reposts?.myRepost ? 'reposted' : ''}`}
+          onClick={handleRepostClick}
+          disabled={repostingId === eventId || reposts?.myRepost}
+          aria-label={reposts?.myRepost ? 'Reposted' : 'Repost this post'}
+        >
+          <Icon name="Repeat2" size={20} />
+          {renderCount(reposts)}
+        </button>
+        {showRepostConfirm && repostConfirmPosition && (
+          <RepostConfirmPopup
+            position={repostConfirmPosition}
+            onConfirm={handleRepostConfirm}
+            onClose={handleRepostCancel}
+          />
+        )}
+      </div>
 
       <div className="share-button-wrapper" ref={shareButtonRef}>
         <button

@@ -434,3 +434,106 @@
 .share-menu-back:hover {
   color: var(--text-primary);
 }
+
+/* ===========================================
+   Repost Confirm Popup (same style as ReactorsPopup)
+   =========================================== */
+
+/* Repost button wrapper - for positioning confirm popup */
+.repost-button-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Overlay to close popup on click outside */
+.repost-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+/* Repost confirm popup - speech bubble style (rendered via portal, right of button) */
+.repost-confirm-popup {
+  position: absolute;
+  background: var(--surface-primary);
+  border: 2px solid var(--border-card);
+  padding: 0.75rem;
+  z-index: 10000;
+  min-width: 140px;
+}
+
+/* Speech bubble arrow pointing left */
+.repost-confirm-popup::after {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 12px;
+  border-width: 8px 10px 8px 0;
+  border-style: solid;
+  border-color: transparent var(--border-card) transparent transparent;
+}
+
+/* Inner arrow for background color */
+.repost-confirm-popup::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 14px;
+  border-width: 6px 8px 6px 0;
+  border-style: solid;
+  border-color: transparent var(--surface-primary) transparent transparent;
+  z-index: 1;
+}
+
+.repost-confirm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--border-card);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.repost-confirm-title {
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: #2ecc71;
+}
+
+.repost-confirm-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.repost-confirm-yes,
+.repost-confirm-no {
+  background: none;
+  border: 1px solid var(--border-card);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+  outline: none;
+}
+
+.repost-confirm-yes {
+  color: #2ecc71;
+  border-color: #2ecc71;
+}
+
+.repost-confirm-yes:hover {
+  background: rgba(46, 204, 113, 0.15);
+}
+
+.repost-confirm-no {
+  color: var(--text-muted);
+}
+
+.repost-confirm-no:hover {
+  background: var(--surface-hover);
+}
