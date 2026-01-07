@@ -189,10 +189,6 @@ export function EmbedPage() {
 
           <PostStickers stickers={stickers} layer="front" />
         </div>
-
-        <div className="embed-footer">
-          <span className="embed-logo">MYPACE</span>
-        </div>
       </article>
     </div>
   )
