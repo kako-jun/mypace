@@ -33,7 +33,7 @@ export default function PostPreview({
   onStickerRemove,
   locations = [],
 }: PostPreviewProps) {
-  if (!content.trim()) return null
+  if (!content.trim() && stickers.length === 0) return null
 
   const themeProps = getThemeCardProps(themeColors)
 
