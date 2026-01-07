@@ -27,7 +27,7 @@ export const onRequest: PagesFunction = async (context) => {
   // If not a crawler, serve the normal SPA
   const userAgent = context.request.headers.get('User-Agent') || ''
   const isCrawler =
-    /bot|crawler|spider|slurp|archiver|facebookexternalhit|twitterbot|linkedinbot|whatsapp|slack|discord|telegram|line|skype|viber|kakao|preview|fetch|embed|card|link|meta|curl|wget|http|url/i.test(
+    /bot|crawler|spider|slurp|archiver|facebookexternalhit|twitterbot|linkedinbot|whatsapp|slack|discord|telegram|line|skype|viber|kakao|preview|fetch|embed|card|link|meta|curl|wget|http|url|rakko|checker|validator|parser|scraper|analyzer|HeadlessChrome|Phantom|libwww|python|ruby|java|go-http|axios|node-fetch|got\//i.test(
       userAgent
     )
 
@@ -45,8 +45,8 @@ export const onRequest: PagesFunction = async (context) => {
 
     const { event } = (await eventResponse.json()) as { event: NostrEvent }
 
-    if (!event || event.kind !== 1) {
-      // Only handle kind 1 (text notes)
+    if (!event || !event.content) {
+      // Skip if no event or no content
       return context.next()
     }
 
