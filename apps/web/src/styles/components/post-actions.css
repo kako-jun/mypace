@@ -109,11 +109,9 @@
   z-index: 9999;
 }
 
-/* Reactors popup - speech bubble style (rendered via portal, below star) */
+/* Reactors popup - speech bubble style (rendered via portal, right of star) */
 .reactors-popup {
   position: absolute;
-  transform: translateX(-50%);
-  margin-top: 12px;
   background: var(--surface-primary);
   border: 2px solid var(--border-card);
   padding: 1rem;
@@ -123,28 +121,26 @@
   overflow-y: auto;
 }
 
-/* Speech bubble arrow pointing up */
+/* Speech bubble arrow pointing left */
 .reactors-popup::after {
   content: '';
   position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 0 8px 10px 8px;
+  left: -10px;
+  top: 12px;
+  border-width: 8px 10px 8px 0;
   border-style: solid;
-  border-color: transparent transparent var(--border-card) transparent;
+  border-color: transparent var(--border-card) transparent transparent;
 }
 
 /* Inner arrow for background color */
 .reactors-popup::before {
   content: '';
   position: absolute;
-  top: -7px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 0 6px 8px 6px;
+  left: -7px;
+  top: 14px;
+  border-width: 6px 8px 6px 0;
   border-style: solid;
-  border-color: transparent transparent var(--surface-primary) transparent;
+  border-color: transparent var(--surface-primary) transparent transparent;
   z-index: 1;
 }
 

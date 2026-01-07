@@ -65,25 +65,14 @@ export default function PostActions({
   const isLiking = likingId === eventId
   const reactors = reactions?.reactors || []
 
-  // Update popup position when shown (below the post card, slightly overlapping)
+  // Update popup position when shown (to the right of the stella button)
   useEffect(() => {
     if (showReactorsPopup && buttonWrapperRef.current) {
-      // Find parent post-card element
-      const postCard = buttonWrapperRef.current.closest('.post-card')
-      if (postCard) {
-        const cardRect = postCard.getBoundingClientRect()
-        setPopupPosition({
-          top: cardRect.bottom + window.scrollY - 32, // Overlap by 32px
-          left: cardRect.left + cardRect.width / 2 + window.scrollX, // Center of card
-        })
-      } else {
-        // Fallback to button position
-        const rect = buttonWrapperRef.current.getBoundingClientRect()
-        setPopupPosition({
-          top: rect.bottom + window.scrollY,
-          left: rect.left + rect.width / 2 + window.scrollX,
-        })
-      }
+      const rect = buttonWrapperRef.current.getBoundingClientRect()
+      setPopupPosition({
+        top: rect.top + window.scrollY,
+        left: rect.right + window.scrollX + 8, // 8px gap to the right of stella
+      })
     } else {
       // Reset position when closed
       setPopupPosition(null)

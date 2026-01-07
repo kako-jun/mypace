@@ -8,8 +8,8 @@ import {
 } from '../../lib/nostr/events'
 import '../../styles/components/post-form.css'
 import { navigateToUser } from '../../lib/utils'
-import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant, StickerLayer } from '../../types'
-import { publishEvent } from '../../lib/nostr/relay'
+import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant, StickerLayer, Profile } from '../../types'
+import { publishEvent, fetchUserProfile } from '../../lib/nostr/relay'
 import { ProfileSetup } from '../user'
 import {
   hasLocalProfile,
@@ -19,7 +19,6 @@ import {
   getStoredVimMode,
   getStoredAppTheme,
   normalizeContent,
-  getCachedProfile,
   getDisplayName,
 } from '../../lib/utils'
 import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../../lib/constants'
@@ -76,6 +75,7 @@ export function PostForm({
   const [stickers, setStickers] = useState<Sticker[]>([])
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
   const [locations, setLocations] = useState<{ geohash: string; name?: string }[]>([])
+  const [replyToProfile, setReplyToProfile] = useState<Profile | null | undefined>(undefined)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const shortTextEditorRef = useRef<ShortTextEditorRef>(null)
   const fileImportRef = useRef<HTMLInputElement>(null)
@@ -152,6 +152,28 @@ export function PostForm({
     if (replyingTo || editingEvent) {
       setMinimized(false)
     }
+  }, [replyingTo, editingEvent])
+
+  // Fetch reply target's profile
+  useEffect(() => {
+    let pubkey: string | undefined
+    if (replyingTo) {
+      pubkey = replyingTo.pubkey
+    } else if (editingEvent) {
+      // Only get pubkey if editing event is a reply
+      const replyTag = editingEvent.tags?.find((t) => t[0] === 'e' && (t[3] === 'reply' || t[3] === 'root'))
+      if (replyTag) {
+        pubkey = editingEvent.tags?.find((t) => t[0] === 'p')?.[1]
+      }
+    }
+    if (!pubkey) {
+      setReplyToProfile(undefined)
+      return
+    }
+    setReplyToProfile(undefined) // Reset to loading state
+    fetchUserProfile(pubkey).then((profile) => {
+      setReplyToProfile(profile)
+    })
   }, [replyingTo, editingEvent])
 
   const handleVimModeChange = (enabled: boolean) => {
@@ -367,6 +389,7 @@ export function PostForm({
         onShowPreviewChange={onShowPreviewChange}
         editingEvent={editingEvent}
         replyingTo={replyingTo}
+        replyToProfile={replyToProfile}
         posting={posting}
         error={error}
         vimMode={vimMode}
@@ -425,7 +448,7 @@ export function PostForm({
               <>
                 <div className="replying-label">
                   <span>Reply</span>
-                  <span className="reply-to-name">→ @{getDisplayName(getCachedProfile(replyPubkey), replyPubkey)}</span>
+                  <span className="reply-to-name">→ @{getDisplayName(replyToProfile, replyPubkey)}</span>
                 </div>
                 <div className="editing-label">Editing</div>
               </>
@@ -436,9 +459,7 @@ export function PostForm({
       {replyingTo && (
         <div className="replying-label">
           <span>Reply</span>
-          <span className="reply-to-name">
-            → @{getDisplayName(getCachedProfile(replyingTo.pubkey), replyingTo.pubkey)}
-          </span>
+          <span className="reply-to-name">→ @{getDisplayName(replyToProfile, replyingTo.pubkey)}</span>
         </div>
       )}
 

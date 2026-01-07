@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback } from 'react'
-import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant, StickerLayer } from '../../types'
+import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant, StickerLayer, Profile } from '../../types'
 import { ImageDropZone, AttachedImages, AttachedLocations, PostPreview } from '../post'
 import { LongModeEditor, type LongModeEditorRef } from './LongModeEditor'
 import { Toggle, Avatar, TextButton, ErrorMessage, Icon } from '../ui'
@@ -9,7 +9,7 @@ import { LocationPicker } from '../location'
 import { DrawingPicker } from '../drawing'
 import { VoicePicker } from '../voice'
 import { FormActions } from './FormActions'
-import { getCachedProfile, getDisplayName } from '../../lib/utils'
+import { getDisplayName } from '../../lib/utils'
 
 interface PostFormLongModeProps {
   content: string
@@ -18,6 +18,7 @@ interface PostFormLongModeProps {
   onShowPreviewChange: (show: boolean) => void
   editingEvent?: Event | null
   replyingTo?: Event | null
+  replyToProfile?: Profile | null
   posting: boolean
   error: string
   vimMode: boolean
@@ -51,6 +52,7 @@ export function PostFormLongMode({
   onShowPreviewChange,
   editingEvent,
   replyingTo,
+  replyToProfile,
   posting,
   error,
   vimMode,
@@ -124,9 +126,7 @@ export function PostFormLongMode({
                   <>
                     <div className="replying-label">
                       <span>Reply</span>
-                      <span className="reply-to-name">
-                        → @{getDisplayName(getCachedProfile(replyPubkey), replyPubkey)}
-                      </span>
+                      <span className="reply-to-name">→ @{getDisplayName(replyToProfile, replyPubkey)}</span>
                     </div>
                     <div className="editing-label">Editing post...</div>
                   </>
@@ -137,9 +137,7 @@ export function PostFormLongMode({
           {replyingTo && (
             <div className="replying-label">
               <span>Reply</span>
-              <span className="reply-to-name">
-                → @{getDisplayName(getCachedProfile(replyingTo.pubkey), replyingTo.pubkey)}
-              </span>
+              <span className="reply-to-name">→ @{getDisplayName(replyToProfile, replyingTo.pubkey)}</span>
             </div>
           )}
 
