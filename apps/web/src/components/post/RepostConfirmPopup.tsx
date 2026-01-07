@@ -28,6 +28,6 @@ export default function RepostConfirmPopup({ position, onConfirm, onClose }: Rep
         </div>
       </div>
     </>,
-    document.body
+    document.getElementById('popup-container') || document.body
   )
 }

@@ -28,6 +28,6 @@ export default function DeleteConfirmDialog({ position, onConfirm, onCancel }: D
         </div>
       </div>
     </>,
-    document.body
+    document.getElementById('popup-container') || document.body
   )
 }

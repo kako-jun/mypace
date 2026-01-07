@@ -57,6 +57,6 @@ export default function ReactorsPopup({
         </div>
       </div>
     </>,
-    document.body
+    document.getElementById('popup-container') || document.body
   )
 }

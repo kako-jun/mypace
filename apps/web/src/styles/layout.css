@@ -2,6 +2,21 @@
    Layout Components
    =========================================== */
 
+/* Popup container - below editor (z-index: 100) but above content */
+#popup-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+
+#popup-container > * {
+  pointer-events: auto;
+}
+
 /* View Transitions - Persist header elements across navigation */
 @view-transition {
   navigation: auto;

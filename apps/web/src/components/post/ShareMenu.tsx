@@ -81,6 +81,6 @@ export default function ShareMenu({ position, onSelect, onClose }: ShareMenuProp
         )}
       </div>
     </>,
-    document.body
+    document.getElementById('popup-container') || document.body
   )
 }
