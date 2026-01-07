@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { SiInstagram } from 'react-icons/si'
 import { Icon, ExternalLink } from '../ui'
 import EmbedPlaceholder from './EmbedPlaceholder'
 
@@ -16,7 +17,7 @@ export default function InstagramEmbed({ instagramId, instagramType, url }: Inst
     return (
       <div className="embed-container embed-instagram embed-simple-link">
         <ExternalLink href={url}>
-          <Icon name="Instagram" size={16} />
+          <SiInstagram size={16} />
           <span>View story on Instagram</span>
         </ExternalLink>
       </div>
@@ -32,7 +33,7 @@ export default function InstagramEmbed({ instagramId, instagramType, url }: Inst
     return (
       <EmbedPlaceholder
         embedType="instagram"
-        iconName="Instagram"
+        icon={<SiInstagram size={32} />}
         text={`Click to load ${instagramType === 'reel' ? 'reel' : 'post'}`}
         onClick={() => setLoaded(true)}
       />

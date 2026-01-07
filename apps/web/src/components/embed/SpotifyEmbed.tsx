@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { SiSpotify } from 'react-icons/si'
 import { Icon, ExternalLink } from '../ui'
 import { getSpotifyEmbedUrl } from '../../lib/utils/embed'
 import EmbedPlaceholder from './EmbedPlaceholder'
@@ -51,9 +52,8 @@ export default function SpotifyEmbed({ spotifyId, spotifyType, url }: SpotifyEmb
     return (
       <EmbedPlaceholder
         embedType="spotify"
-        iconName="Music"
+        icon={<SiSpotify size={32} />}
         text={`Click to load ${getTypeLabel()}`}
-        domain="Spotify"
         onClick={() => setLoaded(true)}
       />
     )

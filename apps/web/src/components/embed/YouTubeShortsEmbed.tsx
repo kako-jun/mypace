@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { SiYoutube } from 'react-icons/si'
 import { Icon } from '../ui'
 import { getYouTubeThumbnail, getYouTubeShortsEmbedUrl } from '../../lib/utils/embed'
 
@@ -23,7 +24,7 @@ export default function YouTubeShortsEmbed({ videoId }: YouTubeShortsEmbedProps)
           rel="noopener noreferrer"
           className="embed-error-link"
         >
-          <Icon name="Youtube" size={24} />
+          <SiYoutube size={24} />
           <span>Watch on YouTube</span>
         </a>
       </div>
@@ -53,7 +54,6 @@ export default function YouTubeShortsEmbed({ videoId }: YouTubeShortsEmbedProps)
         <div className="embed-play-button embed-shorts-button">
           <Icon name="Play" size={24} />
         </div>
-        <span className="embed-shorts-badge">Shorts</span>
       </div>
     </div>
   )

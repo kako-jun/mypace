@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { Icon, ExternalLink } from '../ui'
+import { SiTiktok } from 'react-icons/si'
+import { ExternalLink } from '../ui'
 import EmbedPlaceholder from './EmbedPlaceholder'
 
 interface TikTokEmbedProps {
@@ -61,7 +62,7 @@ export default function TikTokEmbed({ tiktokId, url }: TikTokEmbedProps) {
     return (
       <EmbedPlaceholder
         embedType="tiktok"
-        iconName="Video"
+        icon={<SiTiktok size={32} />}
         text="Click to load TikTok"
         onClick={() => setLoaded(true)}
       />
@@ -72,7 +73,7 @@ export default function TikTokEmbed({ tiktokId, url }: TikTokEmbedProps) {
     return (
       <div className="embed-container embed-tiktok embed-error">
         <ExternalLink href={url}>
-          <Icon name="Video" size={16} /> View on TikTok
+          <SiTiktok size={16} /> View on TikTok
         </ExternalLink>
       </div>
     )

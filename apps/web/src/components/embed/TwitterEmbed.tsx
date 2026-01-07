@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Tweet } from 'react-tweet'
-import { Icon, ExternalLink } from '../ui'
+import { SiX } from 'react-icons/si'
+import { ExternalLink } from '../ui'
 import { API_BASE } from '../../lib/api'
 import EmbedPlaceholder from './EmbedPlaceholder'
 
@@ -36,7 +37,12 @@ export default function TwitterEmbed({ tweetId, url }: TwitterEmbedProps) {
 
   if (!loaded) {
     return (
-      <EmbedPlaceholder embedType="twitter" iconName="X" text="Click to load post" onClick={() => setLoaded(true)} />
+      <EmbedPlaceholder
+        embedType="twitter"
+        icon={<SiX size={32} />}
+        text="Click to load post"
+        onClick={() => setLoaded(true)}
+      />
     )
   }
 
@@ -56,14 +62,14 @@ export default function TwitterEmbed({ tweetId, url }: TwitterEmbedProps) {
               </div>
               <p className="embed-twitter-text">{tweetData.text}</p>
               <div className="embed-twitter-footer">
-                <Icon name="X" size={14} />
+                <SiX size={14} />
                 <span>View on X</span>
               </div>
             </div>
           </ExternalLink>
         ) : (
           <ExternalLink href={url} className="embed-twitter-link">
-            <Icon name="X" size={16} /> View post on X
+            <SiX size={16} /> View post on X
           </ExternalLink>
         )}
       </div>
