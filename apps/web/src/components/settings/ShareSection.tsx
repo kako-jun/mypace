@@ -78,10 +78,7 @@ export default function ShareSection() {
       <SettingsSection title="Notice" style={{ borderBottom: 'none', marginBottom: 0, paddingBottom: 0 }}>
         <ul className="notice-list">
           <li>This app is provided as-is without warranty. Use at your own risk.</li>
-          <li>
-            Images are uploaded to nostr.build. Once uploaded, files cannot be deleted due to the decentralized nature
-            of Nostr. Please choose files carefully before uploading.
-          </li>
+          <li>Images are uploaded to nostr.build.</li>
         </ul>
       </SettingsSection>
     </>
