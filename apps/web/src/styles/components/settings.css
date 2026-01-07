@@ -299,7 +299,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  padding: 8px 8px 4px;
+  padding: 8px;
 }
 
 .color-picker-corner input[type="color"] {
