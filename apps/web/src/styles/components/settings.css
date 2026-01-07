@@ -608,36 +608,47 @@
 }
 
 .sponsor-section {
-  margin-top: 0.5rem;
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
 }
 
 .sponsor-link {
+  --btn-corner: 12px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: var(--surface-secondary);
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
-  color: var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  border: none;
+  color: #fff;
   text-decoration: none;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   transition: all 0.2s;
+  clip-path: polygon(
+    var(--btn-corner) 0,
+    calc(100% - var(--btn-corner)) 0,
+    100% var(--btn-corner),
+    100% calc(100% - var(--btn-corner)),
+    calc(100% - var(--btn-corner)) 100%,
+    var(--btn-corner) 100%,
+    0 calc(100% - var(--btn-corner)),
+    0 var(--btn-corner)
+  );
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
 }
 
 .sponsor-link:hover {
-  background: #e74c3c;
-  color: #fff;
-  border-color: #e74c3c;
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
 }
 
 .sponsor-link .heart-icon {
-  color: #e74c3c;
-  animation: heartbeat 1.5s ease-in-out infinite;
-}
-
-.sponsor-link:hover .heart-icon {
   color: #fff;
+  animation: heartbeat 1.5s ease-in-out infinite;
 }
 
 @keyframes heartbeat {
@@ -645,12 +656,16 @@
   100% {
     transform: scale(1);
   }
-  10%,
-  30% {
-    transform: scale(1.15);
+  14% {
+    transform: scale(1.2);
   }
-  20%,
-  40% {
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.2);
+  }
+  70% {
     transform: scale(1);
   }
 }
