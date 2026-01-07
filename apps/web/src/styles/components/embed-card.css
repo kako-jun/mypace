@@ -2,17 +2,13 @@
    MYPACE Embed Card (for external websites)
    =========================================== */
 
-/* Reset for embed iframe - make background transparent */
-html:has(.embed-page),
-body:has(.embed-page) {
-  margin: 0;
-  padding: 0;
-  min-height: auto;
-  background: transparent !important;
-}
-
 .embed-page {
+  min-height: 100vh;
+  padding: 1rem;
   background: transparent;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
 }
 
 /* Override post-card styles for embed */

@@ -55,15 +55,10 @@ export function EmbedPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  // Apply theme and transparent background for embed
+  // Apply theme (light or dark, default light)
   useEffect(() => {
     const appliedTheme = theme === 'dark' ? 'dark' : 'light'
     document.documentElement.setAttribute('data-theme', appliedTheme)
-    // Make background transparent for iframe embed
-    document.documentElement.style.background = 'transparent'
-    document.body.style.background = 'transparent'
-    document.body.style.margin = '0'
-    document.body.style.padding = '0'
   }, [theme])
 
   useEffect(() => {
