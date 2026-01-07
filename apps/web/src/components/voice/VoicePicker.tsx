@@ -225,7 +225,7 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
       timerRef.current = window.setInterval(() => {
         const elapsed = Math.floor((Date.now() - startTime) / 1000)
         setDuration(Math.min(elapsed, MAX_DURATION))
-        if (elapsed >= MAX_DURATION) {
+        if (elapsed > MAX_DURATION) {
           stopRecording()
         }
       }, 100)
