@@ -20,6 +20,7 @@
     connectedCallback() {
       const noteId = this.getAttribute('note')
       const isLatest = this.hasAttribute('latest')
+      const pubkey = this.getAttribute('pubkey')
       const theme = this.getAttribute('theme') || 'light'
 
       if (!noteId && !isLatest) {
@@ -31,9 +32,14 @@
       if (!this.style.display) this.style.display = 'block'
       if (!this.style.maxWidth) this.style.maxWidth = '500px'
 
-      const src = isLatest
-        ? `${MYPACE_URL}/embed/latest?theme=${encodeURIComponent(theme)}`
-        : `${MYPACE_URL}/embed/${encodeURIComponent(noteId)}?theme=${encodeURIComponent(theme)}`
+      let src
+      if (isLatest) {
+        const params = new URLSearchParams({ theme })
+        if (pubkey) params.set('pubkey', pubkey)
+        src = `${MYPACE_URL}/embed/latest?${params.toString()}`
+      } else {
+        src = `${MYPACE_URL}/embed/${encodeURIComponent(noteId)}?theme=${encodeURIComponent(theme)}`
+      }
 
       this._iframe = document.createElement('iframe')
       this._iframe.src = src

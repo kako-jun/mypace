@@ -4,6 +4,7 @@ import { nip19 } from 'nostr-tools'
 import { PostHeader, PostContent, PostStickers } from '../components/post'
 import { parseEmojiTags, Loading, ErrorMessage } from '../components/ui'
 import { fetchEventById, fetchEvents, fetchUserProfile } from '../lib/nostr/relay'
+import { fetchUserEvents } from '../lib/api'
 import { getEventThemeColors, getThemeCardProps } from '../lib/nostr/events'
 import { parseStickers } from '../lib/nostr/tags'
 import { getDisplayName, getAvatarUrl } from '../lib/utils'
@@ -31,10 +32,23 @@ function decodeNoteId(id: string): string {
   return id
 }
 
+function decodePubkey(key: string): string {
+  try {
+    if (key.startsWith('npub1')) {
+      const decoded = nip19.decode(key)
+      if (decoded.type === 'npub') {
+        return decoded.data as string
+      }
+    }
+  } catch {}
+  return key
+}
+
 export function EmbedPage() {
   const { noteId } = useParams<{ noteId: string }>()
   const [searchParams] = useSearchParams()
   const theme = searchParams.get('theme') || 'auto'
+  const pubkey = searchParams.get('pubkey')
 
   const [event, setEvent] = useState<Event | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -56,9 +70,15 @@ export function EmbedPage() {
         let eventData: Event | null = null
 
         if (noteId === 'latest') {
-          // Fetch latest mypace post
-          const events = await fetchEvents(1, 0, true)
-          eventData = events[0] || null
+          // Fetch latest post (from specific user if pubkey provided)
+          if (pubkey) {
+            const decodedPubkey = decodePubkey(pubkey)
+            const result = await fetchUserEvents(decodedPubkey, 1)
+            eventData = result.events[0] || null
+          } else {
+            const events = await fetchEvents(1, 0, true)
+            eventData = events[0] || null
+          }
         } else if (noteId) {
           // Fetch specific post
           const decodedId = decodeNoteId(noteId)
@@ -87,7 +107,7 @@ export function EmbedPage() {
     }
 
     load()
-  }, [noteId])
+  }, [noteId, pubkey])
 
   // Notify parent iframe of height changes
   useEffect(() => {

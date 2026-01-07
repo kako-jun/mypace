@@ -17,6 +17,9 @@ Provides a `<mypace-card>` custom element that displays a post card on any websi
 
 <!-- Latest post -->
 <mypace-card latest></mypace-card>
+
+<!-- Latest post from specific user -->
+<mypace-card latest pubkey="npub1..."></mypace-card>
 ```
 
 ## Attributes
@@ -25,6 +28,7 @@ Provides a `<mypace-card>` custom element that displays a post card on any websi
 |-----------|-------------|
 | `note` | Note ID (note1... or hex) to display |
 | `latest` | Show the latest post (no value needed) |
+| `pubkey` | User pubkey (npub1... or hex) to filter latest post |
 | `theme` | `light` or `dark` (default: `light`) |
 
 ## Styling
