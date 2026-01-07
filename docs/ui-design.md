@@ -842,4 +842,4 @@ Markdownに加えて、mypace独自の構文をサポート。HTMLタグに似�
 | 定数 | 値 | 用途 |
 |------|-----|------|
 | `MYPACE_TAG` | `mypace` | 投稿に付与するハッシュタグ |
-| `APP_TITLE` | `MY★PACE` | ページタイトル |
+| `APP_TITLE` | `MY PACE` | ページタイトル |

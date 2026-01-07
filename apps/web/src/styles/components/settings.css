@@ -561,6 +561,119 @@
   font-weight: bold;
 }
 
+/* About App Section */
+.about-app {
+  text-align: center;
+  padding: 1.5rem 0;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.about-app-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.about-app-logo .logo-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-primary);
+  -webkit-text-stroke: 1px var(--text-muted);
+}
+
+.about-app-logo .logo-star {
+  color: #f1c40f;
+  -webkit-text-stroke: 1px #333;
+}
+
+.about-app-description {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 1rem;
+}
+
+.about-author {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0 0 1rem;
+}
+
+.about-author strong {
+  color: var(--text-primary);
+}
+
+.author-link {
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.author-link:hover {
+  color: var(--accent);
+}
+
+.sponsor-section {
+  margin-top: 0.5rem;
+}
+
+.sponsor-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.sponsor-link:hover {
+  background: #e74c3c;
+  color: #fff;
+  border-color: #e74c3c;
+}
+
+.sponsor-link .heart-icon {
+  color: #e74c3c;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+.sponsor-link:hover .heart-icon {
+  color: #fff;
+}
+
+@keyframes heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  10%,
+  30% {
+    transform: scale(1.15);
+  }
+  20%,
+  40% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sponsor-link .heart-icon {
+    animation: none;
+  }
+}
+
 /* Settings Footer */
 .settings-footer {
   margin-top: 2rem;
