@@ -1,7 +1,9 @@
 import PostHeader from './PostHeader'
 import { PostContent } from './PostContent'
+import { PostStickers } from './PostStickers'
 import { parseEmojiTags } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
+import { parseStickers } from '../../lib/nostr/tags'
 import type { Event, EmojiTag, ProfileMap } from '../../types'
 
 interface ReplyCardProps {
@@ -24,9 +26,13 @@ export default function ReplyCard({
   onClick,
 }: ReplyCardProps) {
   const themeProps = getThemeCardProps(getEventThemeColors(reply))
+  const stickers = parseStickers(reply.tags)
 
   return (
     <article className={`reply-card ${themeProps.className}`} style={themeProps.style} onClick={onClick}>
+      {/* Back layer stickers (behind content) */}
+      <PostStickers stickers={stickers} truncated={true} layer="back" />
+
       <PostHeader
         pubkey={reply.pubkey}
         createdAt={reply.created_at}
@@ -46,6 +52,9 @@ export default function ReplyCard({
           onReadMore={onClick}
         />
       </div>
+
+      {/* Front layer stickers (above content) */}
+      <PostStickers stickers={stickers} truncated={true} layer="front" />
     </article>
   )
 }

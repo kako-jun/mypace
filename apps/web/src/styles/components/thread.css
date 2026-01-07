@@ -107,6 +107,8 @@
 
 /* Reply card - default background for non-mypace posts, themed posts override via inline style */
 .reply-card {
+  position: relative;
+  overflow: hidden;
   background: var(--surface-secondary);
   padding: 0.75rem;
   border-radius: 8px;
