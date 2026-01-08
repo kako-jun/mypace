@@ -1,13 +1,19 @@
 .timeline-search {
+  column-span: all;
+  break-inside: avoid;
+  direction: ltr;
   background: transparent;
   max-width: 600px;
   margin-left: auto;
+  margin-right: -0.5rem;
 }
 
 .timeline-search-card {
   background: var(--surface-primary);
   border: 2px solid #000;
+  border-right: none;
   padding: 1.5rem;
+  padding-right: calc(1.5rem + 0.5rem);
   margin-bottom: 1rem;
   direction: ltr;
 }
