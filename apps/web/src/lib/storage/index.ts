@@ -93,14 +93,22 @@ function readStorage(): MypaceStorage {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       const parsed = JSON.parse(stored)
-      // Deep merge with defaults
+      // Deep merge with defaults (only pick known fields to avoid legacy data pollution)
+      const pf = parsed.filters || {}
       return {
         theme: { ...DEFAULT_STORAGE.theme, ...parsed.theme },
         filters: {
-          ...DEFAULT_SEARCH_FILTERS,
-          ...parsed.filters,
-          presets: parsed.filters?.presets || [],
-          muteList: parsed.filters?.muteList || [],
+          ngWords: pf.ngWords ?? DEFAULT_SEARCH_FILTERS.ngWords,
+          ngTags: pf.ngTags ?? DEFAULT_SEARCH_FILTERS.ngTags,
+          showSNS: pf.showSNS ?? DEFAULT_SEARCH_FILTERS.showSNS,
+          showBlog: pf.showBlog ?? DEFAULT_SEARCH_FILTERS.showBlog,
+          mypace: pf.mypace ?? DEFAULT_SEARCH_FILTERS.mypace,
+          lang: pf.lang ?? DEFAULT_SEARCH_FILTERS.lang,
+          hideAds: pf.hideAds ?? DEFAULT_SEARCH_FILTERS.hideAds,
+          hideNSFW: pf.hideNSFW ?? DEFAULT_SEARCH_FILTERS.hideNSFW,
+          hideNPC: pf.hideNPC ?? DEFAULT_SEARCH_FILTERS.hideNPC,
+          presets: pf.presets || [],
+          muteList: pf.muteList || [],
         },
         auth: { ...DEFAULT_STORAGE.auth, ...parsed.auth },
         cache: { ...DEFAULT_STORAGE.cache, ...parsed.cache },
