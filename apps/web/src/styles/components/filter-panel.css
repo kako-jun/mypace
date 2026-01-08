@@ -66,6 +66,9 @@
   background: var(--surface-tertiary);
   border-radius: 4px;
   white-space: nowrap;
+}
+
+.filter-circuit-source {
   min-height: 56px;
   display: flex;
   align-items: center;
@@ -141,7 +144,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 48px;
+  align-self: stretch;
   width: 16px;
   position: relative;
 }
@@ -152,18 +155,16 @@
   height: 2px;
   position: absolute;
   right: 0;
+  top: 50%;
+  transform-origin: right center;
 }
 
 .filter-circuit-line-merge-top {
-  top: 6px;
-  transform-origin: right center;
-  transform: rotate(30deg);
+  transform: translateY(-50%) rotate(-25deg);
 }
 
 .filter-circuit-line-merge-bottom {
-  bottom: 6px;
-  transform-origin: right center;
-  transform: rotate(-30deg);
+  transform: translateY(-50%) rotate(25deg);
 }
 
 .filter-circuit-mypace {
