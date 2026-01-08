@@ -30,11 +30,11 @@ export async function fetchTimeline(options: TimelineOptions = {}): Promise<{ ev
   if (filters.lang) params.set('lang', filters.lang)
 
   // Set kinds parameter based on showSNS and showBlog
+  // Each parameter is orthogonal - kinds determines what types, hideNPC filters NPC separately
   const kindsList: number[] = []
   if (filters.showSNS) {
     kindsList.push(1)
-    // Kind 42000 (Sinov NPC) is included when mypace filter is active (and hideNPC is off)
-    if (filters.mypace && !filters.hideNPC) kindsList.push(42000)
+    kindsList.push(42000) // NPC posts (filtered by hideNPC param if needed)
   }
   if (filters.showBlog) kindsList.push(30023)
   // Always send kinds param (empty means no posts should match)
