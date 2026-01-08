@@ -215,7 +215,7 @@ export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
           Clear
         </Button>
         <Button size="md" variant="primary" className={`btn-save ${isDirty ? 'is-dirty' : ''}`} onClick={handleApply}>
-          Save
+          Apply
         </Button>
       </div>
     </div>
