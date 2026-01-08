@@ -154,17 +154,18 @@
   width: 20px;
   height: 2px;
   position: absolute;
-  right: 0;
-  top: 50%;
-  transform-origin: right center;
+  left: 0;
+  transform-origin: left center;
 }
 
 .filter-circuit-line-merge-top {
-  transform: translateY(-50%) rotate(-25deg);
+  top: 25%;
+  transform: translateY(-50%) rotate(38deg);
 }
 
 .filter-circuit-line-merge-bottom {
-  transform: translateY(-50%) rotate(25deg);
+  top: 75%;
+  transform: translateY(-50%) rotate(-38deg);
 }
 
 .filter-circuit-mypace {
