@@ -109,10 +109,21 @@ export async function fetchReposts(eventId: string, myPubkey?: string): Promise<
 }
 
 // User events
-export async function fetchUserEvents(pubkey: string, limit = 50, since = 0, until = 0): Promise<{ events: Event[] }> {
+interface UserEventsOptions {
+  limit?: number
+  since?: number
+  until?: number
+  tags?: string[] // Filter by hashtags
+  q?: string // Text search query
+}
+
+export async function fetchUserEvents(pubkey: string, options: UserEventsOptions = {}): Promise<{ events: Event[] }> {
+  const { limit = 50, since = 0, until = 0, tags = [], q = '' } = options
   const params = new URLSearchParams({ limit: String(limit) })
   if (since > 0) params.set('since', String(since))
   if (until > 0) params.set('until', String(until))
+  if (tags.length > 0) params.set('tags', tags.join(','))
+  if (q) params.set('q', q)
 
   const res = await fetch(`${API_BASE}/api/user/${pubkey}/events?${params}`)
   if (!res.ok) throw new Error('Failed to fetch user events')

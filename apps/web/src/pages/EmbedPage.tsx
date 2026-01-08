@@ -73,10 +73,10 @@ export function EmbedPage() {
           // Fetch latest post (from specific user if pubkey provided)
           if (pubkey) {
             const decodedPubkey = decodePubkey(pubkey)
-            const result = await fetchUserEvents(decodedPubkey, 1)
+            const result = await fetchUserEvents(decodedPubkey, { limit: 1 })
             eventData = result.events[0] || null
           } else {
-            const events = await fetchEvents(1, 0, true)
+            const events = await fetchEvents(1, 0)
             eventData = events[0] || null
           }
         } else if (noteId) {

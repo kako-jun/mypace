@@ -43,7 +43,7 @@ export async function fetchProfiles(pubkeys: string[]): Promise<Record<string, P
 
 export async function fetchUserPosts(pubkey: string, limit = 50, since = 0, until = 0): Promise<Event[]> {
   try {
-    const result = await api.fetchUserEvents(pubkey, limit, since, until)
+    const result = await api.fetchUserEvents(pubkey, { limit, since, until })
     return result.events
   } catch (e) {
     console.error('Failed to fetch user posts:', e)
