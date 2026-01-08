@@ -52,6 +52,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const reactionsRef = useRef(reactions)
   reactionsRef.current = reactions
 
+  // Serialize tags array to avoid unnecessary re-renders
+  const tagsKey = tags ? JSON.stringify(tags) : ''
+
   // ポーリング機構
   const { loadNewEvents } = useTimelinePolling({
     options,
@@ -331,9 +334,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
 
   const loadTimelineRef = useRef(loadTimeline)
   loadTimelineRef.current = loadTimeline
-
-  // Serialize tags array to avoid unnecessary re-renders
-  const tagsKey = tags ? JSON.stringify(tags) : ''
 
   useEffect(() => {
     loadTimelineRef.current()
