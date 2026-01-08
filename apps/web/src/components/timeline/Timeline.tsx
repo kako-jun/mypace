@@ -217,7 +217,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
           {loadingMore ? 'Loading...' : 'Load Older Posts'}
         </TimelineActionButton>
       )}
-      {items.length > 0 && !hasMore && <p className="timeline-end">End of timeline</p>}
+      {!hasMore && <p className="timeline-end">End of timeline</p>}
     </div>
   )
 })
