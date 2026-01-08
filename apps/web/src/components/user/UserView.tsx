@@ -24,7 +24,7 @@ import {
   shareOrCopy,
   verifyNip05,
 } from '../../lib/utils'
-import { Button, Loading, BackButton, ErrorMessage } from '../ui'
+import { Button, Loading, BackButton, ErrorMessage, Icon } from '../ui'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import {
   setHashtagClickHandler,
@@ -81,6 +81,9 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const [pinnedEvent, setPinnedEvent] = useState<Event | null>(null)
   const [serialData, setSerialData] = useState<UserSerialData | null>(null)
   const [, setThemeVersion] = useState(0)
+  // Search/filter state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeQuery, setActiveQuery] = useState('')
 
   useEffect(() => {
     const handleAppThemeChange = () => setThemeVersion((v) => v + 1)
@@ -109,7 +112,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     handleUnlike,
     handleRepost,
     handleDelete,
-  } = useTimeline({ authorPubkey: pubkey })
+  } = useTimeline({ authorPubkey: pubkey, q: activeQuery || undefined })
 
   const loadProfile = async () => {
     setProfileLoading(true)
@@ -260,6 +263,16 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     setEditMode(false)
   }
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setActiveQuery(searchQuery.trim())
+  }
+
+  const handleClearSearch = () => {
+    setSearchQuery('')
+    setActiveQuery('')
+  }
+
   if (!mounted) return null
   if (loading && items.length === 0) return <Loading />
 
@@ -302,6 +315,30 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
           onEditClick={() => setEditMode(true)}
         />
       )}
+
+      {/* Search posts */}
+      <div className="user-search">
+        <form onSubmit={handleSearch} className="user-search-form">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search posts..."
+            className="user-search-input"
+          />
+          <button type="submit" className="user-search-button" aria-label="Search">
+            <Icon name="Search" size={16} />
+          </button>
+        </form>
+        {activeQuery && (
+          <div className="user-search-active">
+            <span>Searching: &quot;{activeQuery}&quot;</span>
+            <button onClick={handleClearSearch} className="user-search-clear">
+              <Icon name="X" size={14} />
+            </button>
+          </div>
+        )}
+      </div>
 
       <UserPosts
         items={items}

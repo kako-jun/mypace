@@ -10,6 +10,8 @@ export interface GapInfo {
 
 export interface UseTimelineOptions {
   authorPubkey?: string // 特定ユーザーの投稿のみ取得（ユーザーページ用）
+  tags?: string[] // ハッシュタグフィルタ（ユーザーページ用）
+  q?: string // テキスト検索クエリ（ユーザーページ用）
 }
 
 export interface UseTimelineResult {

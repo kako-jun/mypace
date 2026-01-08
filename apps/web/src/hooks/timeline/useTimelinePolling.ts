@@ -32,7 +32,7 @@ export function useTimelinePolling({
   setLatestEventTime,
   pendingNewEvents,
 }: UseTimelinePollingOptions) {
-  const { authorPubkey } = options
+  const { authorPubkey, tags, q } = options
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // 新着チェック（ポーリング）- ギャップ検出付き
@@ -42,7 +42,12 @@ export function useTimelinePolling({
     try {
       let newNotes: Event[]
       if (authorPubkey) {
-        newNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime)
+        newNotes = await fetchUserPosts(authorPubkey, {
+          limit: LIMITS.TIMELINE_FETCH_LIMIT,
+          since: latestEventTime,
+          tags,
+          q,
+        })
       } else {
         newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime)
       }
@@ -84,7 +89,7 @@ export function useTimelinePolling({
     } catch (err) {
       console.error('Failed to check new events:', err)
     }
-  }, [latestEventTime, events, authorPubkey, setGaps, setPendingNewEvents])
+  }, [latestEventTime, events, authorPubkey, tags, q, setGaps, setPendingNewEvents])
 
   // 1分ごとのポーリング
   useEffect(() => {

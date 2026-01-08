@@ -24,7 +24,7 @@ import { useGapDetection } from './useGapDetection'
 export type { GapInfo, UseTimelineOptions, UseTimelineResult }
 
 export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult {
-  const { authorPubkey } = options
+  const { authorPubkey, tags, q } = options
 
   // State
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([])
@@ -91,7 +91,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
 
       let notes: Event[]
       if (authorPubkey) {
-        notes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT)
+        notes = await fetchUserPosts(authorPubkey, { limit: LIMITS.TIMELINE_FETCH_LIMIT, tags, q })
       } else {
         notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT)
       }
@@ -125,7 +125,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       setError(getErrorMessage(err, 'Failed to load timeline'))
       setLoading(false)
     }
-  }, [authorPubkey, profiles])
+  }, [authorPubkey, tags, q, profiles])
 
   // Stella送信
   const flushStella = async (targetEvent: Event) => {
@@ -284,7 +284,12 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     try {
       let olderNotes: Event[]
       if (authorPubkey) {
-        olderNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, 0, oldestEventTime)
+        olderNotes = await fetchUserPosts(authorPubkey, {
+          limit: LIMITS.TIMELINE_FETCH_LIMIT,
+          until: oldestEventTime,
+          tags,
+          q,
+        })
       } else {
         olderNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, oldestEventTime)
       }
@@ -322,7 +327,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     } finally {
       setLoadingMore(false)
     }
-  }, [loadingMore, hasMore, oldestEventTime, events, authorPubkey])
+  }, [loadingMore, hasMore, oldestEventTime, events, authorPubkey, tags, q])
 
   const loadTimelineRef = useRef(loadTimeline)
   loadTimelineRef.current = loadTimeline
@@ -332,7 +337,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     const handleNewPost = () => setTimeout(() => loadTimelineRef.current(), TIMEOUTS.NEW_POST_RELOAD)
     window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
     return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
-  }, [authorPubkey])
+  }, [authorPubkey, tags, q])
 
   return {
     items: timelineItems,
