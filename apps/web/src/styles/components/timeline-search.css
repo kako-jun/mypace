@@ -3,8 +3,9 @@
   break-inside: avoid;
   direction: ltr;
   background: transparent;
-  /* 投稿カードと同じ幅（column-width: 560px）に合わせる */
-  max-width: 560px;
+  /* 投稿カードと同じ幅（column-width: 560px）+ 右端へのはみ出し分 */
+  width: calc(560px + 0.5rem);
+  max-width: calc(100% + 0.5rem);
   margin-left: auto;
   /* 親のpadding (0.5rem) を打ち消して右端にくっつける */
   margin-right: -0.5rem;
