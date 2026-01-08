@@ -272,32 +272,35 @@ URLで指定されたタグの投稿を全て表示。
 
 ## タスク
 
-### Phase 1: API側フィルタ実装（タイムライン用）
+### Phase 1: API側フィルタ実装（タイムライン用）✅
 
-- [ ] API: `hideNPC=1` パラメータ追加（kind 42000除外）
-- [ ] API: `mute=pubkey1,pubkey2` パラメータ追加（pubkey除外）
-- [ ] API: `ng=word1,word2` パラメータ追加（NGワード本文マッチ除外）
-- [ ] API: `ngtags=tag1,tag2` パラメータ追加（NGタグ除外）
+- [x] API: `hideNPC=1` パラメータ追加（kind 42000除外）
+- [x] API: `mute=pubkey1,pubkey2` パラメータ追加（pubkey除外）
+- [x] API: `ng=word1,word2` パラメータ追加（NGワード本文マッチ除外）
+- [x] API: `ngtags=tag1,tag2` パラメータ追加（NGタグ除外）
+- [x] API: `q` パラメータ追加（検索クエリ）
+- [x] API: `tags` パラメータ追加（OKタグ）
 
-### Phase 2: フロントエンド タイムラインフィルタ
+### Phase 2: フロントエンド タイムラインフィルタ ✅
 
-- [ ] FE: MuteListManagerをFilterPanelに統合（isDirty連携）
-- [ ] FE: 即時適用イベント (`mypace:muteListChanged`) 削除
-- [ ] FE: `fetchTimeline` で全フィルタをAPIに送信
-- [ ] FE: Timeline.tsxのFEフィルタ削除（muteList, hideNPC）
-- [ ] FE: TimelinePostCard.tsxのFEフィルタ削除（ngWords, ngTags）
-- [ ] FE: ブラウザURLからフィルタパラメータを削除（`/` のみに）
+- [x] FE: MuteListManagerをFilterPanelに統合（isDirty連携）
+- [x] FE: 即時適用イベント (`mypace:muteListChanged`) 削除
+- [x] FE: `fetchTimeline` で全フィルタをAPIに送信
+- [x] FE: Timeline.tsxのFEフィルタ削除（muteList, hideNPC）
+- [x] FE: TimelinePostCard.tsxのFEフィルタ削除（ngWords, ngTags）
+- [x] FE: ブラウザURLから個人フィルタパラメータを削除
 
-### Phase 3: ユーザーページ専用フィルタ
+### Phase 3: ユーザーページ専用フィルタ ✅
 
-- [ ] API: `/api/user/:pubkey/events` に `tags`, `q` パラメータ追加
-- [ ] FE: ユーザーページにシンプルなフィルタUI追加（ポスト回数の下）
-- [ ] FE: tags入力フィールド（Saveなし、URL即時反映）
-- [ ] FE: query入力フィールド（Saveなし、URL即時反映）
-- [ ] FE: `/user/:npub?tags=xxx&q=yyy` のURL対応
+- [x] API: `/api/user/:pubkey/events` に `tags`, `q` パラメータ追加
+- [x] FE: TimelineSearchコンポーネント作成（ホーム・ユーザーページ共通）
+- [x] FE: tags入力フィールド（Saveなし、URL即時反映）
+- [x] FE: query入力フィールド（Saveなし、URL即時反映）
+- [x] FE: `/user/:npub?tags=xxx&q=yyy` のURL対応
+- [x] FE: `/?q=xxx&tags=yyy` のURL対応（ホーム）
 
 ### Phase 4: 整理
 
-- [ ] FE: 不要になったURL解析ロジック削除（`parseSearchParams`のtags, query等）
-- [ ] 型: `TimelineFilters` 型を整理
-- [ ] ドキュメント: CLAUDE.md にフィルタ設計を追記
+- [ ] FE: 不要になったURL解析ロジック削除（`parseSearchParams`のtags, query等）- 保留
+- [ ] 型: `TimelineFilters` 型を整理 - 保留
+- [x] ドキュメント: text-filter.md を更新
