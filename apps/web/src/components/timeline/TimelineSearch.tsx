@@ -154,7 +154,6 @@ export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
               Clear
             </button>
             <button type="submit" className="timeline-search-btn timeline-search-btn-apply">
-              <Icon name="Check" size={16} />
               Apply
             </button>
           </div>
