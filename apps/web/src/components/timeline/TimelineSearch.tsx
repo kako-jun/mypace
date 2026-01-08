@@ -96,56 +96,81 @@ export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
 
   return (
     <div className="timeline-search">
-      <form onSubmit={handleSearch} className="timeline-search-form">
-        <div className="timeline-search-row">
-          <Icon name="Search" size={16} className="timeline-search-icon" />
-          <input
-            type="text"
-            value={queryInput}
-            onChange={(e) => setQueryInput(e.target.value)}
-            placeholder="Search..."
-            className="timeline-search-input"
-          />
-        </div>
-        <div className="timeline-search-row">
-          <Icon name="Hash" size={16} className="timeline-search-icon" />
-          <input
-            type="text"
-            value={tagsInput}
-            onChange={(e) => setTagsInput(e.target.value)}
-            placeholder="Tags (space or + separated)..."
-            className="timeline-search-input"
-          />
-        </div>
-        <button type="submit" className="timeline-search-button" aria-label="Apply filters">
-          <Icon name="Check" size={16} />
-        </button>
-      </form>
-      {hasActiveFilters && (
-        <div className="timeline-search-active">
-          {activeQuery && (
-            <span className="timeline-search-chip">
-              <Icon name="Search" size={12} />
-              {activeQuery}
-              <button onClick={handleClearQuery} className="timeline-search-chip-clear" aria-label="Clear search">
-                <Icon name="X" size={12} />
+      <div className="timeline-search-card">
+        <form onSubmit={handleSearch} className="timeline-search-form">
+          <div className="timeline-search-row">
+            <Icon name="Search" size={16} className="timeline-search-icon" />
+            <input
+              type="text"
+              value={queryInput}
+              onChange={(e) => setQueryInput(e.target.value)}
+              placeholder="Search..."
+              className="timeline-search-input"
+            />
+            {queryInput && (
+              <button
+                type="button"
+                onClick={() => setQueryInput('')}
+                className="timeline-search-clear"
+                aria-label="Clear input"
+              >
+                <Icon name="X" size={14} />
               </button>
-            </span>
-          )}
-          {activeTags && (
-            <span className="timeline-search-chip">
-              <Icon name="Hash" size={12} />
-              {activeTags}
-              <button onClick={handleClearTags} className="timeline-search-chip-clear" aria-label="Clear tags">
-                <Icon name="X" size={12} />
+            )}
+          </div>
+          <div className="timeline-search-row">
+            <Icon name="Hash" size={16} className="timeline-search-icon" />
+            <input
+              type="text"
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              placeholder="Tags (space or + separated)..."
+              className="timeline-search-input"
+            />
+            {tagsInput && (
+              <button
+                type="button"
+                onClick={() => setTagsInput('')}
+                className="timeline-search-clear"
+                aria-label="Clear input"
+              >
+                <Icon name="X" size={14} />
               </button>
-            </span>
-          )}
-          <button onClick={handleClearAll} className="timeline-search-clear-all">
-            Clear all
-          </button>
-        </div>
-      )}
+            )}
+          </div>
+          <div className="timeline-search-actions">
+            <button type="button" onClick={handleClearAll} className="timeline-search-btn timeline-search-btn-clear">
+              Clear
+            </button>
+            <button type="submit" className="timeline-search-btn timeline-search-btn-apply">
+              <Icon name="Check" size={16} />
+              Apply
+            </button>
+          </div>
+        </form>
+        {hasActiveFilters && (
+          <div className="timeline-search-active">
+            {activeQuery && (
+              <span className="timeline-search-chip">
+                <Icon name="Search" size={12} />
+                {activeQuery}
+                <button onClick={handleClearQuery} className="timeline-search-chip-clear" aria-label="Clear search">
+                  <Icon name="X" size={12} />
+                </button>
+              </span>
+            )}
+            {activeTags && (
+              <span className="timeline-search-chip">
+                <Icon name="Hash" size={12} />
+                {activeTags}
+                <button onClick={handleClearTags} className="timeline-search-chip-clear" aria-label="Clear tags">
+                  <Icon name="X" size={12} />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
