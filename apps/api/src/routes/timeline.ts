@@ -33,12 +33,12 @@ timeline.get('/', async (c) => {
   // Mute list: comma-separated pubkeys
   const muteParam = c.req.query('mute') || ''
   const mutedPubkeys = muteParam ? muteParam.split(',').filter(Boolean) : []
-  // NG words: comma-separated words
+  // NG words: + separated words
   const ngParam = c.req.query('ng') || ''
-  const ngWords = ngParam ? ngParam.split(',').filter(Boolean) : []
-  // NG tags: pipe-separated tags
+  const ngWords = ngParam ? ngParam.split('+').map(decodeURIComponent).filter(Boolean) : []
+  // NG tags: + separated tags
   const ngTagsParam = c.req.query('ngtags') || ''
-  const ngTags = ngTagsParam ? ngTagsParam.split('|').filter(Boolean) : []
+  const ngTags = ngTagsParam ? ngTagsParam.split('+').map(decodeURIComponent).filter(Boolean) : []
   // Search query: + separated keywords (AND search, Google-style)
   const queryParam = c.req.query('q') || ''
   const queries = queryParam ? queryParam.split('+').map(decodeURIComponent).filter(Boolean) : []

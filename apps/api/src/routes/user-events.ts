@@ -22,9 +22,9 @@ userEvents.get('/:pubkey/events', async (c) => {
   const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
   const since = Number(c.req.query('since')) || 0
   const until = Number(c.req.query('until')) || 0
-  // Optional tags filter (comma-separated)
+  // Optional tags filter (+ separated)
   const tagsParam = c.req.query('tags') || ''
-  const filterTags = tagsParam ? tagsParam.split(',').filter(Boolean) : []
+  const filterTags = tagsParam ? tagsParam.split('+').map(decodeURIComponent).filter(Boolean) : []
   // Optional text search query (+ separated for AND search, Google-style)
   const queryParam = c.req.query('q') || ''
   const queries = queryParam ? queryParam.split('+').map(decodeURIComponent).filter(Boolean) : []

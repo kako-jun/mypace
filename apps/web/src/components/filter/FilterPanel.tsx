@@ -65,12 +65,14 @@ export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
     hideNPC !== (savedFilters.hideNPC ?? false) ||
     JSON.stringify(muteList.map((m) => m.pubkey).sort()) !== JSON.stringify(savedMuteList.map((m) => m.pubkey).sort())
 
-  // Parse input to array
+  // Parse input to array (space-separated, dedup while preserving order)
   const parseInput = (input: string): string[] => {
-    return input
-      .split(/[\s,]+/)
+    const items = input
+      .split(/\s+/)
       .map((w) => w.trim())
       .filter((w) => w.length > 0)
+    // Remove duplicates while preserving order
+    return Array.from(new Set(items))
   }
 
   // Get current form state as SearchFilters

@@ -94,34 +94,6 @@ export function loadFiltersFromStorage(): SearchFilters {
   return DEFAULT_SEARCH_FILTERS
 }
 
-// Build search URL with all filter parameters
-export function buildSearchUrl(filters: Partial<SearchFilters>): string {
-  const params = new URLSearchParams()
-  const f = { ...DEFAULT_SEARCH_FILTERS, ...filters }
-
-  if (f.query) params.set('q', f.query)
-  if (f.ngWords.length > 0) params.set('ng', f.ngWords.join(','))
-  if (f.tags.length > 0) {
-    const separator = f.mode === 'and' ? '+' : ','
-    params.set('tags', f.tags.join(separator))
-  }
-  if (f.ngTags.length > 0) {
-    params.set('ngtags', f.ngTags.join(','))
-  }
-  if (!f.showSNS) params.set('sns', 'off')
-  if (!f.showBlog) params.set('blog', 'off')
-  if (!f.mypace) params.set('mypace', 'off')
-  if (f.lang) params.set('lang', f.lang)
-  // Smart filters: only add param when OFF (default is ON)
-  if (!f.hideAds) params.set('ads', 'show')
-  if (!f.hideNSFW) params.set('nsfw', 'show')
-  // NPC filter: only add param when ON (default is OFF)
-  if (f.hideNPC) params.set('npc', 'hide')
-
-  const queryString = params.toString()
-  return queryString ? `/?${queryString}` : '/'
-}
-
 // Parse search URL parameters to filters
 export function parseSearchParams(searchParams: URLSearchParams): SearchFilters {
   const query = searchParams.get('q') || ''
@@ -187,8 +159,4 @@ export function parseSearchParams(searchParams: URLSearchParams): SearchFilters 
     // NPC filter: default OFF, param 'hide' means ON
     hideNPC: npcParam === 'hide',
   }
-}
-
-export function navigateToSearch(filters: Partial<SearchFilters>): void {
-  navigateTo(buildSearchUrl(filters))
 }

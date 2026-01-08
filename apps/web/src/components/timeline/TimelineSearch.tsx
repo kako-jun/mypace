@@ -22,13 +22,15 @@ export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
   const [activeQuery, setActiveQuery] = useState('')
   const [activeTags, setActiveTags] = useState('')
 
-  // Parse space-separated string to array
+  // Parse space-separated string to array (dedup while preserving order)
   const parseInput = useCallback((input: string): string[] => {
     if (!input) return []
-    return input
+    const items = input
       .split(/\s+/)
       .map((t) => t.trim())
-      .filter(Boolean) // Remove empty strings
+      .filter(Boolean)
+    // Remove duplicates while preserving order
+    return Array.from(new Set(items))
   }, [])
 
   // Initialize from URL on mount

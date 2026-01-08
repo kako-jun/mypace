@@ -54,12 +54,12 @@ export async function fetchTimeline(options: TimelineOptions = {}): Promise<{ ev
 
   // NG words
   if (filters.ngWords.length > 0) {
-    params.set('ng', filters.ngWords.join(','))
+    params.set('ng', filters.ngWords.map(encodeURIComponent).join('+'))
   }
 
   // NG tags
   if (filters.ngTags && filters.ngTags.length > 0) {
-    params.set('ngtags', filters.ngTags.join(','))
+    params.set('ngtags', filters.ngTags.map(encodeURIComponent).join('+'))
   }
 
   // Public filters (from URL, not localStorage)
