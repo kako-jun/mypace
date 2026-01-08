@@ -4,7 +4,13 @@ import type { Bindings } from '../types'
 import { MYPACE_TAG, RELAYS, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC } from '../constants'
 import { getCachedEvents, cacheEvents } from '../services/cache'
 import { filterByLanguage } from '../filters/language'
-import { filterBySmartFilters } from '../filters/smart-filter'
+import {
+  filterBySmartFilters,
+  filterByNPC,
+  filterByMuteList,
+  filterByNgWords,
+  filterByNgTags,
+} from '../filters/smart-filter'
 import { SimplePool } from 'nostr-tools/pool'
 
 const timeline = new Hono<{ Bindings: Bindings }>()
@@ -20,6 +26,17 @@ timeline.get('/', async (c) => {
   // Smart filters: default to hide (hideAds=1, hideNSFW=1)
   const hideAds = c.req.query('hideAds') !== '0'
   const hideNSFW = c.req.query('hideNSFW') !== '0'
+  // NPC filter: default OFF, hideNPC=1 to hide
+  const hideNPC = c.req.query('hideNPC') === '1'
+  // Mute list: comma-separated pubkeys
+  const muteParam = c.req.query('mute') || ''
+  const mutedPubkeys = muteParam ? muteParam.split(',').filter(Boolean) : []
+  // NG words: comma-separated words
+  const ngParam = c.req.query('ng') || ''
+  const ngWords = ngParam ? ngParam.split(',').filter(Boolean) : []
+  // NG tags: comma-separated tags
+  const ngTagsParam = c.req.query('ngtags') || ''
+  const ngTags = ngTagsParam ? ngTagsParam.split(',').filter(Boolean) : []
   // Parse kinds parameter
   // Kind 42000 (Sinov NPC) is only included when mypace filter is active
   const kindsParam = c.req.query('kinds')
@@ -49,6 +66,10 @@ timeline.get('/', async (c) => {
 
       // スマートフィルタ適用
       events = filterBySmartFilters(events, hideAds, hideNSFW)
+      events = filterByNPC(events, hideNPC)
+      events = filterByMuteList(events, mutedPubkeys)
+      events = filterByNgWords(events, ngWords)
+      events = filterByNgTags(events, ngTags)
 
       if (langFilter) {
         events = filterByLanguage(events, langFilter)
@@ -85,13 +106,17 @@ timeline.get('/', async (c) => {
 
     // スマートフィルタ適用
     events = filterBySmartFilters(events, hideAds, hideNSFW)
+    events = filterByNPC(events, hideNPC)
+    events = filterByMuteList(events, mutedPubkeys)
+    events = filterByNgWords(events, ngWords)
+    events = filterByNgTags(events, ngTags)
 
     // 言語フィルタ（ユーザーの主要言語も考慮）
     if (langFilter) {
       events = filterByLanguage(events, langFilter)
     }
 
-    // キャッシュに保存
+    // キャッシュに保存（フィルタ前のデータを保存すべきだが、一旦フィルタ後を保存）
     await cacheEvents(db, events)
 
     return c.json({ events, source: 'relay' })

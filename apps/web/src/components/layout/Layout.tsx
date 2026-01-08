@@ -1,43 +1,35 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { Icon } from '../ui/Icon'
 import { Settings } from '../settings'
 import { FilterPanel } from '../filter'
-import { parseSearchParams, DEFAULT_SEARCH_FILTERS } from '../../lib/utils'
+import { loadFiltersFromStorage, getMutedPubkeys } from '../../lib/utils'
 import { CUSTOM_EVENTS } from '../../lib/constants'
 import { getStoredThemeColors, isDarkColor } from '../../lib/nostr/theme'
 
 export function Layout() {
   const navigate = useNavigate()
-  const location = useLocation()
-  const [searchParams] = useSearchParams()
   const [showFilterPanel, setShowFilterPanel] = useState(false)
   const [headerCornerClass, setHeaderCornerClass] = useState('')
   const [starAnimationPhase, setStarAnimationPhase] = useState<'initial' | 'normal'>('initial')
   const filterButtonRef = useRef<HTMLButtonElement>(null)
   const filterPanelRef = useRef<HTMLDivElement>(null)
 
-  // Parse current URL filters (home page uses query params for filters)
-  const currentFilters = useMemo(() => {
-    if (location.pathname === '/') {
-      return parseSearchParams(searchParams)
-    }
-    return DEFAULT_SEARCH_FILTERS
-  }, [location.pathname, searchParams])
-
-  // Check if any filters are active (any filtering is happening)
+  // Check if any filters are active (based on localStorage, not URL)
   const hasActiveFilters = useMemo(() => {
+    const filters = loadFiltersFromStorage()
+    const mutedPubkeys = getMutedPubkeys()
     return (
-      currentFilters.query !== '' ||
-      currentFilters.ngWords.length > 0 ||
-      currentFilters.tags.length > 0 ||
-      (currentFilters.ngTags?.length ?? 0) > 0 ||
-      !currentFilters.showSNS || // SNS OFF means filtering out SNS posts
-      !currentFilters.showBlog || // Blog OFF means filtering out blog posts
-      currentFilters.mypace || // mypace ON means filtering to mypace posts only
-      currentFilters.lang !== ''
+      filters.ngWords.length > 0 ||
+      (filters.ngTags?.length ?? 0) > 0 ||
+      !filters.showSNS ||
+      !filters.showBlog ||
+      filters.mypace ||
+      filters.hideNPC ||
+      filters.lang !== '' ||
+      mutedPubkeys.length > 0
     )
-  }, [currentFilters])
+  }, [])
 
   // Check theme colors for top-right corner
   useEffect(() => {
@@ -119,7 +111,7 @@ export function Layout() {
             </button>
             {showFilterPanel && (
               <div ref={filterPanelRef} className="filter-panel-wrapper">
-                <FilterPanel isPopup={true} filters={currentFilters} onClose={() => setShowFilterPanel(false)} />
+                <FilterPanel isPopup={true} onClose={() => setShowFilterPanel(false)} />
               </div>
             )}
           </div>

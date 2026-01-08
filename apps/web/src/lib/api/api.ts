@@ -1,5 +1,6 @@
 // API client for mypace backend
 import type { Event, Profile, ReactionData, ReplyData, RepostData } from '../../types'
+import { loadFiltersFromStorage, getMutedPubkeys } from '../utils'
 
 export const API_BASE =
   import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://api.mypace.llll-ll.com' : 'http://localhost:8787')
@@ -7,37 +8,58 @@ export const API_BASE =
 // Re-export types for convenience
 export type { Event, Profile, ReactionData, ReplyData, RepostData }
 
-// Timeline
-export async function fetchTimeline(
-  limit = 50,
-  since = 0,
-  mypaceOnly = true,
-  language = '',
-  until = 0,
-  showSNS = true,
-  showBlog = true,
-  hideAds = true,
-  hideNSFW = true
-): Promise<{ events: Event[]; source: string }> {
+// Timeline options interface
+interface TimelineOptions {
+  limit?: number
+  since?: number
+  until?: number
+}
+
+// Timeline - loads filters from localStorage and sends to API
+export async function fetchTimeline(options: TimelineOptions = {}): Promise<{ events: Event[]; source: string }> {
+  const { limit = 50, since = 0, until = 0 } = options
+
+  // Load filters from localStorage
+  const filters = loadFiltersFromStorage()
+  const mutedPubkeys = getMutedPubkeys()
+
   const params = new URLSearchParams({ limit: String(limit) })
   if (since > 0) params.set('since', String(since))
   if (until > 0) params.set('until', String(until))
-  if (!mypaceOnly) params.set('all', '1')
-  if (language) params.set('lang', language)
+  if (!filters.mypace) params.set('all', '1')
+  if (filters.lang) params.set('lang', filters.lang)
+
   // Set kinds parameter based on showSNS and showBlog
   const kindsList: number[] = []
-  if (showSNS) {
+  if (filters.showSNS) {
     kindsList.push(1)
-    // Kind 42000 (Sinov NPC) is included when mypace filter is active
-    if (mypaceOnly) kindsList.push(42000)
+    // Kind 42000 (Sinov NPC) is included when mypace filter is active (and hideNPC is off)
+    if (filters.mypace && !filters.hideNPC) kindsList.push(42000)
   }
-  if (showBlog) kindsList.push(30023)
+  if (filters.showBlog) kindsList.push(30023)
   if (kindsList.length > 0) {
     params.set('kinds', kindsList.join(','))
   }
+
   // Smart filters: send 0 when OFF (default is ON on server)
-  if (!hideAds) params.set('hideAds', '0')
-  if (!hideNSFW) params.set('hideNSFW', '0')
+  if (!filters.hideAds) params.set('hideAds', '0')
+  if (!filters.hideNSFW) params.set('hideNSFW', '0')
+  if (filters.hideNPC) params.set('hideNPC', '1')
+
+  // Mute list
+  if (mutedPubkeys.length > 0) {
+    params.set('mute', mutedPubkeys.join(','))
+  }
+
+  // NG words
+  if (filters.ngWords.length > 0) {
+    params.set('ng', filters.ngWords.join(','))
+  }
+
+  // NG tags
+  if (filters.ngTags && filters.ngTags.length > 0) {
+    params.set('ngtags', filters.ngTags.join(','))
+  }
 
   const res = await fetch(`${API_BASE}/api/timeline?${params}`)
   if (!res.ok) throw new Error('Failed to fetch timeline')

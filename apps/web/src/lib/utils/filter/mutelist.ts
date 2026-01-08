@@ -25,11 +25,9 @@ export function loadMuteList(): MuteEntry[] {
 }
 
 // Save mute list to localStorage
-function saveMuteList(list: MuteEntry[]): void {
+export function saveMuteList(list: MuteEntry[]): void {
   try {
     localStorage.setItem(STORAGE_KEYS.MUTE_LIST, JSON.stringify(list))
-    // Dispatch custom event for same-tab updates
-    window.dispatchEvent(new CustomEvent('mypace:muteListChanged'))
   } catch {
     // Ignore storage errors
   }

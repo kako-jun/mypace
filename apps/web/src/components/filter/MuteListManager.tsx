@@ -1,18 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { Icon, Button, Input, CloseButton } from '../ui'
-import { loadMuteList, addToMuteList, removeFromMuteList, type MuteEntry } from '../../lib/utils'
+import { npubToHex, hexToNpub, type MuteEntry } from '../../lib/utils'
 
-export function MuteListManager() {
+interface MuteListManagerProps {
+  muteList: MuteEntry[]
+  onMuteListChange: (list: MuteEntry[]) => void
+}
+
+export function MuteListManager({ muteList, onMuteListChange }: MuteListManagerProps) {
   const [showPopup, setShowPopup] = useState(false)
-  const [muteList, setMuteList] = useState<MuteEntry[]>([])
   const [muteInput, setMuteInput] = useState('')
   const [muteError, setMuteError] = useState('')
   const popupRef = useRef<HTMLDivElement>(null)
-
-  // Load mute list on mount
-  useEffect(() => {
-    setMuteList(loadMuteList())
-  }, [])
 
   // Close popup when clicking outside
   useEffect(() => {
@@ -28,22 +27,51 @@ export function MuteListManager() {
   }, [showPopup])
 
   const handleAddToMuteList = () => {
-    if (!muteInput.trim()) return
+    const trimmed = muteInput.trim()
+    if (!trimmed) return
 
-    const result = addToMuteList(muteInput)
-    if (result) {
-      setMuteList(loadMuteList())
-      setMuteInput('')
-      setMuteError('')
+    let pubkey: string
+    let npub: string
+
+    // Check if input is npub or hex
+    if (trimmed.startsWith('npub1')) {
+      const hex = npubToHex(trimmed)
+      if (!hex) {
+        setMuteError('Invalid npub')
+        setTimeout(() => setMuteError(''), 2000)
+        return
+      }
+      pubkey = hex
+      npub = trimmed
+    } else if (/^[0-9a-f]{64}$/i.test(trimmed)) {
+      pubkey = trimmed.toLowerCase()
+      npub = hexToNpub(pubkey)
     } else {
-      setMuteError('Invalid npub or already muted')
+      setMuteError('Invalid npub or hex pubkey')
       setTimeout(() => setMuteError(''), 2000)
+      return
     }
+
+    // Check if already muted
+    if (muteList.some((entry) => entry.pubkey === pubkey)) {
+      setMuteError('Already muted')
+      setTimeout(() => setMuteError(''), 2000)
+      return
+    }
+
+    const entry: MuteEntry = {
+      npub,
+      pubkey,
+      addedAt: Date.now(),
+    }
+
+    onMuteListChange([...muteList, entry])
+    setMuteInput('')
+    setMuteError('')
   }
 
   const handleRemoveFromMuteList = (pubkey: string) => {
-    removeFromMuteList(pubkey)
-    setMuteList(loadMuteList())
+    onMuteListChange(muteList.filter((entry) => entry.pubkey !== pubkey))
   }
 
   return (

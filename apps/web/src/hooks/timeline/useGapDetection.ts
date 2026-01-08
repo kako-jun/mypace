@@ -28,15 +28,7 @@ export function useGapDetection({
   setEvents,
   setProfiles,
 }: UseGapDetectionOptions) {
-  const {
-    authorPubkey,
-    mypaceOnly = true,
-    showSNS = true,
-    showBlog = true,
-    hideAds = true,
-    hideNSFW = true,
-    lang = '',
-  } = options
+  const { authorPubkey } = options
 
   // ギャップを埋める
   const fillGap = useCallback(
@@ -50,17 +42,7 @@ export function useGapDetection({
         if (authorPubkey) {
           gapNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, gap.since, gap.until)
         } else {
-          gapNotes = await fetchEvents(
-            LIMITS.TIMELINE_FETCH_LIMIT,
-            gap.since,
-            mypaceOnly,
-            lang,
-            gap.until,
-            showSNS,
-            showBlog,
-            hideAds,
-            hideNSFW
-          )
+          gapNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, gap.since, gap.until)
         }
 
         // 既存のイベントIDを除外
@@ -113,23 +95,7 @@ export function useGapDetection({
         setLoadingGap(null)
       }
     },
-    [
-      gaps,
-      loadingGap,
-      events,
-      authorPubkey,
-      mypaceOnly,
-      showSNS,
-      showBlog,
-      hideAds,
-      hideNSFW,
-      lang,
-      setGaps,
-      setLoadingGap,
-      setTimelineItems,
-      setEvents,
-      setProfiles,
-    ]
+    [gaps, loadingGap, events, authorPubkey, setGaps, setLoadingGap, setTimelineItems, setEvents, setProfiles]
   )
 
   return { fillGap }

@@ -24,15 +24,7 @@ import { useGapDetection } from './useGapDetection'
 export type { GapInfo, UseTimelineOptions, UseTimelineResult }
 
 export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult {
-  const {
-    authorPubkey,
-    mypaceOnly = true,
-    showSNS = true,
-    showBlog = true,
-    hideAds = true,
-    hideNSFW = true,
-    lang = '',
-  } = options
+  const { authorPubkey } = options
 
   // State
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([])
@@ -101,17 +93,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       if (authorPubkey) {
         notes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT)
       } else {
-        notes = await fetchEvents(
-          LIMITS.TIMELINE_FETCH_LIMIT,
-          0,
-          mypaceOnly,
-          lang,
-          0,
-          showSNS,
-          showBlog,
-          hideAds,
-          hideNSFW
-        )
+        notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT)
       }
 
       const initialItems: TimelineItem[] = notes.map((note) => ({ event: note }))
@@ -143,7 +125,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       setError(getErrorMessage(err, 'Failed to load timeline'))
       setLoading(false)
     }
-  }, [authorPubkey, mypaceOnly, showSNS, showBlog, hideAds, hideNSFW, lang, profiles])
+  }, [authorPubkey, profiles])
 
   // Stella送信
   const flushStella = async (targetEvent: Event) => {
@@ -304,17 +286,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       if (authorPubkey) {
         olderNotes = await fetchUserPosts(authorPubkey, LIMITS.TIMELINE_FETCH_LIMIT, 0, oldestEventTime)
       } else {
-        olderNotes = await fetchEvents(
-          LIMITS.TIMELINE_FETCH_LIMIT,
-          0,
-          mypaceOnly,
-          lang,
-          oldestEventTime,
-          showSNS,
-          showBlog,
-          hideAds,
-          hideNSFW
-        )
+        olderNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, oldestEventTime)
       }
 
       if (olderNotes.length === 0) {
@@ -350,19 +322,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     } finally {
       setLoadingMore(false)
     }
-  }, [
-    loadingMore,
-    hasMore,
-    oldestEventTime,
-    events,
-    authorPubkey,
-    mypaceOnly,
-    showSNS,
-    showBlog,
-    hideAds,
-    hideNSFW,
-    lang,
-  ])
+  }, [loadingMore, hasMore, oldestEventTime, events, authorPubkey])
 
   const loadTimelineRef = useRef(loadTimeline)
   loadTimelineRef.current = loadTimeline
@@ -372,7 +332,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     const handleNewPost = () => setTimeout(() => loadTimelineRef.current(), TIMEOUTS.NEW_POST_RELOAD)
     window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
     return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
-  }, [authorPubkey, mypaceOnly, showSNS, showBlog, hideAds, hideNSFW, lang])
+  }, [authorPubkey])
 
   return {
     items: timelineItems,

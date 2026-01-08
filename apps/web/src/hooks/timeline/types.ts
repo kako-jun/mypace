@@ -9,13 +9,7 @@ export interface GapInfo {
 }
 
 export interface UseTimelineOptions {
-  authorPubkey?: string // 特定ユーザーの投稿のみ取得
-  mypaceOnly?: boolean // mypaceタグでフィルタリング（デフォルト: true）
-  showSNS?: boolean // Show kind 1 (short notes) (デフォルト: true)
-  showBlog?: boolean // Show kind 30023 (long-form articles) (デフォルト: true)
-  hideAds?: boolean // Hide ad/spam content (デフォルト: true)
-  hideNSFW?: boolean // Hide NSFW content (デフォルト: true)
-  lang?: string // Language filter (デフォルト: '')
+  authorPubkey?: string // 特定ユーザーの投稿のみ取得（ユーザーページ用）
 }
 
 export interface UseTimelineResult {

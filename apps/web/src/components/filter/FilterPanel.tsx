@@ -3,7 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import Button from '../ui/Button'
 import Toggle from '../ui/Toggle'
 import { CloseButton } from '../ui'
-import { buildSearchUrl, DEFAULT_SEARCH_FILTERS, saveFiltersToStorage, loadPresets } from '../../lib/utils'
+import {
+  DEFAULT_SEARCH_FILTERS,
+  saveFiltersToStorage,
+  loadFiltersFromStorage,
+  loadPresets,
+  loadMuteList,
+  saveMuteList,
+  type MuteEntry,
+} from '../../lib/utils'
 import { FilterPresets } from './FilterPresets'
 import { SmartFilter } from './SmartFilter'
 import { MuteListManager } from './MuteListManager'
@@ -14,63 +22,48 @@ import type { SearchFilters, FilterPreset } from '../../types'
 interface FilterPanelProps {
   isPopup?: boolean
   onClose?: () => void
-  filters?: SearchFilters
 }
 
-export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH_FILTERS }: FilterPanelProps) {
+export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
   const navigate = useNavigate()
+
+  // Load saved filters from localStorage
+  const savedFilters = loadFiltersFromStorage()
+  const savedMuteList = loadMuteList()
 
   // Preset state
   const [presets, setPresets] = useState<FilterPreset[]>([])
   const [selectedPresetId, setSelectedPresetId] = useState<string>('')
 
-  // Local state initialized from filters
-  const [showSNS, setShowSNS] = useState(filters.showSNS)
-  const [showBlog, setShowBlog] = useState(filters.showBlog)
-  const [mypaceOnly, setMypaceOnly] = useState(filters.mypace)
-  const [okTagsInput, setOkTagsInput] = useState(filters.tags.join(', '))
-  const [ngTagsInput, setNgTagsInput] = useState(filters.ngTags?.join(', ') || '')
-  const [searchQuery, setSearchQuery] = useState(filters.query)
-  const [ngWordsInput, setNgWordsInput] = useState(filters.ngWords.join(', '))
-  const [languageFilter, setLanguageFilter] = useState(filters.lang)
-  const [hideAds, setHideAds] = useState(filters.hideAds ?? true)
-  const [hideNSFW, setHideNSFW] = useState(filters.hideNSFW ?? true)
-  const [hideNPC, setHideNPC] = useState(filters.hideNPC ?? false)
+  // Local state initialized from saved filters
+  const [showSNS, setShowSNS] = useState(savedFilters.showSNS)
+  const [showBlog, setShowBlog] = useState(savedFilters.showBlog)
+  const [mypaceOnly, setMypaceOnly] = useState(savedFilters.mypace)
+  const [ngTagsInput, setNgTagsInput] = useState(savedFilters.ngTags?.join(', ') || '')
+  const [ngWordsInput, setNgWordsInput] = useState(savedFilters.ngWords.join(', '))
+  const [languageFilter, setLanguageFilter] = useState(savedFilters.lang)
+  const [hideAds, setHideAds] = useState(savedFilters.hideAds ?? true)
+  const [hideNSFW, setHideNSFW] = useState(savedFilters.hideNSFW ?? true)
+  const [hideNPC, setHideNPC] = useState(savedFilters.hideNPC ?? false)
+  const [muteList, setMuteList] = useState<MuteEntry[]>(savedMuteList)
 
   // Load presets on mount
   useEffect(() => {
     setPresets(loadPresets())
   }, [])
 
-  // Update local state when filters change (URL change)
-  useEffect(() => {
-    setShowSNS(filters.showSNS)
-    setShowBlog(filters.showBlog)
-    setMypaceOnly(filters.mypace)
-    setOkTagsInput(filters.tags.join(', '))
-    setNgTagsInput(filters.ngTags?.join(', ') || '')
-    setSearchQuery(filters.query)
-    setNgWordsInput(filters.ngWords.join(', '))
-    setLanguageFilter(filters.lang)
-    setHideAds(filters.hideAds ?? true)
-    setHideNSFW(filters.hideNSFW ?? true)
-    setHideNPC(filters.hideNPC ?? false)
-    setSelectedPresetId('')
-  }, [filters])
-
-  // Track if form is dirty
+  // Track if form is dirty (compare with saved values)
   const isDirty =
-    showSNS !== filters.showSNS ||
-    showBlog !== filters.showBlog ||
-    mypaceOnly !== filters.mypace ||
-    okTagsInput !== filters.tags.join(', ') ||
-    ngTagsInput !== (filters.ngTags?.join(', ') || '') ||
-    searchQuery !== filters.query ||
-    ngWordsInput !== filters.ngWords.join(', ') ||
-    languageFilter !== filters.lang ||
-    hideAds !== (filters.hideAds ?? true) ||
-    hideNSFW !== (filters.hideNSFW ?? true) ||
-    hideNPC !== (filters.hideNPC ?? false)
+    showSNS !== savedFilters.showSNS ||
+    showBlog !== savedFilters.showBlog ||
+    mypaceOnly !== savedFilters.mypace ||
+    ngTagsInput !== (savedFilters.ngTags?.join(', ') || '') ||
+    ngWordsInput !== savedFilters.ngWords.join(', ') ||
+    languageFilter !== savedFilters.lang ||
+    hideAds !== (savedFilters.hideAds ?? true) ||
+    hideNSFW !== (savedFilters.hideNSFW ?? true) ||
+    hideNPC !== (savedFilters.hideNPC ?? false) ||
+    JSON.stringify(muteList.map((m) => m.pubkey).sort()) !== JSON.stringify(savedMuteList.map((m) => m.pubkey).sort())
 
   // Parse input to array
   const parseInput = (input: string): string[] => {
@@ -85,11 +78,11 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     showSNS,
     showBlog,
     mypace: mypaceOnly,
-    tags: parseInput(okTagsInput),
+    tags: [], // Page-specific, not used in home
     ngTags: parseInput(ngTagsInput),
-    query: searchQuery,
+    query: '', // Page-specific, not used in home
     ngWords: parseInput(ngWordsInput),
-    mode: filters.mode,
+    mode: 'and',
     lang: languageFilter,
     hideAds,
     hideNSFW,
@@ -100,8 +93,12 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
   const handleApply = () => {
     const newFilters = getCurrentFilters()
     saveFiltersToStorage(newFilters)
-    navigate(buildSearchUrl(newFilters))
+    saveMuteList(muteList)
+    // Always navigate to home (no filter params in URL)
+    navigate('/')
     onClose?.()
+    // Force page reload to apply new filters
+    window.location.reload()
   }
 
   // Clear all filters
@@ -109,17 +106,19 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     setShowSNS(true)
     setShowBlog(true)
     setMypaceOnly(true)
-    setOkTagsInput('')
     setNgTagsInput('')
-    setSearchQuery('')
     setNgWordsInput('')
     setLanguageFilter('')
     setHideAds(true)
     setHideNSFW(true)
     setHideNPC(false)
+    setMuteList([])
     saveFiltersToStorage(DEFAULT_SEARCH_FILTERS)
+    saveMuteList([])
     navigate('/')
     onClose?.()
+    // Force page reload to apply new filters
+    window.location.reload()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -139,9 +138,7 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
     setShowSNS(f.showSNS)
     setShowBlog(f.showBlog)
     setMypaceOnly(f.mypace)
-    setOkTagsInput(f.tags.join(', '))
     setNgTagsInput(f.ngTags?.join(', ') || '')
-    setSearchQuery(f.query)
     setNgWordsInput(f.ngWords.join(', '))
     setLanguageFilter(f.lang)
     setHideAds(f.hideAds ?? true)
@@ -203,15 +200,11 @@ export function FilterPanel({ isPopup = false, onClose, filters = DEFAULT_SEARCH
         onLanguageChange={setLanguageFilter}
       />
 
-      <MuteListManager />
+      <MuteListManager muteList={muteList} onMuteListChange={setMuteList} />
 
       <FilterFields
-        searchQuery={searchQuery}
-        okTagsInput={okTagsInput}
         ngWordsInput={ngWordsInput}
         ngTagsInput={ngTagsInput}
-        onSearchQueryChange={setSearchQuery}
-        onOkTagsChange={setOkTagsInput}
         onNgWordsChange={setNgWordsInput}
         onNgTagsChange={setNgTagsInput}
         onKeyDown={handleKeyDown}

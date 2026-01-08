@@ -1,25 +1,17 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { PostForm } from '../components/form'
 import { Timeline } from '../components/timeline'
 import { LightBox, triggerLightBox } from '../components/ui'
 import { setImageClickHandler, clearImageClickHandler } from '../lib/parser'
-import { getString, setString, removeItem, getUIThemeColors, applyThemeColors, parseSearchParams } from '../lib/utils'
+import { getString, setString, removeItem, getUIThemeColors, applyThemeColors } from '../lib/utils'
 import { fetchEventById } from '../lib/nostr/relay'
 import { getFullContentForEdit } from '../lib/nostr/tags'
 import { STORAGE_KEYS, CUSTOM_EVENTS, TIMEOUTS, LIMITS } from '../lib/constants'
-import type { Event, SearchFilters } from '../types'
+import type { Event } from '../types'
 
-interface HomePageProps {
-  // Optional filters from parent (e.g., TagPage)
-  filters?: SearchFilters
-}
-
-export function HomePage({ filters: propFilters }: HomePageProps = {}) {
+export function HomePage() {
   const [searchParams] = useSearchParams()
-
-  // Use prop filters if provided, otherwise parse from URL
-  const activeFilters = useMemo(() => propFilters || parseSearchParams(searchParams), [propFilters, searchParams])
   const [longMode, setLongMode] = useState(false)
   const [content, setContent] = useState(() => getString(STORAGE_KEYS.DRAFT))
   const [showPreview, setShowPreview] = useState(false)
@@ -215,7 +207,7 @@ export function HomePage({ filters: propFilters }: HomePageProps = {}) {
         onReplyComplete={handleReplyComplete}
       />
       <div className="container">
-        <Timeline onEditStart={handleEditStart} onReplyStart={handleReplyStart} filters={activeFilters} />
+        <Timeline onEditStart={handleEditStart} onReplyStart={handleReplyStart} />
       </div>
       <LightBox />
     </>

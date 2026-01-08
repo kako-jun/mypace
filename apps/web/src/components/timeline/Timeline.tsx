@@ -12,51 +12,19 @@ import {
   shareOrCopy,
   navigateToEdit,
   navigateTo,
-  buildSearchUrl,
-  contentHasTag,
-  DEFAULT_SEARCH_FILTERS,
-  getMutedPubkeys,
 } from '../../lib/utils'
-import type { Event, SearchFilters } from '../../types'
+import type { Event } from '../../types'
 import type { ShareOption } from '../post/ShareMenu'
 
 interface TimelineProps {
   onEditStart?: (event: Event) => void
   onReplyStart?: (event: Event) => void
-  filters?: SearchFilters
 }
 
-export const Timeline = memo(function Timeline({
-  onEditStart,
-  onReplyStart,
-  filters = DEFAULT_SEARCH_FILTERS,
-}: TimelineProps) {
+export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: TimelineProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const [, setThemeVersion] = useState(0)
-  const [mutedPubkeys, setMutedPubkeys] = useState<string[]>([])
-
-  // Load muted pubkeys on mount and listen for storage changes
-  useEffect(() => {
-    setMutedPubkeys(getMutedPubkeys())
-
-    // Listen for storage changes (when mute list is updated in another tab or FilterPanel)
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'mypace_mute_list') {
-        setMutedPubkeys(getMutedPubkeys())
-      }
-    }
-    window.addEventListener('storage', handleStorage)
-
-    // Also listen for custom event from same-tab updates
-    const handleMuteListChange = () => setMutedPubkeys(getMutedPubkeys())
-    window.addEventListener('mypace:muteListChanged', handleMuteListChange)
-
-    return () => {
-      window.removeEventListener('storage', handleStorage)
-      window.removeEventListener('mypace:muteListChanged', handleMuteListChange)
-    }
-  }, [])
 
   // Re-render when app theme changes
   useEffect(() => {
@@ -64,23 +32,6 @@ export const Timeline = memo(function Timeline({
     window.addEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
     return () => window.removeEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
   }, [])
-
-  // Extract filter values for easier access
-  // Note: mypace/showSNS/showBlog/hideAds/hideNSFW/lang filtering is done server-side
-  const {
-    query,
-    ngWords,
-    tags: filterTags,
-    ngTags: filterNgTags,
-    mode: filterMode,
-    showSNS,
-    showBlog,
-    mypace: mypaceOnly,
-    lang = '',
-    hideAds = true,
-    hideNSFW = true,
-    hideNPC = false,
-  } = filters
 
   const {
     items,
@@ -109,7 +60,7 @@ export const Timeline = memo(function Timeline({
     handleDelete,
     getDisplayName,
     getAvatarUrl,
-  } = useTimeline({ mypaceOnly, showSNS, showBlog, hideAds, hideNSFW, lang })
+  } = useTimeline()
 
   const handleEdit = useCallback(
     (event: Event) => {
@@ -166,40 +117,17 @@ export const Timeline = memo(function Timeline({
     [handleDelete]
   )
 
-  // Handle hashtag clicks - add tag to filter
-  const handleHashtagClick = useCallback(
-    (tag: string) => {
-      // Add tag to current search filters
-      if (!filterTags.includes(tag)) {
-        navigateTo(buildSearchUrl({ ...filters, tags: [...filterTags, tag] }))
-      }
-    },
-    [filters, filterTags]
-  )
-
-  // Handle super mention clicks - add ref path to filter
-  const handleSuperMentionClick = useCallback(
-    (path: string) => {
-      // Add / prefix for super mention search (contentHasTag expects /label format)
-      const searchTag = path.startsWith('/') ? path : `/${path}`
-      if (!filterTags.includes(searchTag)) {
-        navigateTo(buildSearchUrl({ ...filters, tags: [...filterTags, searchTag] }))
-      }
-    },
-    [filters, filterTags]
-  )
-
   // Handle internal link clicks - SPA navigation
   const handleInternalLinkClick = useCallback((path: string) => {
     navigateTo(path)
   }, [])
 
-  // Set up click handlers
+  // Set up click handlers (hashtag/supermention clicks are handled by navigateTo for now)
   useEffect(() => {
-    setHashtagClickHandler(handleHashtagClick)
-    setSuperMentionClickHandler(handleSuperMentionClick)
+    setHashtagClickHandler(() => {})
+    setSuperMentionClickHandler(() => {})
     setInternalLinkClickHandler(handleInternalLinkClick)
-  }, [handleHashtagClick, handleSuperMentionClick, handleInternalLinkClick])
+  }, [handleInternalLinkClick])
 
   if (loading && events.length === 0) return <Loading />
 
@@ -214,63 +142,13 @@ export const Timeline = memo(function Timeline({
     )
   }
 
-  // Client-side filtering (fast, no server request)
-  // Note: mypace filtering is done server-side, so we skip it here
-  let filteredItems = items
-
-  // Filter by hashtags
-  if (filterTags.length > 0) {
-    filteredItems = filteredItems.filter((item) =>
-      filterMode === 'and'
-        ? filterTags.every((tag) => contentHasTag(item.event.content, tag))
-        : filterTags.some((tag) => contentHasTag(item.event.content, tag))
-    )
-  }
-
-  // Filter by OK words (case-insensitive, searches content only)
-  // Multiple words can be separated by spaces or commas (OR logic)
-  if (query) {
-    const okWords = query
-      .split(/[\s,]+/)
-      .map((w) => w.trim().toLowerCase())
-      .filter((w) => w.length > 0)
-    if (okWords.length > 0) {
-      filteredItems = filteredItems.filter((item) => {
-        const lowerContent = item.event.content.toLowerCase()
-        return okWords.some((word) => lowerContent.includes(word))
-      })
-    }
-  }
-
-  // Filter by NG words (exclude posts containing any NG word in content)
-  if (ngWords.length > 0) {
-    filteredItems = filteredItems.filter((item) => {
-      const lowerContent = item.event.content.toLowerCase()
-      return !ngWords.some((ngWord) => lowerContent.includes(ngWord.toLowerCase()))
-    })
-  }
-
-  // Filter by NG tags (exclude posts containing any NG tag)
-  if (filterNgTags && filterNgTags.length > 0) {
-    filteredItems = filteredItems.filter((item) => !filterNgTags.some((tag) => contentHasTag(item.event.content, tag)))
-  }
-
-  // Filter by NPC (exclude kind 42000 posts)
-  if (hideNPC) {
-    filteredItems = filteredItems.filter((item) => item.event.kind !== 42000)
-  }
-
-  // Filter by mute list (exclude posts from muted users)
-  if (mutedPubkeys.length > 0) {
-    filteredItems = filteredItems.filter((item) => !mutedPubkeys.includes(item.event.pubkey))
-  }
-
+  // All filtering is done server-side via API
   return (
     <div className="timeline">
       {newEventCount > 0 && (
         <TimelineActionButton onClick={loadNewEvents}>{newEventCount} New Posts</TimelineActionButton>
       )}
-      {filteredItems.map((item) => {
+      {items.map((item) => {
         const event = item.event
         const isMyPost = myPubkey === event.pubkey
 
@@ -299,9 +177,6 @@ export const Timeline = memo(function Timeline({
               likingId={likingId}
               repostingId={repostingId}
               copiedId={copiedId}
-              ngWords={ngWords}
-              ngTags={filterNgTags}
-              mutedPubkeys={mutedPubkeys}
               onEdit={handleEdit}
               onDeleteConfirm={handleDeleteConfirm}
               onLike={handleLike}
@@ -320,17 +195,13 @@ export const Timeline = memo(function Timeline({
           </Fragment>
         )
       })}
-      {filteredItems.length === 0 && (
-        <p className="empty">
-          {query || filterTags.length > 0 || ngWords.length > 0 ? 'No posts matching filter' : 'No posts yet'}
-        </p>
-      )}
-      {filteredItems.length > 0 && hasMore && (
+      {items.length === 0 && <p className="empty">No posts yet</p>}
+      {items.length > 0 && hasMore && (
         <TimelineActionButton onClick={loadOlderEvents} disabled={loadingMore}>
           {loadingMore ? 'Loading...' : 'Load Older Posts'}
         </TimelineActionButton>
       )}
-      {filteredItems.length > 0 && !hasMore && <p className="timeline-end">End of timeline</p>}
+      {items.length > 0 && !hasMore && <p className="timeline-end">End of timeline</p>}
     </div>
   )
 })

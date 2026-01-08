@@ -11,7 +11,7 @@ import {
   PostStickers,
   PostLocation,
 } from '../post'
-import { cachePost, cacheProfile, navigateToPostModal, navigateToUser, contentHasTag } from '../../lib/utils'
+import { cachePost, cacheProfile, navigateToPostModal, navigateToUser } from '../../lib/utils'
 import { parseStickers, hasTeaserTag } from '../../lib/nostr/tags'
 import { useDeleteConfirm } from '../../hooks'
 import type { Event, ReactionData, ReplyData, RepostData, ProfileCache } from '../../types'
@@ -31,9 +31,6 @@ interface TimelinePostCardProps {
   copiedId: string | null
   isPinned?: boolean
   showPinButton?: boolean
-  ngWords?: string[]
-  ngTags?: string[]
-  mutedPubkeys?: string[]
   onEdit: (event: Event) => void
   onDeleteConfirm: (event: Event) => void
   onLike: (event: Event) => void
@@ -61,9 +58,6 @@ export default function TimelinePostCard({
   copiedId,
   isPinned = false,
   showPinButton = false,
-  ngWords = [],
-  ngTags = [],
-  mutedPubkeys = [],
   onEdit,
   onDeleteConfirm,
   onLike,
@@ -90,23 +84,8 @@ export default function TimelinePostCard({
     name: locationTags[i]?.[1],
   }))
 
-  // Filter replies by NG words, NG tags, and muted users
-  const filteredReplies = replies?.replies
-    ? replies.replies.filter((reply) => {
-        // Filter by muted users
-        if (mutedPubkeys.includes(reply.pubkey)) return false
-        // Filter by NG words
-        if (ngWords.length > 0) {
-          const lowerContent = reply.content.toLowerCase()
-          if (ngWords.some((ngWord) => lowerContent.includes(ngWord.toLowerCase()))) return false
-        }
-        // Filter by NG tags
-        if (ngTags.length > 0) {
-          if (ngTags.some((tag) => contentHasTag(reply.content, tag))) return false
-        }
-        return true
-      })
-    : []
+  // Replies - filtering is done server-side
+  const replyList = replies?.replies || []
 
   const handleCardClick = (e: React.MouseEvent<HTMLElement>) => {
     const target = e.target as HTMLElement
@@ -252,9 +231,9 @@ export default function TimelinePostCard({
           <PostStickers stickers={stickers} truncated={isTruncated} layer="front" />
         </div>
 
-        {filteredReplies.length > 0 && (
+        {replyList.length > 0 && (
           <ThreadReplies
-            replies={filteredReplies}
+            replies={replyList}
             expanded={expandedThread}
             onToggle={() => setExpandedThread(!expandedThread)}
             profiles={profiles}
