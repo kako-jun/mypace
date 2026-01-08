@@ -159,65 +159,70 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
 
   // All filtering is done server-side via API
   return (
-    <div className="timeline">
+    <>
       <TimelineSearch onFiltersChange={handleFiltersChange} />
-      {newEventCount > 0 && (
-        <TimelineActionButton onClick={loadNewEvents}>{newEventCount} New Posts</TimelineActionButton>
-      )}
-      {items.map((item) => {
-        const event = item.event
-        const isMyPost = myPubkey === event.pubkey
+      <div className="timeline">
+        {newEventCount > 0 && (
+          <TimelineActionButton onClick={loadNewEvents}>{newEventCount} New Posts</TimelineActionButton>
+        )}
+        {items.map((item) => {
+          const event = item.event
+          const isMyPost = myPubkey === event.pubkey
 
-        // このイベントの後にギャップがあるか確認
-        const gapAfterThis = gaps.find((g) => g.afterEventId === event.id)
+          // このイベントの後にギャップがあるか確認
+          const gapAfterThis = gaps.find((g) => g.afterEventId === event.id)
 
-        if (deletedId === event.id) {
+          if (deletedId === event.id) {
+            return (
+              <article key={event.id} className="post-card">
+                <SuccessMessage>Deleted!</SuccessMessage>
+              </article>
+            )
+          }
+
           return (
-            <article key={event.id} className="post-card">
-              <SuccessMessage>Deleted!</SuccessMessage>
-            </article>
+            <Fragment key={item.repostedBy ? `repost-${event.id}-${item.repostedBy.pubkey}` : event.id}>
+              <TimelinePostCard
+                event={event}
+                repostedBy={item.repostedBy}
+                isMyPost={isMyPost}
+                myPubkey={myPubkey}
+                profiles={profiles}
+                reactions={reactions[event.id]}
+                replies={replies[event.id]}
+                reposts={reposts[event.id]}
+                likingId={likingId}
+                repostingId={repostingId}
+                copiedId={copiedId}
+                onEdit={handleEdit}
+                onDeleteConfirm={handleDeleteConfirm}
+                onLike={handleLike}
+                onUnlike={handleUnlike}
+                onReply={handleReplyClick}
+                onRepost={handleRepost}
+                onShareOption={handleShareOption}
+                getDisplayName={getDisplayName}
+                getAvatarUrl={getAvatarUrl}
+              />
+              {gapAfterThis && (
+                <TimelineActionButton
+                  onClick={() => fillGap(gapAfterThis.id)}
+                  disabled={loadingGap === gapAfterThis.id}
+                >
+                  {loadingGap === gapAfterThis.id ? 'Loading...' : 'Load More'}
+                </TimelineActionButton>
+              )}
+            </Fragment>
           )
-        }
-
-        return (
-          <Fragment key={item.repostedBy ? `repost-${event.id}-${item.repostedBy.pubkey}` : event.id}>
-            <TimelinePostCard
-              event={event}
-              repostedBy={item.repostedBy}
-              isMyPost={isMyPost}
-              myPubkey={myPubkey}
-              profiles={profiles}
-              reactions={reactions[event.id]}
-              replies={replies[event.id]}
-              reposts={reposts[event.id]}
-              likingId={likingId}
-              repostingId={repostingId}
-              copiedId={copiedId}
-              onEdit={handleEdit}
-              onDeleteConfirm={handleDeleteConfirm}
-              onLike={handleLike}
-              onUnlike={handleUnlike}
-              onReply={handleReplyClick}
-              onRepost={handleRepost}
-              onShareOption={handleShareOption}
-              getDisplayName={getDisplayName}
-              getAvatarUrl={getAvatarUrl}
-            />
-            {gapAfterThis && (
-              <TimelineActionButton onClick={() => fillGap(gapAfterThis.id)} disabled={loadingGap === gapAfterThis.id}>
-                {loadingGap === gapAfterThis.id ? 'Loading...' : 'Load More'}
-              </TimelineActionButton>
-            )}
-          </Fragment>
-        )
-      })}
-      {items.length === 0 && <p className="empty">No posts yet</p>}
-      {hasMore && (
-        <TimelineActionButton onClick={loadOlderEvents} disabled={loadingMore}>
-          {loadingMore ? 'Loading...' : 'Load Older Posts'}
-        </TimelineActionButton>
-      )}
-      {!hasMore && <p className="timeline-end">End of timeline</p>}
-    </div>
+        })}
+        {items.length === 0 && <p className="empty">No posts yet</p>}
+        {hasMore && (
+          <TimelineActionButton onClick={loadOlderEvents} disabled={loadingMore}>
+            {loadingMore ? 'Loading...' : 'Load Older Posts'}
+          </TimelineActionButton>
+        )}
+        {!hasMore && <p className="timeline-end">End of timeline</p>}
+      </div>
+    </>
   )
 })
