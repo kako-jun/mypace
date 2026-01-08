@@ -106,16 +106,23 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       setEvents(notes)
       setLoading(false)
 
+      // 検索フィルタがある場合は、実際に過去データがなくなるまでhasMoreをtrueに維持
+      const hasSearchFilter = (q && q.length > 0) || (tags && tags.length > 0) || false
+
       if (notes.length > 0) {
         const maxTime = Math.max(...notes.map((n) => n.created_at))
         const minTime = Math.min(...notes.map((n) => n.created_at))
         setLatestEventTime(maxTime)
         setOldestEventTime(minTime)
-        setHasMore(notes.length >= LIMITS.TIMELINE_FETCH_LIMIT)
+        // 検索時はフィルタ後の件数では判定できないため、常にtrueにしてloadOlderEventsで確認
+        setHasMore(hasSearchFilter || notes.length >= LIMITS.TIMELINE_FETCH_LIMIT)
       } else {
-        setLatestEventTime(Math.floor(Date.now() / 1000))
-        setOldestEventTime(0)
-        setHasMore(false)
+        const now = Math.floor(Date.now() / 1000)
+        setLatestEventTime(now)
+        // 検索時は結果0件でも過去を検索できるように現在時刻をセット
+        setOldestEventTime(hasSearchFilter ? now : 0)
+        // 検索時は結果0件でもさらに過去にある可能性があるのでtrue
+        setHasMore(hasSearchFilter)
       }
       setGaps([])
 

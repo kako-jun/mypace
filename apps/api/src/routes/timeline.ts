@@ -63,13 +63,17 @@ timeline.get('/', async (c) => {
     return c.json({ events: [], source: 'empty-filter' })
   }
 
+  // 検索フィルタがある場合はより多くの件数を取得する必要がある
+  const hasSearchFilter = queries.length > 0 || okTags.length > 0
+  const fetchMultiplier = hasSearchFilter ? 20 : 2
+
   // まずキャッシュから取得（TTL内のもののみ）
   try {
     const cached = await getCachedEvents(db, {
       kinds,
       since,
       until,
-      limit: limit * 2, // フィルタリング後に足りなくならないよう多めに取得
+      limit: limit * fetchMultiplier, // フィルタリング後に足りなくならないよう多めに取得
     })
 
     if (cached.length > 0) {
@@ -107,7 +111,7 @@ timeline.get('/', async (c) => {
   try {
     const filter: Filter = {
       kinds,
-      limit,
+      limit: hasSearchFilter ? limit * fetchMultiplier : limit,
     }
     if (!showAll) {
       filter['#t'] = [MYPACE_TAG]
