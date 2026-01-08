@@ -2,6 +2,8 @@
   break-inside: avoid;
   direction: ltr;
   background: transparent;
+  /* カラム幅(560px)に収まるようにして切断を防ぐ */
+  max-width: 560px;
 }
 
 .timeline-search-card {
