@@ -85,6 +85,12 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeQuery, setActiveQuery] = useState('')
 
+  // Reset search when user changes
+  useEffect(() => {
+    setSearchQuery('')
+    setActiveQuery('')
+  }, [pubkey])
+
   useEffect(() => {
     const handleAppThemeChange = () => setThemeVersion((v) => v + 1)
     window.addEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
