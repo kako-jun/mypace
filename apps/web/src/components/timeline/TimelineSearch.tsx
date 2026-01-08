@@ -25,7 +25,9 @@ export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
   // Parse space-separated string to array (dedup while preserving order)
   const parseInput = useCallback((input: string): string[] => {
     if (!input) return []
-    const items = input
+    // Convert fullwidth spaces to halfwidth before splitting
+    const normalized = input.replace(/\u3000/g, ' ')
+    const items = normalized
       .split(/\s+/)
       .map((t) => t.trim())
       .filter(Boolean)

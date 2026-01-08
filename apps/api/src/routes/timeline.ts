@@ -138,7 +138,12 @@ timeline.get('/', async (c) => {
     }
 
     // キャッシュに保存（フィルタ前のデータを保存すべきだが、一旦フィルタ後を保存）
-    await cacheEvents(db, events)
+    // waitUntilでレスポンス返却後にバックグラウンドでキャッシュ保存
+    if (c.executionCtx?.waitUntil) {
+      c.executionCtx.waitUntil(cacheEvents(db, events))
+    } else {
+      void cacheEvents(db, events)
+    }
 
     return c.json({ events, source: 'relay' })
   } catch (e) {

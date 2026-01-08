@@ -15,7 +15,7 @@ export const RELAYS = [
   'wss://relay.snort.social',
 ]
 
-export const CACHE_TTL_MS = 10 * 1000 // 10秒
+export const CACHE_TTL_MS = 5 * 60 * 1000 // 5分
 
 // Smart filter: Ad-related tags
 export const AD_TAGS = [

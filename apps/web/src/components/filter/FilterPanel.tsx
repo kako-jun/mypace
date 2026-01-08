@@ -67,7 +67,9 @@ export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
 
   // Parse input to array (space-separated, dedup while preserving order)
   const parseInput = (input: string): string[] => {
-    const items = input
+    // Convert fullwidth spaces to halfwidth before splitting
+    const normalized = input.replace(/\u3000/g, ' ')
+    const items = normalized
       .split(/\s+/)
       .map((w) => w.trim())
       .filter((w) => w.length > 0)
