@@ -54,17 +54,17 @@ export async function fetchTimeline(options: TimelineOptions = {}): Promise<{ ev
 
   // NG words
   if (filters.ngWords.length > 0) {
-    params.set('ng', filters.ngWords.map(encodeURIComponent).join('+'))
+    params.set('ng', filters.ngWords.join('+'))
   }
 
   // NG tags
   if (filters.ngTags && filters.ngTags.length > 0) {
-    params.set('ngtags', filters.ngTags.map(encodeURIComponent).join('+'))
+    params.set('ngtags', filters.ngTags.join('+'))
   }
 
   // Public filters (from URL, not localStorage)
-  if (q.length > 0) params.set('q', q.map(encodeURIComponent).join('+'))
-  if (tags.length > 0) params.set('tags', tags.map(encodeURIComponent).join('+'))
+  if (q.length > 0) params.set('q', q.join('+'))
+  if (tags.length > 0) params.set('tags', tags.join('+'))
 
   const res = await fetch(`${API_BASE}/api/timeline?${params}`)
   if (!res.ok) throw new Error('Failed to fetch timeline')
@@ -128,8 +128,8 @@ export async function fetchUserEvents(pubkey: string, options: UserEventsOptions
   const params = new URLSearchParams({ limit: String(limit) })
   if (since > 0) params.set('since', String(since))
   if (until > 0) params.set('until', String(until))
-  if (tags.length > 0) params.set('tags', tags.map(encodeURIComponent).join('+'))
-  if (q.length > 0) params.set('q', q.map(encodeURIComponent).join('+'))
+  if (tags.length > 0) params.set('tags', tags.join('+'))
+  if (q.length > 0) params.set('q', q.join('+'))
 
   const res = await fetch(`${API_BASE}/api/user/${pubkey}/events?${params}`)
   if (!res.ok) throw new Error('Failed to fetch user events')

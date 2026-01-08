@@ -52,12 +52,12 @@ export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
     (qArray: string[], tagsArray: string[]) => {
       const params = new URLSearchParams(searchParams)
       if (qArray.length > 0) {
-        params.set('q', qArray.map(encodeURIComponent).join('+'))
+        params.set('q', qArray.join('+'))
       } else {
         params.delete('q')
       }
       if (tagsArray.length > 0) {
-        params.set('tags', tagsArray.map(encodeURIComponent).join('+'))
+        params.set('tags', tagsArray.join('+'))
       } else {
         params.delete('tags')
       }
