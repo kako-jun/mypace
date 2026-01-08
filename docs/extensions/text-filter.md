@@ -104,12 +104,43 @@
 3. **NGタグ** → 指定タグを含むものを除外
 4. **NGワード** → 指定ワードを含むものを除外
 
-OKタグ/OKワードはホームタイムラインでは未使用。ユーザーページ専用の検索機能として実装。
+OKタグ/OKワード（`q`, `tags`）は公開フィルタとしてURL形式で指定可能。
 
 ## 保存方法
 
-フィルタ設定は **localStorage** に保存され、APIリクエスト時にパラメータとして送信。
+フィルタには2種類ある:
+
+### 公開フィルタ（URL形式、共有可能）
+
+| フィルタ | URLパラメータ | 例 |
+|---------|-------------|-----|
+| OKワード（検索） | `q` | `/?q=猫` |
+| OKタグ | `tags` | `/?tags=mypace,nostr` または `/?tags=mypace+nostr`（AND） |
+
+```
+# タイムラインで検索
+/?q=検索ワード
+
+# タイムラインでタグフィルタ
+/?tags=mypace,nostr      # OR検索
+/?tags=mypace+nostr      # AND検索
+
+# ユーザーページで検索
+/user/npub1xxx?q=検索ワード
+
+# ユーザーページでタグフィルタ
+/user/npub1xxx?tags=art+illustration
+```
+
+### 個人フィルタ（localStorage、URLに含まない）
+
+以下のフィルタは **localStorage** に保存され、APIリクエスト時にパラメータとして送信。
 ブラウザURLには含まれない（共有URLに個人設定が漏れない）。
+
+- NGワード、NGタグ
+- ミュートリスト
+- SNS/Blog、mypace、言語
+- hideAds、hideNSFW、hideNPC
 
 ## UI
 

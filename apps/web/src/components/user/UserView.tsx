@@ -37,8 +37,9 @@ import { LightBox, triggerLightBox } from '../ui'
 import { UserProfile } from './UserProfile'
 import { UserProfileEditor } from './UserProfileEditor'
 import { UserPosts } from './UserPosts'
-import { UserSearch } from './UserSearch'
+import { TimelineSearch } from '../timeline'
 import { useTimeline } from '../../hooks'
+import '../../styles/components/timeline-search.css'
 import { nip19 } from 'nostr-tools'
 import type { Event, LoadableProfile, Profile } from '../../types'
 import type { ShareOption } from '../post/ShareMenu'
@@ -83,6 +84,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const [serialData, setSerialData] = useState<UserSerialData | null>(null)
   const [, setThemeVersion] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchTags, setSearchTags] = useState<string[]>([])
 
   useEffect(() => {
     const handleAppThemeChange = () => setThemeVersion((v) => v + 1)
@@ -111,7 +113,11 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     handleUnlike,
     handleRepost,
     handleDelete,
-  } = useTimeline({ authorPubkey: pubkey, q: searchQuery || undefined })
+  } = useTimeline({
+    authorPubkey: pubkey,
+    q: searchQuery || undefined,
+    tags: searchTags.length > 0 ? searchTags : undefined,
+  })
 
   const loadProfile = async () => {
     setProfileLoading(true)
@@ -262,8 +268,9 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     setEditMode(false)
   }
 
-  const handleSearchQueryChange = useCallback((query: string) => {
-    setSearchQuery(query)
+  const handleFiltersChange = useCallback((filters: { q: string; tags: string[] }) => {
+    setSearchQuery(filters.q)
+    setSearchTags(filters.tags)
   }, [])
 
   if (!mounted) return null
@@ -309,7 +316,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
         />
       )}
 
-      <UserSearch pubkey={pubkey} onQueryChange={handleSearchQueryChange} />
+      <TimelineSearch onFiltersChange={handleFiltersChange} />
 
       <UserPosts
         items={items}

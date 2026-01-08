@@ -11,9 +11,18 @@ export async function publishEvent(event: Event): Promise<void> {
   }
 }
 
-export async function fetchEvents(limit = 50, since = 0, until = 0): Promise<Event[]> {
+interface FetchEventsOptions {
+  limit?: number
+  since?: number
+  until?: number
+  q?: string
+  tags?: string[]
+}
+
+export async function fetchEvents(options: FetchEventsOptions = {}): Promise<Event[]> {
+  const { limit = 50, since = 0, until = 0, q, tags } = options
   try {
-    const result = await api.fetchTimeline({ limit, since, until })
+    const result = await api.fetchTimeline({ limit, since, until, q, tags })
     return result.events
   } catch (e) {
     console.error('Failed to fetch events:', e)

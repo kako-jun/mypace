@@ -1,0 +1,120 @@
+.timeline-search {
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.timeline-search-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.timeline-search-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+}
+
+.timeline-search-row:focus-within {
+  border-color: var(--accent-color);
+}
+
+.timeline-search-icon {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.timeline-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  outline: none;
+  min-width: 0;
+}
+
+.timeline-search-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.timeline-search-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.timeline-search-button:hover {
+  opacity: 0.9;
+}
+
+.timeline-search-active {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.timeline-search-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-tertiary);
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.timeline-search-chip svg:first-child {
+  color: var(--text-tertiary);
+}
+
+.timeline-search-chip-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.125rem;
+  margin-left: 0.125rem;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  transition: color 0.2s;
+}
+
+.timeline-search-chip-clear:hover {
+  color: var(--text-primary);
+}
+
+.timeline-search-clear-all {
+  margin-left: auto;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.timeline-search-clear-all:hover {
+  color: var(--text-primary);
+}

@@ -76,7 +76,7 @@ export function EmbedPage() {
             const result = await fetchUserEvents(decodedPubkey, { limit: 1 })
             eventData = result.events[0] || null
           } else {
-            const events = await fetchEvents(1, 0)
+            const events = await fetchEvents({ limit: 1 })
             eventData = events[0] || null
           }
         } else if (noteId) {

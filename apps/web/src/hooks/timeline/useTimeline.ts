@@ -93,7 +93,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       if (authorPubkey) {
         notes = await fetchUserPosts(authorPubkey, { limit: LIMITS.TIMELINE_FETCH_LIMIT, tags, q })
       } else {
-        notes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT)
+        notes = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, q, tags })
       }
 
       const initialItems: TimelineItem[] = notes.map((note) => ({ event: note }))
@@ -291,7 +291,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
           q,
         })
       } else {
-        olderNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, 0, oldestEventTime)
+        olderNotes = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, until: oldestEventTime, q, tags })
       }
 
       if (olderNotes.length === 0) {

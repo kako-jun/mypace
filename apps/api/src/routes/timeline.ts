@@ -10,6 +10,8 @@ import {
   filterByMuteList,
   filterByNgWords,
   filterByNgTags,
+  filterByQuery,
+  filterByOkTags,
 } from '../filters/smart-filter'
 import { SimplePool } from 'nostr-tools/pool'
 
@@ -37,6 +39,11 @@ timeline.get('/', async (c) => {
   // NG tags: comma-separated tags
   const ngTagsParam = c.req.query('ngtags') || ''
   const ngTags = ngTagsParam ? ngTagsParam.split(',').filter(Boolean) : []
+  // Search query (OK word)
+  const query = c.req.query('q') || ''
+  // OK tags: comma or + separated tags
+  const okTagsParam = c.req.query('tags') || ''
+  const okTags = okTagsParam ? okTagsParam.split(/[+,]/).filter(Boolean) : []
   // Parse kinds parameter
   // Kind 42000 (Sinov NPC) is only included when mypace filter is active
   const kindsParam = c.req.query('kinds')
@@ -77,6 +84,9 @@ timeline.get('/', async (c) => {
       events = filterByMuteList(events, mutedPubkeys)
       events = filterByNgWords(events, ngWords)
       events = filterByNgTags(events, ngTags)
+      // 公開フィルタ（OKワード、OKタグ）
+      events = filterByQuery(events, query)
+      events = filterByOkTags(events, okTags)
 
       if (langFilter) {
         events = filterByLanguage(events, langFilter)
@@ -117,6 +127,9 @@ timeline.get('/', async (c) => {
     events = filterByMuteList(events, mutedPubkeys)
     events = filterByNgWords(events, ngWords)
     events = filterByNgTags(events, ngTags)
+    // 公開フィルタ（OKワード、OKタグ）
+    events = filterByQuery(events, query)
+    events = filterByOkTags(events, okTags)
 
     // 言語フィルタ（ユーザーの主要言語も考慮）
     if (langFilter) {

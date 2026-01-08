@@ -49,7 +49,7 @@ export function useTimelinePolling({
           q,
         })
       } else {
-        newNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, latestEventTime)
+        newNotes = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, since: latestEventTime, q, tags })
       }
 
       // 既存のイベントIDを除外

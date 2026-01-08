@@ -63,6 +63,39 @@ function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+// OKワードフィルタ（検索）: 本文に検索ワードを含む投稿のみ表示
+export function filterByQuery<T extends { content: string }>(events: T[], query: string): T[] {
+  if (!query) return events
+  const queryLower = query.toLowerCase()
+  return events.filter((e) => e.content.toLowerCase().includes(queryLower))
+}
+
+// OKタグフィルタ: 指定タグを含む投稿のみ表示（AND: 全て含む必要あり）
+export function filterByOkTags<T extends { content: string; tags: string[][] }>(events: T[], okTags: string[]): T[] {
+  if (okTags.length === 0) return events
+  const okTagsLower = okTags.map((t) => t.toLowerCase())
+  return events.filter((e) => {
+    // タグ配列をチェック
+    const eventTags = e.tags
+      .filter((t) => t[0] === 't')
+      .map((t) => t[1]?.toLowerCase())
+      .filter(Boolean)
+    // 本文中の#tagもチェック
+    const contentLower = e.content.toLowerCase()
+    // 全てのOKタグが含まれているか確認（AND条件）
+    return okTagsLower.every((okTag) => {
+      // タグ配列に含まれるか
+      if (eventTags.includes(okTag)) return true
+      // 本文中に#tag形式で含まれるか
+      const pattern = new RegExp(
+        `#${escapeRegex(okTag)}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`,
+        'i'
+      )
+      return pattern.test(contentLower)
+    })
+  })
+}
+
 // スマートフィルタ: 広告/NSFWコンテンツをフィルタ
 export function filterBySmartFilters<T extends { content: string; tags: string[][] }>(
   events: T[],

@@ -48,7 +48,13 @@ export function useGapDetection({
             q,
           })
         } else {
-          gapNotes = await fetchEvents(LIMITS.TIMELINE_FETCH_LIMIT, gap.since, gap.until)
+          gapNotes = await fetchEvents({
+            limit: LIMITS.TIMELINE_FETCH_LIMIT,
+            since: gap.since,
+            until: gap.until,
+            q,
+            tags,
+          })
         }
 
         // 既存のイベントIDを除外

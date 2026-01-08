@@ -13,11 +13,13 @@ interface TimelineOptions {
   limit?: number
   since?: number
   until?: number
+  q?: string // Text search query
+  tags?: string[] // OK tags filter
 }
 
 // Timeline - loads filters from localStorage and sends to API
 export async function fetchTimeline(options: TimelineOptions = {}): Promise<{ events: Event[]; source: string }> {
-  const { limit = 50, since = 0, until = 0 } = options
+  const { limit = 50, since = 0, until = 0, q = '', tags = [] } = options
 
   // Load filters from localStorage
   const filters = loadFiltersFromStorage()
@@ -59,6 +61,10 @@ export async function fetchTimeline(options: TimelineOptions = {}): Promise<{ ev
   if (filters.ngTags && filters.ngTags.length > 0) {
     params.set('ngtags', filters.ngTags.join(','))
   }
+
+  // Public filters (from URL, not localStorage)
+  if (q) params.set('q', q)
+  if (tags.length > 0) params.set('tags', tags.join(','))
 
   const res = await fetch(`${API_BASE}/api/timeline?${params}`)
   if (!res.ok) throw new Error('Failed to fetch timeline')

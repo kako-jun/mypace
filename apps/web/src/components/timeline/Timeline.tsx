@@ -1,8 +1,9 @@
 import { useState, useCallback, Fragment, useEffect, memo } from 'react'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import '../../styles/components/timeline.css'
+import '../../styles/components/timeline-search.css'
 import { setHashtagClickHandler, setSuperMentionClickHandler, setInternalLinkClickHandler } from '../../lib/parser'
-import { TimelinePostCard, TimelineActionButton } from './index'
+import { TimelinePostCard, TimelineActionButton, TimelineSearch } from './index'
 import { Loading, Button, ErrorMessage, SuccessMessage } from '../ui'
 import { useTimeline } from '../../hooks'
 import {
@@ -26,11 +27,21 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const [, setThemeVersion] = useState(0)
 
+  // Search/filter state (public filters from URL)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchTags, setSearchTags] = useState<string[]>([])
+
   // Re-render when app theme changes
   useEffect(() => {
     const handleAppThemeChange = () => setThemeVersion((v) => v + 1)
     window.addEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
     return () => window.removeEventListener(CUSTOM_EVENTS.APP_THEME_CHANGED, handleAppThemeChange)
+  }, [])
+
+  // Handle search filter changes from TimelineSearch component
+  const handleFiltersChange = useCallback((filters: { q: string; tags: string[] }) => {
+    setSearchQuery(filters.q)
+    setSearchTags(filters.tags)
   }, [])
 
   const {
@@ -60,7 +71,10 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
     handleDelete,
     getDisplayName,
     getAvatarUrl,
-  } = useTimeline()
+  } = useTimeline({
+    q: searchQuery || undefined,
+    tags: searchTags.length > 0 ? searchTags : undefined,
+  })
 
   const handleEdit = useCallback(
     (event: Event) => {
@@ -145,6 +159,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
   // All filtering is done server-side via API
   return (
     <div className="timeline">
+      <TimelineSearch onFiltersChange={handleFiltersChange} />
       {newEventCount > 0 && (
         <TimelineActionButton onClick={loadNewEvents}>{newEventCount} New Posts</TimelineActionButton>
       )}
