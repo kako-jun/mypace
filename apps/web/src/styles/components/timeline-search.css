@@ -3,8 +3,10 @@
   break-inside: avoid;
   direction: ltr;
   background: transparent;
-  max-width: 600px;
+  /* 投稿カードと同じ幅（column-width: 560px）に合わせる */
+  max-width: 560px;
   margin-left: auto;
+  /* 親のpadding (0.5rem) を打ち消して右端にくっつける */
   margin-right: -0.5rem;
 }
 
@@ -13,6 +15,7 @@
   border: 2px solid #000;
   border-right: none;
   padding: 1.5rem;
+  /* 右端にくっついた分、内部のパディングを増やして内容の位置を維持 */
   padding-right: calc(1.5rem + 0.5rem);
   margin-bottom: 1rem;
   direction: ltr;
