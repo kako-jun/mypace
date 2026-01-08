@@ -37,9 +37,8 @@ export async function fetchTimeline(options: TimelineOptions = {}): Promise<{ ev
     if (filters.mypace && !filters.hideNPC) kindsList.push(42000)
   }
   if (filters.showBlog) kindsList.push(30023)
-  if (kindsList.length > 0) {
-    params.set('kinds', kindsList.join(','))
-  }
+  // Always send kinds param (empty means no posts should match)
+  params.set('kinds', kindsList.join(','))
 
   // Smart filters: send 0 when OFF (default is ON on server)
   if (!filters.hideAds) params.set('hideAds', '0')

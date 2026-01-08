@@ -41,12 +41,19 @@ timeline.get('/', async (c) => {
   // Kind 42000 (Sinov NPC) is only included when mypace filter is active
   const kindsParam = c.req.query('kinds')
   const defaultKinds = showAll ? [KIND_NOTE, KIND_LONG_FORM] : [KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC]
-  const kinds = kindsParam
-    ? kindsParam
-        .split(',')
-        .map((k) => parseInt(k, 10))
-        .filter((k) => !isNaN(k))
-    : defaultKinds
+  // If kinds param is explicitly set (even if empty), use it; otherwise use defaults
+  const kinds =
+    kindsParam !== undefined && kindsParam !== null
+      ? kindsParam
+          .split(',')
+          .map((k) => parseInt(k, 10))
+          .filter((k) => !isNaN(k))
+      : defaultKinds
+
+  // If kinds is empty, return empty result (SNS and Blog both OFF)
+  if (kinds.length === 0) {
+    return c.json({ events: [], source: 'empty-filter' })
+  }
 
   // まずキャッシュから取得（TTL内のもののみ）
   try {
