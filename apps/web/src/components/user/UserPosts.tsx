@@ -1,5 +1,5 @@
 import { Fragment, useCallback } from 'react'
-import { TimelinePostCard, TimelineActionButton } from '../timeline'
+import { TimelinePostCard, TimelineActionButton, TimelineSearch } from '../timeline'
 import { SuccessMessage, Icon } from '../ui'
 import { navigateToEdit, navigateToReply, getDisplayName, getAvatarUrl } from '../../lib/utils'
 import type {
@@ -43,6 +43,7 @@ interface UserPostsProps {
   onUnpin: () => void
   loadOlderEvents: () => Promise<void>
   fillGap: (gapId: string) => Promise<void>
+  onFiltersChange: (filters: { q: string[]; tags: string[] }) => void
 }
 
 export function UserPosts({
@@ -73,6 +74,7 @@ export function UserPosts({
   onUnpin,
   loadOlderEvents,
   fillGap,
+  onFiltersChange,
 }: UserPostsProps) {
   const handleEdit = useCallback((event: Event) => navigateToEdit(event.id), [])
   const handleReplyClick = useCallback((event: Event) => navigateToReply(event.id), [])
@@ -145,6 +147,8 @@ export function UserPosts({
 
   return (
     <div className="timeline">
+      <TimelineSearch onFiltersChange={onFiltersChange} />
+
       {/* Pinned post section */}
       {pinnedEvent && (
         <div className="pinned-post-section">

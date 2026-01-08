@@ -37,7 +37,6 @@ import { LightBox, triggerLightBox } from '../ui'
 import { UserProfile } from './UserProfile'
 import { UserProfileEditor } from './UserProfileEditor'
 import { UserPosts } from './UserPosts'
-import { TimelineSearch } from '../timeline'
 import { useTimeline } from '../../hooks'
 import '../../styles/components/timeline-search.css'
 import { nip19 } from 'nostr-tools'
@@ -316,8 +315,6 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
         />
       )}
 
-      <TimelineSearch onFiltersChange={handleFiltersChange} />
-
       <UserPosts
         items={items}
         profiles={profiles}
@@ -347,6 +344,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
         onUnpin={handleUnpin}
         loadOlderEvents={loadOlderEvents}
         fillGap={fillGap}
+        onFiltersChange={handleFiltersChange}
       />
       <LightBox />
     </div>
