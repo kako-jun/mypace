@@ -191,6 +191,7 @@ OKタグ/OKワード（`q`, `tags`）は公開フィルタとしてURL形式で�
 
 ## 関連ドキュメント
 
+- [filter-overview.md](./filter-overview.md) - フィルタ機能の全体設計
 - [kind-filter.md](./kind-filter.md) - SNS/Blogフィルタ
 - [smart-filter.md](./smart-filter.md) - Ads/NSFWスマートフィルタ
 - [filter-presets.md](./filter-presets.md) - プリセット保存

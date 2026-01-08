@@ -1,0 +1,115 @@
+# フィルタ機能 概要
+
+mypaceのフィルタ機能の全体設計。
+
+## 設計原則
+
+### 1. 全フィルタはAPI側で処理
+
+フロントエンドでフィルタすると、APIから50件取得後に除外するため、全件NGの場合0件表示になる問題がある。
+
+**正しい設計**: 全てAPI側でフィルタし、フィルタ後の結果から50件を返す。
+
+### 2. 公開フィルタ vs 個人フィルタ
+
+| 種類 | フィルタ | 保存場所 | URL表示 | 共有 |
+|-----|---------|---------|--------|-----|
+| 公開 | q（検索）, tags（OKタグ） | なし | ✓ | 可能 |
+| 個人 | mute, ng, ngtags, hideNPC等 | localStorage | ✗ | 不可 |
+
+**公開フィルタ**: ブラウザURLに含まれ、共有可能。
+**個人フィルタ**: localStorageに保存、APIリクエスト時のみ送信。URLには含まれない（プライバシー保護）。
+
+### 3. 共有URLは本人と他人で同じ見た目
+
+ユーザーページ、タグページ、投稿ページは共有用途。個人設定フィルタを適用すると、本人と他人で見た目が異なってしまう。
+
+本人が「この見た目でOK」と確認した状態が他人にも表示されることが重要。
+
+---
+
+## ページ別の挙動
+
+### ホーム `/`
+
+フィルタポップアップで設定（Save必要）+ TimelineSearch（URL即時反映）。
+
+| フィルタ | 種類 | UI |
+|---------|------|-----|
+| q, tags | 公開 | TimelineSearch（タイムライン上部） |
+| その他すべて | 個人 | FilterPanel（ポップアップ） |
+
+### ユーザーページ `/user/:npub`
+
+フィルタポップアップは使用しない。TimelineSearchのみ。
+
+```
+例: /user/npub1xxx?tags=art+illustration&q=猫
+→ このユーザーの #art かつ #illustration タグ付き、「猫」を含む投稿のみ表示
+```
+
+**用途**: ポートフォリオとして見せたい投稿を絞り込んだURLを共有
+
+### 個別投稿 `/post/:id`
+
+フィルタなし。常に表示。URL直指定なら何でも見れる。
+
+### タグページ `/tag/:tag`
+
+フィルタポップアップは使用しない。URLで指定されたタグの投稿を全て表示。
+
+---
+
+## APIパラメータ一覧
+
+### タイムラインAPI `/api/timeline`
+
+| パラメータ | 型 | デフォルト | 説明 |
+|-----------|-----|----------|------|
+| `limit` | number | 50 | 取得件数（最大100） |
+| `since` | number | 0 | この時刻以降 |
+| `until` | number | 0 | この時刻以前 |
+| `all` | `1` | - | #mypaceフィルタOFF |
+| `kinds` | string | `1,30023,42000` | カンマ区切りkind |
+| `lang` | string | - | 言語コード |
+| `hideAds` | `0` | ON | 広告フィルタOFF |
+| `hideNSFW` | `0` | ON | NSFWフィルタOFF |
+| `hideNPC` | `1` | OFF | NPCフィルタON |
+| `mute` | string | - | ミュートpubkey（カンマ区切り） |
+| `ng` | string | - | NGワード（カンマ区切り） |
+| `ngtags` | string | - | NGタグ（カンマ区切り） |
+| `q` | string | - | 検索クエリ |
+| `tags` | string | - | OKタグ（カンマ/+区切り、+はAND） |
+
+### ユーザー投稿API `/api/user/:pubkey/events`
+
+| パラメータ | 型 | デフォルト | 説明 |
+|-----------|-----|----------|------|
+| `limit` | number | 50 | 取得件数（最大100） |
+| `since` | number | 0 | この時刻以降 |
+| `until` | number | 0 | この時刻以前 |
+| `q` | string | - | 検索クエリ |
+| `tags` | string | - | OKタグ（カンマ区切り） |
+
+---
+
+## 実装ファイル
+
+| ファイル | 役割 |
+|----------|------|
+| `apps/api/src/filters/smart-filter.ts` | サーバーサイドフィルタロジック |
+| `apps/api/src/routes/timeline.ts` | タイムラインAPI |
+| `apps/api/src/routes/user-events.ts` | ユーザー投稿API |
+| `apps/web/src/components/timeline/TimelineSearch.tsx` | 公開フィルタUI |
+| `apps/web/src/components/filter/FilterPanel.tsx` | 個人フィルタUI |
+| `apps/web/src/lib/api/api.ts` | APIクライアント |
+
+---
+
+## 関連ドキュメント
+
+- [text-filter.md](./text-filter.md) - OK/NGワード・タグの詳細
+- [kind-filter.md](./kind-filter.md) - SNS/Blogフィルタ
+- [smart-filter.md](./smart-filter.md) - Ads/NSFWスマートフィルタ
+- [mute-list.md](./mute-list.md) - ミュートリスト
+- [filter-presets.md](./filter-presets.md) - プリセット保存
