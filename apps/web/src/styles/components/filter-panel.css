@@ -66,6 +66,9 @@
   background: var(--surface-tertiary);
   border-radius: 4px;
   white-space: nowrap;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
 }
 
 .filter-circuit-branch {
@@ -137,18 +140,34 @@
 .filter-circuit-merge {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   height: 48px;
-  width: 8px;
+  width: 16px;
+  position: relative;
 }
 
-.filter-circuit-line-merge {
-  width: 8px;
+.filter-circuit-line-merge-top,
+.filter-circuit-line-merge-bottom {
+  width: 20px;
   height: 2px;
+  position: absolute;
+  right: 0;
+}
+
+.filter-circuit-line-merge-top {
+  top: 6px;
+  transform-origin: right center;
+  transform: rotate(30deg);
+}
+
+.filter-circuit-line-merge-bottom {
+  bottom: 6px;
+  transform-origin: right center;
+  transform: rotate(-30deg);
 }
 
 .filter-circuit-mypace {
-  margin-left: 0.25rem;
+  margin-left: 0;
 }
 
 .filter-circuit-line-output {
