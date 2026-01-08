@@ -53,6 +53,16 @@ export function navigateToAddTag(currentTags: string[], newTag: string, mode: Fi
   navigateToTagFilter([...currentTags, newTag], mode)
 }
 
+// Supported language codes for smart filter
+const SUPPORTED_LANG_CODES = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'de']
+
+// Get default language from browser settings
+function getDefaultLanguage(): string {
+  if (typeof navigator === 'undefined') return ''
+  const browserLang = navigator.language?.slice(0, 2).toLowerCase() || ''
+  return SUPPORTED_LANG_CODES.includes(browserLang) ? browserLang : ''
+}
+
 // Default search filters
 export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
   query: '',
@@ -63,7 +73,7 @@ export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
   showSNS: true,
   showBlog: true,
   mypace: true,
-  lang: '',
+  lang: '', // Will be set dynamically based on browser language
   // Smart filters default to ON (hide by default)
   hideAds: true,
   hideNSFW: true,
@@ -91,7 +101,8 @@ export function loadFiltersFromStorage(): SearchFilters {
   } catch {
     // Ignore parse errors
   }
-  return DEFAULT_SEARCH_FILTERS
+  // First time: use browser language as default
+  return { ...DEFAULT_SEARCH_FILTERS, lang: getDefaultLanguage() }
 }
 
 // Parse search URL parameters to filters

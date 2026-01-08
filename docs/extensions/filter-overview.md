@@ -97,6 +97,19 @@ mypaceのフィルタ機能の全体設計。
 
 ---
 
+## フィルタ適用時の動作
+
+FilterPanelで「Apply」または「Clear」を押すと、以下の処理が行われる：
+
+1. 新しいフィルタ設定をlocalStorageに保存
+2. `window.location.href = '/'` でホームにリダイレクト（フルリロード）
+
+**重要**: SPAナビゲーション（`navigate()`）とフルリロード（`window.location.reload()`）を併用すると、競合状態が発生しリロードが無視されることがある。そのため、`window.location.href` を使用して確実にフルリロードを行う。
+
+フルリロード後、`fetchTimeline()`が呼ばれ、localStorageから最新のフィルタ設定が読み込まれてAPIリクエストに適用される。
+
+---
+
 ## 実装ファイル
 
 | ファイル | 役割 |
@@ -105,8 +118,8 @@ mypaceのフィルタ機能の全体設計。
 | `apps/api/src/routes/timeline.ts` | タイムラインAPI |
 | `apps/api/src/routes/user-events.ts` | ユーザー投稿API |
 | `apps/web/src/components/timeline/TimelineSearch.tsx` | 公開フィルタUI |
-| `apps/web/src/components/filter/FilterPanel.tsx` | 個人フィルタUI |
-| `apps/web/src/lib/api/api.ts` | APIクライアント |
+| `apps/web/src/components/filter/FilterPanel.tsx` | 個人フィルタUI（Apply/Clear時はフルリロード） |
+| `apps/web/src/lib/api/api.ts` | APIクライアント（フィルタをlocalStorageから読み込み） |
 
 ---
 
