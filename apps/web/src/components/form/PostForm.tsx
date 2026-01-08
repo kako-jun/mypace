@@ -523,7 +523,7 @@ export function PostForm({
 
       <div className="post-form-row-2">
         <ImagePicker onEmbed={insertImageUrl} onAddSticker={handleAddSticker} onError={setError} />
-        <DrawingPicker onComplete={insertImageUrl} />
+        <DrawingPicker onEmbed={insertImageUrl} onAddSticker={handleAddSticker} />
         <VoicePicker onComplete={insertImageUrl} />
         <LocationPicker
           onSelect={(geohash, name) => setLocations([...locations, { geohash, name }])}

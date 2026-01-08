@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Icon, CloseButton, Portal } from '../ui'
 import Button from '../ui/Button'
-import { uploadImage, saveUploadToHistory } from '../../lib/api'
+import { uploadImage, saveUploadToHistory, saveStickerToHistory } from '../../lib/api'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import '../../styles/components/drawing.css'
 
 interface DrawingPickerProps {
-  onComplete: (url: string) => void
+  onEmbed: (url: string) => void
+  onAddSticker: (sticker: { url: string }) => void
 }
 
 const CANVAS_WIDTH = 320
@@ -40,7 +41,7 @@ interface DrawAction {
   points: DrawPoint[]
 }
 
-export function DrawingPicker({ onComplete }: DrawingPickerProps) {
+export function DrawingPicker({ onEmbed, onAddSticker }: DrawingPickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -398,9 +399,9 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
     if (!isTimerRunning) setIsTimerRunning(true)
   }
 
-  const handleComplete = async () => {
+  const uploadDrawing = async (): Promise<string | null> => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas) return null
 
     setUploading(true)
     setError('')
@@ -429,13 +430,31 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
       } catch {
         // Silently fail
       }
-      onComplete(result.url)
-      setIsOpen(false)
+      return result.url
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
+      return null
     } finally {
       setUploading(false)
     }
+  }
+
+  const handleEmbed = async () => {
+    const url = await uploadDrawing()
+    if (!url) return
+    const pubkey = await getCurrentPubkey()
+    saveStickerToHistory(url, pubkey)
+    onEmbed(url)
+    setIsOpen(false)
+  }
+
+  const handleSticker = async () => {
+    const url = await uploadDrawing()
+    if (!url) return
+    const pubkey = await getCurrentPubkey()
+    saveStickerToHistory(url, pubkey)
+    onAddSticker({ url })
+    setIsOpen(false)
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -526,8 +545,11 @@ export function DrawingPicker({ onComplete }: DrawingPickerProps) {
                 <Button size="md" variant="secondary" onClick={handleClose}>
                   Cancel
                 </Button>
-                <Button size="md" variant="primary" onClick={handleComplete} disabled={uploading || !hasDrawn}>
-                  {uploading ? 'Uploading...' : 'Add'}
+                <Button size="md" variant="primary" onClick={handleEmbed} disabled={uploading || !hasDrawn}>
+                  {uploading ? 'Uploading...' : 'Embed'}
+                </Button>
+                <Button size="md" variant="primary" onClick={handleSticker} disabled={uploading || !hasDrawn}>
+                  {uploading ? 'Uploading...' : 'Sticker'}
                 </Button>
               </div>
             </div>

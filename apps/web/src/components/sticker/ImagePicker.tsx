@@ -223,10 +223,13 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
 
               {/* Action buttons */}
               <div className="image-picker-actions">
-                <Button size="sm" variant="secondary" onClick={handleEmbed} disabled={!selectedUrl.trim()}>
+                <Button size="md" variant="secondary" onClick={handleClose}>
+                  Cancel
+                </Button>
+                <Button size="md" variant="primary" onClick={handleEmbed} disabled={!selectedUrl.trim()}>
                   Embed
                 </Button>
-                <Button size="sm" variant="primary" onClick={handleSticker} disabled={!selectedUrl.trim()}>
+                <Button size="md" variant="primary" onClick={handleSticker} disabled={!selectedUrl.trim()}>
                   Sticker
                 </Button>
               </div>

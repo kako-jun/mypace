@@ -194,7 +194,7 @@ export function PostFormLongMode({
 
           <div className="post-form-row-2">
             <ImagePicker onEmbed={handleInsertToEditor} onAddSticker={onAddSticker} onError={onError} />
-            <DrawingPicker onComplete={handleInsertToEditor} />
+            <DrawingPicker onEmbed={handleInsertToEditor} onAddSticker={onAddSticker} />
             <VoicePicker onComplete={handleInsertToEditor} />
             <LocationPicker
               onSelect={(geohash, name) => onLocationsChange([...locations, { geohash, name }])}
