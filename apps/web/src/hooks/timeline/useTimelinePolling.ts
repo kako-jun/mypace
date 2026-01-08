@@ -33,6 +33,9 @@ export function useTimelinePolling({
   pendingNewEvents,
 }: UseTimelinePollingOptions) {
   const { authorPubkey, tags, q } = options
+  // Serialize arrays for stable dependency comparison
+  const tagsKey = tags ? JSON.stringify(tags) : ''
+  const qKey = q ? JSON.stringify(q) : ''
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // 新着チェック（ポーリング）- ギャップ検出付き
@@ -89,7 +92,7 @@ export function useTimelinePolling({
     } catch (err) {
       console.error('Failed to check new events:', err)
     }
-  }, [latestEventTime, events, authorPubkey, tags, q, setGaps, setPendingNewEvents])
+  }, [latestEventTime, events, authorPubkey, tagsKey, qKey, setGaps, setPendingNewEvents])
 
   // 1分ごとのポーリング
   useEffect(() => {

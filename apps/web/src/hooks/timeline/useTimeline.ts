@@ -52,8 +52,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const reactionsRef = useRef(reactions)
   reactionsRef.current = reactions
 
-  // Serialize tags array to avoid unnecessary re-renders
+  // Serialize arrays to avoid unnecessary re-renders (reference comparison)
   const tagsKey = tags ? JSON.stringify(tags) : ''
+  const qKey = q ? JSON.stringify(q) : ''
 
   // ポーリング機構
   const { loadNewEvents } = useTimelinePolling({
@@ -128,7 +129,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       setError(getErrorMessage(err, 'Failed to load timeline'))
       setLoading(false)
     }
-  }, [authorPubkey, tags, q, profiles])
+  }, [authorPubkey, tagsKey, qKey, profiles])
 
   // Stella送信
   const flushStella = async (targetEvent: Event) => {
@@ -330,7 +331,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     } finally {
       setLoadingMore(false)
     }
-  }, [loadingMore, hasMore, oldestEventTime, events, authorPubkey, tagsKey, q])
+  }, [loadingMore, hasMore, oldestEventTime, events, authorPubkey, tagsKey, qKey])
 
   const loadTimelineRef = useRef(loadTimeline)
   loadTimelineRef.current = loadTimeline
@@ -340,7 +341,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     const handleNewPost = () => setTimeout(() => loadTimelineRef.current(), TIMEOUTS.NEW_POST_RELOAD)
     window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
     return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
-  }, [authorPubkey, tagsKey, q])
+  }, [authorPubkey, tagsKey, qKey])
 
   return {
     items: timelineItems,

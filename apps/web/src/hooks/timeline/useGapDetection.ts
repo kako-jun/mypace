@@ -29,6 +29,9 @@ export function useGapDetection({
   setProfiles,
 }: UseGapDetectionOptions) {
   const { authorPubkey, tags, q } = options
+  // Serialize arrays for stable dependency comparison
+  const tagsKey = tags ? JSON.stringify(tags) : ''
+  const qKey = q ? JSON.stringify(q) : ''
 
   // ギャップを埋める
   const fillGap = useCallback(
@@ -107,7 +110,19 @@ export function useGapDetection({
         setLoadingGap(null)
       }
     },
-    [gaps, loadingGap, events, authorPubkey, tags, q, setGaps, setLoadingGap, setTimelineItems, setEvents, setProfiles]
+    [
+      gaps,
+      loadingGap,
+      events,
+      authorPubkey,
+      tagsKey,
+      qKey,
+      setGaps,
+      setLoadingGap,
+      setTimelineItems,
+      setEvents,
+      setProfiles,
+    ]
   )
 
   return { fillGap }
