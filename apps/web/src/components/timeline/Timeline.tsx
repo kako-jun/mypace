@@ -28,7 +28,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
   const [, setThemeVersion] = useState(0)
 
   // Search/filter state (public filters from URL)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState<string[]>([])
   const [searchTags, setSearchTags] = useState<string[]>([])
 
   // Re-render when app theme changes
@@ -39,7 +39,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
   }, [])
 
   // Handle search filter changes from TimelineSearch component
-  const handleFiltersChange = useCallback((filters: { q: string; tags: string[] }) => {
+  const handleFiltersChange = useCallback((filters: { q: string[]; tags: string[] }) => {
     setSearchQuery(filters.q)
     setSearchTags(filters.tags)
   }, [])
@@ -72,7 +72,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
     getDisplayName,
     getAvatarUrl,
   } = useTimeline({
-    q: searchQuery || undefined,
+    q: searchQuery.length > 0 ? searchQuery : undefined,
     tags: searchTags.length > 0 ? searchTags : undefined,
   })
 

@@ -15,7 +15,7 @@ interface FetchEventsOptions {
   limit?: number
   since?: number
   until?: number
-  q?: string
+  q?: string[]
   tags?: string[]
 }
 
@@ -55,11 +55,11 @@ interface FetchUserPostsOptions {
   since?: number
   until?: number
   tags?: string[]
-  q?: string
+  q?: string[]
 }
 
 export async function fetchUserPosts(pubkey: string, options: FetchUserPostsOptions = {}): Promise<Event[]> {
-  const { limit = 50, since = 0, until = 0, tags = [], q = '' } = options
+  const { limit = 50, since = 0, until = 0, tags = [], q = [] } = options
   try {
     const result = await api.fetchUserEvents(pubkey, { limit, since, until, tags, q })
     return result.events

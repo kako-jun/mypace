@@ -83,7 +83,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const [pinnedEvent, setPinnedEvent] = useState<Event | null>(null)
   const [serialData, setSerialData] = useState<UserSerialData | null>(null)
   const [, setThemeVersion] = useState(0)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState<string[]>([])
   const [searchTags, setSearchTags] = useState<string[]>([])
 
   useEffect(() => {
@@ -115,7 +115,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     handleDelete,
   } = useTimeline({
     authorPubkey: pubkey,
-    q: searchQuery || undefined,
+    q: searchQuery.length > 0 ? searchQuery : undefined,
     tags: searchTags.length > 0 ? searchTags : undefined,
   })
 
@@ -268,7 +268,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     setEditMode(false)
   }
 
-  const handleFiltersChange = useCallback((filters: { q: string; tags: string[] }) => {
+  const handleFiltersChange = useCallback((filters: { q: string[]; tags: string[] }) => {
     setSearchQuery(filters.q)
     setSearchTags(filters.tags)
   }, [])

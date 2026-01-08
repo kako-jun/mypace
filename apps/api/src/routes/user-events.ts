@@ -6,11 +6,14 @@ import { SimplePool } from 'nostr-tools/pool'
 
 const userEvents = new Hono<{ Bindings: Bindings }>()
 
-// コンテンツ検索フィルタ
-function filterByQuery(events: Event[], query: string): Event[] {
-  if (!query) return events
-  const queryLower = query.toLowerCase()
-  return events.filter((e) => e.content.toLowerCase().includes(queryLower))
+// コンテンツ検索フィルタ（AND検索）
+function filterByQuery(events: Event[], queries: string[]): Event[] {
+  if (!queries || queries.length === 0) return events
+  return events.filter((e) => {
+    const contentLower = e.content.toLowerCase()
+    const queriesLower = queries.map((q) => q.toLowerCase())
+    return queriesLower.every((query) => contentLower.includes(query))
+  })
 }
 
 // GET /api/user/:pubkey/events - ユーザーの投稿取得
@@ -22,8 +25,9 @@ userEvents.get('/:pubkey/events', async (c) => {
   // Optional tags filter (comma-separated)
   const tagsParam = c.req.query('tags') || ''
   const filterTags = tagsParam ? tagsParam.split(',').filter(Boolean) : []
-  // Optional text search query
-  const query = c.req.query('q') || ''
+  // Optional text search query (+ separated for AND search, Google-style)
+  const queryParam = c.req.query('q') || ''
+  const queries = queryParam ? queryParam.split('+').map(decodeURIComponent).filter(Boolean) : []
 
   const pool = new SimplePool()
 
@@ -35,7 +39,7 @@ userEvents.get('/:pubkey/events', async (c) => {
       kinds: [KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC],
       authors: [pubkey],
       '#t': tagFilter,
-      limit: query ? limit * 2 : limit, // Get more if we need to filter by query
+      limit: queries.length > 0 ? limit * 2 : limit, // Get more if we need to filter by query
     }
     if (since > 0) {
       filter.since = since
@@ -48,8 +52,8 @@ userEvents.get('/:pubkey/events', async (c) => {
     events.sort((a, b) => b.created_at - a.created_at)
 
     // Apply text search filter
-    if (query) {
-      events = filterByQuery(events, query)
+    if (queries.length > 0) {
+      events = filterByQuery(events, queries)
       events = events.slice(0, limit)
     }
 

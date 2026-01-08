@@ -4,53 +4,58 @@ import { Icon } from '../ui'
 import '../../styles/components/timeline-search.css'
 
 interface TimelineSearchProps {
-  onFiltersChange: (filters: { q: string; tags: string[] }) => void
+  onFiltersChange: (filters: { q: string[]; tags: string[] }) => void
 }
 
 export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // Read from URL
-  const urlQuery = searchParams.get('q') || ''
+  // Read from URL (stored as comma-separated)
+  const urlQueryParam = searchParams.get('q') || ''
   const urlTagsParam = searchParams.get('tags') || ''
 
-  // Local input state
-  const [queryInput, setQueryInput] = useState(urlQuery)
-  const [tagsInput, setTagsInput] = useState(urlTagsParam)
+  // Local input state (user-facing, space-separated)
+  const [queryInput, setQueryInput] = useState('')
+  const [tagsInput, setTagsInput] = useState('')
 
-  // Active state (what's actually being filtered)
-  const [activeQuery, setActiveQuery] = useState(urlQuery)
-  const [activeTags, setActiveTags] = useState(urlTagsParam)
+  // Active state (what's actually being filtered, space-separated)
+  const [activeQuery, setActiveQuery] = useState('')
+  const [activeTags, setActiveTags] = useState('')
 
-  // Parse tags string to array (supports both + and , separators)
-  const parseTags = useCallback((tagsStr: string): string[] => {
-    if (!tagsStr) return []
-    return tagsStr
-      .split(/[+,\s]+/)
+  // Parse space-separated string to array
+  const parseInput = useCallback((input: string): string[] => {
+    if (!input) return []
+    return input
+      .split(/\s+/)
       .map((t) => t.trim())
-      .filter(Boolean)
+      .filter(Boolean) // Remove empty strings
   }, [])
 
   // Initialize from URL on mount
   useEffect(() => {
-    setQueryInput(urlQuery)
-    setTagsInput(urlTagsParam)
-    setActiveQuery(urlQuery)
-    setActiveTags(urlTagsParam)
-    onFiltersChange({ q: urlQuery, tags: parseTags(urlTagsParam) })
-  }, [urlQuery, urlTagsParam, onFiltersChange, parseTags])
+    // Parse + separated from URL (Google-style, special chars auto-encoded)
+    const qArray = urlQueryParam ? urlQueryParam.split('+').map(decodeURIComponent).filter(Boolean) : []
+    const tagsArray = urlTagsParam ? urlTagsParam.split('+').map(decodeURIComponent).filter(Boolean) : []
+    const queryDisplay = qArray.join(' ')
+    const tagsDisplay = tagsArray.join(' ')
+    setQueryInput(queryDisplay)
+    setTagsInput(tagsDisplay)
+    setActiveQuery(queryDisplay)
+    setActiveTags(tagsDisplay)
+    onFiltersChange({ q: qArray, tags: tagsArray })
+  }, [urlQueryParam, urlTagsParam, onFiltersChange])
 
-  // Update URL helper
+  // Update URL helper - store as + separated (Google-style)
   const updateUrl = useCallback(
-    (q: string, tags: string) => {
+    (qArray: string[], tagsArray: string[]) => {
       const params = new URLSearchParams(searchParams)
-      if (q) {
-        params.set('q', q)
+      if (qArray.length > 0) {
+        params.set('q', qArray.map(encodeURIComponent).join('+'))
       } else {
         params.delete('q')
       }
-      if (tags) {
-        params.set('tags', tags)
+      if (tagsArray.length > 0) {
+        params.set('tags', tagsArray.map(encodeURIComponent).join('+'))
       } else {
         params.delete('tags')
       }
@@ -63,24 +68,26 @@ export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
     e.preventDefault()
     const trimmedQuery = queryInput.trim()
     const trimmedTags = tagsInput.trim()
+    const parsedQuery = parseInput(trimmedQuery)
+    const parsedTags = parseInput(trimmedTags)
     setActiveQuery(trimmedQuery)
     setActiveTags(trimmedTags)
-    updateUrl(trimmedQuery, trimmedTags)
-    onFiltersChange({ q: trimmedQuery, tags: parseTags(trimmedTags) })
+    updateUrl(parsedQuery, parsedTags)
+    onFiltersChange({ q: parsedQuery, tags: parsedTags })
   }
 
   const handleClearQuery = () => {
     setQueryInput('')
     setActiveQuery('')
-    updateUrl('', activeTags)
-    onFiltersChange({ q: '', tags: parseTags(activeTags) })
+    updateUrl([], parseInput(activeTags))
+    onFiltersChange({ q: [], tags: parseInput(activeTags) })
   }
 
   const handleClearTags = () => {
     setTagsInput('')
     setActiveTags('')
-    updateUrl(activeQuery, '')
-    onFiltersChange({ q: activeQuery, tags: [] })
+    updateUrl(parseInput(activeQuery), [])
+    onFiltersChange({ q: parseInput(activeQuery), tags: [] })
   }
 
   const handleClearAll = () => {
@@ -88,8 +95,8 @@ export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
     setTagsInput('')
     setActiveQuery('')
     setActiveTags('')
-    updateUrl('', '')
-    onFiltersChange({ q: '', tags: [] })
+    updateUrl([], [])
+    onFiltersChange({ q: [], tags: [] })
   }
 
   const hasActiveFilters = activeQuery || activeTags

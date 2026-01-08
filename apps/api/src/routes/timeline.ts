@@ -36,14 +36,15 @@ timeline.get('/', async (c) => {
   // NG words: comma-separated words
   const ngParam = c.req.query('ng') || ''
   const ngWords = ngParam ? ngParam.split(',').filter(Boolean) : []
-  // NG tags: comma-separated tags
+  // NG tags: pipe-separated tags
   const ngTagsParam = c.req.query('ngtags') || ''
-  const ngTags = ngTagsParam ? ngTagsParam.split(',').filter(Boolean) : []
-  // Search query (OK word)
-  const query = c.req.query('q') || ''
-  // OK tags: comma or + separated tags
+  const ngTags = ngTagsParam ? ngTagsParam.split('|').filter(Boolean) : []
+  // Search query: + separated keywords (AND search, Google-style)
+  const queryParam = c.req.query('q') || ''
+  const queries = queryParam ? queryParam.split('+').map(decodeURIComponent).filter(Boolean) : []
+  // OK tags: + separated tags (AND search)
   const okTagsParam = c.req.query('tags') || ''
-  const okTags = okTagsParam ? okTagsParam.split(/[+,]/).filter(Boolean) : []
+  const okTags = okTagsParam ? okTagsParam.split('+').map(decodeURIComponent).filter(Boolean) : []
   // Parse kinds parameter
   // Kind 42000 (Sinov NPC) is only included when mypace filter is active
   const kindsParam = c.req.query('kinds')
@@ -85,7 +86,7 @@ timeline.get('/', async (c) => {
       events = filterByNgWords(events, ngWords)
       events = filterByNgTags(events, ngTags)
       // 公開フィルタ（OKワード、OKタグ）
-      events = filterByQuery(events, query)
+      events = filterByQuery(events, queries)
       events = filterByOkTags(events, okTags)
 
       if (langFilter) {
@@ -128,7 +129,7 @@ timeline.get('/', async (c) => {
     events = filterByNgWords(events, ngWords)
     events = filterByNgTags(events, ngTags)
     // 公開フィルタ（OKワード、OKタグ）
-    events = filterByQuery(events, query)
+    events = filterByQuery(events, queries)
     events = filterByOkTags(events, okTags)
 
     // 言語フィルタ（ユーザーの主要言語も考慮）

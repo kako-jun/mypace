@@ -63,11 +63,15 @@ function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-// OKワードフィルタ（検索）: 本文に検索ワードを含む投稿のみ表示
-export function filterByQuery<T extends { content: string }>(events: T[], query: string): T[] {
-  if (!query) return events
-  const queryLower = query.toLowerCase()
-  return events.filter((e) => e.content.toLowerCase().includes(queryLower))
+// OKワードフィルタ（検索）: 本文にすべての検索ワードを含む投稿のみ表示（AND検索）
+export function filterByQuery<T extends { content: string }>(events: T[], queries: string[]): T[] {
+  if (queries.length === 0) return events
+  const queriesLower = queries.map((q) => q.toLowerCase())
+  return events.filter((e) => {
+    const contentLower = e.content.toLowerCase()
+    // 全てのクエリが含まれているか確認（AND条件）
+    return queriesLower.every((query) => contentLower.includes(query))
+  })
 }
 
 // OKタグフィルタ: 指定タグを含む投稿のみ表示（AND: 全て含む必要あり）

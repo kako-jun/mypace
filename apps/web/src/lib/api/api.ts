@@ -13,13 +13,13 @@ interface TimelineOptions {
   limit?: number
   since?: number
   until?: number
-  q?: string // Text search query
+  q?: string[] // Text search query (array of keywords)
   tags?: string[] // OK tags filter
 }
 
 // Timeline - loads filters from localStorage and sends to API
 export async function fetchTimeline(options: TimelineOptions = {}): Promise<{ events: Event[]; source: string }> {
-  const { limit = 50, since = 0, until = 0, q = '', tags = [] } = options
+  const { limit = 50, since = 0, until = 0, q = [], tags = [] } = options
 
   // Load filters from localStorage
   const filters = loadFiltersFromStorage()
@@ -63,8 +63,8 @@ export async function fetchTimeline(options: TimelineOptions = {}): Promise<{ ev
   }
 
   // Public filters (from URL, not localStorage)
-  if (q) params.set('q', q)
-  if (tags.length > 0) params.set('tags', tags.join(','))
+  if (q.length > 0) params.set('q', q.map(encodeURIComponent).join('+'))
+  if (tags.length > 0) params.set('tags', tags.map(encodeURIComponent).join('+'))
 
   const res = await fetch(`${API_BASE}/api/timeline?${params}`)
   if (!res.ok) throw new Error('Failed to fetch timeline')
@@ -120,16 +120,16 @@ interface UserEventsOptions {
   since?: number
   until?: number
   tags?: string[] // Filter by hashtags
-  q?: string // Text search query
+  q?: string[] // Text search query (array of keywords)
 }
 
 export async function fetchUserEvents(pubkey: string, options: UserEventsOptions = {}): Promise<{ events: Event[] }> {
-  const { limit = 50, since = 0, until = 0, tags = [], q = '' } = options
+  const { limit = 50, since = 0, until = 0, tags = [], q = [] } = options
   const params = new URLSearchParams({ limit: String(limit) })
   if (since > 0) params.set('since', String(since))
   if (until > 0) params.set('until', String(until))
-  if (tags.length > 0) params.set('tags', tags.join(','))
-  if (q) params.set('q', q)
+  if (tags.length > 0) params.set('tags', tags.map(encodeURIComponent).join('+'))
+  if (q.length > 0) params.set('q', q.map(encodeURIComponent).join('+'))
 
   const res = await fetch(`${API_BASE}/api/user/${pubkey}/events?${params}`)
   if (!res.ok) throw new Error('Failed to fetch user events')
