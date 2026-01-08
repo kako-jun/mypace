@@ -104,7 +104,7 @@ export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
               type="text"
               value={queryInput}
               onChange={(e) => setQueryInput(e.target.value)}
-              placeholder="Search..."
+              placeholder="Keywords..."
               className="timeline-search-input"
             />
             {queryInput && (
@@ -124,7 +124,7 @@ export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
               type="text"
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
-              placeholder="Tags (space or + separated)..."
+              placeholder="Tags..."
               className="timeline-search-input"
             />
             {tagsInput && (

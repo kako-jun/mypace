@@ -327,17 +327,20 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     } finally {
       setLoadingMore(false)
     }
-  }, [loadingMore, hasMore, oldestEventTime, events, authorPubkey, tags, q])
+  }, [loadingMore, hasMore, oldestEventTime, events, authorPubkey, tagsKey, q])
 
   const loadTimelineRef = useRef(loadTimeline)
   loadTimelineRef.current = loadTimeline
+
+  // Serialize tags array to avoid unnecessary re-renders
+  const tagsKey = tags ? JSON.stringify(tags) : ''
 
   useEffect(() => {
     loadTimelineRef.current()
     const handleNewPost = () => setTimeout(() => loadTimelineRef.current(), TIMEOUTS.NEW_POST_RELOAD)
     window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
     return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
-  }, [authorPubkey, tags, q])
+  }, [authorPubkey, tagsKey, q])
 
   return {
     items: timelineItems,
