@@ -65,11 +65,8 @@ function getDefaultLanguage(): string {
 
 // Default search filters
 export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
-  query: '',
   ngWords: [],
-  tags: [],
   ngTags: [],
-  mode: 'and',
   showSNS: true,
   showBlog: true,
   mypace: true,
@@ -103,71 +100,4 @@ export function loadFiltersFromStorage(): SearchFilters {
   }
   // First time: use browser language as default
   return { ...DEFAULT_SEARCH_FILTERS, lang: getDefaultLanguage() }
-}
-
-// Parse search URL parameters to filters
-export function parseSearchParams(searchParams: URLSearchParams): SearchFilters {
-  const query = searchParams.get('q') || ''
-  const ngParam = searchParams.get('ng') || ''
-  const ngWords = ngParam
-    ? ngParam
-        .split(/[\s,]+/)
-        .map((w) => w.trim())
-        .filter(Boolean)
-    : []
-  const tagsParam = searchParams.get('tags') || ''
-  const ngTagsParam = searchParams.get('ngtags') || ''
-  const snsParam = searchParams.get('sns')
-  const blogParam = searchParams.get('blog')
-  const mypaceParam = searchParams.get('mypace')
-  const lang = searchParams.get('lang') || ''
-  const adsParam = searchParams.get('ads')
-  const nsfwParam = searchParams.get('nsfw')
-  const npcParam = searchParams.get('npc')
-
-  // Determine mode and parse tags based on separator
-  // + means AND mode, space/comma means OR mode
-  let tags: string[] = []
-  let mode: FilterMode = 'and'
-  if (tagsParam) {
-    if (tagsParam.includes('+')) {
-      tags = tagsParam
-        .split('+')
-        .map((t) => decodeURIComponent(t.trim()))
-        .filter(Boolean)
-      mode = 'and'
-    } else {
-      // Split by space or comma (OR mode)
-      tags = tagsParam
-        .split(/[\s,]+/)
-        .map((t) => decodeURIComponent(t.trim()))
-        .filter(Boolean)
-      mode = 'or'
-    }
-  }
-
-  // Parse NG tags (whitespace or comma separated)
-  const ngTags = ngTagsParam
-    ? ngTagsParam
-        .split(/[\s,]+/)
-        .map((t) => decodeURIComponent(t.trim()))
-        .filter(Boolean)
-    : []
-
-  return {
-    query,
-    ngWords,
-    tags,
-    ngTags,
-    mode,
-    showSNS: snsParam !== 'off',
-    showBlog: blogParam !== 'off',
-    mypace: mypaceParam !== 'off',
-    lang,
-    // Smart filters: default ON, param 'show' means OFF
-    hideAds: adsParam !== 'show',
-    hideNSFW: nsfwParam !== 'show',
-    // NPC filter: default OFF, param 'hide' means ON
-    hideNPC: npcParam === 'hide',
-  }
 }

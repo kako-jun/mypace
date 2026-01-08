@@ -79,11 +79,8 @@ export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
     showSNS,
     showBlog,
     mypace: mypaceOnly,
-    tags: [], // Page-specific, not used in home
     ngTags: parseInput(ngTagsInput),
-    query: '', // Page-specific, not used in home
     ngWords: parseInput(ngWordsInput),
-    mode: 'and',
     lang: languageFilter,
     hideAds,
     hideNSFW,

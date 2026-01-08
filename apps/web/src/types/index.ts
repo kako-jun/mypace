@@ -94,11 +94,8 @@ export interface ThemeColors {
 export type FilterMode = 'and' | 'or'
 
 export interface SearchFilters {
-  query: string // OK word
   ngWords: string[] // NG words
-  tags: string[] // OK tags (include posts with these hashtags)
   ngTags: string[] // NG tags (exclude posts with these hashtags)
-  mode: FilterMode // AND/OR for tags
   showSNS: boolean // Show kind 1 (short notes)
   showBlog: boolean // Show kind 30023 (long-form articles)
   mypace: boolean // mypace filter (#mypace tag only)

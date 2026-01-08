@@ -31,8 +31,18 @@
       "presets": [
         {
           "id": "preset-123",
-          "name": "Tech News",
-          "filters": { "query": "", "tags": ["tech"], ... }
+          "name": "My Preset",
+          "filters": {
+            "showSNS": true,
+            "showBlog": true,
+            "mypace": true,
+            "ngWords": ["spam"],
+            "ngTags": ["ad"],
+            "lang": "ja",
+            "hideAds": true,
+            "hideNSFW": true,
+            "hideNPC": false
+          }
         }
       ],
       "muteList": [
