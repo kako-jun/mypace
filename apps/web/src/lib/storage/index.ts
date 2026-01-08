@@ -86,6 +86,34 @@ function getDefaultLanguage(): string {
   return SUPPORTED.includes(lang) ? lang : ''
 }
 
+// Clean SearchFilters object - only keep known fields
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function cleanFilters(raw: any): SearchFilters {
+  return {
+    ngWords: raw?.ngWords ?? DEFAULT_SEARCH_FILTERS.ngWords,
+    ngTags: raw?.ngTags ?? DEFAULT_SEARCH_FILTERS.ngTags,
+    showSNS: raw?.showSNS ?? DEFAULT_SEARCH_FILTERS.showSNS,
+    showBlog: raw?.showBlog ?? DEFAULT_SEARCH_FILTERS.showBlog,
+    mypace: raw?.mypace ?? DEFAULT_SEARCH_FILTERS.mypace,
+    lang: raw?.lang ?? DEFAULT_SEARCH_FILTERS.lang,
+    hideAds: raw?.hideAds ?? DEFAULT_SEARCH_FILTERS.hideAds,
+    hideNSFW: raw?.hideNSFW ?? DEFAULT_SEARCH_FILTERS.hideNSFW,
+    hideNPC: raw?.hideNPC ?? DEFAULT_SEARCH_FILTERS.hideNPC,
+  }
+}
+
+// Clean presets - remove legacy fields from each preset's filters
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function cleanPresets(rawPresets: any[]): FilterPreset[] {
+  if (!Array.isArray(rawPresets)) return []
+  return rawPresets.map((p) => ({
+    id: p.id,
+    name: p.name,
+    filters: cleanFilters(p.filters),
+    createdAt: p.createdAt ?? Date.now(),
+  }))
+}
+
 // Read full storage
 function readStorage(): MypaceStorage {
   if (typeof localStorage === 'undefined') return DEFAULT_STORAGE
@@ -98,16 +126,8 @@ function readStorage(): MypaceStorage {
       return {
         theme: { ...DEFAULT_STORAGE.theme, ...parsed.theme },
         filters: {
-          ngWords: pf.ngWords ?? DEFAULT_SEARCH_FILTERS.ngWords,
-          ngTags: pf.ngTags ?? DEFAULT_SEARCH_FILTERS.ngTags,
-          showSNS: pf.showSNS ?? DEFAULT_SEARCH_FILTERS.showSNS,
-          showBlog: pf.showBlog ?? DEFAULT_SEARCH_FILTERS.showBlog,
-          mypace: pf.mypace ?? DEFAULT_SEARCH_FILTERS.mypace,
-          lang: pf.lang ?? DEFAULT_SEARCH_FILTERS.lang,
-          hideAds: pf.hideAds ?? DEFAULT_SEARCH_FILTERS.hideAds,
-          hideNSFW: pf.hideNSFW ?? DEFAULT_SEARCH_FILTERS.hideNSFW,
-          hideNPC: pf.hideNPC ?? DEFAULT_SEARCH_FILTERS.hideNPC,
-          presets: pf.presets || [],
+          ...cleanFilters(pf),
+          presets: cleanPresets(pf.presets),
           muteList: pf.muteList || [],
         },
         auth: { ...DEFAULT_STORAGE.auth, ...parsed.auth },
