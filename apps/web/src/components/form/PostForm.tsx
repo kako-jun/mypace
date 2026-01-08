@@ -26,6 +26,7 @@ import { AttachedImages, AttachedLocations, PostPreview } from '../post'
 import { Avatar, Icon, TextButton, ErrorMessage } from '../ui'
 import { setBoolean } from '../../lib/utils/storage'
 import { ImagePicker } from '../sticker'
+import { useDragDrop } from '../../hooks'
 import { SuperMentionPopup } from '../superMention'
 import { LocationPicker } from '../location'
 import { DrawingPicker } from '../drawing'
@@ -347,22 +348,35 @@ export function PostForm({
     setStickers(updatedStickers)
   }
 
-  const handleFileImport = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (!file) return
-
+  const processFileImport = useCallback(
+    async (file: File) => {
+      const validTypes = ['text/plain', 'text/markdown', '']
+      const validExtensions = ['.txt', '.md', '.markdown']
+      const hasValidExt = validExtensions.some((ext) => file.name.toLowerCase().endsWith(ext))
+      if (!validTypes.includes(file.type) && !hasValidExt) {
+        setError('Please drop a .txt or .md file')
+        return
+      }
       try {
         const text = await file.text()
         onContentChange(text)
       } catch {
         setError('Failed to read file')
       }
-
-      // Reset input
-      e.target.value = ''
     },
     [onContentChange]
+  )
+
+  const { dragging: fileImportDragging, handlers: fileImportHandlers } = useDragDrop(processFileImport)
+
+  const handleFileImport = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file) return
+      await processFileImport(file)
+      e.target.value = ''
+    },
+    [processFileImport]
   )
 
   const imageUrls = getImageUrls(content)
@@ -468,15 +482,14 @@ export function PostForm({
           <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
         </button>
         {!content && (
-          <>
-            <button
-              type="button"
-              className="file-import-button"
-              onClick={() => fileImportRef.current?.click()}
-              title="Import text file"
-            >
-              <Icon name="FileUp" size={16} />
-            </button>
+          <label
+            className={`file-import-area ${fileImportDragging ? 'dragging' : ''}`}
+            title="Import text file"
+            onDragOver={fileImportHandlers.onDragOver}
+            onDragLeave={fileImportHandlers.onDragLeave}
+            onDrop={fileImportHandlers.onDrop}
+          >
+            <Icon name="FileUp" size={16} />
             <input
               ref={fileImportRef}
               type="file"
@@ -484,7 +497,7 @@ export function PostForm({
               onChange={handleFileImport}
               style={{ display: 'none' }}
             />
-          </>
+          </label>
         )}
         <button
           type="button"

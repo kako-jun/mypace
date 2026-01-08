@@ -343,12 +343,14 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: background 0.15s ease;
+  border: 2px dashed var(--border-primary);
+  transition: border-color 0.15s ease, border-style 0.15s ease;
 }
 
 .banner-upload-area:hover,
 .banner-upload-area.dragging {
-  background: var(--surface-hover);
+  border-color: var(--color-primary, #007bff);
+  border-style: solid;
 }
 
 .banner-preview {
@@ -393,6 +395,14 @@
   cursor: pointer;
   border-radius: 50%;
   overflow: hidden;
+  border: 2px dashed var(--border-primary);
+  transition: border-color 0.15s ease, border-style 0.15s ease;
+}
+
+.avatar-upload-area:hover,
+.avatar-upload-area.dragging {
+  border-color: var(--color-primary, #007bff);
+  border-style: solid;
 }
 
 .avatar-upload-area .user-avatar,

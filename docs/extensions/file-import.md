@@ -31,6 +31,7 @@ The import button appears next to the avatar in the post form:
 
 ## Behavior
 
+### クリックでインポート
 1. Click the file import button (FileUp icon)
 2. File picker opens
 3. Select a `.md` or `.txt` file
@@ -38,40 +39,51 @@ The import button appears next to the avatar in the post form:
 5. User reviews and edits as needed
 6. User manually posts when ready
 
+### ドラッグ＆ドロップでインポート
+1. `.md` or `.txt` file をインポートボタンにドラッグ
+2. ボタンの枠線が破線から色付き実線に変化（ドロップ可能を示す）
+3. ファイルをドロップ
+4. Content is loaded into the editor
+
 **Important:** Files are NOT auto-posted. This allows reviewing and editing before publishing.
 
 ## Implementation
 
 ```typescript
-const handleFileImport = useCallback(
-  async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+// ファイル処理（クリック・ドラッグ共通）
+const processFileImport = useCallback(
+  async (file: File) => {
+    const validTypes = ['text/plain', 'text/markdown', '']
+    const validExtensions = ['.txt', '.md', '.markdown']
+    const hasValidExt = validExtensions.some((ext) => file.name.toLowerCase().endsWith(ext))
+    if (!validTypes.includes(file.type) && !hasValidExt) {
+      onError('Please drop a .txt or .md file')
+      return
+    }
     try {
       const text = await file.text()
       onContentChange(text)
     } catch {
       onError('Failed to read file')
     }
-
-    e.target.value = ''
   },
   [onContentChange, onError]
 )
+
+// ドラッグ＆ドロップ対応
+const { dragging: fileImportDragging, handlers: fileImportHandlers } = useDragDrop(processFileImport)
 ```
 
 ```tsx
 {!content && (
-  <>
-    <button
-      type="button"
-      className="file-import-button"
-      onClick={() => fileImportRef.current?.click()}
-      title="Import text file"
-    >
-      <Icon name="FileUp" size={16} />
-    </button>
+  <label
+    className={`file-import-area ${fileImportDragging ? 'dragging' : ''}`}
+    title="Import text file"
+    onDragOver={fileImportHandlers.onDragOver}
+    onDragLeave={fileImportHandlers.onDragLeave}
+    onDrop={fileImportHandlers.onDrop}
+  >
+    <Icon name="FileUp" size={16} />
     <input
       ref={fileImportRef}
       type="file"
@@ -79,7 +91,7 @@ const handleFileImport = useCallback(
       onChange={handleFileImport}
       style={{ display: 'none' }}
     />
-  </>
+  </label>
 )}
 ```
 

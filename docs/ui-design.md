@@ -479,6 +479,44 @@ linear-gradient(135deg, color1 0%, color4 100%)
 - 本文からURLを削除しても、画像自体はインターネット上に残る
 - これはNostr/分散型SNSの特性
 
+## Drag & Drop UI
+
+ファイルをドラッグ＆ドロップできるエリアは統一されたスタイルを使用。
+
+### 対象エリア
+| エリア | 対応ファイル |
+|--------|-------------|
+| 画像ピッカー（📷ボタン） | 画像ファイル |
+| ファイルインポート（📄ボタン） | .md, .txt |
+| アバター画像（プロフィール編集） | 画像ファイル |
+| バナー画像（プロフィール編集） | 画像ファイル |
+
+### スタイル
+
+```css
+/* 通常状態: 破線ボーダー */
+border: 2px dashed var(--border-primary);
+
+/* ホバー/ドラッグ中: 色付き実線 */
+border-color: var(--color-primary);
+border-style: solid;
+```
+
+- **通常**: 破線（dashed）でドロップ可能を示唆
+- **ホバー/ドラッグ中**: 実線（solid）+ プライマリカラーでアクティブ状態を示す
+- **背景色変化**: なし（シンプルに枠線のみ変化）
+- **円形要素（アバター）**: 同じ破線スタイルを適用
+
+### 実装
+
+`useDragDrop` フックで共通のドラッグ処理を提供:
+
+```typescript
+const { dragging, handlers } = useDragDrop(processFile)
+
+// handlers: onDragOver, onDragLeave, onDrop
+```
+
 ## Content Rendering
 
 投稿内容の自動パース:

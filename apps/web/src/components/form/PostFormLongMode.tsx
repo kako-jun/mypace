@@ -4,6 +4,7 @@ import { AttachedImages, AttachedLocations, PostPreview } from '../post'
 import { LongModeEditor, type LongModeEditorRef } from './LongModeEditor'
 import { Toggle, Avatar, TextButton, ErrorMessage, Icon } from '../ui'
 import { ImagePicker } from '../sticker'
+import { useDragDrop } from '../../hooks'
 import { SuperMentionPopup } from '../superMention'
 import { LocationPicker } from '../location'
 import { DrawingPicker } from '../drawing'
@@ -87,21 +88,35 @@ export function PostFormLongMode({
     editorRef.current?.insertText(text)
   }
 
-  const handleFileImport = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (!file) return
-
+  const processFileImport = useCallback(
+    async (file: File) => {
+      const validTypes = ['text/plain', 'text/markdown', '']
+      const validExtensions = ['.txt', '.md', '.markdown']
+      const hasValidExt = validExtensions.some((ext) => file.name.toLowerCase().endsWith(ext))
+      if (!validTypes.includes(file.type) && !hasValidExt) {
+        onError('Please drop a .txt or .md file')
+        return
+      }
       try {
         const text = await file.text()
         onContentChange(text)
       } catch {
         onError('Failed to read file')
       }
-
-      e.target.value = ''
     },
     [onContentChange, onError]
+  )
+
+  const { dragging: fileImportDragging, handlers: fileImportHandlers } = useDragDrop(processFileImport)
+
+  const handleFileImport = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file) return
+      await processFileImport(file)
+      e.target.value = ''
+    },
+    [processFileImport]
   )
 
   return (
@@ -146,15 +161,14 @@ export function PostFormLongMode({
               <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
             </button>
             {!content && (
-              <>
-                <button
-                  type="button"
-                  className="file-import-button"
-                  onClick={() => fileImportRef.current?.click()}
-                  title="Import text file"
-                >
-                  <Icon name="FileUp" size={16} />
-                </button>
+              <label
+                className={`file-import-area ${fileImportDragging ? 'dragging' : ''}`}
+                title="Import text file"
+                onDragOver={fileImportHandlers.onDragOver}
+                onDragLeave={fileImportHandlers.onDragLeave}
+                onDrop={fileImportHandlers.onDrop}
+              >
+                <Icon name="FileUp" size={16} />
                 <input
                   ref={fileImportRef}
                   type="file"
@@ -162,7 +176,7 @@ export function PostFormLongMode({
                   onChange={handleFileImport}
                   style={{ display: 'none' }}
                 />
-              </>
+              </label>
             )}
             <button
               type="button"
