@@ -1,10 +1,7 @@
 .timeline-search {
-  column-span: all;
   break-inside: avoid;
   direction: ltr;
   background: transparent;
-  max-width: 600px;
-  margin-left: auto;
 }
 
 .timeline-search-card {
