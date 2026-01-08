@@ -1,90 +1,37 @@
 import { useState } from 'react'
-import { loadPresets, loadMuteList, type MuteEntry } from '../../lib/utils'
 import { Button, SettingsSection } from '../ui'
-import type { ThemeColors, FilterPreset } from '../../types'
+import {
+  exportSettings as exportStorageSettings,
+  importSettings as importStorageSettings,
+  type ExportableSettings,
+} from '../../lib/storage'
 
 interface ExportSectionProps {
-  themeColors: ThemeColors
-  appTheme: 'light' | 'dark'
-  onImport: (settings: ImportedSettings) => void
-}
-
-export interface ImportedSettings {
-  themeColors?: ThemeColors
-  appTheme?: 'light' | 'dark'
-  filterPresets?: FilterPreset[]
-  muteList?: MuteEntry[]
+  onImport: () => void
 }
 
 interface SettingsJSON {
-  mypace_settings: {
-    version: number
-    theme: {
-      mode: 'light' | 'dark'
-      colors: ThemeColors
-    }
-    filters?: {
-      presets: FilterPreset[]
-      muteList: MuteEntry[]
-    }
-  }
+  mypace_settings: ExportableSettings
 }
 
-function exportSettings(themeColors: ThemeColors, appTheme: 'light' | 'dark'): string {
-  const settings: SettingsJSON = {
-    mypace_settings: {
-      version: 2, // Bumped to version 2 for filter support
-      theme: {
-        mode: appTheme,
-        colors: themeColors,
-      },
-      filters: {
-        presets: loadPresets(),
-        muteList: loadMuteList(),
-      },
-    },
-  }
-  return JSON.stringify(settings, null, 2)
-}
-
-function parseSettings(json: string): ImportedSettings | null {
+function parseSettings(json: string): ExportableSettings | null {
   try {
     const data = JSON.parse(json) as SettingsJSON
     if (!data.mypace_settings) return null
-
-    const settings = data.mypace_settings
-    const result: ImportedSettings = {}
-
-    if (settings.theme) {
-      if (settings.theme.colors) {
-        result.themeColors = settings.theme.colors
-      }
-      if (settings.theme.mode === 'light' || settings.theme.mode === 'dark') {
-        result.appTheme = settings.theme.mode
-      }
-    }
-
-    // Parse filter settings (version 2+)
-    if (settings.filters) {
-      if (Array.isArray(settings.filters.presets)) {
-        result.filterPresets = settings.filters.presets
-      }
-      if (Array.isArray(settings.filters.muteList)) {
-        result.muteList = settings.filters.muteList
-      }
-    }
-
-    return result
+    return data.mypace_settings
   } catch {
     return null
   }
 }
 
-export default function ExportSection({ themeColors, appTheme, onImport }: ExportSectionProps) {
+export default function ExportSection({ onImport }: ExportSectionProps) {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const handleDownload = () => {
-    const json = exportSettings(themeColors, appTheme)
+    const settings: SettingsJSON = {
+      mypace_settings: exportStorageSettings(),
+    }
+    const json = JSON.stringify(settings, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -102,7 +49,8 @@ export default function ExportSection({ themeColors, appTheme, onImport }: Expor
       const text = await file.text()
       const settings = parseSettings(text)
       if (settings) {
-        onImport(settings)
+        importStorageSettings(settings)
+        onImport()
         setMessage({ type: 'success', text: 'Settings imported' })
         setTimeout(() => setMessage(null), 2000)
       } else {

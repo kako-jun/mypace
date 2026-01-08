@@ -11,27 +11,11 @@ import {
 import '../../styles/components/settings.css'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import { fetchUserProfile } from '../../lib/nostr/relay'
-import {
-  getLocalProfile,
-  setItem,
-  setString,
-  getUIThemeColors,
-  getStoredAppTheme,
-  applyThemeColors,
-  DEFAULT_COLORS,
-  importMuteList,
-} from '../../lib/utils'
-import { STORAGE_KEYS, CUSTOM_EVENTS } from '../../lib/constants'
+import { getLocalProfile, getUIThemeColors, getStoredAppTheme, applyThemeColors, DEFAULT_COLORS } from '../../lib/utils'
+import { setThemeColors as saveThemeColors, setThemeMode, getThemeColors, getThemeMode } from '../../lib/storage'
+import { CUSTOM_EVENTS } from '../../lib/constants'
 import { TextButton } from '../ui'
-import {
-  ProfileSection,
-  ThemeSection,
-  KeysSection,
-  ShareSection,
-  ExportSection,
-  FilterSection,
-  type ImportedSettings,
-} from './index'
+import { ProfileSection, ThemeSection, KeysSection, ShareSection, ExportSection, FilterSection } from './index'
 import { VisitorCounter } from './VisitorCounter'
 import { VersionDisplay } from './VersionDisplay'
 import { CloseButton } from '../ui'
@@ -113,7 +97,7 @@ export function Settings() {
   const applyAndSaveColors = (colors: ThemeColors) => {
     setThemeColors(colors)
     applyThemeColors(colors)
-    setItem(STORAGE_KEYS.THEME_COLORS, colors)
+    saveThemeColors(colors)
     window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.THEME_COLORS_CHANGED))
   }
 
@@ -128,32 +112,22 @@ export function Settings() {
 
   const handleAppThemeChange = (theme: 'light' | 'dark') => {
     setAppTheme(theme)
-    setString(STORAGE_KEYS.APP_THEME, theme)
+    setThemeMode(theme)
     document.documentElement.setAttribute('data-theme', theme)
     window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.APP_THEME_CHANGED))
   }
 
-  const handleImportSettings = (settings: ImportedSettings) => {
-    if (settings.themeColors) {
-      setThemeColors(settings.themeColors)
-      applyThemeColors(settings.themeColors)
-      setItem(STORAGE_KEYS.THEME_COLORS, settings.themeColors)
-      window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.THEME_COLORS_CHANGED))
-    }
-    if (settings.appTheme) {
-      setAppTheme(settings.appTheme)
-      setString(STORAGE_KEYS.APP_THEME, settings.appTheme)
-      document.documentElement.setAttribute('data-theme', settings.appTheme)
-      window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.APP_THEME_CHANGED))
-    }
-    // Import filter presets
-    if (settings.filterPresets && settings.filterPresets.length > 0) {
-      setItem(STORAGE_KEYS.FILTER_PRESETS, settings.filterPresets)
-    }
-    // Import mute list
-    if (settings.muteList && settings.muteList.length > 0) {
-      importMuteList(settings.muteList)
-    }
+  const handleImportRefresh = () => {
+    // Re-read from storage and apply to UI
+    const newColors = getThemeColors()
+    setThemeColors(newColors)
+    applyThemeColors(newColors)
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.THEME_COLORS_CHANGED))
+
+    const newTheme = getThemeMode()
+    setAppTheme(newTheme)
+    document.documentElement.setAttribute('data-theme', newTheme)
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.APP_THEME_CHANGED))
   }
 
   if (!open) {
@@ -201,7 +175,7 @@ export function Settings() {
 
           <FilterSection onClose={() => setOpen(false)} />
 
-          <ExportSection themeColors={themeColors} appTheme={appTheme} onImport={handleImportSettings} />
+          <ExportSection onImport={handleImportRefresh} />
         </div>
 
         <div style={{ display: activeTab === 'account' ? 'block' : 'none' }}>

@@ -21,10 +21,10 @@ import {
   normalizeContent,
   getDisplayName,
 } from '../../lib/utils'
-import { CUSTOM_EVENTS, LIMITS, STORAGE_KEYS } from '../../lib/constants'
+import { CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
 import { AttachedImages, AttachedLocations, PostPreview } from '../post'
 import { Avatar, Icon, TextButton, ErrorMessage } from '../ui'
-import { setBoolean } from '../../lib/utils/storage'
+import { setVimMode as saveVimMode } from '../../lib/storage'
 import { ImagePicker } from '../sticker'
 import { useDragDrop } from '../../hooks'
 import { SuperMentionPopup } from '../superMention'
@@ -179,7 +179,7 @@ export function PostForm({
 
   const handleVimModeChange = (enabled: boolean) => {
     setVimMode(enabled)
-    setBoolean(STORAGE_KEYS.VIM_MODE, enabled)
+    saveVimMode(enabled)
   }
 
   const handleLongModeToggle = () => {

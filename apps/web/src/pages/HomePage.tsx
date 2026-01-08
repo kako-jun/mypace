@@ -4,16 +4,17 @@ import { PostForm } from '../components/form'
 import { Timeline } from '../components/timeline'
 import { LightBox, triggerLightBox } from '../components/ui'
 import { setImageClickHandler, clearImageClickHandler } from '../lib/parser'
-import { getString, setString, removeItem, getUIThemeColors, applyThemeColors } from '../lib/utils'
+import { getUIThemeColors, applyThemeColors } from '../lib/utils'
+import { getDraft, setDraft, getDraftReplyTo, setDraftReplyTo, clearDraft } from '../lib/storage'
 import { fetchEventById } from '../lib/nostr/relay'
 import { getFullContentForEdit } from '../lib/nostr/tags'
-import { STORAGE_KEYS, CUSTOM_EVENTS, TIMEOUTS, LIMITS } from '../lib/constants'
+import { CUSTOM_EVENTS, TIMEOUTS, LIMITS } from '../lib/constants'
 import type { Event } from '../types'
 
 export function HomePage() {
   const [searchParams] = useSearchParams()
   const [longMode, setLongMode] = useState(false)
-  const [content, setContent] = useState(() => getString(STORAGE_KEYS.DRAFT))
+  const [content, setContent] = useState(() => getDraft())
   const [showPreview, setShowPreview] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [replyingTo, setReplyingTo] = useState<Event | null>(null)
@@ -26,16 +27,15 @@ export function HomePage() {
     }
     draftTimerRef.current = setTimeout(() => {
       if (content.trim()) {
-        setString(STORAGE_KEYS.DRAFT, content)
+        setDraft(content)
         // Save reply target id if replying
         if (replyingTo) {
-          setString(STORAGE_KEYS.DRAFT_REPLY_TO, replyingTo.id)
+          setDraftReplyTo(replyingTo.id)
         } else {
-          removeItem(STORAGE_KEYS.DRAFT_REPLY_TO)
+          setDraftReplyTo('')
         }
       } else {
-        removeItem(STORAGE_KEYS.DRAFT)
-        removeItem(STORAGE_KEYS.DRAFT_REPLY_TO)
+        clearDraft()
       }
     }, TIMEOUTS.DRAFT_SAVE_DELAY)
 
@@ -49,8 +49,7 @@ export function HomePage() {
   // Clear draft when a new post is successfully published
   useEffect(() => {
     const handleNewPost = () => {
-      removeItem(STORAGE_KEYS.DRAFT)
-      removeItem(STORAGE_KEYS.DRAFT_REPLY_TO)
+      clearDraft()
     }
     window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
     return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
@@ -93,15 +92,14 @@ export function HomePage() {
       setReplyingTo(null)
     } else {
       // Restore reply target from localStorage if no URL params
-      const savedReplyToId = getString(STORAGE_KEYS.DRAFT_REPLY_TO)
+      const savedReplyToId = getDraftReplyTo()
       if (savedReplyToId) {
         fetchEventById(savedReplyToId).then((event) => {
           if (event) {
             setReplyingTo(event)
           } else {
             // Reply target not found, clear draft to prevent accidental non-reply post
-            removeItem(STORAGE_KEYS.DRAFT)
-            removeItem(STORAGE_KEYS.DRAFT_REPLY_TO)
+            clearDraft()
             setContent('')
           }
         })

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { importNsec, saveSecretKey, clearSecretKey } from '../../lib/nostr/keys'
 import { Button, Input, ErrorMessage, SettingsSection } from '../ui'
-import { copyToClipboard, removeItem, removeLocalProfile } from '../../lib/utils'
-import { STORAGE_KEYS } from '../../lib/constants'
+import { copyToClipboard, removeLocalProfile } from '../../lib/utils'
+import { resetThemeColors } from '../../lib/storage'
 import { useTemporaryFlag } from '../../hooks'
 
 interface KeysSectionProps {
@@ -39,7 +39,7 @@ export default function KeysSection({ nsec, npub, usingNip07, onNavigateUploadHi
 
       // Clear all settings for new identity
       removeLocalProfile()
-      removeItem(STORAGE_KEYS.THEME_COLORS)
+      resetThemeColors()
 
       // Reload to start fresh with new identity
       window.location.reload()

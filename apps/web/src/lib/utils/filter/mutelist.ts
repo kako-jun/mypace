@@ -1,36 +1,18 @@
 // Mute list management (user blocklist)
 import { nip19 } from 'nostr-tools'
-import { STORAGE_KEYS } from '../../constants'
+import { getMuteList, setMuteList, type MuteEntry } from '../../storage'
 
-export interface MuteEntry {
-  npub: string // Display format (npub1...)
-  pubkey: string // Hex format for matching
-  addedAt: number // timestamp
-}
+// Re-export MuteEntry type
+export type { MuteEntry }
 
-// Load mute list from localStorage
+// Load mute list from storage
 export function loadMuteList(): MuteEntry[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEYS.MUTE_LIST)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      if (Array.isArray(parsed)) {
-        return parsed
-      }
-    }
-  } catch {
-    // Ignore parse errors
-  }
-  return []
+  return getMuteList()
 }
 
-// Save mute list to localStorage
+// Save mute list to storage
 export function saveMuteList(list: MuteEntry[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEYS.MUTE_LIST, JSON.stringify(list))
-  } catch {
-    // Ignore storage errors
-  }
+  setMuteList(list)
 }
 
 // Convert npub to hex pubkey

@@ -1,6 +1,5 @@
 import type { ThemeColors, Event } from '../../types'
-import { getItem, getString } from '../utils/storage'
-import { STORAGE_KEYS } from '../constants'
+import { getThemeColors, getThemeMode } from '../storage'
 import { AURORA_TAG } from './constants'
 
 // Theme background colors
@@ -9,21 +8,25 @@ const THEME_BG_COLORS = {
   dark: '#282828',
 }
 
-// Get current app theme
-function getCurrentTheme(): 'light' | 'dark' {
-  if (typeof localStorage === 'undefined') return 'light'
-  return (getString(STORAGE_KEYS.APP_THEME) as 'light' | 'dark') || 'light'
-}
-
 // Get fallback colors based on current theme
 export function getThemeFallbackColors(): ThemeColors {
-  const bg = THEME_BG_COLORS[getCurrentTheme()]
+  const bg = THEME_BG_COLORS[getThemeMode()]
   return { topLeft: bg, topRight: bg, bottomLeft: bg, bottomRight: bg }
 }
 
-// Get stored theme colors from localStorage
+// Get stored theme colors from storage
 export function getStoredThemeColors(): ThemeColors | null {
-  return getItem<ThemeColors | null>(STORAGE_KEYS.THEME_COLORS, null)
+  const colors = getThemeColors()
+  // Return null if using defaults (for backward compatibility)
+  if (
+    colors.topLeft === '#f8f8f8' &&
+    colors.topRight === '#f8f8f8' &&
+    colors.bottomLeft === '#f8f8f8' &&
+    colors.bottomRight === '#f8f8f8'
+  ) {
+    return null
+  }
+  return colors
 }
 
 // Extract theme colors from event tags

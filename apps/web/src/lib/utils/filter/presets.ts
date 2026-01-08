@@ -1,5 +1,5 @@
 // Filter presets management
-import { STORAGE_KEYS } from '../../constants'
+import { getFilterPresets, setFilterPresets } from '../../storage'
 import type { FilterPreset, SearchFilters } from '../../../types'
 
 export const MAX_PRESETS = 10
@@ -9,29 +9,14 @@ function generateId(): string {
   return crypto.randomUUID()
 }
 
-// Load all presets from localStorage
+// Load all presets from storage
 export function loadPresets(): FilterPreset[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEYS.FILTER_PRESETS)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      if (Array.isArray(parsed)) {
-        return parsed
-      }
-    }
-  } catch {
-    // Ignore parse errors
-  }
-  return []
+  return getFilterPresets()
 }
 
-// Save presets to localStorage
+// Save presets to storage
 function savePresets(presets: FilterPreset[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEYS.FILTER_PRESETS, JSON.stringify(presets))
-  } catch {
-    // Ignore storage errors
-  }
+  setFilterPresets(presets)
 }
 
 // Save a new preset (or update if same name exists)

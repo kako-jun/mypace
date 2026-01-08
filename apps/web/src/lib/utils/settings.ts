@@ -1,6 +1,5 @@
 import type { ThemeColors } from '../../types'
-import { getItem, getString, getBoolean } from './storage'
-import { STORAGE_KEYS } from '../constants'
+import { getThemeColors, getThemeMode, getVimMode } from '../storage'
 import { isDarkColor } from '../nostr/theme'
 
 // Default colors for UI
@@ -54,17 +53,17 @@ function applyThemeColors(colors: ThemeColors) {
   window.dispatchEvent(new CustomEvent('themeColorsChanged'))
 }
 
-// Get theme colors for UI display (always returns values, uses defaults if not stored)
+// Get theme colors for UI display
 export function getUIThemeColors(): ThemeColors {
-  return getItem<ThemeColors>(STORAGE_KEYS.THEME_COLORS, DEFAULT_COLORS)
+  return getThemeColors()
 }
 
 export function getStoredVimMode(): boolean {
-  return getBoolean(STORAGE_KEYS.VIM_MODE)
+  return getVimMode()
 }
 
 export function getStoredAppTheme(): 'light' | 'dark' {
-  return (getString(STORAGE_KEYS.APP_THEME) as 'light' | 'dark') || 'light'
+  return getThemeMode()
 }
 
 export { applyThemeColors }

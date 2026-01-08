@@ -127,21 +127,23 @@ src/
 │   │   ├── format.ts    # npub/nsec変換
 │   │   └── constants.ts # Nostr定数
 │   ├── utils/           # ユーティリティ
-│   │   ├── navigation.ts       # URL遷移
-│   │   ├── router-navigation.ts # React Router統合
+│   │   ├── navigation/         # URL遷移
+│   │   ├── storage/            # sessionStorageキャッシュ
+│   │   ├── filter/             # フィルタ・ミュートリスト
+│   │   ├── profile/            # プロフィール
+│   │   ├── embed/              # 埋め込み判定
 │   │   ├── image.ts
 │   │   ├── content.ts
 │   │   ├── clipboard.ts
-│   │   ├── storage.ts
 │   │   ├── settings.ts
-│   │   ├── profile.ts
 │   │   ├── time.ts
 │   │   ├── error.ts
 │   │   ├── json.ts
-│   │   └── cache.ts
+│   │   └── animated.ts
+│   ├── storage/         # localStorage管理（統合）
+│   │   └── index.ts     # 全設定を単一キー"mypace"で管理
 │   ├── constants/       # 定数
-│   │   ├── ui.ts
-│   │   └── storage.ts
+│   │   └── ui.ts
 │   ├── content-parser.tsx
 │   └── upload.ts        # 画像アップロード
 │
@@ -308,3 +310,33 @@ vite-plugin-pwaによるPWA対応:
 
 **注意**: `getCachedPost` / `getCachedProfile` は読み取り時にキャッシュを削除しない。
 これはReact 18 StrictModeでエフェクトが2回実行されても問題なく動作するため。
+
+## localStorage Structure
+
+全設定は単一の `mypace` キーで管理:
+
+```typescript
+interface MypaceStorage {
+  // エクスポート可能
+  theme: {
+    mode: 'light' | 'dark'
+    colors: ThemeColors
+  }
+  filters: SearchFilters & {
+    presets: FilterPreset[]
+    muteList: MuteEntry[]
+  }
+  // 非エクスポート
+  auth: { sk: string }
+  cache: { profile: Profile | null }
+  editor: { vimMode, draft, draftReplyTo }
+}
+```
+
+| カテゴリ | 内容 | エクスポート |
+|----------|------|--------------|
+| theme | テーマモード、グラデーション色 | Yes |
+| filters | フィルタ設定、プリセット、ミュートリスト | Yes |
+| auth | 秘密鍵（hex） | No |
+| cache | 自分のプロフィール | No |
+| editor | Vimモード、下書き | No |

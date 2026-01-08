@@ -1,0 +1,378 @@
+// Unified localStorage management under single "mypace" key
+import type { ThemeColors, SearchFilters, FilterPreset, Profile } from '../../types'
+
+const STORAGE_KEY = 'mypace'
+
+// Mute list entry type
+export interface MuteEntry {
+  npub: string
+  pubkey: string
+  addedAt: number
+}
+
+// Full storage structure
+export interface MypaceStorage {
+  // Exportable
+  theme: {
+    mode: 'light' | 'dark'
+    colors: ThemeColors
+  }
+  filters: SearchFilters & {
+    presets: FilterPreset[]
+    muteList: MuteEntry[]
+  }
+  // Non-exportable
+  auth: {
+    sk: string
+  }
+  cache: {
+    profile: Profile | null
+  }
+  editor: {
+    vimMode: boolean
+    draft: string
+    draftReplyTo: string
+  }
+}
+
+// Default values
+const DEFAULT_COLORS: ThemeColors = {
+  topLeft: '#ff6b6b',
+  topRight: '#4ecdc4',
+  bottomLeft: '#45b7d1',
+  bottomRight: '#96ceb4',
+}
+
+export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
+  ngWords: [],
+  ngTags: [],
+  showSNS: true,
+  showBlog: true,
+  mypace: true,
+  lang: '',
+  hideAds: true,
+  hideNSFW: true,
+  hideNPC: false,
+}
+
+const DEFAULT_STORAGE: MypaceStorage = {
+  theme: {
+    mode: 'light',
+    colors: DEFAULT_COLORS,
+  },
+  filters: {
+    ...DEFAULT_SEARCH_FILTERS,
+    presets: [],
+    muteList: [],
+  },
+  auth: {
+    sk: '',
+  },
+  cache: {
+    profile: null,
+  },
+  editor: {
+    vimMode: false,
+    draft: '',
+    draftReplyTo: '',
+  },
+}
+
+// Get browser default language
+function getDefaultLanguage(): string {
+  if (typeof navigator === 'undefined') return ''
+  const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'de']
+  const lang = navigator.language?.slice(0, 2).toLowerCase() || ''
+  return SUPPORTED.includes(lang) ? lang : ''
+}
+
+// Read full storage
+function readStorage(): MypaceStorage {
+  if (typeof localStorage === 'undefined') return DEFAULT_STORAGE
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      // Deep merge with defaults
+      return {
+        theme: { ...DEFAULT_STORAGE.theme, ...parsed.theme },
+        filters: {
+          ...DEFAULT_SEARCH_FILTERS,
+          ...parsed.filters,
+          presets: parsed.filters?.presets || [],
+          muteList: parsed.filters?.muteList || [],
+        },
+        auth: { ...DEFAULT_STORAGE.auth, ...parsed.auth },
+        cache: { ...DEFAULT_STORAGE.cache, ...parsed.cache },
+        editor: { ...DEFAULT_STORAGE.editor, ...parsed.editor },
+      }
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  // First time: use browser language
+  return {
+    ...DEFAULT_STORAGE,
+    filters: {
+      ...DEFAULT_SEARCH_FILTERS,
+      lang: getDefaultLanguage(),
+      presets: [],
+      muteList: [],
+    },
+  }
+}
+
+// Write full storage
+function writeStorage(data: MypaceStorage): void {
+  if (typeof localStorage === 'undefined') return
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+// Update a section of storage
+function updateStorage<K extends keyof MypaceStorage>(
+  key: K,
+  updater: (current: MypaceStorage[K]) => MypaceStorage[K]
+): void {
+  const data = readStorage()
+  data[key] = updater(data[key])
+  writeStorage(data)
+}
+
+// ============ Theme ============
+
+export function getThemeMode(): 'light' | 'dark' {
+  return readStorage().theme.mode
+}
+
+export function setThemeMode(mode: 'light' | 'dark'): void {
+  updateStorage('theme', (t) => ({ ...t, mode }))
+}
+
+export function getThemeColors(): ThemeColors {
+  return readStorage().theme.colors
+}
+
+export function setThemeColors(colors: ThemeColors): void {
+  updateStorage('theme', (t) => ({ ...t, colors }))
+}
+
+export function resetThemeColors(): void {
+  updateStorage('theme', (t) => ({ ...t, colors: DEFAULT_COLORS }))
+}
+
+// ============ Filters ============
+
+export function getFilterSettings(): SearchFilters {
+  const { presets: _p, muteList: _m, ...settings } = readStorage().filters
+  return settings
+}
+
+export function setFilterSettings(settings: SearchFilters): void {
+  updateStorage('filters', (f) => ({ ...f, ...settings }))
+}
+
+export function getFilterPresets(): FilterPreset[] {
+  return readStorage().filters.presets
+}
+
+export function setFilterPresets(presets: FilterPreset[]): void {
+  updateStorage('filters', (f) => ({ ...f, presets }))
+}
+
+export function getMuteList(): MuteEntry[] {
+  return readStorage().filters.muteList
+}
+
+export function setMuteList(muteList: MuteEntry[]): void {
+  updateStorage('filters', (f) => ({ ...f, muteList }))
+}
+
+// ============ Auth ============
+
+// Legacy key for backward compatibility (remove after 2025-02-28)
+const LEGACY_SK_KEY = 'mypace_sk'
+
+export function getSecretKey(): string {
+  const data = readStorage()
+  if (data.auth.sk) {
+    return data.auth.sk
+  }
+
+  // Fallback: check legacy key for users who haven't migrated yet
+  // TODO: Remove this fallback after 2025-02-28
+  if (typeof localStorage !== 'undefined') {
+    const legacySk = localStorage.getItem(LEGACY_SK_KEY)
+    if (legacySk) {
+      // Migrate to new structure and remove legacy key
+      updateStorage('auth', (a) => ({ ...a, sk: legacySk }))
+      localStorage.removeItem(LEGACY_SK_KEY)
+      return legacySk
+    }
+  }
+
+  return ''
+}
+
+export function setSecretKey(sk: string): void {
+  updateStorage('auth', (a) => ({ ...a, sk }))
+}
+
+export function clearSecretKey(): void {
+  updateStorage('auth', (a) => ({ ...a, sk: '' }))
+}
+
+// ============ Cache ============
+
+export function getCachedProfile(): Profile | null {
+  return readStorage().cache.profile
+}
+
+export function setCachedProfile(profile: Profile): void {
+  updateStorage('cache', (c) => ({ ...c, profile }))
+}
+
+export function clearCachedProfile(): void {
+  updateStorage('cache', (c) => ({ ...c, profile: null }))
+}
+
+// ============ Editor ============
+
+export function getVimMode(): boolean {
+  return readStorage().editor.vimMode
+}
+
+export function setVimMode(enabled: boolean): void {
+  updateStorage('editor', (e) => ({ ...e, vimMode: enabled }))
+}
+
+export function getDraft(): string {
+  return readStorage().editor.draft
+}
+
+export function setDraft(draft: string): void {
+  updateStorage('editor', (e) => ({ ...e, draft }))
+}
+
+export function getDraftReplyTo(): string {
+  return readStorage().editor.draftReplyTo
+}
+
+export function setDraftReplyTo(replyTo: string): void {
+  updateStorage('editor', (e) => ({ ...e, draftReplyTo: replyTo }))
+}
+
+export function clearDraft(): void {
+  updateStorage('editor', (e) => ({ ...e, draft: '', draftReplyTo: '' }))
+}
+
+// ============ Export/Import ============
+
+export interface ExportableSettings {
+  version: number
+  theme: MypaceStorage['theme']
+  filters: MypaceStorage['filters']
+}
+
+export function exportSettings(): ExportableSettings {
+  const data = readStorage()
+  return {
+    version: 3,
+    theme: data.theme,
+    filters: data.filters,
+  }
+}
+
+export function importSettings(settings: ExportableSettings): void {
+  const data = readStorage()
+  if (settings.theme) {
+    data.theme = { ...data.theme, ...settings.theme }
+  }
+  if (settings.filters) {
+    const { presets, muteList, ...filterSettings } = settings.filters
+    data.filters = {
+      ...DEFAULT_SEARCH_FILTERS,
+      ...filterSettings,
+      presets: presets || [],
+      muteList: muteList || [],
+    }
+  }
+  writeStorage(data)
+}
+
+// ============ Migration ============
+
+// Migrate from old multi-key structure to new single-key structure
+export function migrateFromLegacy(): void {
+  if (typeof localStorage === 'undefined') return
+
+  // Check if already migrated
+  if (localStorage.getItem(STORAGE_KEY)) return
+
+  // Read old keys
+  const oldSk = localStorage.getItem('mypace_sk') || ''
+  const oldProfile = localStorage.getItem('mypace_profile')
+  const oldThemeColors = localStorage.getItem('mypace_theme_colors')
+  const oldAppTheme = localStorage.getItem('mypace_app_theme')
+  const oldVimMode = localStorage.getItem('mypace_vim_mode')
+  const oldDraft = localStorage.getItem('mypace_draft') || ''
+  const oldDraftReplyTo = localStorage.getItem('mypace_draft_reply_to') || ''
+  const oldSearchFilters = localStorage.getItem('mypace_search_filters')
+  const oldFilterPresets = localStorage.getItem('mypace_filter_presets')
+  const oldMuteList = localStorage.getItem('mypace_mute_list')
+
+  // Build new structure
+  const oldFilters = oldSearchFilters ? JSON.parse(oldSearchFilters) : {}
+  const data: MypaceStorage = {
+    theme: {
+      mode: (oldAppTheme as 'light' | 'dark') || 'light',
+      colors: oldThemeColors ? JSON.parse(oldThemeColors) : DEFAULT_COLORS,
+    },
+    filters: {
+      ...DEFAULT_SEARCH_FILTERS,
+      ...oldFilters,
+      lang: oldFilters.lang || getDefaultLanguage(),
+      presets: oldFilterPresets ? JSON.parse(oldFilterPresets) : [],
+      muteList: oldMuteList ? JSON.parse(oldMuteList) : [],
+    },
+    auth: {
+      sk: oldSk,
+    },
+    cache: {
+      profile: oldProfile ? JSON.parse(oldProfile) : null,
+    },
+    editor: {
+      vimMode: oldVimMode === 'true',
+      draft: oldDraft,
+      draftReplyTo: oldDraftReplyTo,
+    },
+  }
+
+  // Write new structure
+  writeStorage(data)
+
+  // Remove old keys
+  const oldKeys = [
+    'mypace_sk',
+    'mypace_profile',
+    'mypace_theme_colors',
+    'mypace_app_theme',
+    'mypace_vim_mode',
+    'mypace_draft',
+    'mypace_draft_reply_to',
+    'mypace_search_filters',
+    'mypace_filter_presets',
+    'mypace_mute_list',
+    // Legacy keys
+    'mypace_only',
+    'mypace_language_filter',
+    'mypace_ng_words',
+  ]
+  oldKeys.forEach((key) => localStorage.removeItem(key))
+}
+
+// Run migration on module load
+migrateFromLegacy()

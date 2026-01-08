@@ -6,18 +6,18 @@
 
 ### エクスポート
 
-「ファイルで保存」ボタンで `mypace-settings.json` をダウンロード。
+「Export」ボタンで `mypace-settings.json` をダウンロード。
 
 ### インポート
 
-「ファイルから読み込み」でJSONファイルを選択して設定を復元。
+「Import」でJSONファイルを選択して設定を復元。
 
-## エクスポート形式（v2）
+## エクスポート形式（v3）
 
 ```json
 {
   "mypace_settings": {
-    "version": 2,
+    "version": 3,
     "theme": {
       "mode": "dark",
       "colors": {
@@ -28,6 +28,15 @@
       }
     },
     "filters": {
+      "showSNS": true,
+      "showBlog": true,
+      "mypace": true,
+      "ngWords": ["spam"],
+      "ngTags": ["ad"],
+      "lang": "ja",
+      "hideAds": true,
+      "hideNSFW": true,
+      "hideNPC": false,
       "presets": [
         {
           "id": "preset-123",
@@ -63,8 +72,17 @@
 |------|------|
 | theme.mode | アプリテーマ（light / dark） |
 | theme.colors | 4隅のグラデーション色 |
+| filters.* | フィルタ設定（ngWords, ngTags, lang等） |
 | filters.presets | フィルタプリセット一覧 |
 | filters.muteList | ミュートリスト（npub/pubkey/追加日時） |
+
+## 含まれない設定
+
+| 設定 | 理由 |
+|------|------|
+| 秘密鍵（nsec） | セキュリティ上の理由 |
+| プロフィールキャッシュ | 一時データ |
+| 下書き・エディタ設定 | デバイス固有 |
 
 ## バージョン履歴
 
@@ -72,6 +90,7 @@
 |------------|----------|
 | v1 | テーマ設定のみ |
 | v2 | フィルタプリセット、ミュートリストを追加 |
+| v3 | フィルタ設定本体を追加、localStorage構造を統合 |
 
 ## 使用シナリオ
 

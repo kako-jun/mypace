@@ -1,6 +1,5 @@
 import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
-import { getString, setString, removeItem } from '../utils/storage'
-import { STORAGE_KEYS } from '../constants'
+import { getSecretKey, setSecretKey, clearSecretKey as clearStoredSecretKey } from '../storage'
 
 declare global {
   interface Window {
@@ -29,18 +28,18 @@ export function getOrCreateSecretKey(): Uint8Array {
     throw new Error('Cannot access localStorage on server')
   }
 
-  const stored = getString(STORAGE_KEYS.SECRET_KEY)
+  const stored = getSecretKey()
   if (stored) {
     return hexToBytes(stored)
   }
 
   const sk = generateSecretKey()
-  setString(STORAGE_KEYS.SECRET_KEY, bytesToHex(sk))
+  setSecretKey(bytesToHex(sk))
   return sk
 }
 
 export function getStoredSecretKey(): Uint8Array | null {
-  const stored = getString(STORAGE_KEYS.SECRET_KEY)
+  const stored = getSecretKey()
   if (!stored) return null
   return hexToBytes(stored)
 }
@@ -66,11 +65,11 @@ export function importNsec(nsec: string): Uint8Array {
 }
 
 export function saveSecretKey(sk: Uint8Array): void {
-  setString(STORAGE_KEYS.SECRET_KEY, bytesToHex(sk))
+  setSecretKey(bytesToHex(sk))
 }
 
 export function clearSecretKey(): void {
-  removeItem(STORAGE_KEYS.SECRET_KEY)
+  clearStoredSecretKey()
 }
 
 function bytesToHex(bytes: Uint8Array): string {

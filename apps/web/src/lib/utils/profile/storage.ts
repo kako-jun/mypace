@@ -1,17 +1,16 @@
 import type { Profile } from '../../../types'
-import { getItem, setItem, removeItem } from '../storage'
-import { STORAGE_KEYS } from '../../constants'
+import { getCachedProfile, setCachedProfile, clearCachedProfile } from '../../storage'
 
 export function getLocalProfile(): Profile | null {
-  return getItem<Profile | null>(STORAGE_KEYS.PROFILE, null)
+  return getCachedProfile()
 }
 
 export function setLocalProfile(profile: Profile): void {
-  setItem(STORAGE_KEYS.PROFILE, profile)
+  setCachedProfile(profile)
 }
 
 export function removeLocalProfile(): void {
-  removeItem(STORAGE_KEYS.PROFILE)
+  clearCachedProfile()
 }
 
 export function hasLocalProfile(): boolean {

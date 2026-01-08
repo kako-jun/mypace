@@ -1,8 +1,8 @@
 // Navigation utilities
 import { nip19 } from 'nostr-tools'
-import type { FilterMode, SearchFilters } from '../../../types'
+import type { FilterMode } from '../../../types'
 import { getNavigateFunction } from './router-navigation'
-import { STORAGE_KEYS } from '../../constants'
+import { getFilterSettings, setFilterSettings, DEFAULT_SEARCH_FILTERS } from '../../storage'
 
 // Navigate to a URL using React Router
 export function navigateTo(href: string): void {
@@ -53,51 +53,7 @@ export function navigateToAddTag(currentTags: string[], newTag: string, mode: Fi
   navigateToTagFilter([...currentTags, newTag], mode)
 }
 
-// Supported language codes for smart filter
-const SUPPORTED_LANG_CODES = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'de']
-
-// Get default language from browser settings
-function getDefaultLanguage(): string {
-  if (typeof navigator === 'undefined') return ''
-  const browserLang = navigator.language?.slice(0, 2).toLowerCase() || ''
-  return SUPPORTED_LANG_CODES.includes(browserLang) ? browserLang : ''
-}
-
-// Default search filters
-export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
-  ngWords: [],
-  ngTags: [],
-  showSNS: true,
-  showBlog: true,
-  mypace: true,
-  lang: '', // Will be set dynamically based on browser language
-  // Smart filters default to ON (hide by default)
-  hideAds: true,
-  hideNSFW: true,
-  hideNPC: false, // NPC posts shown by default
-}
-
-// Save filters to localStorage
-export function saveFiltersToStorage(filters: SearchFilters): void {
-  try {
-    localStorage.setItem(STORAGE_KEYS.SEARCH_FILTERS, JSON.stringify(filters))
-  } catch {
-    // Ignore storage errors
-  }
-}
-
-// Load filters from localStorage
-export function loadFiltersFromStorage(): SearchFilters {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEYS.SEARCH_FILTERS)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      // Merge with defaults to ensure all fields exist
-      return { ...DEFAULT_SEARCH_FILTERS, ...parsed }
-    }
-  } catch {
-    // Ignore parse errors
-  }
-  // First time: use browser language as default
-  return { ...DEFAULT_SEARCH_FILTERS, lang: getDefaultLanguage() }
-}
+// Re-export storage functions for backwards compatibility
+export const loadFiltersFromStorage = getFilterSettings
+export const saveFiltersToStorage = setFilterSettings
+export { DEFAULT_SEARCH_FILTERS }
