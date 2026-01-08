@@ -16,6 +16,7 @@ export function Layout() {
   const filterPanelRef = useRef<HTMLDivElement>(null)
 
   // Check if any filters are active (based on localStorage, not URL)
+  // Note: mypace=true is the default, so we only highlight when filters differ from defaults
   const hasActiveFilters = useMemo(() => {
     const filters = loadFiltersFromStorage()
     const mutedPubkeys = getMutedPubkeys()
@@ -24,7 +25,7 @@ export function Layout() {
       (filters.ngTags?.length ?? 0) > 0 ||
       !filters.showSNS ||
       !filters.showBlog ||
-      filters.mypace ||
+      !filters.mypace || // Highlight when mypace is OFF (showing all posts)
       filters.hideNPC ||
       filters.lang !== '' ||
       mutedPubkeys.length > 0

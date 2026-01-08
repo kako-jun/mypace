@@ -29,17 +29,38 @@ export function filterByNgWords<T extends { content: string }>(events: T[], ngWo
   })
 }
 
-// NGタグフィルタ: 指定タグを含む投稿を除外
-export function filterByNgTags<T extends { tags: string[][] }>(events: T[], ngTags: string[]): T[] {
+// NGタグフィルタ: 指定タグを含む投稿を除外（タグ配列 + 本文中の#tag）
+export function filterByNgTags<T extends { content: string; tags: string[][] }>(events: T[], ngTags: string[]): T[] {
   if (ngTags.length === 0) return events
   const ngTagsLower = ngTags.map((t) => t.toLowerCase())
   return events.filter((e) => {
+    // タグ配列をチェック
     const eventTags = e.tags
       .filter((t) => t[0] === 't')
       .map((t) => t[1]?.toLowerCase())
       .filter(Boolean)
-    return !eventTags.some((tag) => ngTagsLower.includes(tag))
+    if (eventTags.some((tag) => ngTagsLower.includes(tag))) {
+      return false
+    }
+    // 本文中の#tagもチェック
+    const contentLower = e.content.toLowerCase()
+    for (const ngTag of ngTagsLower) {
+      // #tag の形式で本文内を検索（日本語対応）
+      const pattern = new RegExp(
+        `#${escapeRegex(ngTag)}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`,
+        'i'
+      )
+      if (pattern.test(contentLower)) {
+        return false
+      }
+    }
+    return true
   })
+}
+
+// 正規表現のエスケープ
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 // スマートフィルタ: 広告/NSFWコンテンツをフィルタ
