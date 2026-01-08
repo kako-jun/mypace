@@ -153,6 +153,8 @@ export function renderContent(
     if (target.classList.contains('content-hashtag')) {
       const tag = target.getAttribute('data-tag')
       if (tag && hashtagHandler) {
+        e.preventDefault()
+        e.stopPropagation()
         hashtagHandler(tag)
       }
     }
@@ -160,6 +162,8 @@ export function renderContent(
       const button = target.classList.contains('super-mention-prefix') ? target.parentElement : target
       const path = button?.getAttribute('data-ref')
       if (path && superMentionHandler) {
+        e.preventDefault()
+        e.stopPropagation()
         superMentionHandler(path)
       }
     }
