@@ -13,6 +13,7 @@ import {
   shareOrCopy,
   navigateToEdit,
   navigateTo,
+  navigateToTag,
 } from '../../lib/utils'
 import type { Event } from '../../types'
 import type { ShareOption } from '../post/ShareMenu'
@@ -136,10 +137,10 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
     navigateTo(path)
   }, [])
 
-  // Set up click handlers (hashtag/supermention clicks are handled by navigateTo for now)
+  // Set up click handlers for hashtag/supermention
   useEffect(() => {
-    setHashtagClickHandler(() => {})
-    setSuperMentionClickHandler(() => {})
+    setHashtagClickHandler((tag) => navigateToTag(tag))
+    setSuperMentionClickHandler((path) => navigateToTag(path))
     setInternalLinkClickHandler(handleInternalLinkClick)
   }, [handleInternalLinkClick])
 
