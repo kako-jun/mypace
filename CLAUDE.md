@@ -60,6 +60,7 @@ apps/
 - プロフィール設定（プロフィールページで編集）
   - 名前（必須）、アバター、バナー画像
   - 自己紹介、Webサイト、NIP-05、Lightning Address
+- ユーザーページ投稿検索（テキスト検索でユーザーの投稿を絞り込み）
 - 投稿の編集・削除
 - 画像アップロード（nostr.build、NIP-98認証）
 - 画像クリックでLightBox表示
@@ -68,7 +69,7 @@ apps/
 - 返信・リポスト
 - NIP-07対応（ブラウザ拡張）
 - 鍵のエクスポート・インポート
-- フィルタ機能（詳細は [docs/extensions/](./docs/extensions/) 参照）
+- フィルタ機能（APIサイドフィルタ、詳細は [docs/extensions/](./docs/extensions/) 参照）
 - 長文モード（CodeMirror、Vimモード）
 - 下書き自動保存
 - 短文エディタの最小化（アバターのみ表示）

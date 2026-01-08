@@ -1,12 +1,13 @@
 # Mute List（ミュートリスト）
 
-特定ユーザーの投稿を非表示にするクライアントサイドフィルタ機能。
+特定ユーザーの投稿を非表示にするフィルタ機能。
 
 ## 概要
 
 - **Nostr標準準拠**: NIP-51のミュートリスト概念に沿った命名
-- **クライアントサイド処理**: プライバシー保護のためサーバーに送信しない
+- **サーバーサイド処理**: APIリクエスト時にパラメータとして送信、サーバー側でフィルタ
 - **npub形式**: ユーザーが管理しやすい形式で保存
+- **ブラウザURL非公開**: 共有URLにはミュート情報が含まれない
 
 ## 使い方
 
@@ -41,26 +42,27 @@ localStorage キー: `mypace_mute_list`
 
 ### フィルタリング処理
 
+フィルタリングはAPIサーバー側で実行される:
+
 ```typescript
-// Timeline.tsx
-const mutedPubkeys = getMutedPubkeys()
-filteredItems = items.filter(item =>
-  !mutedPubkeys.includes(item.event.pubkey)
-)
+// apps/api/src/routes/timeline.ts
+const muteParam = c.req.query('mute') || ''
+const mutedPubkeys = muteParam ? muteParam.split(',') : []
+
+// フィルタ適用
+events = events.filter(e => !mutedPubkeys.includes(e.pubkey))
 ```
 
 - イベントの`pubkey`フィールド（hex形式）でマッチング
-- リポストの場合は元投稿者もチェック
+- APIから返却前に除外されるため、ページネーションが正しく動作
 
-### イベント通知
+### 適用タイミング
 
-ミュートリスト変更時にカスタムイベントを発火:
+ミュートリストは他のフィルタ設定と同様、FilterPanelの「Save」ボタンで適用:
 
-```typescript
-window.dispatchEvent(new CustomEvent('mypace:muteListChanged'))
-```
-
-これによりTimelineがリアルタイムで更新される。
+- localStorageに保存
+- 次回のAPIリクエストから反映
+- 即時適用（Save前のプレビュー）は非対応
 
 ## 設定エクスポート
 
@@ -85,9 +87,10 @@ window.dispatchEvent(new CustomEvent('mypace:muteListChanged'))
 
 ## プライバシー考慮
 
-- ミュートリストはローカルストレージにのみ保存
-- APIリクエストにミュート情報を含めない
-- サーバーサイドでミュート対象を知ることはできない
+- ミュートリストはローカルストレージに保存
+- APIリクエストにはパラメータとして送信（フィルタ処理のため）
+- **ブラウザURLには含まれない**（共有時に漏れない）
+- サーバーログに残る可能性があるが、ユーザー間で共有されることはない
 
 ## 関連
 

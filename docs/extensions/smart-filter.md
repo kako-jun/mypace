@@ -77,14 +77,12 @@ FilterPanel内の回路図UIとOKワード入力の間に配置:
 - ラベルクリックでトグル切替
 - 言語フィルタもこのポップアップ内に配置
 
-## URL形式
+## 保存方法
 
-```
-/?ads=show     # 広告を表示（デフォルトは非表示）
-/?nsfw=show    # NSFWを表示（デフォルトは非表示）
-```
+フィルタ設定は **localStorage** に保存され、APIリクエスト時にパラメータとして送信。
+ブラウザURLには含まれない（共有URLに個人設定が漏れない）。
 
-デフォルトがON（非表示）のため、OFFにする場合のみURLパラメータが付与される。
+デフォルトはON（非表示）。
 
 ## API
 
@@ -101,11 +99,11 @@ GET /api/timeline?hideAds=0&hideNSFW=0
 
 | ファイル | 役割 |
 |----------|------|
-| `apps/api/src/index.ts` | サーバーサイドフィルタロジック |
-| `apps/api/src/dev-server.ts` | 開発サーバー用フィルタ |
-| `apps/web/src/components/FilterPanel.tsx` | UI |
-| `apps/web/src/lib/api.ts` | APIクライアント |
-| `apps/web/src/hooks/useTimeline.ts` | フィルタパラメータ受け渡し |
+| `apps/api/src/filters/smart-filter.ts` | サーバーサイドフィルタロジック |
+| `apps/api/src/routes/timeline.ts` | タイムラインAPI（フィルタ適用） |
+| `apps/web/src/components/filter/FilterPanel.tsx` | UI |
+| `apps/web/src/lib/api/api.ts` | APIクライアント（パラメータ送信） |
+| `apps/web/src/hooks/timeline/useTimeline.ts` | フィルタパラメータ受け渡し |
 | `apps/web/src/types/index.ts` | SearchFilters型 |
 
 ## 将来の拡張

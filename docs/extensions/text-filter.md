@@ -42,13 +42,6 @@
 結果: 「猫が好き」「犬と散歩」どちらも表示、「鳥を飼う」は非表示
 ```
 
-### URL形式
-
-```
-/?q=猫+犬
-/?q=猫,犬
-```
-
 ## OKタグ
 
 投稿本文に指定タグ（`#tag` または `@@path`）を含むものだけを表示。
@@ -69,13 +62,6 @@
 入力: /ハンチョウ       → @@ハンチョウ を含む投稿
 ```
 
-### URL形式
-
-```
-/?tags=mypace,nostr      # OR検索
-/?tags=mypace+nostr      # AND検索
-```
-
 ## NGワード
 
 投稿本文に指定ワードを含むものを非表示。
@@ -91,13 +77,6 @@
 ```
 入力: 広告 PR
 結果: 「広告です」「PR案件」を含む投稿は非表示
-```
-
-### URL形式
-
-```
-/?ng=広告+PR
-/?ng=広告,PR
 ```
 
 ## NGタグ
@@ -116,22 +95,21 @@
 結果: #nsfw または #ad を含む投稿は非表示
 ```
 
-### URL形式
-
-```
-/?ngtags=nsfw,ad
-```
-
 ## フィルタの優先順位
 
-1. **サーバーサイドフィルタ**（mypace、SNS/Blog、Ads/NSFW、言語）
-2. **OKタグ** → 指定タグを含むもののみ残す
-3. **OKワード** → 指定ワードを含むもののみ残す
-4. **NGワード** → 指定ワードを含むものを除外
-5. **NGタグ** → 指定タグを含むものを除外
-6. **ミュートリスト** → ミュートユーザーの投稿を除外
+全フィルタがAPIサーバー側で処理される。処理順序:
 
-OKとNGに同じワードを指定した場合、NGが優先（除外される）。
+1. **基本フィルタ**（mypace、SNS/Blog、Ads/NSFW、言語、hideNPC）
+2. **ミュートリスト** → ミュートユーザーの投稿を除外
+3. **NGタグ** → 指定タグを含むものを除外
+4. **NGワード** → 指定ワードを含むものを除外
+
+OKタグ/OKワードはホームタイムラインでは未使用。ユーザーページ専用の検索機能として実装。
+
+## 保存方法
+
+フィルタ設定は **localStorage** に保存され、APIリクエスト時にパラメータとして送信。
+ブラウザURLには含まれない（共有URLに個人設定が漏れない）。
 
 ## UI
 
@@ -157,12 +135,13 @@ FilterPanel内のOK/NGグループ:
 
 | ファイル | 役割 |
 |----------|------|
-| `components/filter/FilterFields.tsx` | OK/NG入力欄UI |
-| `components/filter/FilterPanel.tsx` | フィルタパネル全体 |
-| `components/timeline/Timeline.tsx` | クライアントサイドフィルタ実行 |
-| `lib/utils/navigation/navigation.ts` | URL解析・生成 |
-| `lib/utils/content/content.ts` | `contentHasTag` タグマッチング |
-| `types/index.ts` | `SearchFilters` 型定義 |
+| `apps/api/src/filters/smart-filter.ts` | サーバーサイドフィルタロジック |
+| `apps/api/src/routes/timeline.ts` | タイムラインAPI（フィルタ適用） |
+| `apps/web/src/components/filter/FilterFields.tsx` | OK/NG入力欄UI |
+| `apps/web/src/components/filter/FilterPanel.tsx` | フィルタパネル全体 |
+| `apps/web/src/lib/api/api.ts` | APIクライアント（パラメータ送信） |
+| `apps/web/src/lib/utils/content/content.ts` | `contentHasTag` タグマッチング |
+| `apps/web/src/types/index.ts` | `SearchFilters` 型定義 |
 
 ## 関連ドキュメント
 
