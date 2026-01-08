@@ -159,8 +159,6 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
                 >
                   {uploading ? (
                     <span className="image-picker-uploading">Uploading...</span>
-                  ) : dragging ? (
-                    <span className="image-picker-drop">Drop here</span>
                   ) : (
                     <>
                       <Icon name="Upload" size={24} />

@@ -109,9 +109,11 @@ body.long-mode-active .image-picker-modal {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 1.5rem 1rem;
+  padding: 0.75rem 1rem;
   background: var(--surface-secondary);
-  border: 2px dashed var(--border-primary);
+  border-width: 2px;
+  border-style: dashed;
+  border-color: var(--border-primary);
   border-radius: 8px;
   cursor: pointer;
   color: var(--text-muted);
@@ -134,8 +136,7 @@ body.long-mode-active .image-picker-modal {
   cursor: not-allowed;
 }
 
-.image-picker-uploading,
-.image-picker-drop {
+.image-picker-uploading {
   font-size: 0.9rem;
   font-weight: 500;
 }

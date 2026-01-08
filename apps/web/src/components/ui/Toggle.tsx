@@ -7,8 +7,12 @@ interface ToggleProps {
 }
 
 export default function Toggle({ checked, onChange, label, disabled = false, size = 'normal' }: ToggleProps) {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+  }
+
   return (
-    <label className={`toggle ${size === 'small' ? 'toggle-small' : ''}`}>
+    <label className={`toggle ${size === 'small' ? 'toggle-small' : ''}`} onClick={handleClick}>
       <input
         type="checkbox"
         checked={checked}
