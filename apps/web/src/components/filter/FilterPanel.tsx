@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import Button from '../ui/Button'
 import Toggle from '../ui/Toggle'
 import { CloseButton } from '../ui'
@@ -25,8 +24,6 @@ interface FilterPanelProps {
 }
 
 export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
-  const navigate = useNavigate()
-
   // Load saved filters from localStorage
   const savedFilters = loadFiltersFromStorage()
   const savedMuteList = loadMuteList()
@@ -98,11 +95,10 @@ export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
     const newFilters = getCurrentFilters()
     saveFiltersToStorage(newFilters)
     saveMuteList(muteList)
-    // Always navigate to home (no filter params in URL)
-    navigate('/')
-    onClose?.()
-    // Force page reload to apply new filters
-    window.location.reload()
+    // Navigate to home with full reload to apply new filters
+    // Using window.location.href instead of navigate() + reload()
+    // to avoid race conditions between SPA navigation and page reload
+    window.location.href = '/'
   }
 
   // Clear all filters
@@ -119,10 +115,8 @@ export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
     setMuteList([])
     saveFiltersToStorage(DEFAULT_SEARCH_FILTERS)
     saveMuteList([])
-    navigate('/')
-    onClose?.()
-    // Force page reload to apply new filters
-    window.location.reload()
+    // Navigate to home with full reload to apply cleared filters
+    window.location.href = '/'
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

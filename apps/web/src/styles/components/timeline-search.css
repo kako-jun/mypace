@@ -1,10 +1,10 @@
 .timeline-search {
-  /* CSS Columns の外に配置、右寄せ */
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
-  /* 親のパディングを打ち消して右端まで広げる */
-  margin-right: -0.5rem;
+  column-span: all;
+  break-inside: avoid;
+  direction: ltr;
+  background: transparent;
+  max-width: 600px;
+  margin-left: auto;
 }
 
 .timeline-search-card {
@@ -12,12 +12,13 @@
   border: 2px solid #000;
   border-right: none;
   padding: 1.5rem;
-  /* 右端にくっついた分、内部のパディングを増やして内容の位置を維持 */
   padding-right: calc(1.5rem + 0.5rem);
-  /* 投稿カードと同じ幅 */
-  width: 560px;
-  max-width: calc(100% - 0.5rem);
-  box-sizing: border-box;
+  margin-bottom: 1rem;
+  direction: ltr;
+  /* 右端にくっつける */
+  position: relative;
+  right: -0.5rem;
+  width: calc(100% + 0.5rem);
 }
 
 .timeline-search-form {
