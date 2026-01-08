@@ -5,7 +5,6 @@ import { HomePage } from './pages/HomePage'
 import { PostPage } from './pages/PostPage'
 import { UserPage } from './pages/UserPage'
 import { SettingsPage } from './pages/SettingsPage'
-import { TagPage } from './pages/TagPage'
 import { UploadHistoryPage } from './pages/UploadHistoryPage'
 import { EmbedPage } from './pages/EmbedPage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -41,7 +40,6 @@ export default function App() {
           <Route path="/intent/post" element={<HomePage />} />
           <Route path="/post/:id" element={<PostPage />} />
           <Route path="/user/:pubkey" element={<UserPage />} />
-          <Route path="/tag/:tags" element={<TagPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/upload-history" element={<UploadHistoryPage />} />
           <Route path="*" element={<NotFoundPage />} />

@@ -25,7 +25,7 @@ export function navigateToUser(pubkey: string): void {
 }
 
 export function navigateToTag(tag: string): void {
-  navigateTo(`/tag/${encodeURIComponent(tag)}`)
+  navigateTo(`/?tags=${encodeURIComponent(tag)}`)
 }
 
 export function navigateToEdit(eventId: string): void {
@@ -40,7 +40,7 @@ export function navigateToReply(eventId: string): void {
 export function buildTagUrl(tags: string[], mode: FilterMode): string {
   if (tags.length === 0) return '/'
   const separator = mode === 'and' ? '+' : ','
-  return `/tag/${tags.map((t) => encodeURIComponent(t)).join(separator)}`
+  return `/?tags=${tags.map((t) => encodeURIComponent(t)).join(separator)}`
 }
 
 export function navigateToTagFilter(tags: string[], mode: FilterMode): void {
