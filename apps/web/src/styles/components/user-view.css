@@ -343,7 +343,7 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  border: 2px dashed var(--border-primary);
+  border: 2px dashed var(--border-primary, #666);
   transition: border-color 0.15s ease, border-style 0.15s ease;
 }
 
@@ -395,7 +395,14 @@
   cursor: pointer;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px dashed var(--border-primary);
+  border: 2px dashed var(--border-primary, #666);
+  padding: 4px;
+  width: 98px;
+  height: 98px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: border-color 0.15s ease, border-style 0.15s ease;
 }
 

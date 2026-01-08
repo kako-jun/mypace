@@ -113,7 +113,7 @@ body.long-mode-active .image-picker-modal {
   background: var(--surface-secondary);
   border-width: 2px;
   border-style: dashed;
-  border-color: var(--border-primary);
+  border-color: var(--border-primary, #666);
   border-radius: 8px;
   cursor: pointer;
   color: var(--text-muted);
