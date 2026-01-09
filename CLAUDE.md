@@ -24,7 +24,7 @@ pnpm typecheck     # TypeScript型チェック
 - **Styling**: Tailwind CSS
 - **Auth**: Auto-generated keys (localStorage) + NIP-07
 
-詳細は [docs/architecture.md](./docs/architecture.md) を参照。
+詳細は [docs/development/architecture.md](./docs/development/architecture.md) を参照。
 
 ## Project Structure
 
@@ -69,7 +69,7 @@ apps/
 - 返信・リポスト
 - NIP-07対応（ブラウザ拡張）
 - 鍵のエクスポート・インポート
-- フィルタ機能（APIサイドフィルタ、詳細は [docs/extensions/](./docs/extensions/) 参照）
+- フィルタ機能（APIサイドフィルタ、詳細は [docs/development/extensions/](./docs/development/extensions/) 参照）
 - 長文モード（CodeMirror、Vimモード）
 - 下書き自動保存
 - 短文エディタの最小化（アバターのみ表示）
@@ -85,7 +85,7 @@ apps/
 - NIP-05検証（プロフィールにチェックマーク表示）
 - NIP-19メンション（nostr:npub, nostr:nprofile → @ユーザー名リンク）
 - NIP-19投稿参照（nostr:note, nostr:nevent → 📝 noteリンク）
-- SEO対応（動的OGP、Twitter Card、robots.txt、sitemap.xml。詳細は [docs/seo.md](./docs/seo.md) 参照）
+- SEO対応（動的OGP、Twitter Card、robots.txt、sitemap.xml。詳細は [docs/development/seo.md](./docs/development/seo.md) 参照）
 - ユーザー通し番号（初回#mypace投稿順に番号付与、プロフィールに「Thanks #N」表示）
 
 ## Nostr Events
