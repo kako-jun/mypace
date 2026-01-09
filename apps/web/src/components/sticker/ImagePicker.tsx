@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Icon, Input, CloseButton, Portal } from '../ui'
 import Button from '../ui/Button'
 import '../../styles/components/image-picker.css'
@@ -20,6 +21,7 @@ interface ImagePickerProps {
 }
 
 export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps) {
+  const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const [selectedUrl, setSelectedUrl] = useState('')
   const [history, setHistory] = useState<StickerHistoryItem[]>([])
@@ -223,15 +225,28 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
 
               {/* Action buttons */}
               <div className="image-picker-actions">
-                <Button size="md" variant="secondary" onClick={handleClose}>
-                  Cancel
-                </Button>
-                <Button size="md" variant="primary" onClick={handleEmbed} disabled={!selectedUrl.trim()}>
-                  Embed
-                </Button>
-                <Button size="md" variant="primary" onClick={handleSticker} disabled={!selectedUrl.trim()}>
-                  Sticker
-                </Button>
+                <button
+                  type="button"
+                  className="image-picker-history-btn"
+                  onClick={() => {
+                    handleClose()
+                    navigate('/upload-history')
+                  }}
+                  title="Manage uploads"
+                >
+                  <Icon name="History" size={18} />
+                </button>
+                <div className="image-picker-actions-right">
+                  <Button size="md" variant="secondary" onClick={handleClose}>
+                    Cancel
+                  </Button>
+                  <Button size="md" variant="primary" onClick={handleEmbed} disabled={!selectedUrl.trim()}>
+                    Embed
+                  </Button>
+                  <Button size="md" variant="primary" onClick={handleSticker} disabled={!selectedUrl.trim()}>
+                    Sticker
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

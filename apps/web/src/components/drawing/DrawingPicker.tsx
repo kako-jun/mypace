@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Icon, CloseButton, Portal } from '../ui'
 import Button from '../ui/Button'
 import { uploadImage, saveUploadToHistory, saveStickerToHistory } from '../../lib/api'
@@ -42,6 +43,7 @@ interface DrawAction {
 }
 
 export function DrawingPicker({ onEmbed, onAddSticker }: DrawingPickerProps) {
+  const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -542,15 +544,28 @@ export function DrawingPicker({ onEmbed, onAddSticker }: DrawingPickerProps) {
               {error && <div className="drawing-picker-error">{error}</div>}
 
               <div className="drawing-picker-footer">
-                <Button size="md" variant="secondary" onClick={handleClose}>
-                  Cancel
-                </Button>
-                <Button size="md" variant="primary" onClick={handleEmbed} disabled={uploading || !hasDrawn}>
-                  {uploading ? 'Uploading...' : 'Embed'}
-                </Button>
-                <Button size="md" variant="primary" onClick={handleSticker} disabled={uploading || !hasDrawn}>
-                  {uploading ? 'Uploading...' : 'Sticker'}
-                </Button>
+                <button
+                  type="button"
+                  className="drawing-picker-history-btn"
+                  onClick={() => {
+                    handleClose()
+                    navigate('/upload-history')
+                  }}
+                  title="Manage uploads"
+                >
+                  <Icon name="History" size={18} />
+                </button>
+                <div className="drawing-picker-footer-right">
+                  <Button size="md" variant="secondary" onClick={handleClose}>
+                    Cancel
+                  </Button>
+                  <Button size="md" variant="primary" onClick={handleEmbed} disabled={uploading || !hasDrawn}>
+                    {uploading ? 'Uploading...' : 'Embed'}
+                  </Button>
+                  <Button size="md" variant="primary" onClick={handleSticker} disabled={uploading || !hasDrawn}>
+                    {uploading ? 'Uploading...' : 'Sticker'}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

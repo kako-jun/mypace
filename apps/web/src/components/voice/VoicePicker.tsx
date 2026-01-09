@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Icon, CloseButton, Portal } from '../ui'
 import Button from '../ui/Button'
 import { uploadImage } from '../../lib/api/upload'
@@ -13,6 +14,7 @@ interface VoicePickerProps {
 const MAX_DURATION = 21 // seconds
 
 export function VoicePicker({ onComplete }: VoicePickerProps) {
+  const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null)
@@ -416,12 +418,25 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
               {error && <div className="voice-picker-error">{error}</div>}
 
               <div className="voice-picker-footer">
-                <Button size="md" variant="secondary" onClick={handleClose}>
-                  Cancel
-                </Button>
-                <Button size="md" variant="primary" onClick={handleUpload} disabled={!recordedBlob || uploading}>
-                  {uploading ? 'Uploading...' : 'Add'}
-                </Button>
+                <button
+                  type="button"
+                  className="voice-picker-history-btn"
+                  onClick={() => {
+                    handleClose()
+                    navigate('/upload-history')
+                  }}
+                  title="Manage uploads"
+                >
+                  <Icon name="History" size={18} />
+                </button>
+                <div className="voice-picker-footer-right">
+                  <Button size="md" variant="secondary" onClick={handleClose}>
+                    Cancel
+                  </Button>
+                  <Button size="md" variant="primary" onClick={handleUpload} disabled={!recordedBlob || uploading}>
+                    {uploading ? 'Uploading...' : 'Add'}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

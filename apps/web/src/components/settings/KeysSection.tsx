@@ -76,7 +76,7 @@ export default function KeysSection({ nsec, npub, usingNip07, onNavigateUploadHi
 
         <SettingsSection title="Uploads">
           <button className="profile-edit-link" onClick={onNavigateUploadHistory}>
-            Upload History
+            Upload History →
           </button>
         </SettingsSection>
       </>
@@ -119,7 +119,7 @@ export default function KeysSection({ nsec, npub, usingNip07, onNavigateUploadHi
 
       <SettingsSection title="Uploads">
         <button className="profile-edit-link" onClick={onNavigateUploadHistory}>
-          Upload History
+          Upload History →
         </button>
       </SettingsSection>
 

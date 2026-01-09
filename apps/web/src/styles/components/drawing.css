@@ -250,10 +250,35 @@ body.long-mode-active .drawing-picker-modal {
 /* Footer */
 .drawing-picker-footer {
   display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
   padding: 1rem;
   border-top: 1px solid var(--border-subtle);
+}
+
+.drawing-picker-history-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.drawing-picker-history-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.drawing-picker-footer-right {
+  display: flex;
+  gap: 0.5rem;
 }
 
 /* Drawing Picker container */

@@ -295,8 +295,33 @@ body.long-mode-active .image-picker-modal {
 /* Action buttons */
 .image-picker-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
   padding-top: 0.5rem;
   border-top: 1px solid var(--border-light);
+}
+
+.image-picker-history-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.image-picker-history-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.image-picker-actions-right {
+  display: flex;
+  gap: 0.5rem;
 }

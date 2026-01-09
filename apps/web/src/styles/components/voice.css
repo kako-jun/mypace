@@ -229,10 +229,35 @@ body.long-mode-active .voice-picker-modal {
 /* Footer */
 .voice-picker-footer {
   display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
   padding: 1rem;
   border-top: 1px solid var(--border-subtle);
+}
+
+.voice-picker-history-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.voice-picker-history-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.voice-picker-footer-right {
+  display: flex;
+  gap: 0.5rem;
 }
 
 /* Voice Picker container */

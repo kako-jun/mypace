@@ -45,7 +45,10 @@ CREATE TABLE upload_history (
 
 ### アクセス方法
 
-Settings → Account → Upload History
+- Settings → Account → Upload History →
+- ImagePicker → 左下の🕐アイコン
+- DrawingPicker → 左下の🕐アイコン
+- VoicePicker → 左下の🕐アイコン
 
 ### 履歴一覧
 
