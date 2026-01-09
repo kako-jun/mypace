@@ -51,7 +51,7 @@
 
 ### [5. カスタマイズ](./customize/)
 
-MyPaceを自分好みに。
+MY PACEを自分好みに。
 
 - [プロフィール](./customize/profile.md) - 名前・アバター・自己紹介
 - [設定エクスポート](./customize/settings-export.md) - 設定の保存・復元

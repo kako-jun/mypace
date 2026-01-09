@@ -1,6 +1,6 @@
 # Webhook API
 
-外部ツールやスクリプトからMyPace経由でNostrに投稿するためのAPI。
+外部ツールやスクリプトからMY PACE経由でNostrに投稿するためのAPI。
 
 ## エンドポイント
 
@@ -124,9 +124,9 @@ curl -X POST https://mypace-api.llll-ll.workers.dev/api/publish \
   -d @signed_event.json
 ```
 
-## MyPace独自タグの追加
+## MY PACE独自タグの追加
 
-投稿にMyPace機能を付与する場合は、署名前にタグを追加:
+投稿にMY PACE機能を付与する場合は、署名前にタグを追加:
 
 ```javascript
 const event = finalizeEvent({

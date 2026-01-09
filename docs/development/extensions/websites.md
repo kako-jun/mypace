@@ -47,7 +47,7 @@ Kind 0（プロフィール）のcontentに`websites`配列を追加:
 
 | クライアント | 表示 |
 |-------------|------|
-| MyPace | 全ての`websites`を表示 |
+| MY PACE | 全ての`websites`を表示 |
 | 他のクライアント | `website`のみ表示（`websites`は無視） |
 
 互換性のため、`websites[0].url`を`website`フィールドにも設定する。
@@ -146,7 +146,7 @@ interface WebsiteEntry {
 
 interface Profile {
   website?: string      // 互換性用
-  websites?: WebsiteEntry[]  // MyPace拡張
+  websites?: WebsiteEntry[]  // MY PACE拡張
   // ...
 }
 

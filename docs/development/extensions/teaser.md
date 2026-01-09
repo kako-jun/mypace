@@ -91,4 +91,4 @@ if (hasTeaserTag(event)) {
 
 - `content` 部分（280字+リンク）のみ表示される
 - `teaser` タグは無視される
-- READ MOREリンクをクリックするとMyPaceで全文を読める
+- READ MOREリンクをクリックするとMY PACEで全文を読める
