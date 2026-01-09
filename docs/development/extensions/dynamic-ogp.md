@@ -86,4 +86,4 @@ curl "http://localhost:8788/post/{EVENT_ID}"
 ## 関連
 
 - [seo.md](../seo.md) - SEO全体の設計
-- [share.md](./share.md) - シェアメニュー
+- [共有（ユーザーガイド）](../../user-guide/features/share.md) - シェアメニュー

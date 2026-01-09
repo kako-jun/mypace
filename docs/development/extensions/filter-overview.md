@@ -125,8 +125,5 @@ FilterPanelで「Apply」または「Clear」を押すと、以下の処理が�
 
 ## 関連ドキュメント
 
-- [text-filter.md](./text-filter.md) - OK/NGワード・タグの詳細
-- [kind-filter.md](./kind-filter.md) - SNS/Blogフィルタ
-- [smart-filter.md](./smart-filter.md) - Ads/NSFWスマートフィルタ
-- [mute-list.md](./mute-list.md) - ミュートリスト
-- [filter-presets.md](./filter-presets.md) - プリセット保存
+- [フィルター（ユーザーガイド）](../../user-guide/features/filters.md) - テキストフィルタ、kindフィルタ、プリセット
+- [ミュート（ユーザーガイド）](../../user-guide/features/mute.md) - ミュートリスト
