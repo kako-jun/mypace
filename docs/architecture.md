@@ -231,6 +231,52 @@ src/
 | Workers | api | APIサーバー |
 | D1 | api | SQLiteキャッシュ |
 
+## D1 Cache (Server-Side)
+
+### 概要
+
+APIサーバーはNostrリレーから取得したイベントをCloudflare D1にキャッシュする。
+MYPACEタグ付き投稿もそれ以外も同様にキャッシュし、`has_mypace_tag`カラムで区別する。
+
+### eventsテーブル
+
+| カラム | 型 | 説明 |
+|--------|-----|------|
+| id | TEXT | イベントID（主キー） |
+| pubkey | TEXT | 投稿者の公開鍵 |
+| created_at | INTEGER | イベント作成時刻 |
+| kind | INTEGER | イベント種別 |
+| tags | TEXT | タグ（JSON） |
+| content | TEXT | 本文 |
+| sig | TEXT | 署名 |
+| cached_at | INTEGER | キャッシュ保存時刻 |
+| has_mypace_tag | INTEGER | mypaceタグの有無（0 or 1） |
+
+### TTLと物理削除
+
+| 設定 | 値 | 説明 |
+|------|-----|------|
+| 論理TTL | 5分 | これより古いキャッシュは取得されない |
+| 物理削除 | 1日 | これより古いキャッシュはDBから削除 |
+
+### 確率的クリーンアップ
+
+キャッシュ書き込み時、**1%の確率**でバックグラウンドクリーンアップを実行:
+
+```typescript
+if (Math.random() < 0.01) {
+  executionCtx.waitUntil(
+    db.prepare('DELETE FROM events WHERE cached_at < ?')
+      .bind(Date.now() - 24 * 60 * 60 * 1000) // 1日
+      .run()
+  )
+}
+```
+
+- レスポンスに影響しない（waitUntilでバックグラウンド実行）
+- 平均100リクエストに1回なので負荷分散
+- 1日以上古いキャッシュは確実に削除される
+
 ## SOCKS5 Proxy Support
 
 APIサーバーはオプションでSOCKS5プロキシ経由でリレーに接続可能。

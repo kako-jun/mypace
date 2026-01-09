@@ -15,6 +15,11 @@ CREATE INDEX IF NOT EXISTS idx_events_kind ON events(kind);
 CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_events_cached_at ON events(cached_at);
 
+-- Migration: Add has_mypace_tag column for filtering (run manually if table exists)
+-- ALTER TABLE events ADD COLUMN has_mypace_tag INTEGER DEFAULT 0;
+-- CREATE INDEX IF NOT EXISTS idx_events_has_mypace_tag ON events(has_mypace_tag);
+-- UPDATE events SET has_mypace_tag = 1 WHERE tags LIKE '%"t","mypace"%';
+
 -- Profiles cache table
 CREATE TABLE IF NOT EXISTS profiles (
   pubkey TEXT PRIMARY KEY,

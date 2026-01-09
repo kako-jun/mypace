@@ -16,6 +16,8 @@ export const RELAYS = [
 ]
 
 export const CACHE_TTL_MS = 5 * 60 * 1000 // 5分
+export const CACHE_CLEANUP_AGE_MS = 24 * 60 * 60 * 1000 // 1日（物理削除）
+export const CACHE_CLEANUP_PROBABILITY = 0.01 // 1%の確率でクリーンアップ
 
 // Smart filter: Ad-related tags
 export const AD_TAGS = [

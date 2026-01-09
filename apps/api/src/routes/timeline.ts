@@ -1,8 +1,8 @@
 import { Hono } from 'hono'
 import type { Filter } from 'nostr-tools'
 import type { Bindings } from '../types'
-import { MYPACE_TAG, RELAYS, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC } from '../constants'
-import { getCachedEvents, cacheEvents } from '../services/cache'
+import { MYPACE_TAG, RELAYS, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC, CACHE_CLEANUP_PROBABILITY } from '../constants'
+import { getCachedEvents, cacheEvents, cleanupOldCache } from '../services/cache'
 import { filterByLanguage } from '../filters/language'
 import {
   filterBySmartFilters,
@@ -74,14 +74,11 @@ timeline.get('/', async (c) => {
       since,
       until,
       limit: limit * fetchMultiplier, // フィルタリング後に足りなくならないよう多めに取得
+      mypaceOnly: !showAll, // mypaceフィルタONの場合はhas_mypace_tag=1でフィルタ
     })
 
     if (cached.length > 0) {
       let events = cached
-
-      if (!showAll) {
-        events = events.filter((e) => e.tags.some((t: string[]) => t[0] === 't' && t[1] === MYPACE_TAG))
-      }
 
       // スマートフィルタ適用
       events = filterBySmartFilters(events, hideAds, hideNSFW)
@@ -145,6 +142,10 @@ timeline.get('/', async (c) => {
     // waitUntilでレスポンス返却後にバックグラウンドでキャッシュ保存
     if (c.executionCtx?.waitUntil) {
       c.executionCtx.waitUntil(cacheEvents(db, events))
+      // 1%の確率で古いキャッシュをクリーンアップ
+      if (Math.random() < CACHE_CLEANUP_PROBABILITY) {
+        c.executionCtx.waitUntil(cleanupOldCache(db))
+      }
     } else {
       void cacheEvents(db, events)
     }

@@ -1,7 +1,12 @@
 import type { D1Database } from '@cloudflare/workers-types'
 import type { Event } from 'nostr-tools'
-import { CACHE_TTL_MS } from '../constants'
+import { CACHE_TTL_MS, CACHE_CLEANUP_AGE_MS, MYPACE_TAG } from '../constants'
 import type { CachedEvent, CachedProfile } from '../types'
+
+// イベントがmypaceタグを持つかチェック
+function hasMypaceTag(event: Event): boolean {
+  return event.tags.some((t) => t[0] === 't' && t[1] === MYPACE_TAG)
+}
 
 // キャッシュからイベントを取得
 export async function getCachedEvents(
@@ -11,6 +16,7 @@ export async function getCachedEvents(
     since?: number
     until?: number
     limit: number
+    mypaceOnly?: boolean
   }
 ): Promise<CachedEvent[]> {
   const cacheThreshold = Date.now() - CACHE_TTL_MS
@@ -22,6 +28,11 @@ export async function getCachedEvents(
     WHERE kind IN (${kindPlaceholders}) AND created_at > ? AND cached_at > ?
   `
   const params: (number | string)[] = [...options.kinds, options.since || 0, cacheThreshold]
+
+  // mypaceOnlyの場合はhas_mypace_tag=1でフィルタ
+  if (options.mypaceOnly) {
+    query += ` AND has_mypace_tag = 1`
+  }
 
   if (options.until && options.until > 0) {
     query += ` AND created_at < ?`
@@ -52,11 +63,12 @@ export async function cacheEvents(db: D1Database, events: Event[]): Promise<void
   const now = Date.now()
   for (const event of events) {
     try {
+      const hasMypace = hasMypaceTag(event) ? 1 : 0
       await db
         .prepare(
           `
-        INSERT OR REPLACE INTO events (id, pubkey, created_at, kind, tags, content, sig, cached_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO events (id, pubkey, created_at, kind, tags, content, sig, cached_at, has_mypace_tag)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `
         )
         .bind(
@@ -67,7 +79,8 @@ export async function cacheEvents(db: D1Database, events: Event[]): Promise<void
           JSON.stringify(event.tags),
           event.content,
           event.sig,
-          now
+          now,
+          hasMypace
         )
         .run()
     } catch (e) {
@@ -100,6 +113,16 @@ export async function deleteEventsFromCache(db: D1Database, eventIds: string[]):
       .run()
   } catch (e) {
     console.error('Cache delete error:', e)
+  }
+}
+
+// 古いキャッシュを削除（1日以上古いもの）
+export async function cleanupOldCache(db: D1Database): Promise<void> {
+  const threshold = Date.now() - CACHE_CLEANUP_AGE_MS
+  try {
+    await db.prepare('DELETE FROM events WHERE cached_at < ?').bind(threshold).run()
+  } catch (e) {
+    console.error('Cache cleanup error:', e)
   }
 }
 
