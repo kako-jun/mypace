@@ -1,22 +1,22 @@
-# Development
+# 開発環境
 
-## Prerequisites
+## 必要条件
 
 - Node.js 20+
 - pnpm 9+
 
-## Setup
+## セットアップ
 
 ```bash
-# Install dependencies
+# 依存関係のインストール
 pnpm install
 
-# Start development servers
-pnpm dev        # Frontend (localhost:5173)
+# 開発サーバー起動
+pnpm dev        # フロントエンド (localhost:5173)
 pnpm dev:api    # API (localhost:8787)
 ```
 
-## Project Structure
+## プロジェクト構成
 
 ```
 mypace/
@@ -44,7 +44,7 @@ mypace/
 └── package.json             # ルートスクリプト
 ```
 
-## Adding New Pages (React Router)
+## 新しいページの追加 (React Router)
 
 `apps/web/src/App.tsx` にルートを追加:
 
@@ -54,7 +54,7 @@ import { NewPage } from './pages/NewPage'
 <Route path="/new" element={<NewPage />} />
 ```
 
-## Adding New API Endpoints
+## 新しいAPIエンドポイントの追加
 
 `apps/api/src/index.ts` にエンドポイントを追加:
 
@@ -66,7 +66,7 @@ app.get('/api/new-endpoint', async (c) => {
 })
 ```
 
-## API Client
+## APIクライアント
 
 フロントエンドからAPIを呼び出す場合は `lib/api.ts` を使用:
 
@@ -80,7 +80,7 @@ const { events, source } = await fetchTimeline(50)
 await publishEvent(signedEvent)
 ```
 
-## Nostr Event Signing
+## Nostrイベントの署名
 
 署名は常にクライアント側で行う:
 
@@ -97,9 +97,9 @@ await publishEvent(event)
 
 NIP-07 (ブラウザ拡張) がある場合は自動的にそちらで署名。
 
-## Environment Variables
+## 環境変数
 
-### Frontend (apps/web)
+### フロントエンド (apps/web)
 
 `.env` ファイル:
 
@@ -118,11 +118,11 @@ SOCKS5_PROXY = "socks5://localhost:1080"  # Optional
 
 ## TypeScript
 
-- **Frontend**: React + DOM types
+- **フロントエンド**: React + DOM types
 - **API**: Cloudflare Workers types
 - 型定義は各パッケージの `types/` または `src/types/` に配置
 
-## Code Style
+## コードスタイル
 
 - ESLint + Prettier
 - セミコロンなし

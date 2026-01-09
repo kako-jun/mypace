@@ -1,8 +1,8 @@
-# Intent Share (MY PACEでシェア)
+# Intent Share（MY PACEでシェア）
 
 外部サイトからMY PACEの投稿画面にテキストを渡す機能。
 
-## Overview
+## 概要
 
 XやFacebookの「シェア」ボタンと同様に、外部サイトから「MY PACEでシェア」リンクを設置できる。リンクをクリックするとMY PACEが開き、投稿エディタにテキストがセットされた状態になる。
 
@@ -12,16 +12,16 @@ XやFacebookの「シェア」ボタンと同様に、外部サイトから「MY
 https://mypace.llll-ll.com/intent/post?text=シェアしたいテキスト
 ```
 
-### Parameters
+### パラメータ
 
 | パラメータ | 必須 | 説明 |
 |-----------|------|------|
-| `text` | Yes | 投稿本文にセットするテキスト（URLエンコード必須） |
+| `text` | ○ | 投稿本文にセットするテキスト（URLエンコード必須） |
 
 - URLを含めたい場合は`text`パラメータ内に含める
 - 文字数が上限を超える場合は末尾をカット
 
-## Usage
+## 使用方法
 
 外部サイトがシェアボタンを設置する場合、`text`にページタイトルとURLを含める。
 
@@ -65,16 +65,16 @@ shareToMypace('この記事おすすめ！')
 // → "この記事おすすめ！ https://example.com/article" が投稿欄にセットされる
 ```
 
-## Behavior
+## 動作
 
 1. Intent URLにアクセス
 2. プロフィール未設定の場合 → ProfileSetupが表示される → 名前設定後に投稿エディタ
 3. プロフィール設定済みの場合 → 投稿エディタに`text`の内容がセットされた状態で表示
 4. ユーザーは内容を編集して投稿できる
 
-## Implementation
+## 実装
 
-### Routes
+### ルート
 
 `/intent/post` を `HomePage` にマッピング:
 
@@ -83,7 +83,7 @@ shareToMypace('この記事おすすめ！')
 <Route path="/intent/post" element={<HomePage />} />
 ```
 
-### Query Parameter Handling
+### クエリパラメータ処理
 
 `HomePage` で `text` パラメータを処理:
 
@@ -99,6 +99,6 @@ if (shareText) {
 }
 ```
 
-## Related
+## 関連
 
-- [share.md](./share.md) - 投稿のシェアメニュー（投稿をURLやMarkdownでシェアする機能）
+- 投稿のシェアメニュー（投稿をURLやMarkdownでシェアする機能）→ [ユーザーガイド: 共有](../../user-guide/features/share.md)

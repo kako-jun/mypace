@@ -1,7 +1,9 @@
-# MyPace独自拡張
+# MY PACE独自拡張（技術仕様）
 
-MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装しています。
+MY PACEはNostrプロトコルの拡張性を活用し、独自機能を実装しています。
 これらの拡張はNostrのタグ構造に従っており、他のクライアントに影響を与えません。
+
+> **ユーザー向けドキュメント**: 各機能の使い方は [ユーザーガイド](../../user-guide/) を参照してください。
 
 ## 設計思想
 
@@ -16,9 +18,8 @@ MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装し
 
 | タグ名 | ドキュメント | 概要 |
 |--------|-------------|------|
-| `aurora` | [aurora.md](./aurora.md) | 投稿カードの4隅グラデーション |
-| `teaser` | [teaser.md](./teaser.md) | 280文字超の投稿を折りたたみ |
 | `stella` | [stella.md](./stella.md) | 1投稿に最大10ステラ |
+| `pinned` | [pinned-post.md](./pinned-post.md) | プロフィール先頭固定投稿 |
 
 ### プロフィール拡張
 
@@ -26,39 +27,33 @@ MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装し
 |-----------|-------------|------|
 | `websites` | [websites.md](./websites.md) | 複数サイトURLをプロフィールに登録 |
 
-### コンテンツ構文拡張
-
-| 拡張 | ドキュメント | 概要 |
-|------|-------------|------|
-| アライメント構文 | [alignment-syntax.md](./alignment-syntax.md) | `<<` `>>` `><` `<>` で配置指定 |
-| Font構文 | [font-syntax.md](./font-syntax.md) | `<font>` 風の色・サイズ指定 |
-
 ### API
 
 | 拡張 | ドキュメント | 概要 |
 |------|-------------|------|
 | Webhook API | [webhook-api.md](./webhook-api.md) | 外部からの投稿API |
+| Dynamic OGP | [dynamic-ogp.md](./dynamic-ogp.md) | 動的OGP生成 |
+| Intent Share | [intent-share.md](./intent-share.md) | 外部サイトから投稿画面へテキスト渡し |
 
-### クライアント機能
+### インフラ
 
 | 機能 | ドキュメント | 概要 |
 |------|-------------|------|
-| Sticker | [sticker.md](./sticker.md) | 投稿カードにシール画像を自由配置 |
-| Super Mention | [super-mention.md](./super-mention.md) | @@構文で万物への言及（Wikidata連携） |
-| Location | [location.md](./location.md) | NIP-52準拠のgeohash座標タグ |
-| Drawing | [drawing.md](./drawing.md) | Splatoon風お絵かき（42秒制限） |
-| Voice | [voice.md](./voice.md) | 押し続けて録音（10秒制限） |
-| Image Crop | [image-crop.md](./image-crop.md) | アップロード前の画像トリミング |
-| Upload History | [upload-history.md](./upload-history.md) | nostr.build削除支援の履歴管理 |
-| Share Menu | [share.md](./share.md) | URL/Markdown共有・ダウンロード |
-| File Import | [file-import.md](./file-import.md) | ローカルファイルからエディタに読み込み |
-| 設定エクスポート | [settings-export.md](./settings-export.md) | テーマ・フィルタ設定の保存・復元 |
-| Kind Filter | [kind-filter.md](./kind-filter.md) | SNS/ブログの表示切替 |
-| Text Filter | [text-filter.md](./text-filter.md) | OK/NGワード・タグでフィルタ |
-| Filter Presets | [filter-presets.md](./filter-presets.md) | フィルタ設定の保存・切替 |
-| Smart Filter | [smart-filter.md](./smart-filter.md) | 広告/NSFWのサーバーサイドフィルタ |
-| Mute List | [mute-list.md](./mute-list.md) | 特定ユーザーのミュート |
-| User Serial | [user-serial.md](./user-serial.md) | 参加順の通し番号（Thanks #N） |
+| 404 | [404.md](./404.md) | 存在しないルートのフォールバック |
+| Embed | [embed.md](./embed.md) | Web Components埋め込みカード |
+| User Serial | [user-serial.md](./user-serial.md) | 参加順の通し番号 |
+
+### フィルタ設計
+
+| 機能 | ドキュメント | 概要 |
+|------|-------------|------|
+| Filter Overview | [filter-overview.md](./filter-overview.md) | フィルタ機能の全体設計 |
+
+### 廃止機能
+
+| 機能 | ドキュメント | 概要 |
+|------|-------------|------|
+| Teaser | [teaser.md](./teaser.md) | 280文字超の折りたたみ（廃止） |
 
 ## データフロー
 
@@ -69,7 +64,7 @@ MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装し
     │ 2. 秘密鍵で署名
     │
     ▼
-[MyPace API] (/api/publish)
+[MY PACE API] (/api/publish)
     │
     │ 3. 署名検証なし（リレーが行う）
     │ 4. そのまま転送
@@ -88,7 +83,7 @@ MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装し
 
 ## 外部ツールとの連携
 
-署名済みイベントを作成できるツールであれば、MyPace APIを通じて投稿可能です。
+署名済みイベントを作成できるツールであれば、MY PACE APIを通じて投稿可能です。
 
 - **nostr-tools** (JavaScript/TypeScript)
 - **python-nostr** (Python)
@@ -96,3 +91,7 @@ MyPaceはNostrプロトコルの拡張性を活用し、独自機能を実装し
 - **その他のNostrライブラリ**
 
 詳細は [webhook-api.md](./webhook-api.md) を参照。
+
+---
+
+[← 開発者向けドキュメントに戻る](../index.md)

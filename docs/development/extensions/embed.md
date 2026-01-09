@@ -1,50 +1,50 @@
-# Embed Card (Web Components)
+# 埋め込みカード（Web Components）
 
-Embed MYPACE post cards on external websites.
+外部サイトにMY PACEの投稿カードを埋め込む機能。
 
-## Overview
+## 概要
 
-Provides a `<mypace-card>` custom element that displays a post card on any website. Uses iframe internally to reuse existing React components, ensuring the embedded card looks identical to cards on MYPACE.
+`<mypace-card>` カスタム要素を提供し、任意のウェブサイトに投稿カードを表示できる。内部的にはiframeを使用し、既存のReactコンポーネントを再利用するため、MY PACE上のカードと同一の見た目になる。
 
-## Usage
+## 使用方法
 
 ```html
-<!-- Load the script -->
+<!-- スクリプトを読み込み -->
 <script src="https://mypace.llll-ll.com/embed.js"></script>
 
-<!-- Specific post by note ID -->
+<!-- 特定の投稿をノートIDで指定 -->
 <mypace-card note="note1abc..."></mypace-card>
 
-<!-- Latest post -->
+<!-- 最新の投稿 -->
 <mypace-card latest></mypace-card>
 
-<!-- Latest post from specific user -->
+<!-- 特定ユーザーの最新投稿 -->
 <mypace-card latest pubkey="npub1..."></mypace-card>
 ```
 
-## Attributes
+## 属性
 
-| Attribute | Description |
-|-----------|-------------|
-| `note` | Note ID (note1... or hex) to display |
-| `latest` | Show the latest post (no value needed) |
-| `pubkey` | User pubkey (npub1... or hex) to filter latest post |
-| `theme` | `light` or `dark` (default: `light`) |
+| 属性 | 説明 |
+|------|------|
+| `note` | 表示するノートID（note1... または hex） |
+| `latest` | 最新の投稿を表示（値不要） |
+| `pubkey` | 最新投稿をフィルタするユーザー公開鍵（npub1... または hex） |
+| `theme` | `light` または `dark`（デフォルト: `light`） |
 
-## Styling
+## スタイリング
 
-Default: `max-width: 500px; display: block;`
+デフォルト: `max-width: 500px; display: block;`
 
-Override with `style` attribute:
+`style` 属性で上書き可能:
 ```html
 <mypace-card note="..." style="max-width: 400px;"></mypace-card>
 <mypace-card note="..." style="max-width: 100%;"></mypace-card>
 ```
 
-## Architecture
+## アーキテクチャ
 
 ```
-External Site
+外部サイト
     │
     ├─ <script src="https://mypace.llll-ll.com/embed.js">
     │
@@ -58,34 +58,34 @@ External Site
        EmbedPage.tsx (React)
            │
            ▼
-       Existing components: PostHeader, PostContent, PostStickers, etc.
+       既存コンポーネント: PostHeader, PostContent, PostStickers など
 ```
 
-## Card Features
+## カードの表示内容
 
-The embedded card displays:
-- Author avatar with black-bordered white text name
-- Post content with super-mentions
-- Stickers (positioned as in original)
-- Corner gradient colors (mypace theme)
-- Timestamp
+埋め込みカードに表示されるもの:
+- アバター（黒縁白文字の名前）
+- 投稿本文（スーパーメンション含む）
+- ステッカー（オリジナルと同じ位置）
+- 4隅グラデーション（mypaceテーマ）
+- タイムスタンプ
 
-**Not included:**
-- Reaction buttons (like, reply, repost)
-- Edit/delete buttons
+**含まれないもの:**
+- リアクションボタン（いいね、返信、リポスト）
+- 編集・削除ボタン
 
-**Click behavior:**
-Clicking anywhere on the card opens the full post on mypace.llll-ll.com in a new tab.
+**クリック動作:**
+カードのどこをクリックしても、mypace.llll-ll.com の投稿詳細ページが新しいタブで開く。
 
-## Implementation
+## 実装
 
-### Files
+### ファイル
 
-| File | Location | Role |
-|------|----------|------|
-| `embed.js` | `apps/web/public/` | Web Component (generates iframe) |
-| `EmbedPage.tsx` | `apps/web/src/pages/` | Embed page using existing components |
-| `embed-card.css` | `apps/web/src/styles/components/` | Embed-specific styles |
+| ファイル | 場所 | 役割 |
+|----------|------|------|
+| `embed.js` | `apps/web/public/` | Web Component（iframe生成） |
+| `EmbedPage.tsx` | `apps/web/src/pages/` | 既存コンポーネントを使用した埋め込みページ |
+| `embed-card.css` | `apps/web/src/styles/components/` | 埋め込み専用スタイル |
 
 ### Web Component (embed.js)
 
@@ -96,7 +96,7 @@ class MypaceCard extends HTMLElement {
     const isLatest = this.hasAttribute('latest')
     const theme = this.getAttribute('theme') || 'light'
 
-    // Default styles (can be overridden)
+    // デフォルトスタイル（上書き可能）
     if (!this.style.display) this.style.display = 'block'
     if (!this.style.maxWidth) this.style.maxWidth = '500px'
 
@@ -109,28 +109,24 @@ class MypaceCard extends HTMLElement {
     iframe.style.cssText = 'border:none; width:100%; min-height:200px;'
     this.appendChild(iframe)
 
-    // Height auto-adjusts via postMessage from iframe
+    // 高さはiframeからのpostMessageで自動調整
   }
 }
 
 customElements.define('mypace-card', MypaceCard)
 ```
 
-### Routing
+### ルーティング
 
 ```
 /embed/:noteId → EmbedPage
 ```
 
-## Styling
+## スタイル
 
-The embed page:
-- Uses existing post-card.css
-- Card width follows outer container (no internal max-width constraint)
-- Removes hover effects (no drop-shadow on hover)
-- Entire card is clickable
-- Supports light/dark theme via query parameter
-
-## Related
-
-- [share.md](./share.md) - Share menu functionality
+埋め込みページ:
+- 既存のpost-card.cssを使用
+- カード幅は外側のコンテナに従う（内部のmax-width制約なし）
+- ホバーエフェクトを削除（ホバー時のdrop-shadowなし）
+- カード全体がクリック可能
+- クエリパラメータでライト/ダークテーマをサポート

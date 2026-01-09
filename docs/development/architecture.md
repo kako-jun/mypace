@@ -1,6 +1,6 @@
-# Architecture
+# アーキテクチャ
 
-## Overview
+## 概要
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -50,7 +50,7 @@
                     └─────────────┘
 ```
 
-## Packages
+## パッケージ
 
 ### apps/web (React SPA)
 
@@ -172,16 +172,16 @@ src/
 └── index.ts             # 全APIエンドポイント
 ```
 
-## Data Flow
+## データフロー
 
-### 読み取り (Client → API → Relay)
+### 読み取り (クライアント → API → リレー)
 
 1. フロントエンドが `/api/timeline` 等をfetch
 2. APIがD1キャッシュをチェック
 3. キャッシュミス → SOCKS5プロキシ経由でリレーに接続
 4. イベント取得 → D1にキャッシュ → JSONで返却
 
-### 書き込み (Client → API → Relay)
+### 書き込み (クライアント → API → リレー)
 
 1. ユーザーがコンテンツを入力
 2. クライアントでNostrイベント(kind:1等)を生成
@@ -191,9 +191,9 @@ src/
 
 **重要**: 秘密鍵はサーバーに送信されない。署名は常にクライアント側で行う。
 
-## API Endpoints
+## APIエンドポイント
 
-| Method | Endpoint | Description |
+| メソッド | エンドポイント | 説明 |
 |--------|----------|-------------|
 | GET | /api/timeline | mypaceタグ付き投稿一覧 |
 | GET | /api/events/:id | 単一イベント取得 |
@@ -207,11 +207,11 @@ src/
 | POST | /api/publish | 署名済みイベントをリレーに投稿 |
 | GET | /health | ヘルスチェック |
 
-### Timeline Pagination
+### タイムラインページネーション
 
 `/api/timeline` と `/api/user/:pubkey/events` は以下のクエリパラメータでページネーションをサポート:
 
-| Parameter | Description |
+| パラメータ | 説明 |
 |-----------|-------------|
 | limit | 取得件数（最大100、デフォルト50） |
 | since | この時刻より新しい投稿を取得（Unix timestamp） |
@@ -223,15 +223,15 @@ src/
 - 過去読み込み: `?limit=50&until=1234567890`
 - ギャップ埋め: `?limit=50&since=1234567800&until=1234567890`
 
-## Cloudflare Services
+## Cloudflareサービス
 
-| Service | Package | Purpose |
+| サービス | パッケージ | 用途 |
 |---------|---------|---------|
 | Pages | web | 静的SPAホスティング |
 | Workers | api | APIサーバー |
 | D1 | api | SQLiteキャッシュ |
 
-## D1 Cache (Server-Side)
+## D1キャッシュ（サーバーサイド）
 
 ### 概要
 
@@ -277,7 +277,7 @@ if (Math.random() < 0.01) {
 - 平均100リクエストに1回なので負荷分散
 - 1日以上古いキャッシュは確実に削除される
 
-## SOCKS5 Proxy Support
+## SOCKS5プロキシサポート
 
 APIサーバーはオプションでSOCKS5プロキシ経由でリレーに接続可能。
 `wrangler.toml` の `SOCKS5_PROXY` 環境変数で設定。
@@ -287,7 +287,7 @@ APIサーバーはオプションでSOCKS5プロキシ経由でリレーに接�
 SOCKS5_PROXY = "socks5://localhost:1080"
 ```
 
-## Component Hierarchy
+## コンポーネント階層
 
 ```
 App.tsx (react-router)
@@ -319,7 +319,7 @@ App.tsx (react-router)
     └── ...
 ```
 
-## PWA Support
+## PWAサポート
 
 vite-plugin-pwaによるPWA対応:
 
@@ -329,7 +329,7 @@ vite-plugin-pwaによるPWA対応:
   - Google Fontsを1年間キャッシュ
 - **インストール**: ホーム画面追加でネイティブアプリ風に起動
 
-## Modal Navigation
+## モーダルナビゲーション
 
 タイムラインからの投稿詳細表示にはモーダルパターンを採用:
 
@@ -341,7 +341,7 @@ vite-plugin-pwaによるPWA対応:
 
 直接 `/post/:id` にアクセスした場合は通常のフルページ表示。
 
-## Client-Side Caching
+## クライアントサイドキャッシュ
 
 `sessionStorage` を使用したクライアント側キャッシュ:
 
@@ -357,7 +357,7 @@ vite-plugin-pwaによるPWA対応:
 **注意**: `getCachedPost` / `getCachedProfile` は読み取り時にキャッシュを削除しない。
 これはReact 18 StrictModeでエフェクトが2回実行されても問題なく動作するため。
 
-## localStorage Structure
+## localStorageの構造
 
 全設定は単一の `mypace` キーで管理:
 
