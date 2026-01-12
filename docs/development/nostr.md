@@ -241,24 +241,38 @@ const nip05 = profile.nip05  // "user@domain.com"
 - プロフィールページでチェックマーク表示
 - キャッシュして再検証の負荷を軽減
 
-## NIP-45: Event Counts
+## ユーザー投稿数の取得
 
-ユーザーの投稿数を取得するために NIP-45 COUNT を使用:
+ユーザーの投稿数を取得するために [Primal](https://primal.net) のキャッシュサービスを使用:
 
 ```typescript
-// WebSocket で COUNT リクエストを送信
-ws.send(JSON.stringify(['COUNT', subId, {
-  kinds: [1, 30023],  // kind:1 (Text Note) + kind:30023 (Long-form)
-  authors: [pubkey]
+// Primal cache WebSocket API
+ws.send(JSON.stringify(['REQ', 'stats', {
+  cache: ['user_profile', { pubkey }]
 }]))
 
-// リレーからの応答
-// ['COUNT', subId, { count: 123 }]
+// kind 10000105 イベントで統計を返す
+// { note_count: 240, long_form_note_count: 0, ... }
 ```
 
-- `relay.nostr.band` が NIP-45 をサポート
-- プロフィールページで総投稿数を表示
-- フィルタ状態に関係なく、常にユーザーの総投稿数を取得
+### なぜ Primal を使用するか
+
+NIP-45 (COUNT) は標準プロトコルだが、2025年1月時点で主要リレーがサポートしていない:
+
+| リレー | NIP-45対応 |
+|--------|-----------|
+| relay.nostr.band | ❌ (502エラー) |
+| relay.damus.io | ❌ ("unknown cmd") |
+| nos.lol | ❌ ("unknown cmd") |
+| nostr.wine | ❌ ("Invalid enum value") |
+| purplepag.es | ✅ (ただしプロフィール専用、投稿データなし) |
+
+Primalは全Nostrリレーからイベントを収集・集計し、`user_profile` エンドポイントで統計を提供:
+- `note_count`: 短文投稿数
+- `long_form_note_count`: 長文投稿数
+- `followers_count`, `follows_count` など
+
+**注意**: MYPACE独自のステラ（いいね）数はPrimalで取得不可。標準タグを使用していないため。
 
 ## NIP-19: Bech32 Entity Encoding
 
