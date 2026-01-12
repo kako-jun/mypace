@@ -450,3 +450,15 @@ export async function deleteUploadFromHistory(pubkey: string, url: string): Prom
     return false
   }
 }
+
+// User posts count (NIP-45)
+export async function fetchUserPostsCount(pubkey: string): Promise<number | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/user/${pubkey}/count`)
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.count
+  } catch {
+    return null
+  }
+}

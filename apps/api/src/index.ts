@@ -9,6 +9,7 @@ import {
   replies,
   reposts,
   userEvents,
+  userCount,
   publish,
   ogp,
   tweet,
@@ -42,6 +43,7 @@ app.route('/api/reactions', reactions)
 app.route('/api/replies', replies)
 app.route('/api/reposts', reposts)
 app.route('/api/user', userEvents)
+app.route('/api/user', userCount)
 app.route('/api/publish', publish)
 app.route('/api/ogp', ogp)
 app.route('/api/tweet', tweet)

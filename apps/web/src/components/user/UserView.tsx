@@ -7,6 +7,7 @@ import {
   unpinPost,
   fetchEvent,
   fetchUserSerial,
+  fetchUserPostsCount,
   type UserSerialData,
 } from '../../lib/api'
 import { getEventThemeColors } from '../../lib/nostr/events'
@@ -81,6 +82,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const [pinnedEventId, setPinnedEventId] = useState<string | null>(null)
   const [pinnedEvent, setPinnedEvent] = useState<Event | null>(null)
   const [serialData, setSerialData] = useState<UserSerialData | null>(null)
+  const [postsCount, setPostsCount] = useState<number | null>(null)
   const [, setThemeVersion] = useState(0)
   const [searchQuery, setSearchQuery] = useState<string[]>([])
   const [searchTags, setSearchTags] = useState<string[]>([])
@@ -160,6 +162,15 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     }
   }, [pubkey])
 
+  const loadPostsCount = useCallback(async () => {
+    try {
+      const count = await fetchUserPostsCount(pubkey)
+      setPostsCount(count)
+    } catch (err) {
+      console.error('Failed to fetch posts count:', err)
+    }
+  }, [pubkey])
+
   const handlePin = useCallback(
     async (event: Event) => {
       const success = await setPinnedPost(pubkey, event.id)
@@ -192,8 +203,9 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     loadProfile()
     loadPinnedPost()
     loadSerial()
+    loadPostsCount()
     return () => clearImageClickHandler()
-  }, [pubkey, loadPinnedPost, loadSerial])
+  }, [pubkey, loadPinnedPost, loadSerial, loadPostsCount])
 
   useEffect(() => {
     if (profile?.nip05) {
@@ -308,9 +320,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
           isOwnProfile={isOwnProfile}
           nip05Verified={nip05Verified}
           npubCopied={npubCopied}
-          postsCount={items.length}
-          hasMore={hasMore}
-          isFiltered={searchQuery.length > 0 || searchTags.length > 0}
+          postsCount={postsCount}
           serialData={serialData}
           onCopyNpub={handleCopyNpub}
           onEditClick={() => setEditMode(true)}

@@ -241,6 +241,25 @@ const nip05 = profile.nip05  // "user@domain.com"
 - プロフィールページでチェックマーク表示
 - キャッシュして再検証の負荷を軽減
 
+## NIP-45: Event Counts
+
+ユーザーの投稿数を取得するために NIP-45 COUNT を使用:
+
+```typescript
+// WebSocket で COUNT リクエストを送信
+ws.send(JSON.stringify(['COUNT', subId, {
+  kinds: [1, 30023],  // kind:1 (Text Note) + kind:30023 (Long-form)
+  authors: [pubkey]
+}]))
+
+// リレーからの応答
+// ['COUNT', subId, { count: 123 }]
+```
+
+- `relay.nostr.band` が NIP-45 をサポート
+- プロフィールページで総投稿数を表示
+- フィルタ状態に関係なく、常にユーザーの総投稿数を取得
+
 ## NIP-19: Bech32 Entity Encoding
 
 投稿内の `nostr:` URIをパースしてリンク表示:

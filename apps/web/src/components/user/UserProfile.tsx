@@ -15,9 +15,7 @@ interface UserProfileProps {
   isOwnProfile: boolean
   nip05Verified: boolean | null
   npubCopied: boolean
-  postsCount: number
-  hasMore: boolean
-  isFiltered: boolean
+  postsCount: number | null
   serialData: UserSerialData | null
   onCopyNpub: () => void
   onEditClick: () => void
@@ -33,8 +31,6 @@ export function UserProfile({
   nip05Verified,
   npubCopied,
   postsCount,
-  hasMore,
-  isFiltered,
   serialData,
   onCopyNpub,
   onEditClick,
@@ -110,14 +106,7 @@ export function UserProfile({
         </div>
 
         <div className="user-stats">
-          {isFiltered ? (
-            <span>{postsCount} posts (filtered)</span>
-          ) : (
-            <span>
-              {postsCount}
-              {hasMore ? '+' : ''} posts
-            </span>
-          )}
+          <span>{postsCount !== null ? postsCount : '...'} posts</span>
         </div>
       </div>
     </div>
