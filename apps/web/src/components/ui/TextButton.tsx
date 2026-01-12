@@ -1,8 +1,8 @@
-import { forwardRef, type ReactNode } from 'react'
+import { forwardRef, type ReactNode, type MouseEvent } from 'react'
 
 interface Props {
   children: ReactNode
-  onClick?: () => void
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void
   disabled?: boolean
   type?: 'button' | 'submit'
   variant?: 'default' | 'primary' | 'warning'

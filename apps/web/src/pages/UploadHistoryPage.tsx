@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchUploadHistory, deleteUploadFromHistory, deleteFromNostrBuild, type UploadHistoryItem } from '../lib/api'
 import { copyToClipboard } from '../lib/utils'
 import { getCurrentPubkey } from '../lib/nostr/events'
 import { BackButton, CopyButton, TextButton, CloseButton, LightBox, triggerLightBox, Icon } from '../components/ui'
+import DeleteConfirmDialog from '../components/post/DeleteConfirmDialog'
 import { formatTimestamp, getStoredThemeColors, isDarkColor } from '../lib/nostr/events'
 import { TIMEOUTS } from '../lib/constants'
 import '../styles/pages/upload-history.css'
@@ -25,12 +26,28 @@ export function UploadHistoryPage() {
   const navigate = useNavigate()
   const [history, setHistory] = useState<UploadHistoryItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [deletePopupPosition, setDeletePopupPosition] = useState<{ top: number; left: number } | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null)
   const [pubkey, setPubkey] = useState<string>('')
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
   const textClass = useTextClass()
+
+  const handleDeleteCancel = useCallback(() => {
+    setConfirmDelete(null)
+    setDeletePopupPosition(null)
+  }, [])
+
+  // Close popup on scroll
+  useEffect(() => {
+    if (confirmDelete) {
+      const handleScroll = () => handleDeleteCancel()
+      window.addEventListener('scroll', handleScroll, { passive: true })
+      return () => window.removeEventListener('scroll', handleScroll)
+    }
+  }, [confirmDelete, handleDeleteCancel])
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -62,7 +79,22 @@ export function UploadHistoryPage() {
     if (success) {
       setHistory(history.filter((item) => item.url !== url))
     }
-    setConfirmDelete(null)
+    setConfirmRemove(null)
+  }
+
+  const handleDeleteClick = (url: string, e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    setDeletePopupPosition({
+      top: rect.top,
+      left: rect.left + rect.width / 2,
+    })
+    setConfirmDelete(url)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!confirmDelete) return
+    handleDeleteCancel()
+    await handleDeleteFromNostrBuild(confirmDelete)
   }
 
   const handleDeleteFromNostrBuild = async (url: string) => {
@@ -119,7 +151,7 @@ export function UploadHistoryPage() {
         <div className="upload-history-list">
           {history.map((item) => (
             <div key={item.url} className="upload-history-item">
-              <CloseButton onClick={() => setConfirmDelete(item.url)} size={16} className="upload-history-remove-btn" />
+              <CloseButton onClick={() => setConfirmRemove(item.url)} size={16} className="upload-history-remove-btn" />
               <div
                 className={`upload-history-item-preview ${item.type === 'image' ? 'clickable' : ''}`}
                 onClick={item.type === 'image' ? () => triggerLightBox(item.url) : undefined}
@@ -153,7 +185,7 @@ export function UploadHistoryPage() {
               <div className="upload-history-item-actions">
                 <TextButton
                   variant="warning"
-                  onClick={() => handleDeleteFromNostrBuild(item.url)}
+                  onClick={(e) => handleDeleteClick(item.url, e)}
                   disabled={deleting === item.url}
                   title="Delete from nostr.build"
                 >
@@ -165,17 +197,17 @@ export function UploadHistoryPage() {
         </div>
       )}
 
-      {confirmDelete && (
+      {confirmRemove && (
         <>
-          <div className="upload-history-confirm-backdrop" onClick={() => setConfirmDelete(null)} />
+          <div className="upload-history-confirm-backdrop" onClick={() => setConfirmRemove(null)} />
           <div className="upload-history-confirm-dialog">
             <p>このURLを履歴から削除すると、nostr.buildからファイルを削除するための情報を失います。</p>
             <p className="upload-history-confirm-warning">本当に削除しますか？</p>
             <div className="upload-history-confirm-buttons">
-              <button className="upload-history-confirm-cancel" onClick={() => setConfirmDelete(null)}>
+              <button className="upload-history-confirm-cancel" onClick={() => setConfirmRemove(null)}>
                 Cancel
               </button>
-              <button className="upload-history-confirm-ok" onClick={() => handleRemoveFromHistory(confirmDelete)}>
+              <button className="upload-history-confirm-ok" onClick={() => handleRemoveFromHistory(confirmRemove)}>
                 Remove
               </button>
             </div>
@@ -183,6 +215,13 @@ export function UploadHistoryPage() {
         </>
       )}
       <LightBox />
+      {confirmDelete && deletePopupPosition && (
+        <DeleteConfirmDialog
+          position={deletePopupPosition}
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+        />
+      )}
     </div>
   )
 }
