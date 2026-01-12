@@ -54,9 +54,14 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
   }
 
   // Check if item matches all keywords (AND search)
-  const matchesAllKeywords = (item: { path: string; description?: string }, keywords: string[]): boolean => {
+  const matchesAllKeywords = (
+    item: { path: string; description?: string; aliases?: string[] },
+    keywords: string[]
+  ): boolean => {
     if (keywords.length === 0) return true
-    const searchText = `${item.path} ${item.description || ''}`.toLowerCase()
+    // Include aliases in search text for better matching (e.g., "Switch2" matches "Nintendo Switch 2")
+    const aliasText = item.aliases?.join(' ') || ''
+    const searchText = `${item.path} ${item.description || ''} ${aliasText}`.toLowerCase()
     return keywords.every((kw) => searchText.includes(kw))
   }
 
@@ -86,14 +91,13 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
 
     // Parse keywords for AND search
     const keywords = parseKeywords(query)
-    const firstKeyword = keywords[0] || query
 
     // Search with query
     setLoading(true)
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        // Search using first keyword for API efficiency
-        const historyResults = await getSuperMentionSuggestions(firstKeyword, undefined, 30)
+        // Search using full query for better results (e.g., "Nintendo Switch 2")
+        const historyResults = await getSuperMentionSuggestions(query, undefined, 30)
         const newItems: SuggestItem[] = []
 
         // Filter history results by all keywords (AND)
@@ -112,18 +116,19 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
           }
         }
 
-        // Search Wikidata and filter by all keywords (AND)
-        const wikidataResults = await searchWikidata(firstKeyword, 'ja')
+        // Search Wikidata using full query for better results
+        const wikidataResults = await searchWikidata(query, 'ja')
         const historyIds = new Set(historyResults.map((h) => h.wikidataId).filter(Boolean))
         for (const w of wikidataResults) {
           if (!historyIds.has(w.id)) {
-            const item = { path: w.label, description: w.description }
+            const item = { path: w.label, description: w.description, aliases: w.aliases }
             if (matchesAllKeywords(item, keywords)) {
               newItems.push({
                 type: 'wikidata',
                 id: w.id,
                 path: w.label,
                 description: w.description,
+                aliases: w.aliases,
               })
             }
           }
