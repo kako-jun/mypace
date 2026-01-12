@@ -18,6 +18,10 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
   const [imageSrc, setImageSrc] = useState<string | null>(null)
   const [imageLoaded, setImageLoaded] = useState(false)
 
+  // Store original filename to preserve it through async operations
+  const originalFilename = useRef(file.name)
+  const originalFileType = useRef(file.type)
+
   // Crop state
   const [crop, setCrop] = useState<Crop>()
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
@@ -181,17 +185,18 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
       }
     }
 
+    const fileType = originalFileType.current || 'image/png'
     canvas.toBlob(
       (blob) => {
         if (blob) {
-          const editedFile = new File([blob], file.name, { type: file.type || 'image/png' })
+          const editedFile = new File([blob], originalFilename.current, { type: fileType })
           onComplete(editedFile)
         }
       },
-      file.type || 'image/png',
+      fileType,
       0.95
     )
-  }, [completedCrop, stickers, file, onComplete])
+  }, [completedCrop, stickers, onComplete])
 
   // No stickers and no crop = use original
   const handleConfirmWrapper = useCallback(async () => {
