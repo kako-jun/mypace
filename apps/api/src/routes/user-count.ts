@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { Relay } from 'nostr-tools/relay'
 import type { Bindings } from '../types'
 import { KIND_NOTE, KIND_LONG_FORM } from '../constants'
 
@@ -7,67 +8,17 @@ const COUNT_RELAY = 'wss://relay.nostr.band'
 
 const userCount = new Hono<{ Bindings: Bindings }>()
 
-// Cloudflare Workers用 WebSocket でNIP-45 COUNTリクエストを送信
-async function fetchCount(pubkey: string, kinds: number[]): Promise<number | null> {
+// nostr-tools の Relay.count() を使用
+async function fetchCount(pubkey: string, kinds: number[]): Promise<{ count: number | null; error?: string }> {
+  let relay: Relay | null = null
   try {
-    // Cloudflare Workers の WebSocket API
-    const resp = await fetch(COUNT_RELAY, {
-      headers: {
-        Upgrade: 'websocket',
-      },
-    })
-
-    const ws = resp.webSocket
-    if (!ws) {
-      return null
-    }
-
-    ws.accept()
-
-    const subId = `count-${Date.now()}`
-
-    return new Promise((resolve) => {
-      let resolved = false
-
-      const timeout = setTimeout(() => {
-        if (!resolved) {
-          resolved = true
-          ws.close()
-          resolve(null)
-        }
-      }, 5000)
-
-      ws.addEventListener('message', (event) => {
-        try {
-          const data = JSON.parse(event.data as string)
-          if (data[0] === 'COUNT' && data[1] === subId && data[2]?.count !== undefined) {
-            if (!resolved) {
-              resolved = true
-              clearTimeout(timeout)
-              ws.close()
-              resolve(data[2].count)
-            }
-          }
-        } catch {
-          // ignore parse errors
-        }
-      })
-
-      ws.addEventListener('error', () => {
-        if (!resolved) {
-          resolved = true
-          clearTimeout(timeout)
-          ws.close()
-          resolve(null)
-        }
-      })
-
-      // COUNTリクエストを送信
-      const filter = { kinds, authors: [pubkey] }
-      ws.send(JSON.stringify(['COUNT', subId, filter]))
-    })
-  } catch {
-    return null
+    relay = await Relay.connect(COUNT_RELAY)
+    const count = await relay.count([{ kinds, authors: [pubkey] }], {})
+    return { count }
+  } catch (e) {
+    return { count: null, error: String(e) }
+  } finally {
+    relay?.close()
   }
 }
 
@@ -79,9 +30,9 @@ userCount.get('/:pubkey/count', async (c) => {
     return c.json({ error: 'Invalid pubkey' }, 400)
   }
 
-  const count = await fetchCount(pubkey, [KIND_NOTE, KIND_LONG_FORM])
+  const result = await fetchCount(pubkey, [KIND_NOTE, KIND_LONG_FORM])
 
-  return c.json({ count })
+  return c.json(result)
 })
 
 export default userCount
