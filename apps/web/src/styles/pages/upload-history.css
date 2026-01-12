@@ -85,51 +85,11 @@
 }
 
 .upload-history-item-filename {
-  font-size: 0.85rem;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* URL row with horizontal scroll */
-.upload-history-url-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 0.15rem;
-}
-
-.upload-history-url-scroll {
-  flex: 1;
-  min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-light) transparent;
-}
-
-.upload-history-url-scroll::-webkit-scrollbar {
-  height: 4px;
-}
-
-.upload-history-url-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.upload-history-url-scroll::-webkit-scrollbar-thumb {
-  background: var(--border-light);
-  border-radius: 2px;
-}
-
-.upload-history-url-text {
-  display: block;
-  font-size: 0.7rem;
-  font-family: var(--font-mono);
-  color: var(--text-muted);
-  white-space: nowrap;
-  padding: 2px 0;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-primary);
 }
 
 .upload-history-item-meta {

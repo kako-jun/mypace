@@ -164,11 +164,8 @@ export function UploadHistoryPage() {
               </div>
 
               <div className="upload-history-item-info">
-                <div className="upload-history-item-filename">{item.filename}</div>
-                <div className="upload-history-url-row">
-                  <div className="upload-history-url-scroll">
-                    <span className="upload-history-url-text">{item.url}</span>
-                  </div>
+                <div className="upload-history-item-filename">
+                  {item.filename}
                   <CopyButton
                     copied={copiedUrl === item.url}
                     onClick={() => handleCopyUrl(item.url)}
