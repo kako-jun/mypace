@@ -183,6 +183,24 @@ body.long-mode-active .drawing-picker-modal {
   gap: 0.35rem;
 }
 
+/* Fill buttons group */
+.drawing-fill-buttons {
+  display: flex;
+}
+
+.drawing-fill-buttons .drawing-action-button {
+  border-radius: 0;
+}
+
+.drawing-fill-buttons .drawing-action-button:first-child {
+  border-radius: 4px 0 0 4px;
+  border-right: none;
+}
+
+.drawing-fill-buttons .drawing-action-button:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
 .drawing-action-button {
   width: 32px;
   height: 32px;

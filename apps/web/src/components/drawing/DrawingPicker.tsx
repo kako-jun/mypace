@@ -112,19 +112,18 @@ export function DrawingPicker({ onEmbed, onAddSticker }: DrawingPickerProps) {
   }, [isTimerRunning, timeLeft])
 
   // Draw dot pattern (screentone/halftone effect)
+  // Use fillRect instead of arc to avoid anti-aliasing artifacts
   const drawDotPattern = useCallback((ctx: CanvasRenderingContext2D, fillColor: string) => {
     const DOT_SPACING = 4
-    const DOT_RADIUS = 1
+    const DOT_SIZE = 2
 
     ctx.fillStyle = fillColor
     let rowIndex = 0
-    for (let y = DOT_SPACING / 2; y < CANVAS_HEIGHT; y += DOT_SPACING * 0.866) {
+    for (let y = 1; y < CANVAS_HEIGHT; y += DOT_SPACING) {
       // Offset every other row by half spacing (halftone pattern)
       const xOffset = rowIndex % 2 === 0 ? 0 : DOT_SPACING / 2
-      for (let x = DOT_SPACING / 2 + xOffset; x < CANVAS_WIDTH; x += DOT_SPACING) {
-        ctx.beginPath()
-        ctx.arc(x, y, DOT_RADIUS, 0, Math.PI * 2)
-        ctx.fill()
+      for (let x = 1 + xOffset; x < CANVAS_WIDTH; x += DOT_SPACING) {
+        ctx.fillRect(Math.floor(x), Math.floor(y), DOT_SIZE, DOT_SIZE)
       }
       rowIndex++
     }
@@ -559,24 +558,26 @@ export function DrawingPicker({ onEmbed, onAddSticker }: DrawingPickerProps) {
                     </button>
                   ))}
                 </div>
-                <button
-                  type="button"
-                  className="drawing-action-button"
-                  onClick={handleFill}
-                  disabled={timeLeft <= 0}
-                  title="Fill"
-                >
-                  <Icon name="Droplet" size={18} />
-                </button>
-                <button
-                  type="button"
-                  className="drawing-action-button"
-                  onClick={handlePatternFill}
-                  disabled={timeLeft <= 0}
-                  title="Pattern Fill (Screentone)"
-                >
-                  <Icon name="Grip" size={18} />
-                </button>
+                <div className="drawing-fill-buttons">
+                  <button
+                    type="button"
+                    className="drawing-action-button"
+                    onClick={handleFill}
+                    disabled={timeLeft <= 0}
+                    title="Fill"
+                  >
+                    <Icon name="Droplet" size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    className="drawing-action-button"
+                    onClick={handlePatternFill}
+                    disabled={timeLeft <= 0}
+                    title="Pattern Fill (Screentone)"
+                  >
+                    <Icon name="Grip" size={18} />
+                  </button>
+                </div>
                 <button
                   type="button"
                   className="drawing-action-button"
