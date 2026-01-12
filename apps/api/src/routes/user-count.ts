@@ -1,18 +1,62 @@
 import { Hono } from 'hono'
-import { Relay } from 'nostr-tools/relay'
 import type { Bindings } from '../types'
-import { KIND_NOTE, KIND_LONG_FORM } from '../constants'
 
-// NIP-45をサポートするリレー
-const COUNT_RELAYS = ['wss://relay.snort.social', 'wss://nostr.wine', 'wss://relay.nostr.band']
-
+const PRIMAL_CACHE_URL = 'wss://cache1.primal.net/v1'
 const TIMEOUT_MS = 10000
+const STATS_KIND = 10000105
 
 const userCount = new Hono<{ Bindings: Bindings }>()
 
-// タイムアウト付きでPromiseを実行
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))])
+interface UserStats {
+  note_count?: number
+  long_form_note_count?: number
+  reply_count?: number
+  followers_count?: number
+  follows_count?: number
+}
+
+// Primal cacheからユーザー統計を取得
+async function fetchUserStatsFromPrimal(pubkey: string): Promise<UserStats | null> {
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      ws.close()
+      resolve(null)
+    }, TIMEOUT_MS)
+
+    // Cloudflare Workers用のWebSocket接続
+    const ws = new WebSocket(PRIMAL_CACHE_URL)
+
+    ws.addEventListener('open', () => {
+      const req = JSON.stringify(['REQ', 'stats', { cache: ['user_profile', { pubkey }] }])
+      ws.send(req)
+    })
+
+    ws.addEventListener('message', (event) => {
+      try {
+        const data = JSON.parse(event.data as string)
+        // kind 10000105のイベントを探す（ユーザー統計）
+        if (Array.isArray(data) && data[0] === 'EVENT' && data[2]?.kind === STATS_KIND) {
+          const content = JSON.parse(data[2].content)
+          clearTimeout(timeout)
+          ws.close()
+          resolve(content as UserStats)
+        } else if (Array.isArray(data) && data[0] === 'EOSE') {
+          // 統計が見つからない場合
+          clearTimeout(timeout)
+          ws.close()
+          resolve(null)
+        }
+      } catch {
+        // パースエラーは無視
+      }
+    })
+
+    ws.addEventListener('error', () => {
+      clearTimeout(timeout)
+      ws.close()
+      resolve(null)
+    })
+  })
 }
 
 // GET /api/user/:pubkey/count - ユーザーの投稿数を取得
@@ -23,25 +67,21 @@ userCount.get('/:pubkey/count', async (c) => {
     return c.json({ error: 'Invalid pubkey' }, 400)
   }
 
-  const errors: string[] = []
+  try {
+    const stats = await fetchUserStatsFromPrimal(pubkey)
 
-  for (const relayUrl of COUNT_RELAYS) {
-    let relay: Relay | null = null
-    try {
-      relay = await withTimeout(Relay.connect(relayUrl), TIMEOUT_MS)
-      const count = await withTimeout(
-        relay.count([{ kinds: [KIND_NOTE, KIND_LONG_FORM], authors: [pubkey] }], {}),
-        TIMEOUT_MS
-      )
-      return c.json({ count })
-    } catch (e) {
-      errors.push(`${relayUrl}: ${String(e)}`)
-    } finally {
-      relay?.close()
+    if (stats && typeof stats.note_count === 'number') {
+      return c.json({
+        count: stats.note_count + (stats.long_form_note_count || 0),
+        noteCount: stats.note_count,
+        longFormCount: stats.long_form_note_count || 0,
+      })
     }
-  }
 
-  return c.json({ count: null, errors })
+    return c.json({ count: null, error: 'Could not fetch user stats' })
+  } catch (e) {
+    return c.json({ count: null, error: String(e) })
+  }
 })
 
 export default userCount
