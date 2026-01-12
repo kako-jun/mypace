@@ -149,15 +149,19 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
 
     // Draw stickers
     for (const sticker of stickers) {
-      const stickerImg = new Image()
-      stickerImg.crossOrigin = 'anonymous'
-      await new Promise<void>((resolve) => {
-        stickerImg.onload = () => resolve()
-        stickerImg.onerror = () => resolve()
-        stickerImg.src = sticker.url
-      })
+      try {
+        // Fetch as blob to bypass CORS for canvas
+        const response = await fetch(sticker.url)
+        const blob = await response.blob()
+        const blobUrl = URL.createObjectURL(blob)
 
-      if (stickerImg.complete && stickerImg.naturalWidth > 0) {
+        const stickerImg = new Image()
+        await new Promise<void>((resolve, reject) => {
+          stickerImg.onload = () => resolve()
+          stickerImg.onerror = () => reject()
+          stickerImg.src = blobUrl
+        })
+
         const globalPos = getGlobalPosition(sticker)
         const centerX = (globalPos.x / 100) * image.naturalWidth - cropX
         const centerY = (globalPos.y / 100) * image.naturalHeight - cropY
@@ -169,6 +173,11 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
         ctx.rotate((sticker.rotation * Math.PI) / 180)
         ctx.drawImage(stickerImg, -sw / 2, -sh / 2, sw, sh)
         ctx.restore()
+
+        URL.revokeObjectURL(blobUrl)
+      } catch {
+        // Skip stickers that fail to load
+        console.warn('Failed to load sticker:', sticker.url)
       }
     }
 
