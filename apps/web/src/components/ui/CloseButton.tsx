@@ -1,7 +1,8 @@
+import type { MouseEvent } from 'react'
 import { Icon } from './Icon'
 
 interface CloseButtonProps {
-  onClick: () => void
+  onClick: (e: MouseEvent<HTMLButtonElement>) => void
   size?: number
   className?: string
 }
