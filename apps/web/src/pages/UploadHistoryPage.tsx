@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { fetchUploadHistory, deleteUploadFromHistory, deleteFromNostrBuild, type UploadHistoryItem } from '../lib/api'
 import { copyToClipboard } from '../lib/utils'
 import { getCurrentPubkey } from '../lib/nostr/events'
-import { BackButton, CopyButton, TextButton, CloseButton, LightBox, triggerLightBox, Icon } from '../components/ui'
+import { BackButton, CopyButton, TextButton, LightBox, triggerLightBox, Icon } from '../components/ui'
 import DeleteConfirmDialog from '../components/post/DeleteConfirmDialog'
 import { formatTimestamp, getStoredThemeColors, isDarkColor } from '../lib/nostr/events'
 import { TIMEOUTS } from '../lib/constants'
@@ -26,8 +26,6 @@ export function UploadHistoryPage() {
   const navigate = useNavigate()
   const [history, setHistory] = useState<UploadHistoryItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
-  const [removePopupPosition, setRemovePopupPosition] = useState<{ top: number; left: number } | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deletePopupPosition, setDeletePopupPosition] = useState<{ top: number; left: number } | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -36,11 +34,6 @@ export function UploadHistoryPage() {
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
   const textClass = useTextClass()
 
-  const handleRemoveCancel = useCallback(() => {
-    setConfirmRemove(null)
-    setRemovePopupPosition(null)
-  }, [])
-
   const handleDeleteCancel = useCallback(() => {
     setConfirmDelete(null)
     setDeletePopupPosition(null)
@@ -48,15 +41,12 @@ export function UploadHistoryPage() {
 
   // Close popup on scroll
   useEffect(() => {
-    if (confirmRemove || confirmDelete) {
-      const handleScroll = () => {
-        handleRemoveCancel()
-        handleDeleteCancel()
-      }
+    if (confirmDelete) {
+      const handleScroll = () => handleDeleteCancel()
       window.addEventListener('scroll', handleScroll, { passive: true })
       return () => window.removeEventListener('scroll', handleScroll)
     }
-  }, [confirmRemove, confirmDelete, handleRemoveCancel, handleDeleteCancel])
+  }, [confirmDelete, handleDeleteCancel])
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -79,24 +69,6 @@ export function UploadHistoryPage() {
     if (success) {
       setCopiedUrl(url)
       setTimeout(() => setCopiedUrl(null), TIMEOUTS.COPY_FEEDBACK)
-    }
-  }
-
-  const handleRemoveClick = (url: string, e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    setRemovePopupPosition({
-      top: rect.top,
-      left: rect.left + rect.width / 2,
-    })
-    setConfirmRemove(url)
-  }
-
-  const handleRemoveConfirm = async () => {
-    if (!confirmRemove || !pubkey) return
-    handleRemoveCancel()
-    const success = await deleteUploadFromHistory(pubkey, confirmRemove)
-    if (success) {
-      setHistory(history.filter((item) => item.url !== confirmRemove))
     }
   }
 
@@ -169,11 +141,6 @@ export function UploadHistoryPage() {
         <div className="upload-history-list">
           {history.map((item) => (
             <div key={item.url} className="upload-history-item">
-              <CloseButton
-                onClick={(e) => handleRemoveClick(item.url, e)}
-                size={16}
-                className="upload-history-remove-btn"
-              />
               <div
                 className={`upload-history-item-preview ${item.type === 'image' ? 'clickable' : ''}`}
                 onClick={item.type === 'image' ? () => triggerLightBox(item.url) : undefined}
@@ -217,27 +184,6 @@ export function UploadHistoryPage() {
         </div>
       )}
 
-      {confirmRemove && removePopupPosition && (
-        <>
-          <div className="delete-confirm-overlay" onClick={handleRemoveCancel} />
-          <div
-            className="delete-confirm-popup"
-            style={{ top: removePopupPosition.top, left: removePopupPosition.left }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="delete-confirm-header">
-              <span className="delete-confirm-title">Remove?</span>
-              <CloseButton onClick={handleRemoveCancel} size={16} />
-            </div>
-            <div className="delete-confirm-actions">
-              <TextButton variant="warning" onClick={handleRemoveConfirm}>
-                Yes
-              </TextButton>
-              <TextButton onClick={handleRemoveCancel}>No</TextButton>
-            </div>
-          </div>
-        </>
-      )}
       <LightBox />
       {confirmDelete && deletePopupPosition && (
         <DeleteConfirmDialog
