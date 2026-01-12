@@ -309,6 +309,8 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
           nip05Verified={nip05Verified}
           npubCopied={npubCopied}
           postsCount={items.length}
+          hasMore={hasMore}
+          isFiltered={searchQuery.length > 0 || searchTags.length > 0}
           serialData={serialData}
           onCopyNpub={handleCopyNpub}
           onEditClick={() => setEditMode(true)}

@@ -293,16 +293,18 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     if (loadingMore || !hasMore || oldestEventTime === 0) return
     setLoadingMore(true)
     try {
+      // until は inclusive なので、-1 して既知の最古イベントを除外
+      const untilTime = oldestEventTime - 1
       let olderNotes: Event[]
       if (authorPubkey) {
         olderNotes = await fetchUserPosts(authorPubkey, {
           limit: LIMITS.TIMELINE_FETCH_LIMIT,
-          until: oldestEventTime,
+          until: untilTime,
           tags,
           q,
         })
       } else {
-        olderNotes = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, until: oldestEventTime, q, tags })
+        olderNotes = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, until: untilTime, q, tags })
       }
 
       if (olderNotes.length === 0) {
