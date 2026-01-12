@@ -111,6 +111,25 @@ export function DrawingPicker({ onEmbed, onAddSticker }: DrawingPickerProps) {
     return () => clearInterval(timer)
   }, [isTimerRunning, timeLeft])
 
+  // Draw dot pattern (screentone/halftone effect)
+  const drawDotPattern = useCallback((ctx: CanvasRenderingContext2D, fillColor: string) => {
+    const DOT_SPACING = 4
+    const DOT_RADIUS = 1
+
+    ctx.fillStyle = fillColor
+    let rowIndex = 0
+    for (let y = DOT_SPACING / 2; y < CANVAS_HEIGHT; y += DOT_SPACING * 0.866) {
+      // Offset every other row by half spacing (halftone pattern)
+      const xOffset = rowIndex % 2 === 0 ? 0 : DOT_SPACING / 2
+      for (let x = DOT_SPACING / 2 + xOffset; x < CANVAS_WIDTH; x += DOT_SPACING) {
+        ctx.beginPath()
+        ctx.arc(x, y, DOT_RADIUS, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      rowIndex++
+    }
+  }, [])
+
   const redrawCanvas = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -127,6 +146,12 @@ export function DrawingPicker({ onEmbed, onAddSticker }: DrawingPickerProps) {
       if (action.size === 0) {
         ctx.fillStyle = action.color
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+        continue
+      }
+
+      // Pattern fill action (size === -1)
+      if (action.size === -1) {
+        drawDotPattern(ctx, action.color)
         continue
       }
 
@@ -401,6 +426,30 @@ export function DrawingPicker({ onEmbed, onAddSticker }: DrawingPickerProps) {
     if (!isTimerRunning) setIsTimerRunning(true)
   }
 
+  const handlePatternFill = () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Draw dot pattern (screentone effect)
+    drawDotPattern(ctx, COLORS[color])
+
+    // Add pattern fill action to history (size === -1)
+    historyRef.current.push({
+      type: 'stroke',
+      color: COLORS[color],
+      size: -1,
+      points: [
+        { x: 0, y: 0 },
+        { x: CANVAS_WIDTH, y: CANVAS_HEIGHT },
+      ],
+    })
+    setHistoryLength(historyRef.current.length)
+    if (!hasDrawn) setHasDrawn(true)
+    if (!isTimerRunning) setIsTimerRunning(true)
+  }
+
   const uploadDrawing = async (): Promise<string | null> => {
     const canvas = canvasRef.current
     if (!canvas) return null
@@ -518,6 +567,15 @@ export function DrawingPicker({ onEmbed, onAddSticker }: DrawingPickerProps) {
                   title="Fill"
                 >
                   <Icon name="Droplet" size={18} />
+                </button>
+                <button
+                  type="button"
+                  className="drawing-action-button"
+                  onClick={handlePatternFill}
+                  disabled={timeLeft <= 0}
+                  title="Pattern Fill (Screentone)"
+                >
+                  <Icon name="Grip" size={18} />
                 </button>
                 <button
                   type="button"
