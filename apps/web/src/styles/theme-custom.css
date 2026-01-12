@@ -189,11 +189,6 @@ body.custom-theme .logo-pace {
   -webkit-text-fill-color: #fd0 !important;
   -webkit-text-stroke: 1px #000 !important;
   paint-order: stroke fill !important;
-  text-shadow:
-    1px 1px 0 #000,
-    -1px 1px 0 #000,
-    1px -1px 0 #000,
-    -1px -1px 0 #000 !important;
 }
 
 .light-text .markdown-content blockquote {
@@ -483,11 +478,6 @@ body.long-mode-active .super-mention-popup {
   -webkit-text-fill-color: #fd0;
   -webkit-text-stroke: 1px #000;
   paint-order: stroke fill;
-  text-shadow:
-    1px 1px 0 #000,
-    -1px 1px 0 #000,
-    1px -1px 0 #000,
-    -1px -1px 0 #000;
   font-weight: 700;
   font-size: 1.1rem;
   flex-shrink: 0;

@@ -237,11 +237,6 @@
   -webkit-text-fill-color: #fd0;
   -webkit-text-stroke: 1px #000;
   paint-order: stroke fill;
-  text-shadow:
-    1px 1px 0 #000,
-    -1px 1px 0 #000,
-    1px -1px 0 #000,
-    -1px -1px 0 #000;
   font-weight: 700;
   cursor: pointer;
   padding: 0;
@@ -262,11 +257,6 @@
   -webkit-text-fill-color: #fd0;
   -webkit-text-stroke: 1px #000;
   paint-order: stroke fill;
-  text-shadow:
-    1px 1px 0 #000,
-    -1px 1px 0 #000,
-    1px -1px 0 #000,
-    -1px -1px 0 #000;
   font-weight: 700;
   font-size: 1.1em;
   text-decoration: none;
@@ -285,11 +275,6 @@
   -webkit-text-fill-color: #fe0;
   -webkit-text-stroke: 1px #000;
   paint-order: stroke fill;
-  text-shadow:
-    1px 1px 0 #000,
-    -1px 1px 0 #000,
-    1px -1px 0 #000,
-    -1px -1px 0 #000;
   letter-spacing: -0.05em;
 }
 
