@@ -4,22 +4,15 @@ import type { Bindings } from '../types'
 import { KIND_NOTE, KIND_LONG_FORM } from '../constants'
 
 // NIP-45をサポートするリレー
-const COUNT_RELAY = 'wss://relay.nostr.band'
+const COUNT_RELAYS = ['wss://relay.snort.social', 'wss://nostr.wine', 'wss://relay.nostr.band']
+
+const TIMEOUT_MS = 10000
 
 const userCount = new Hono<{ Bindings: Bindings }>()
 
-// nostr-tools の Relay.count() を使用
-async function fetchCount(pubkey: string, kinds: number[]): Promise<{ count: number | null; error?: string }> {
-  let relay: Relay | null = null
-  try {
-    relay = await Relay.connect(COUNT_RELAY)
-    const count = await relay.count([{ kinds, authors: [pubkey] }], {})
-    return { count }
-  } catch (e) {
-    return { count: null, error: String(e) }
-  } finally {
-    relay?.close()
-  }
+// タイムアウト付きでPromiseを実行
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))])
 }
 
 // GET /api/user/:pubkey/count - ユーザーの投稿数を取得
@@ -30,9 +23,25 @@ userCount.get('/:pubkey/count', async (c) => {
     return c.json({ error: 'Invalid pubkey' }, 400)
   }
 
-  const result = await fetchCount(pubkey, [KIND_NOTE, KIND_LONG_FORM])
+  const errors: string[] = []
 
-  return c.json(result)
+  for (const relayUrl of COUNT_RELAYS) {
+    let relay: Relay | null = null
+    try {
+      relay = await withTimeout(Relay.connect(relayUrl), TIMEOUT_MS)
+      const count = await withTimeout(
+        relay.count([{ kinds: [KIND_NOTE, KIND_LONG_FORM], authors: [pubkey] }], {}),
+        TIMEOUT_MS
+      )
+      return c.json({ count })
+    } catch (e) {
+      errors.push(`${relayUrl}: ${String(e)}`)
+    } finally {
+      relay?.close()
+    }
+  }
+
+  return c.json({ count: null, errors })
 })
 
 export default userCount
