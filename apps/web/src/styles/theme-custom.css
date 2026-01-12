@@ -175,15 +175,25 @@ body.custom-theme .logo-pace {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
-/* Super mention URL should keep its black outline */
-.light-text .markdown-content a.content-super-mention-url {
-  color: #fd0;
+/* Super mention should keep its yellow color with black outline */
+.light-text .content-super-mention,
+.light-text .content-super-mention-url,
+.light-text .super-mention-prefix,
+.dark-text .content-super-mention,
+.dark-text .content-super-mention-url,
+.dark-text .super-mention-prefix,
+.themed-card .content-super-mention,
+.themed-card .content-super-mention-url,
+.themed-card .super-mention-prefix {
+  color: #fd0 !important;
+  -webkit-text-fill-color: #fd0 !important;
+  -webkit-text-stroke: 1px #000 !important;
+  paint-order: stroke fill !important;
   text-shadow:
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
     1px 1px 0 #000,
-    0 0 3px rgba(0, 0, 0, 0.7);
+    -1px 1px 0 #000,
+    1px -1px 0 #000,
+    -1px -1px 0 #000 !important;
 }
 
 .light-text .markdown-content blockquote {
@@ -209,16 +219,6 @@ body.custom-theme .logo-pace {
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
-/* Super mention URL should keep its black outline */
-.dark-text .markdown-content a.content-super-mention-url {
-  color: #fd0;
-  text-shadow:
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
-    1px 1px 0 #000,
-    0 0 3px rgba(0, 0, 0, 0.7);
-}
 
 /* Light text adjustments */
 .light-text .preview-label {
@@ -480,14 +480,17 @@ body.long-mode-active .super-mention-popup {
 
 .super-mention-popup-prefix {
   color: #fd0;
+  -webkit-text-fill-color: #fd0;
+  -webkit-text-stroke: 1px #000;
+  paint-order: stroke fill;
+  text-shadow:
+    1px 1px 0 #000,
+    -1px 1px 0 #000,
+    1px -1px 0 #000,
+    -1px -1px 0 #000;
   font-weight: 700;
   font-size: 1.1rem;
   flex-shrink: 0;
-  text-shadow:
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
-    1px 1px 0 #000;
 }
 
 .super-mention-popup-category {
