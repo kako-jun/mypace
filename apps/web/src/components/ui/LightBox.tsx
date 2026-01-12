@@ -1,25 +1,36 @@
 import { useState, useEffect } from 'react'
 import '../../styles/components/lightbox.css'
 
-let openLightBox: ((src: string) => void) | null = null
+type MediaType = 'image' | 'video' | 'audio'
 
-export function setLightBoxHandler(handler: (src: string) => void) {
+let openLightBox: ((src: string, type?: MediaType) => void) | null = null
+
+export function setLightBoxHandler(handler: (src: string, type?: MediaType) => void) {
   openLightBox = handler
 }
 
-export function triggerLightBox(src: string) {
+export function triggerLightBox(src: string, type?: MediaType) {
   if (openLightBox) {
-    openLightBox(src)
+    openLightBox(src, type)
   }
+}
+
+function detectMediaType(src: string): MediaType {
+  const lower = src.toLowerCase()
+  if (/\.(mp4|webm|mov|avi|mkv)(\?|$)/.test(lower)) return 'video'
+  if (/\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/.test(lower)) return 'audio'
+  return 'image'
 }
 
 export function LightBox() {
   const [isOpen, setIsOpen] = useState(false)
-  const [imageSrc, setImageSrc] = useState('')
+  const [mediaSrc, setMediaSrc] = useState('')
+  const [mediaType, setMediaType] = useState<MediaType>('image')
 
   useEffect(() => {
-    setLightBoxHandler((src: string) => {
-      setImageSrc(src)
+    setLightBoxHandler((src: string, type?: MediaType) => {
+      setMediaSrc(src)
+      setMediaType(type || detectMediaType(src))
       setIsOpen(true)
     })
 
@@ -50,12 +61,27 @@ export function LightBox() {
 
   if (!isOpen) return null
 
+  const renderMedia = () => {
+    switch (mediaType) {
+      case 'video':
+        return (
+          <video src={mediaSrc} className="lightbox-video" controls autoPlay onClick={(e) => e.stopPropagation()} />
+        )
+      case 'audio':
+        return (
+          <audio src={mediaSrc} className="lightbox-audio" controls autoPlay onClick={(e) => e.stopPropagation()} />
+        )
+      default:
+        return <img src={mediaSrc} alt="" className="lightbox-image" onClick={(e) => e.stopPropagation()} />
+    }
+  }
+
   return (
     <div className="lightbox-backdrop" onClick={() => setIsOpen(false)}>
       <button className="lightbox-close" onClick={() => setIsOpen(false)} aria-label="Close">
         ×
       </button>
-      <img src={imageSrc} alt="" className="lightbox-image" onClick={(e) => e.stopPropagation()} />
+      {renderMedia()}
     </div>
   )
 }

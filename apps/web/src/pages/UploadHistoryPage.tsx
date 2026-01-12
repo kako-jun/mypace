@@ -142,8 +142,8 @@ export function UploadHistoryPage() {
           {history.map((item) => (
             <div key={item.url} className="upload-history-item">
               <div
-                className={`upload-history-item-preview ${item.type === 'image' ? 'clickable' : ''}`}
-                onClick={item.type === 'image' ? () => triggerLightBox(item.url) : undefined}
+                className="upload-history-item-preview clickable"
+                onClick={() => triggerLightBox(item.url, item.type)}
               >
                 {item.type === 'image' ? (
                   <img src={item.url} alt={item.filename} loading="lazy" />

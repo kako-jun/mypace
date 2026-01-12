@@ -178,7 +178,10 @@ export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
           <div className={`filter-circuit-line filter-circuit-line-merge-bottom ${showBlog ? 'active' : ''}`} />
         </div>
         <div className={`filter-circuit-node filter-circuit-mypace ${mypaceOnly ? 'active' : ''}`}>
-          <span className="filter-circuit-label">MY PACE</span>
+          <span className="filter-circuit-label filter-circuit-label-mypace">
+            <span>MY PACE</span>
+            <span className="filter-circuit-label-only">Only</span>
+          </span>
           <Toggle checked={mypaceOnly} onChange={setMypaceOnly} size="small" />
         </div>
         <div className={`filter-circuit-line filter-circuit-line-output ${showSNS || showBlog ? 'active' : ''}`} />

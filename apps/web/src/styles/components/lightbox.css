@@ -45,10 +45,17 @@
   transform: rotate(90deg);
 }
 
-.lightbox-image {
+.lightbox-image,
+.lightbox-video {
   max-width: 90vw;
   max-height: 90vh;
   object-fit: contain;
+  cursor: default;
+  animation: lightbox-zoom-in 0.2s ease;
+}
+
+.lightbox-audio {
+  width: min(90vw, 400px);
   cursor: default;
   animation: lightbox-zoom-in 0.2s ease;
 }

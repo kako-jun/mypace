@@ -170,6 +170,22 @@
 
 .filter-circuit-mypace {
   margin-left: 0;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.3rem 0.4rem;
+}
+
+.filter-circuit-label-mypace {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+  min-width: auto;
+}
+
+.filter-circuit-label-only {
+  font-size: 0.6rem;
+  opacity: 0.7;
 }
 
 .filter-circuit-line-output {
