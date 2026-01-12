@@ -125,11 +125,39 @@ interface UserEventsOptions {
 
 export async function fetchUserEvents(pubkey: string, options: UserEventsOptions = {}): Promise<{ events: Event[] }> {
   const { limit = 50, since = 0, until = 0, tags = [], q = [] } = options
+
+  // Load filters from localStorage (same as timeline)
+  const filters = loadFiltersFromStorage()
+
   const params = new URLSearchParams({ limit: String(limit) })
   if (since > 0) params.set('since', String(since))
   if (until > 0) params.set('until', String(until))
   if (tags.length > 0) params.set('tags', tags.join('+'))
   if (q.length > 0) params.set('q', q.join('+'))
+  if (!filters.mypace) params.set('all', '1')
+  if (filters.lang) params.set('lang', filters.lang)
+
+  // Set kinds parameter based on showSNS and showBlog
+  const kindsList: number[] = []
+  if (filters.showSNS) {
+    kindsList.push(1)
+    kindsList.push(42000) // NPC posts
+  }
+  if (filters.showBlog) kindsList.push(30023)
+  params.set('kinds', kindsList.join(','))
+
+  // Smart filters
+  if (!filters.hideAds) params.set('hideAds', '0')
+  if (!filters.hideNSFW) params.set('hideNSFW', '0')
+  if (filters.hideNPC) params.set('hideNPC', '1')
+
+  // NG words/tags
+  if (filters.ngWords.length > 0) {
+    params.set('ng', filters.ngWords.join('+'))
+  }
+  if (filters.ngTags && filters.ngTags.length > 0) {
+    params.set('ngtags', filters.ngTags.join('+'))
+  }
 
   const res = await fetch(`${API_BASE}/api/user/${pubkey}/events?${params}`)
   if (!res.ok) throw new Error('Failed to fetch user events')

@@ -45,12 +45,17 @@ MY PACEのフィルタ機能の全体設計。
 
 ### ユーザーページ `/user/:npub`
 
-フィルタポップアップは使用しない。TimelineSearchのみ。
+フィルタポップアップの個人設定 + TimelineSearchの公開フィルタが両方適用される。
 
 ```
 例: /user/npub1xxx?tags=art+illustration&q=猫
 → このユーザーの #art かつ #illustration タグ付き、「猫」を含む投稿のみ表示
 ```
+
+**適用されるフィルタ**:
+- 個人: mypace, lang, kinds, hideAds, hideNSFW, hideNPC, ng, ngtags
+- 公開: q, tags
+- **適用されない**: mute（ユーザーページは意図的に訪問しているため）
 
 **用途**: ポートフォリオとして見せたい投稿を絞り込んだURLを共有
 
@@ -92,8 +97,18 @@ MY PACEのフィルタ機能の全体設計。
 | `limit` | number | 50 | 取得件数（最大100） |
 | `since` | number | 0 | この時刻以降 |
 | `until` | number | 0 | この時刻以前 |
+| `all` | `1` | - | #mypaceフィルタOFF |
+| `kinds` | string | `1,30023,42000` | カンマ区切りkind |
+| `lang` | string | - | 言語コード |
+| `hideAds` | `0` | ON | 広告フィルタOFF |
+| `hideNSFW` | `0` | ON | NSFWフィルタOFF |
+| `hideNPC` | `1` | OFF | NPCフィルタON |
+| `ng` | string | - | NGワード（+区切り） |
+| `ngtags` | string | - | NGタグ（+区切り） |
 | `q` | string | - | 検索クエリ |
-| `tags` | string | - | OKタグ（カンマ区切り） |
+| `tags` | string | - | OKタグ（+区切り、AND検索） |
+
+> **注意**: タイムラインAPIと異なり、`mute`（ミュートリスト）は適用されない。
 
 ---
 
