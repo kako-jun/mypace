@@ -640,7 +640,7 @@ const { dragging, handlers } = useDragDrop(processFile)
 「Filter」ボタンをクリックすると、すぐ下にポップアップでフィルタUIが表示される:
 
 #### mypaceトグル（最上部）
-- **MY PACE**: #mypace投稿のみ表示（トグル、右寄せ）
+- **MY PACE Only**: #mypace投稿のみ表示（トグル）
 - サーバーサイドフィルタのため最上部に配置
 
 #### OKグループ
