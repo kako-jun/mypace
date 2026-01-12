@@ -10,7 +10,7 @@ import {
 } from '../../lib/api'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import { useImageUpload } from '../../hooks'
-import { ImageCropper } from '../image'
+import { ImageEditor } from '../image'
 import { isAnimatedImage } from '../../lib/utils'
 
 interface StickerPickerProps {
@@ -170,9 +170,7 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
           </div>
         </Portal>
       )}
-      {pendingFile && (
-        <ImageCropper file={pendingFile} onCropComplete={handleCropComplete} onCancel={handleCropCancel} />
-      )}
+      {pendingFile && <ImageEditor file={pendingFile} onComplete={handleCropComplete} onCancel={handleCropCancel} />}
     </div>
   )
 }
