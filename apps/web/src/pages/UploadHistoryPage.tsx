@@ -3,8 +3,23 @@ import { useNavigate } from 'react-router-dom'
 import { fetchUploadHistory, deleteUploadFromHistory, deleteFromNostrBuild, type UploadHistoryItem } from '../lib/api'
 import { copyToClipboard } from '../lib/utils'
 import { getCurrentPubkey } from '../lib/nostr/events'
-import { BackButton } from '../components/ui'
+import { BackButton, CopyButton, TextButton, CloseButton, LightBox, triggerLightBox, Icon } from '../components/ui'
+import { formatTimestamp, getStoredThemeColors, isDarkColor } from '../lib/nostr/events'
+import { TIMEOUTS } from '../lib/constants'
 import '../styles/pages/upload-history.css'
+
+function useTextClass(): string {
+  const colors = getStoredThemeColors()
+  if (!colors) return ''
+
+  const darkCount =
+    (isDarkColor(colors.topLeft) ? 1 : 0) +
+    (isDarkColor(colors.topRight) ? 1 : 0) +
+    (isDarkColor(colors.bottomLeft) ? 1 : 0) +
+    (isDarkColor(colors.bottomRight) ? 1 : 0)
+
+  return darkCount >= 2 ? 'light-text' : 'dark-text'
+}
 
 export function UploadHistoryPage() {
   const navigate = useNavigate()
@@ -14,6 +29,8 @@ export function UploadHistoryPage() {
   const [deleting, setDeleting] = useState<string | null>(null)
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null)
   const [pubkey, setPubkey] = useState<string>('')
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
+  const textClass = useTextClass()
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -32,7 +49,11 @@ export function UploadHistoryPage() {
   }, [])
 
   const handleCopyUrl = async (url: string) => {
-    await copyToClipboard(url)
+    const success = await copyToClipboard(url)
+    if (success) {
+      setCopiedUrl(url)
+      setTimeout(() => setCopiedUrl(null), TIMEOUTS.COPY_FEEDBACK)
+    }
   }
 
   const handleRemoveFromHistory = async (url: string) => {
@@ -64,28 +85,16 @@ export function UploadHistoryPage() {
     setDeleting(null)
   }
 
-  const formatDate = (timestamp: number) => {
-    // API returns Unix timestamp in seconds
-    const date = new Date(timestamp * 1000)
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
   const getTypeIcon = (type: UploadHistoryItem['type']) => {
     switch (type) {
       case 'image':
-        return '🖼️'
+        return <Icon name="Image" size={24} />
       case 'video':
-        return '🎬'
+        return <Icon name="Film" size={24} />
       case 'audio':
-        return '🎵'
+        return <Icon name="Music" size={24} />
       default:
-        return '📁'
+        return <Icon name="File" size={24} />
     }
   }
 
@@ -93,10 +102,10 @@ export function UploadHistoryPage() {
     <div className="upload-history-page">
       <BackButton onClick={() => navigate(-1)} />
 
-      <div className="upload-history-notice">
-        <p>nostr.buildにアップロードしたファイルの履歴です。Deleteでファイルを削除できます。</p>
-        {deleteMessage && <p className="upload-history-message">{deleteMessage}</p>}
-      </div>
+      <p className={`upload-history-hint themed-card ${textClass}`}>
+        Files uploaded to nostr.build. Press DELETE to remove from server.
+      </p>
+      {deleteMessage && <p className={`upload-history-message themed-card ${textClass}`}>{deleteMessage}</p>}
 
       {loading ? (
         <div className="upload-history-empty">
@@ -110,7 +119,11 @@ export function UploadHistoryPage() {
         <div className="upload-history-list">
           {history.map((item) => (
             <div key={item.url} className="upload-history-item">
-              <div className="upload-history-item-preview">
+              <CloseButton onClick={() => setConfirmDelete(item.url)} size={16} className="upload-history-remove-btn" />
+              <div
+                className={`upload-history-item-preview ${item.type === 'image' ? 'clickable' : ''}`}
+                onClick={item.type === 'image' ? () => triggerLightBox(item.url) : undefined}
+              >
                 {item.type === 'image' ? (
                   <img src={item.url} alt={item.filename} loading="lazy" />
                 ) : (
@@ -120,38 +133,32 @@ export function UploadHistoryPage() {
 
               <div className="upload-history-item-info">
                 <div className="upload-history-item-filename">{item.filename}</div>
-                <button
-                  className="upload-history-item-url"
-                  onClick={() => handleCopyUrl(item.url)}
-                  title="Click to copy URL"
-                >
-                  {item.url}
-                </button>
+                <div className="upload-history-url-row">
+                  <div className="upload-history-url-scroll">
+                    <span className="upload-history-url-text">{item.url}</span>
+                  </div>
+                  <CopyButton
+                    copied={copiedUrl === item.url}
+                    onClick={() => handleCopyUrl(item.url)}
+                    className="upload-history-copy-btn"
+                    aria-label="Copy URL"
+                  />
+                </div>
                 <div className="upload-history-item-meta">
                   <span className="upload-history-item-type">{item.type}</span>
-                  <span className="upload-history-item-date">{formatDate(item.uploadedAt)}</span>
+                  <span className="upload-history-item-date">{formatTimestamp(item.uploadedAt)}</span>
                 </div>
               </div>
 
               <div className="upload-history-item-actions">
-                <button className="upload-history-copy-btn" onClick={() => handleCopyUrl(item.url)} title="Copy URL">
-                  Copy
-                </button>
-                <button
-                  className="upload-history-delete-btn"
+                <TextButton
+                  variant="warning"
                   onClick={() => handleDeleteFromNostrBuild(item.url)}
                   disabled={deleting === item.url}
                   title="Delete from nostr.build"
                 >
-                  {deleting === item.url ? '...' : 'Delete'}
-                </button>
-                <button
-                  className="upload-history-remove-btn"
-                  onClick={() => setConfirmDelete(item.url)}
-                  title="Remove from history"
-                >
-                  ×
-                </button>
+                  {deleting === item.url ? '...' : 'DELETE'}
+                </TextButton>
               </div>
             </div>
           ))}
@@ -175,6 +182,7 @@ export function UploadHistoryPage() {
           </div>
         </>
       )}
+      <LightBox />
     </div>
   )
 }
