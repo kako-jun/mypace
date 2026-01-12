@@ -104,11 +104,6 @@ body.long-mode-active .image-editor-modal {
   overflow-x: auto;
 }
 
-.image-editor-palette-icon {
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
 .image-editor-palette-loading,
 .image-editor-palette-empty {
   color: var(--text-muted);

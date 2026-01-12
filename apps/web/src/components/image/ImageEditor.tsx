@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { CloseButton, Portal, Icon } from '../ui'
+import { CloseButton, Portal } from '../ui'
 import Button from '../ui/Button'
 import { PostStickers } from '../post/PostStickers'
 import { getStickerHistory, type StickerHistoryItem } from '../../lib/api'
@@ -262,7 +262,6 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
           {/* Sticker palette */}
           {imageLoaded && (
             <div className="image-editor-sticker-palette">
-              <Icon name="Smile" size={16} className="image-editor-palette-icon" />
               {historyLoading && <span className="image-editor-palette-loading">...</span>}
               {!historyLoading && stickerHistory.length === 0 && (
                 <span className="image-editor-palette-empty">No stickers</span>
