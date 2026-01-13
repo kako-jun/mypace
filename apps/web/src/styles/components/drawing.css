@@ -94,7 +94,7 @@ body.long-mode-active .drawing-picker-modal {
 
 .drawing-picker-colors {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .drawing-color-button {
@@ -131,7 +131,7 @@ body.long-mode-active .drawing-picker-modal {
 /* Pen sizes */
 .drawing-picker-sizes {
   display: flex;
-  gap: 0.35rem;
+  gap: 0.25rem;
 }
 
 .drawing-size-button {
