@@ -634,7 +634,13 @@ const { dragging, handlers } = useDragDrop(processFile)
 ### フィルタアイコン
 - アイコンの枠: 常に黒（#333）
 - アイコンの中身: 通常は白、フィルタ適用時は水色（--action-reply: #3498db）
-- **アクティブ判定**: mypace only ON、言語フィルタ設定、NGワード/NGタグ設定、OKワード/OKタグ設定のいずれかがあればアクティブ
+- **アクティブ判定**: 何か1つでもコンテンツを減らすフィルタが有効ならアクティブ
+  - SNSオフ、Blogオフ
+  - MY PACE Onlyオン
+  - Hide Ads/NSFW/NPCオン
+  - NGワード/NGタグあり
+  - 言語フィルタあり
+  - ミュートリストあり
 
 ### FilterPanel
 「Filter」ボタンをクリックすると、すぐ下にポップアップでフィルタUIが表示される:
