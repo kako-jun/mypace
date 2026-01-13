@@ -9,12 +9,9 @@
   font-weight: 900;
   letter-spacing: 0.05em;
   color: #fff;
-  -webkit-text-stroke: 1px #555;
-  text-shadow:
-    1px 1px 0 #555,
-    -1px 1px 0 #555,
-    1px -1px 0 #555,
-    -1px -1px 0 #555;
+  -webkit-text-fill-color: #fff;
+  -webkit-text-stroke: 3px #555;
+  paint-order: stroke fill;
   display: inline-block;
 }
 
@@ -32,32 +29,19 @@
 /* Zero state - muted gray */
 .action-count-zero {
   color: #999;
-  -webkit-text-stroke: 1px #666;
-  text-shadow:
-    1px 1px 0 #666,
-    -1px 1px 0 #666,
-    1px -1px 0 #666,
-    -1px -1px 0 #666;
+  -webkit-text-fill-color: #999;
+  -webkit-text-stroke: 3px #666;
   opacity: 0.5;
 }
 
 [data-theme="dark"] .action-count-zero {
   color: #666;
-  -webkit-text-stroke: 1px #444;
-  text-shadow:
-    1px 1px 0 #444,
-    -1px 1px 0 #444,
-    1px -1px 0 #444,
-    -1px -1px 0 #444;
+  -webkit-text-fill-color: #666;
+  -webkit-text-stroke: 3px #444;
 }
 
 [data-theme="dark"] .action-count {
-  -webkit-text-stroke: 1px #222;
-  text-shadow:
-    1px 1px 0 #222,
-    -1px 1px 0 #222,
-    1px -1px 0 #222,
-    -1px -1px 0 #222;
+  -webkit-text-stroke: 3px #222;
 }
 
 /* Like button - extends .icon-button, vertical layout */

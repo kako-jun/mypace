@@ -8,12 +8,9 @@
   font-weight: 900;
   letter-spacing: 0.05em;
   color: #fff;
-  -webkit-text-stroke: 1px #555;
-  text-shadow:
-    1px 1px 0 #555,
-    -1px 1px 0 #555,
-    1px -1px 0 #555,
-    -1px -1px 0 #555;
+  -webkit-text-fill-color: #fff;
+  -webkit-text-stroke: 3px #555;
+  paint-order: stroke fill;
   transition: transform 0.15s ease;
 }
 
@@ -31,52 +28,29 @@
 }
 
 [data-theme="dark"] .text-outlined {
-  -webkit-text-stroke: 1px #222;
-  text-shadow:
-    1px 1px 0 #222,
-    -1px 1px 0 #222,
-    1px -1px 0 #222,
-    -1px -1px 0 #222;
+  -webkit-text-stroke: 3px #222;
 }
 
 /* Outlined text - primary (light blue for Edit) */
 .text-outlined-primary {
   color: #8df;
-  -webkit-text-stroke: 1px #046;
-  text-shadow:
-    1px 1px 0 #046,
-    -1px 1px 0 #046,
-    1px -1px 0 #046,
-    -1px -1px 0 #046;
+  -webkit-text-fill-color: #8df;
+  -webkit-text-stroke: 3px #046;
 }
 
 [data-theme="dark"] .text-outlined-primary {
-  -webkit-text-stroke: 1px #024;
-  text-shadow:
-    1px 1px 0 #024,
-    -1px 1px 0 #024,
-    1px -1px 0 #024,
-    -1px -1px 0 #024;
+  -webkit-text-stroke: 3px #024;
 }
 
 /* Outlined text - warning (orange for Delete) */
 .text-outlined-warning {
   color: #fa0;
-  -webkit-text-stroke: 1px #640;
-  text-shadow:
-    1px 1px 0 #640,
-    -1px 1px 0 #640,
-    1px -1px 0 #640,
-    -1px -1px 0 #640;
+  -webkit-text-fill-color: #fa0;
+  -webkit-text-stroke: 3px #640;
 }
 
 [data-theme="dark"] .text-outlined-warning {
-  -webkit-text-stroke: 1px #420;
-  text-shadow:
-    1px 1px 0 #420,
-    -1px 1px 0 #420,
-    1px -1px 0 #420,
-    -1px -1px 0 #420;
+  -webkit-text-stroke: 3px #420;
 }
 
 /* Author name - uses text-outlined base */
@@ -85,21 +59,13 @@
   font-weight: 900;
   letter-spacing: 0.05em;
   color: #fff;
-  -webkit-text-stroke: 1px #555;
-  text-shadow:
-    1px 1px 0 #555,
-    -1px 1px 0 #555,
-    1px -1px 0 #555,
-    -1px -1px 0 #555;
+  -webkit-text-fill-color: #fff;
+  -webkit-text-stroke: 3px #555;
+  paint-order: stroke fill;
 }
 
 [data-theme="dark"] .author-name {
-  -webkit-text-stroke: 1px #222;
-  text-shadow:
-    1px 1px 0 #222,
-    -1px 1px 0 #222,
-    1px -1px 0 #222,
-    -1px -1px 0 #222;
+  -webkit-text-stroke: 3px #222;
 }
 
 /* Rainbow loading animation for author name */
