@@ -117,9 +117,9 @@ MY PACEのフィルタ機能の全体設計。
 FilterPanelで「Apply」または「Clear」を押すと、以下の処理が行われる：
 
 1. 新しいフィルタ設定をlocalStorageに保存
-2. `window.location.href = '/'` でホームにリダイレクト（フルリロード）
+2. `window.location.reload()` で現在のページをリロード
 
-**重要**: SPAナビゲーション（`navigate()`）とフルリロード（`window.location.reload()`）を併用すると、競合状態が発生しリロードが無視されることがある。そのため、`window.location.href` を使用して確実にフルリロードを行う。
+**現在のURLを維持**: ユーザーページ（`/user/npub1xxx`）やクエリパラメータ付きURL（`/?tags=art`）でフィルタを適用しても、同じURLのままリロードされる。これにより、フィルタ変更前のページに留まることができる。
 
 フルリロード後、`fetchTimeline()`が呼ばれ、localStorageから最新のフィルタ設定が読み込まれてAPIリクエストに適用される。
 

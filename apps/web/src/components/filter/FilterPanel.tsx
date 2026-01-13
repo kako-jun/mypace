@@ -92,10 +92,9 @@ export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
     const newFilters = getCurrentFilters()
     saveFiltersToStorage(newFilters)
     saveMuteList(muteList)
-    // Navigate to home with full reload to apply new filters
-    // Using window.location.href instead of navigate() + reload()
-    // to avoid race conditions between SPA navigation and page reload
-    window.location.href = '/'
+    // Reload current page to apply new filters
+    // This preserves the current URL (user page, home, etc.)
+    window.location.reload()
   }
 
   // Clear all filters
@@ -112,8 +111,9 @@ export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
     setMuteList([])
     saveFiltersToStorage(DEFAULT_SEARCH_FILTERS)
     saveMuteList([])
-    // Navigate to home with full reload to apply cleared filters
-    window.location.href = '/'
+    // Reload current page to apply cleared filters
+    // This preserves the current URL (user page, home, etc.)
+    window.location.reload()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

@@ -25,7 +25,7 @@ export function Layout() {
       (filters.ngTags?.length ?? 0) > 0 ||
       !filters.showSNS ||
       !filters.showBlog ||
-      !filters.mypace || // Highlight when mypace is OFF (showing all posts)
+      filters.mypace || // Highlight when mypace is ON (filtering to MY PACE posts only)
       filters.hideNPC ||
       filters.lang !== '' ||
       mutedPubkeys.length > 0
