@@ -15,18 +15,19 @@ export function Layout() {
   const filterButtonRef = useRef<HTMLButtonElement>(null)
   const filterPanelRef = useRef<HTMLDivElement>(null)
 
-  // Check if any filters are active (based on localStorage, not URL)
-  // Note: mypace=true is the default, so we only highlight when filters differ from defaults
+  // Check if any filters are active - highlight when ANY filter reduces content
   const checkActiveFilters = useCallback(() => {
     const filters = loadFiltersFromStorage()
     const mutedPubkeys = getMutedPubkeys()
     return (
-      filters.ngWords.length > 0 ||
-      (filters.ngTags?.length ?? 0) > 0 ||
       !filters.showSNS ||
       !filters.showBlog ||
-      filters.mypace || // Highlight when mypace is ON (filtering to MY PACE posts only)
+      filters.mypace ||
+      filters.hideAds ||
+      filters.hideNSFW ||
       filters.hideNPC ||
+      filters.ngWords.length > 0 ||
+      (filters.ngTags?.length ?? 0) > 0 ||
       filters.lang !== '' ||
       mutedPubkeys.length > 0
     )
