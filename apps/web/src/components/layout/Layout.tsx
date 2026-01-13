@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { Icon } from '../ui/Icon'
 import { Settings } from '../settings'
@@ -17,7 +17,7 @@ export function Layout() {
 
   // Check if any filters are active (based on localStorage, not URL)
   // Note: mypace=true is the default, so we only highlight when filters differ from defaults
-  const hasActiveFilters = useMemo(() => {
+  const checkActiveFilters = useCallback(() => {
     const filters = loadFiltersFromStorage()
     const mutedPubkeys = getMutedPubkeys()
     return (
@@ -31,6 +31,25 @@ export function Layout() {
       mutedPubkeys.length > 0
     )
   }, [])
+
+  const [hasActiveFilters, setHasActiveFilters] = useState(checkActiveFilters)
+
+  // Update hasActiveFilters when filters change
+  useEffect(() => {
+    const updateFilters = () => setHasActiveFilters(checkActiveFilters())
+
+    window.addEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, updateFilters)
+    window.addEventListener(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED, updateFilters)
+    window.addEventListener(CUSTOM_EVENTS.NG_WORDS_CHANGED, updateFilters)
+    window.addEventListener('storage', updateFilters)
+
+    return () => {
+      window.removeEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, updateFilters)
+      window.removeEventListener(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED, updateFilters)
+      window.removeEventListener(CUSTOM_EVENTS.NG_WORDS_CHANGED, updateFilters)
+      window.removeEventListener('storage', updateFilters)
+    }
+  }, [checkActiveFilters])
 
   // Check theme colors for top-right corner
   useEffect(() => {
