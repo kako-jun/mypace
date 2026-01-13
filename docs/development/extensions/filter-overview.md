@@ -125,6 +125,29 @@ FilterPanelで「Apply」または「Clear」を押すと、以下の処理が�
 
 ---
 
+## スマートフィルタの詳細
+
+`filterBySmartFilters` が検出する内容：
+
+### 広告フィルタ (hideAds)
+
+| チェック対象 | 説明 |
+|-------------|------|
+| 構造化tタグ | `bitcoin`, `crypto`, `nft`, `airdrop`, `giveaway`, `ad`, `pr`, `promotion` |
+| 本文中の#tag | 上記タグが `#bitcoin` のように本文に含まれる場合も検出 |
+| キーワード | `airdrop`, `giveaway`, `free btc`, `free bitcoin` |
+| URL数 | 11個以上のURLを含む投稿 |
+
+### NSFWフィルタ (hideNSFW)
+
+| チェック対象 | 説明 |
+|-------------|------|
+| 構造化tタグ | `nsfw`, `r18`, `porn`, `hentai`, `content-warning` |
+| 本文中の#tag | 上記タグが `#nsfw` のように本文に含まれる場合も検出 |
+| .onionリンク | ダークウェブへのリンク（`.onion`ドメイン）を含む投稿 |
+
+---
+
 ## 実装ファイル
 
 | ファイル | 役割 |

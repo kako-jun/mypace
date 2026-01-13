@@ -51,5 +51,5 @@ export const NSFW_TAGS = [
   'content-warning',
 ]
 
-// NSFW keywords (使わない - 責任ある投稿者が警告として書く言葉であり、実際のスパマーは使わない)
+// NSFW keywords (明示的な性的用語 - スパマーが頻繁に使用するキーワード)
 export const NSFW_KEYWORDS: string[] = []

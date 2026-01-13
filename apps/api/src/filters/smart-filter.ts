@@ -117,9 +117,19 @@ export function filterBySmartFilters<T extends { content: string; tags: string[]
 
     // 広告フィルタ
     if (hideAds) {
-      // タグチェック
+      // 構造化タグチェック
       if (eventTags.some((tag) => AD_TAGS.includes(tag))) {
         return false
+      }
+      // 本文中の#tagもチェック（filterByNgTagsと同様）
+      for (const adTag of AD_TAGS) {
+        const pattern = new RegExp(
+          `#${escapeRegex(adTag)}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`,
+          'i'
+        )
+        if (pattern.test(contentLower)) {
+          return false
+        }
       }
       // キーワードチェック（本文）
       if (AD_KEYWORDS.some((kw) => contentLower.includes(kw.toLowerCase()))) {
@@ -133,12 +143,26 @@ export function filterBySmartFilters<T extends { content: string; tags: string[]
 
     // NSFWフィルタ
     if (hideNSFW) {
-      // タグチェック
+      // 構造化タグチェック
       if (eventTags.some((tag) => NSFW_TAGS.includes(tag))) {
         return false
       }
+      // 本文中の#tagもチェック（filterByNgTagsと同様）
+      for (const nsfwTag of NSFW_TAGS) {
+        const pattern = new RegExp(
+          `#${escapeRegex(nsfwTag)}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`,
+          'i'
+        )
+        if (pattern.test(contentLower)) {
+          return false
+        }
+      }
       // キーワードチェック（本文）
       if (NSFW_KEYWORDS.some((kw) => contentLower.includes(kw.toLowerCase()))) {
+        return false
+      }
+      // .onionリンクはダークウェブへのリンクなのでフィルタ
+      if (/\.onion(?:\/|$|\s)/i.test(e.content)) {
         return false
       }
     }
