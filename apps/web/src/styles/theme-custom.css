@@ -187,7 +187,7 @@ body.custom-theme .logo-pace {
 .themed-card .super-mention-prefix {
   color: #fd0 !important;
   -webkit-text-fill-color: #fd0 !important;
-  -webkit-text-stroke: 1px #000 !important;
+  -webkit-text-stroke: 2px #000 !important;
   paint-order: stroke fill !important;
 }
 
@@ -476,7 +476,7 @@ body.long-mode-active .super-mention-popup {
 .super-mention-popup-prefix {
   color: #fd0;
   -webkit-text-fill-color: #fd0;
-  -webkit-text-stroke: 1px #000;
+  -webkit-text-stroke: 2px #000;
   paint-order: stroke fill;
   font-weight: 700;
   font-size: 1.1rem;
