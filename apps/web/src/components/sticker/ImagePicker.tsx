@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon, Input, CloseButton, Portal } from '../ui'
 import Button from '../ui/Button'
+import DeleteConfirmDialog from '../post/DeleteConfirmDialog'
 import '../../styles/components/image-picker.css'
 import {
   getStickerHistory,
@@ -27,6 +28,8 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
   const [history, setHistory] = useState<StickerHistoryItem[]>([])
   const [loading, setLoading] = useState(false)
   const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [deletePopupPosition, setDeletePopupPosition] = useState<{ top: number; left: number } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { uploading, uploadFile } = useImageUpload()
 
@@ -39,6 +42,15 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
         .finally(() => setLoading(false))
     }
   }, [isOpen])
+
+  // Close delete popup on scroll
+  useEffect(() => {
+    if (confirmDelete) {
+      const handleScroll = () => handleDeleteCancel()
+      window.addEventListener('scroll', handleScroll, { passive: true })
+      return () => window.removeEventListener('scroll', handleScroll)
+    }
+  }, [confirmDelete])
 
   // Reset state when closing
   const handleClose = () => {
@@ -72,12 +84,28 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
     }
   }
 
-  const handleDelete = async (e: React.MouseEvent, url: string) => {
+  const handleDelete = (e: React.MouseEvent, url: string) => {
     e.stopPropagation()
-    const success = await deleteStickerFromHistory(url)
+    const rect = e.currentTarget.getBoundingClientRect()
+    setDeletePopupPosition({
+      top: rect.top,
+      left: rect.left + rect.width / 2,
+    })
+    setConfirmDelete(url)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!confirmDelete) return
+    handleDeleteCancel()
+    const success = await deleteStickerFromHistory(confirmDelete)
     if (success) {
-      setHistory((prev) => prev.filter((s) => s.url !== url))
+      setHistory((prev) => prev.filter((s) => s.url !== confirmDelete))
     }
+  }
+
+  const handleDeleteCancel = () => {
+    setConfirmDelete(null)
+    setDeletePopupPosition(null)
   }
 
   const handleHistoryClick = (url: string) => {
@@ -253,6 +281,13 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
         </Portal>
       )}
       {pendingFile && <ImageEditor file={pendingFile} onComplete={handleCropComplete} onCancel={handleCropCancel} />}
+      {confirmDelete && deletePopupPosition && (
+        <DeleteConfirmDialog
+          position={deletePopupPosition}
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+        />
+      )}
     </div>
   )
 }
