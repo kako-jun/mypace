@@ -84,4 +84,26 @@ userCount.get('/:pubkey/count', async (c) => {
   }
 })
 
+// GET /api/user/:pubkey/stella - ユーザーの累計ステラ数を取得
+userCount.get('/:pubkey/stella', async (c) => {
+  const pubkey = c.req.param('pubkey')
+
+  if (!pubkey || pubkey.length !== 64) {
+    return c.json({ error: 'Invalid pubkey' }, 400)
+  }
+
+  try {
+    const db = c.env.DB
+    const result = await db
+      .prepare('SELECT COALESCE(SUM(stella_count), 0) as total FROM user_stella WHERE author_pubkey = ?')
+      .bind(pubkey)
+      .first<{ total: number }>()
+
+    return c.json({ total: result?.total ?? 0 })
+  } catch (e) {
+    console.error('Stella count error:', e)
+    return c.json({ total: 0, error: String(e) })
+  }
+})
+
 export default userCount

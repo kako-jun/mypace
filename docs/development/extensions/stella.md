@@ -166,3 +166,72 @@ function getStellaCount(event: Event): number {
 - ステラ追加のたびに新しいリアクションイベントを作成し、古いものを削除
 - 削除が失敗しても新しいリアクションが有効（最新のみ採用）
 - デバウンス処理により、連打時のネットワーク負荷を軽減
+
+## ユーザー累計ステラ数
+
+ユーザーページに、そのユーザーが獲得した累計ステラ数を表示する機能。
+
+### 背景
+
+- Nostrリレーには累計を保存する仕組みがない
+- 毎回全リアクションを集計するのは非効率
+- D1データベースにキャッシュして高速表示
+
+### DBスキーマ
+
+```sql
+CREATE TABLE IF NOT EXISTS user_stella (
+  event_id TEXT NOT NULL,           -- ステラを受けた投稿ID
+  author_pubkey TEXT NOT NULL,      -- 投稿者（集計対象）
+  reactor_pubkey TEXT NOT NULL,     -- ステラを付けた人
+  stella_count INTEGER NOT NULL,    -- ステラ数 (1-10)
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (event_id, reactor_pubkey)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_stella_author ON user_stella(author_pubkey);
+```
+
+### 記録タイミング
+
+イベント発行API（`POST /api/publish`）で自動記録:
+
+1. **Kind 7 + stellaタグ**: user_stellaにUPSERT
+2. **Kind 5（リアクション削除）**: 該当レコードをDELETE
+3. **Kind 5（投稿削除）**: その投稿への全ステラをDELETE
+
+### 操作パターンと処理
+
+| 操作 | DB処理 |
+|------|--------|
+| ステラ追加 (0→1, 1→2, ...) | UPSERT（stellaCountを更新） |
+| ステラ全削除 (→0) | DELETE（レコード削除） |
+| 投稿削除 | DELETE WHERE event_id = ?（全ステラ削除） |
+
+### API仕様
+
+```
+GET /api/users/:pubkey/stella
+```
+
+レスポンス:
+
+```json
+{
+  "total": 1234
+}
+```
+
+### UI表示
+
+ユーザーページのプロフィールカード内に表示:
+
+```
+123 posts · ★ 456
+            ↑累計ステラ
+```
+
+### 制限事項
+
+- **MY PACE経由のみ**: 他のNostrクライアントからのリアクションは含まれない
+- **stellaタグ必須**: 通常のNIP-25リアクション（stellaタグなし）はカウントされない

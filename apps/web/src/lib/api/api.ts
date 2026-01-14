@@ -463,6 +463,18 @@ export async function fetchUserPostsCount(pubkey: string): Promise<number | null
   }
 }
 
+// User stella count (cumulative stella received)
+export async function fetchUserStellaCount(pubkey: string): Promise<number | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/user/${pubkey}/stella`)
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.total
+  } catch {
+    return null
+  }
+}
+
 // View counts
 export interface ViewCountData {
   impression: number

@@ -16,6 +16,7 @@ interface UserProfileProps {
   nip05Verified: boolean | null
   npubCopied: boolean
   postsCount: number | null
+  stellaCount: number | null
   serialData: UserSerialData | null
   onCopyNpub: () => void
   onEditClick: () => void
@@ -31,6 +32,7 @@ export function UserProfile({
   nip05Verified,
   npubCopied,
   postsCount,
+  stellaCount,
   serialData,
   onCopyNpub,
   onEditClick,
@@ -107,6 +109,11 @@ export function UserProfile({
 
         <div className="user-stats">
           <span>{postsCount !== null ? postsCount : '...'} posts</span>
+          {stellaCount !== null && stellaCount > 0 && (
+            <span>
+              <Icon name="Star" size={14} /> {stellaCount}
+            </span>
+          )}
         </div>
       </div>
     </div>

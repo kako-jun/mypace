@@ -8,6 +8,7 @@ import {
   fetchEvent,
   fetchUserSerial,
   fetchUserPostsCount,
+  fetchUserStellaCount,
   type UserSerialData,
 } from '../../lib/api'
 import { getEventThemeColors } from '../../lib/nostr/events'
@@ -83,6 +84,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const [pinnedEvent, setPinnedEvent] = useState<Event | null>(null)
   const [serialData, setSerialData] = useState<UserSerialData | null>(null)
   const [postsCount, setPostsCount] = useState<number | null>(null)
+  const [stellaCount, setStellaCount] = useState<number | null>(null)
   const [, setThemeVersion] = useState(0)
   const [searchQuery, setSearchQuery] = useState<string[]>([])
   const [searchTags, setSearchTags] = useState<string[]>([])
@@ -172,6 +174,15 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     }
   }, [pubkey])
 
+  const loadStellaCount = useCallback(async () => {
+    try {
+      const count = await fetchUserStellaCount(pubkey)
+      setStellaCount(count)
+    } catch (err) {
+      console.error('Failed to fetch stella count:', err)
+    }
+  }, [pubkey])
+
   const handlePin = useCallback(
     async (event: Event) => {
       const success = await setPinnedPost(pubkey, event.id)
@@ -205,8 +216,9 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     loadPinnedPost()
     loadSerial()
     loadPostsCount()
+    loadStellaCount()
     return () => clearImageClickHandler()
-  }, [pubkey, loadPinnedPost, loadSerial, loadPostsCount])
+  }, [pubkey, loadPinnedPost, loadSerial, loadPostsCount, loadStellaCount])
 
   useEffect(() => {
     if (profile?.nip05) {
@@ -322,6 +334,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
           nip05Verified={nip05Verified}
           npubCopied={npubCopied}
           postsCount={postsCount}
+          stellaCount={stellaCount}
           serialData={serialData}
           onCopyNpub={handleCopyNpub}
           onEditClick={() => setEditMode(true)}
