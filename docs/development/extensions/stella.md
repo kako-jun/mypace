@@ -242,35 +242,41 @@ GET /api/user/:pubkey/stella
 
 ### バックフィル（初期データ投入）
 
-既存のステラをD1に一括登録するための管理用API。
+既存のステラをD1に一括登録するためのローカルスクリプト。
 
+```bash
+npx tsx scripts/backfill-stella.ts [--clear]
 ```
-POST /api/admin/backfill-stella?clear=true
-```
 
-**パラメータ:**
+**オプション:**
 
-| パラメータ | 説明 |
+| オプション | 説明 |
 |-----------|------|
-| `clear=true` | 実行前に全レコードを削除（オプション） |
+| `--clear` | 実行前に全レコードを削除 |
 
 **処理内容:**
 
-1. リレーからKind 7（stellaタグ付き）を全取得
+1. リレーからKind 7を全取得（ページネーション対応）
 2. stellaタグがないKind 7は無視
-3. D1にバッチUPSERT
+3. 同一ユーザー・同一投稿への複数リアクションは最新のみ採用
+4. D1にバッチUPSERT
 
 **特徴:**
 
 - **冪等性**: 何度実行しても安全（UPSERTで重複なし）
-- **全クリア対応**: `clear=true`でデータのズレをリセット可能
+- **全クリア対応**: `--clear`でデータのズレをリセット可能
+- **最新優先**: 同一ユーザーの複数リアクションは`created_at`が最新のものを採用
+- **セキュア**: 公開APIではなくローカル実行のみ
 
 **実行例:**
 
 ```bash
+# プロジェクトルートで実行
+cd /path/to/mypace
+
 # 追加/上書きのみ
-curl -X POST https://api.mypace.llll-ll.com/api/admin/backfill-stella
+npx tsx scripts/backfill-stella.ts
 
 # 全クリアしてから再取得
-curl -X POST "https://api.mypace.llll-ll.com/api/admin/backfill-stella?clear=true"
+npx tsx scripts/backfill-stella.ts --clear
 ```
