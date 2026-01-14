@@ -112,11 +112,11 @@ export function UserProfile({
         <div className="user-stats">
           <span>{postsCount !== null ? postsCount : '...'} posts</span>
           <span>
-            <Icon name="Star" size={14} /> {stellaCount !== null ? stellaCount : '...'}
-          </span>
-          <span>
             <Icon name="BarChart2" size={14} />{' '}
             {viewsCount !== null ? `${viewsCount.details} / ${viewsCount.impressions}` : '...'}
+          </span>
+          <span>
+            <Icon name="Star" size={14} /> {stellaCount !== null ? stellaCount : '...'}
           </span>
         </div>
       </div>
