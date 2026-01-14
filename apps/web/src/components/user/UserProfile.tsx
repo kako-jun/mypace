@@ -109,11 +109,9 @@ export function UserProfile({
 
         <div className="user-stats">
           <span>{postsCount !== null ? postsCount : '...'} posts</span>
-          {stellaCount !== null && stellaCount > 0 && (
-            <span>
-              <Icon name="Star" size={14} /> {stellaCount}
-            </span>
-          )}
+          <span>
+            <Icon name="Star" size={14} /> {stellaCount !== null ? stellaCount : '...'}
+          </span>
         </div>
       </div>
     </div>

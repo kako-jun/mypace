@@ -14,17 +14,19 @@ async function recordStella(
   eventId: string,
   authorPubkey: string,
   reactorPubkey: string,
-  stellaCount: number
+  stellaCount: number,
+  reactionId: string
 ): Promise<void> {
   await db
     .prepare(
-      `INSERT INTO user_stella (event_id, author_pubkey, reactor_pubkey, stella_count, updated_at)
-       VALUES (?, ?, ?, ?, ?)
+      `INSERT INTO user_stella (event_id, author_pubkey, reactor_pubkey, stella_count, reaction_id, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT (event_id, reactor_pubkey) DO UPDATE SET
          stella_count = excluded.stella_count,
+         reaction_id = excluded.reaction_id,
          updated_at = excluded.updated_at`
     )
-    .bind(eventId, authorPubkey, reactorPubkey, stellaCount, Math.floor(Date.now() / 1000))
+    .bind(eventId, authorPubkey, reactorPubkey, stellaCount, reactionId, Math.floor(Date.now() / 1000))
     .run()
 }
 
@@ -34,13 +36,13 @@ async function deleteStella(db: D1Database, eventIds: string[], pubkey: string):
 
   const placeholders = eventIds.map(() => '?').join(',')
 
-  // Delete if user is the reactor (deleting their reaction)
+  // Delete if user is the reactor (deleting their reaction by reaction_id)
   await db
-    .prepare(`DELETE FROM user_stella WHERE event_id IN (${placeholders}) AND reactor_pubkey = ?`)
+    .prepare(`DELETE FROM user_stella WHERE reaction_id IN (${placeholders}) AND reactor_pubkey = ?`)
     .bind(...eventIds, pubkey)
     .run()
 
-  // Delete if user is the author (deleting their post)
+  // Delete if user is the author (deleting their post by event_id)
   await db
     .prepare(`DELETE FROM user_stella WHERE event_id IN (${placeholders}) AND author_pubkey = ?`)
     .bind(...eventIds, pubkey)
@@ -100,7 +102,7 @@ publish.post('/', async (c) => {
           try {
             const stellaCount = parseInt(stellaTag[1], 10)
             if (!isNaN(stellaCount) && stellaCount >= 1 && stellaCount <= 10) {
-              await recordStella(db, eTag[1], pTag[1], event.pubkey, stellaCount)
+              await recordStella(db, eTag[1], pTag[1], event.pubkey, stellaCount, event.id)
             }
           } catch (e) {
             console.error('Stella record error:', e)

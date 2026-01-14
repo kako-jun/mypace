@@ -185,20 +185,22 @@ CREATE TABLE IF NOT EXISTS user_stella (
   author_pubkey TEXT NOT NULL,      -- 投稿者（集計対象）
   reactor_pubkey TEXT NOT NULL,     -- ステラを付けた人
   stella_count INTEGER NOT NULL,    -- ステラ数 (1-10)
+  reaction_id TEXT,                 -- リアクションイベントID（削除用）
   updated_at INTEGER NOT NULL,
   PRIMARY KEY (event_id, reactor_pubkey)
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_stella_author ON user_stella(author_pubkey);
+CREATE INDEX IF NOT EXISTS idx_user_stella_reaction ON user_stella(reaction_id);
 ```
 
 ### 記録タイミング
 
 イベント発行API（`POST /api/publish`）で自動記録:
 
-1. **Kind 7 + stellaタグ**: user_stellaにUPSERT
-2. **Kind 5（リアクション削除）**: 該当レコードをDELETE
-3. **Kind 5（投稿削除）**: その投稿への全ステラをDELETE
+1. **Kind 7 + stellaタグ**: user_stellaにUPSERT（reaction_idも保存）
+2. **Kind 5（リアクション削除）**: reaction_idで該当レコードをDELETE
+3. **Kind 5（投稿削除）**: event_idでその投稿への全ステラをDELETE
 
 ### 操作パターンと処理
 
@@ -227,9 +229,11 @@ GET /api/users/:pubkey/stella
 ユーザーページのプロフィールカード内に表示:
 
 ```
-123 posts · ★ 456
-            ↑累計ステラ
+123 posts ★ 456
+          ↑累計ステラ
 ```
+
+- 0でも表示（ローディング中は「...」）
 
 ### 制限事項
 

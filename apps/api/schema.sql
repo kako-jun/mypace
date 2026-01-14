@@ -130,8 +130,10 @@ CREATE TABLE IF NOT EXISTS user_stella (
   author_pubkey TEXT NOT NULL,      -- Author of the post (for aggregation)
   reactor_pubkey TEXT NOT NULL,     -- User who gave stella
   stella_count INTEGER NOT NULL,    -- Stella count (1-10)
+  reaction_id TEXT,                 -- Reaction event ID (for deletion)
   updated_at INTEGER NOT NULL,
   PRIMARY KEY (event_id, reactor_pubkey)
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_stella_author ON user_stella(author_pubkey);
+CREATE INDEX IF NOT EXISTS idx_user_stella_reaction ON user_stella(reaction_id);
