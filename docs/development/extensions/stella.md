@@ -213,7 +213,7 @@ CREATE INDEX IF NOT EXISTS idx_user_stella_reaction ON user_stella(reaction_id);
 ### API仕様
 
 ```
-GET /api/users/:pubkey/stella
+GET /api/user/:pubkey/stella
 ```
 
 レスポンス:
