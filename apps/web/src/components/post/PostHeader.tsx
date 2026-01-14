@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { formatTimestamp } from '../../lib/nostr/events'
 import { navigateToUser } from '../../lib/utils'
-import { Avatar, EmojiText } from '../ui'
-import type { EmojiTag } from '../../types'
+import { Avatar, EmojiText, Icon } from '../ui'
+import type { EmojiTag, ViewCountData } from '../../types'
 
 const AVATAR_ANIMATIONS = ['avatar-pulse', 'avatar-bounce', 'avatar-wink']
 
@@ -16,6 +16,7 @@ interface PostHeaderProps {
   isProfileLoading?: boolean
   emojis?: EmojiTag[]
   eventKind?: number
+  views?: ViewCountData
 }
 
 export default function PostHeader({
@@ -28,6 +29,7 @@ export default function PostHeader({
   isProfileLoading = false,
   emojis = [],
   eventKind,
+  views,
 }: PostHeaderProps) {
   const nameClass = `author-name${isProfileLoading ? ' loading-rainbow' : ''}`
 
@@ -51,9 +53,16 @@ export default function PostHeader({
   // Show labels for special event kinds
   const isBlogPost = eventKind === 30023
   const isNpcPost = eventKind === 42000
+  const hasViews = views && (views.impression > 0 || views.detail > 0)
   const timestampContent = (
     <>
       {formatTimestamp(createdAt)}
+      {hasViews && (
+        <span className="view-count" aria-label={`${views.detail} detail views, ${views.impression} impressions`}>
+          {' · '}
+          <Icon name="BarChart2" size={12} /> {views.detail} / {views.impression}
+        </span>
+      )}
       {isBlogPost && <span className="kind-label kind-label-blog"> · Blog</span>}
       {isNpcPost && <span className="kind-label kind-label-npc"> · NPC</span>}
     </>

@@ -163,6 +163,19 @@
   color: var(--btn-primary-bg);
 }
 
+/* View count in header */
+.view-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.view-count svg {
+  vertical-align: middle;
+  opacity: 0.8;
+}
+
 /* Post content */
 .post-content {
   position: relative;

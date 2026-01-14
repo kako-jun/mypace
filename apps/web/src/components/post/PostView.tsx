@@ -368,6 +368,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
           isProfileLoading={!profile}
           emojis={profile?.emojis}
           eventKind={event.kind}
+          views={views}
         />
         <div className="post-content post-content-full">
           <PostContent
@@ -389,7 +390,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
               reactions={reactions}
               replies={replies}
               reposts={reposts}
-              views={views}
               likingId={likingId}
               repostingId={repostingId}
               eventId={event.id}

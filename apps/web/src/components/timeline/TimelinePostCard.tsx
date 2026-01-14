@@ -181,6 +181,7 @@ export default function TimelinePostCard({
             isProfileLoading={profiles[event.pubkey] === undefined}
             emojis={profiles[event.pubkey]?.emojis}
             eventKind={event.kind}
+            views={views}
           />
 
           <div className="post-content">
@@ -204,7 +205,6 @@ export default function TimelinePostCard({
               reactions={reactions}
               replies={replies}
               reposts={reposts}
-              views={views}
               likingId={likingId}
               repostingId={repostingId}
               eventId={event.id}
