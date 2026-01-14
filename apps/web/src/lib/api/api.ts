@@ -509,6 +509,7 @@ export async function fetchViewCountsBatch(eventIds: string[]): Promise<Record<s
 
 export async function recordView(
   eventId: string,
+  authorPubkey: string,
   viewType: 'impression' | 'detail',
   viewerPubkey: string
 ): Promise<boolean> {
@@ -516,7 +517,7 @@ export async function recordView(
     const res = await fetch(`${API_BASE}/api/views/${eventId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ viewType, viewerPubkey }),
+      body: JSON.stringify({ viewType, viewerPubkey, authorPubkey }),
     })
     return res.ok
   } catch {
@@ -525,20 +526,30 @@ export async function recordView(
 }
 
 export async function recordViewsBatch(
-  eventIds: string[],
+  events: Array<{ eventId: string; authorPubkey: string }>,
   viewType: 'impression' | 'detail',
   viewerPubkey: string
 ): Promise<boolean> {
-  if (eventIds.length === 0) return true
+  if (events.length === 0) return true
 
   try {
     const res = await fetch(`${API_BASE}/api/views/batch-record`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventIds, viewType, viewerPubkey }),
+      body: JSON.stringify({ events, viewType, viewerPubkey }),
     })
     return res.ok
   } catch {
     return false
+  }
+}
+
+export async function fetchUserViewsCount(pubkey: string): Promise<{ details: number; impressions: number } | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/user/${pubkey}/views`)
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
   }
 }

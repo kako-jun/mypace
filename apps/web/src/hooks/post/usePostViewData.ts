@@ -100,7 +100,7 @@ export function usePostViewData(eventId: string): PostViewData {
       if (hasMypaceTag(eventData)) {
         // Record detail view (fire-and-forget)
         if (pubkey) {
-          recordView(eventId, 'detail', pubkey).catch(() => {})
+          recordView(eventId, eventData.pubkey, 'detail', pubkey).catch(() => {})
         }
         // Fetch view counts
         fetchViewCounts(eventId)

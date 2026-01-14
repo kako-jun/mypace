@@ -106,4 +106,35 @@ userCount.get('/:pubkey/stella', async (c) => {
   }
 })
 
+// GET /api/user/:pubkey/views - ユーザーの累計閲覧数を取得
+userCount.get('/:pubkey/views', async (c) => {
+  const pubkey = c.req.param('pubkey')
+
+  if (!pubkey || pubkey.length !== 64) {
+    return c.json({ error: 'Invalid pubkey' }, 400)
+  }
+
+  try {
+    const db = c.env.DB
+    const result = await db
+      .prepare(
+        `SELECT
+          COUNT(CASE WHEN view_type = 'detail' THEN 1 END) as details,
+          COUNT(CASE WHEN view_type = 'impression' THEN 1 END) as impressions
+        FROM event_views
+        WHERE author_pubkey = ?`
+      )
+      .bind(pubkey)
+      .first<{ details: number; impressions: number }>()
+
+    return c.json({
+      details: result?.details ?? 0,
+      impressions: result?.impressions ?? 0,
+    })
+  } catch (e) {
+    console.error('Views count error:', e)
+    return c.json({ details: 0, impressions: 0, error: String(e) })
+  }
+})
+
 export default userCount

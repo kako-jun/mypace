@@ -9,6 +9,7 @@ import {
   fetchUserSerial,
   fetchUserPostsCount,
   fetchUserStellaCount,
+  fetchUserViewsCount,
   type UserSerialData,
 } from '../../lib/api'
 import { getEventThemeColors } from '../../lib/nostr/events'
@@ -85,6 +86,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const [serialData, setSerialData] = useState<UserSerialData | null>(null)
   const [postsCount, setPostsCount] = useState<number | null>(null)
   const [stellaCount, setStellaCount] = useState<number | null>(null)
+  const [viewsCount, setViewsCount] = useState<{ details: number; impressions: number } | null>(null)
   const [, setThemeVersion] = useState(0)
   const [searchQuery, setSearchQuery] = useState<string[]>([])
   const [searchTags, setSearchTags] = useState<string[]>([])
@@ -183,6 +185,15 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     }
   }, [pubkey])
 
+  const loadViewsCount = useCallback(async () => {
+    try {
+      const counts = await fetchUserViewsCount(pubkey)
+      setViewsCount(counts)
+    } catch (err) {
+      console.error('Failed to fetch views count:', err)
+    }
+  }, [pubkey])
+
   const handlePin = useCallback(
     async (event: Event) => {
       const success = await setPinnedPost(pubkey, event.id)
@@ -217,8 +228,9 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     loadSerial()
     loadPostsCount()
     loadStellaCount()
+    loadViewsCount()
     return () => clearImageClickHandler()
-  }, [pubkey, loadPinnedPost, loadSerial, loadPostsCount, loadStellaCount])
+  }, [pubkey, loadPinnedPost, loadSerial, loadPostsCount, loadStellaCount, loadViewsCount])
 
   useEffect(() => {
     if (profile?.nip05) {
@@ -335,6 +347,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
           npubCopied={npubCopied}
           postsCount={postsCount}
           stellaCount={stellaCount}
+          viewsCount={viewsCount}
           serialData={serialData}
           onCopyNpub={handleCopyNpub}
           onEditClick={() => setEditMode(true)}

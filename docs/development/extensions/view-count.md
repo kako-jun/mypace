@@ -28,6 +28,7 @@ MY PACE独自のD1データベースでトラッキングし、2種類の指標�
 ```sql
 CREATE TABLE IF NOT EXISTS event_views (
   event_id TEXT NOT NULL,
+  author_pubkey TEXT NOT NULL,    -- 投稿者のpubkey（ユーザー累計用）
   viewer_pubkey TEXT NOT NULL,
   view_type TEXT NOT NULL,        -- 'impression' or 'detail'
   created_at INTEGER NOT NULL,
@@ -35,9 +36,13 @@ CREATE TABLE IF NOT EXISTS event_views (
 );
 
 CREATE INDEX IF NOT EXISTS idx_event_views_event ON event_views(event_id);
+CREATE INDEX IF NOT EXISTS idx_event_views_author ON event_views(author_pubkey);
 CREATE INDEX IF NOT EXISTS idx_event_views_viewer ON event_views(viewer_pubkey);
 CREATE INDEX IF NOT EXISTS idx_event_views_type ON event_views(view_type);
 ```
+
+`author_pubkey`カラムは、ユーザーページでの累計閲覧数表示に使用する。
+投稿単位のカウントでは`event_id`でグループ化し、ユーザー単位のカウントでは`author_pubkey`でグループ化する。
 
 ## API仕様
 
@@ -52,7 +57,8 @@ POST /api/views/:eventId
 ```json
 {
   "viewType": "impression",      // or "detail"
-  "viewerPubkey": "npub..."
+  "viewerPubkey": "npub...",
+  "authorPubkey": "npub..."      // 投稿者のpubkey（必須）
 }
 ```
 
@@ -116,7 +122,11 @@ POST /api/views/batch-record
 
 ```json
 {
-  "eventIds": ["event1", "event2", "event3"],
+  "events": [
+    { "eventId": "event1", "authorPubkey": "pubkey1" },
+    { "eventId": "event2", "authorPubkey": "pubkey2" },
+    { "eventId": "event3", "authorPubkey": "pubkey3" }
+  ],
   "viewType": "impression",
   "viewerPubkey": "npub..."
 }
@@ -130,6 +140,25 @@ POST /api/views/batch-record
   "recorded": 3
 }
 ```
+
+### ユーザー累計閲覧数を取得
+
+ユーザーページで表示する累計閲覧数を取得。
+
+```
+GET /api/user/:pubkey/views
+```
+
+レスポンス:
+
+```json
+{
+  "details": 45,        // 累計詳細閲覧数
+  "impressions": 123    // 累計インプレッション数
+}
+```
+
+ユーザーページでは `詳細 / インプレッション` 形式（例: `45 / 123`）で表示する。
 
 ## UI表示
 
@@ -164,12 +193,13 @@ POST /api/views/batch-record
 ```typescript
 // タイムラインに投稿が表示されたとき
 // IntersectionObserver等で可視性を検知して記録
-async function recordImpression(eventId: string, viewerPubkey: string) {
+async function recordImpression(eventId: string, authorPubkey: string, viewerPubkey: string) {
   await fetch(`/api/views/${eventId}`, {
     method: 'POST',
     body: JSON.stringify({
       viewType: 'impression',
       viewerPubkey,
+      authorPubkey,
     }),
   })
 }
@@ -179,12 +209,13 @@ async function recordImpression(eventId: string, viewerPubkey: string) {
 
 ```typescript
 // 詳細ページを開いたとき
-async function recordDetailView(eventId: string, viewerPubkey: string) {
+async function recordDetailView(eventId: string, authorPubkey: string, viewerPubkey: string) {
   await fetch(`/api/views/${eventId}`, {
     method: 'POST',
     body: JSON.stringify({
       viewType: 'detail',
       viewerPubkey,
+      authorPubkey,
     }),
   })
 }
@@ -196,14 +227,14 @@ async function recordDetailView(eventId: string, viewerPubkey: string) {
 // 閲覧記録（UPSERT）
 app.post('/views/:eventId', async (c) => {
   const { eventId } = c.req.param()
-  const { viewType, viewerPubkey } = await c.req.json()
+  const { viewType, viewerPubkey, authorPubkey } = await c.req.json()
 
   const result = await c.env.DB.prepare(`
-    INSERT INTO event_views (event_id, viewer_pubkey, view_type, created_at)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO event_views (event_id, author_pubkey, viewer_pubkey, view_type, created_at)
+    VALUES (?, ?, ?, ?, ?)
     ON CONFLICT (event_id, viewer_pubkey, view_type) DO NOTHING
   `)
-    .bind(eventId, viewerPubkey, viewType, Math.floor(Date.now() / 1000))
+    .bind(eventId, authorPubkey, viewerPubkey, viewType, Math.floor(Date.now() / 1000))
     .run()
 
   return c.json({
@@ -247,6 +278,21 @@ app.get('/views/:eventId', async (c) => {
 ### インデックス
 
 `event_id`と`view_type`にインデックスを設定し、集計クエリを高速化。
+
+## ユーザープロフィールでの表示
+
+ユーザーページでは、そのユーザーの累計閲覧数を表示する。
+
+### 表示形式
+
+```
+[BarChart2] 45 / 123
+            ↑詳細 ↑インプレ
+```
+
+- 棒グラフアイコン（BarChart2）の後に `詳細 / インプレッション` 形式で表示
+- 「123回表示されて、45回詳細ページが開かれた」という意味
+- `UserProfile`コンポーネントの`user-stats`内に表示
 
 ## 関連機能
 

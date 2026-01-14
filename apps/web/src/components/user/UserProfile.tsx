@@ -17,6 +17,7 @@ interface UserProfileProps {
   npubCopied: boolean
   postsCount: number | null
   stellaCount: number | null
+  viewsCount: { details: number; impressions: number } | null
   serialData: UserSerialData | null
   onCopyNpub: () => void
   onEditClick: () => void
@@ -33,6 +34,7 @@ export function UserProfile({
   npubCopied,
   postsCount,
   stellaCount,
+  viewsCount,
   serialData,
   onCopyNpub,
   onEditClick,
@@ -111,6 +113,10 @@ export function UserProfile({
           <span>{postsCount !== null ? postsCount : '...'} posts</span>
           <span>
             <Icon name="Star" size={14} /> {stellaCount !== null ? stellaCount : '...'}
+          </span>
+          <span>
+            <Icon name="BarChart2" size={14} />{' '}
+            {viewsCount !== null ? `${viewsCount.details} / ${viewsCount.impressions}` : '...'}
           </span>
         </div>
       </div>

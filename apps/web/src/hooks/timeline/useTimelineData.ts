@@ -161,10 +161,10 @@ export async function loadViewsForEvents(
 
 // インプレッション一括記録（mypaceタグ付き投稿のみ）
 export async function recordImpressionsForEvents(events: Event[], viewerPubkey: string): Promise<void> {
-  // mypaceタグ付き投稿のIDのみ抽出
-  const mypaceEventIds = events.filter((e) => hasMypaceTag(e)).map((e) => e.id)
-  if (mypaceEventIds.length === 0 || !viewerPubkey) return
+  // mypaceタグ付き投稿の { eventId, authorPubkey } を抽出
+  const mypaceEvents = events.filter((e) => hasMypaceTag(e)).map((e) => ({ eventId: e.id, authorPubkey: e.pubkey }))
+  if (mypaceEvents.length === 0 || !viewerPubkey) return
 
   // fire-and-forget
-  recordViewsBatch(mypaceEventIds, 'impression', viewerPubkey).catch(() => {})
+  recordViewsBatch(mypaceEvents, 'impression', viewerPubkey).catch(() => {})
 }
