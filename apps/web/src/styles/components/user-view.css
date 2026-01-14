@@ -217,13 +217,22 @@
 }
 
 .user-stats {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-primary);
   margin-top: 16px;
   padding-top: 12px;
   border-top: 1px solid var(--border-light);
-  text-align: right;
+}
+
+.user-stats > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* Post Header User Button */

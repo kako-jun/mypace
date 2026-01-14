@@ -245,6 +245,7 @@ GET /api/user/:pubkey/stella
 既存のステラをD1に一括登録するためのローカルスクリプト。
 
 ```bash
+cd apps/api
 npx tsx scripts/backfill-stella.ts [--clear]
 ```
 
@@ -271,8 +272,8 @@ npx tsx scripts/backfill-stella.ts [--clear]
 **実行例:**
 
 ```bash
-# プロジェクトルートで実行
-cd /path/to/mypace
+# apps/apiディレクトリで実行
+cd /path/to/mypace/apps/api
 
 # 追加/上書きのみ
 npx tsx scripts/backfill-stella.ts
