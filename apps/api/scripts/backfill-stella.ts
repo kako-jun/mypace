@@ -31,54 +31,68 @@ interface StellaRecord {
   createdAt: number
 }
 
-async function fetchAllReactions(): Promise<Event[]> {
-  const pool = new SimplePool()
-  const allEvents: Event[] = []
+async function fetchMyPacePosts(pool: SimplePool): Promise<Event[]> {
+  const allPosts: Event[] = []
   let until: number | undefined = undefined
-  const batchSize = 5000
+  const batchSize = 500
 
-  console.log('Fetching Kind 7 reactions from relays...')
+  console.log('Fetching MY PACE posts...')
 
-  try {
-    while (true) {
-      const filter: { kinds: number[]; limit: number; until?: number } = {
-        kinds: [7],
-        limit: batchSize,
-      }
-      if (until) {
-        filter.until = until
-      }
-
-      const events = await pool.querySync(RELAYS, filter)
-      if (events.length === 0) break
-
-      allEvents.push(...events)
-      console.log(`  Fetched ${events.length} events (total: ${allEvents.length})`)
-
-      // Get oldest event timestamp for next batch
-      const oldest = Math.min(...events.map((e) => e.created_at))
-      if (oldest === until) break // No more events
-      until = oldest
-
-      // Safety limit
-      if (allEvents.length >= 100000) {
-        console.log('  Reached safety limit of 100000 events')
-        break
-      }
+  while (true) {
+    const filter: { kinds: number[]; '#t': string[]; limit: number; until?: number } = {
+      kinds: [1],
+      '#t': ['mypace'],
+      limit: batchSize,
     }
-  } finally {
-    pool.close(RELAYS)
+    if (until) {
+      filter.until = until
+    }
+
+    const posts = await pool.querySync(RELAYS, filter)
+    if (posts.length === 0) break
+
+    allPosts.push(...posts)
+    console.log(`  Fetched ${posts.length} posts (total: ${allPosts.length})`)
+
+    const oldest = Math.min(...posts.map((p) => p.created_at))
+    if (oldest === until) break
+    until = oldest
+
+    if (allPosts.length >= 10000) {
+      console.log('  Reached safety limit of 10000 posts')
+      break
+    }
   }
 
-  return allEvents
+  return allPosts
 }
 
-function extractStellaRecords(events: Event[]): Map<string, StellaRecord> {
-  // Key: `${eventId}:${reactorPubkey}`, Value: latest StellaRecord
+async function fetchReactionsForPosts(pool: SimplePool, postIds: string[]): Promise<Event[]> {
+  const allReactions: Event[] = []
+  const batchSize = 100
+
+  console.log(`\nFetching reactions for ${postIds.length} posts...`)
+
+  for (let i = 0; i < postIds.length; i += batchSize) {
+    const batch = postIds.slice(i, i + batchSize)
+    const reactions = await pool.querySync(RELAYS, {
+      kinds: [7],
+      '#e': batch,
+    })
+    allReactions.push(...reactions)
+    console.log(
+      `  Batch ${Math.floor(i / batchSize) + 1}: ${reactions.length} reactions (total: ${allReactions.length})`
+    )
+  }
+
+  return allReactions
+}
+
+function extractStellaRecords(reactions: Event[], postAuthors: Map<string, string>): Map<string, StellaRecord> {
   const recordMap = new Map<string, StellaRecord>()
 
-  for (const event of events) {
-    const tags = event.tags || []
+  for (const reaction of reactions) {
+    const tags = reaction.tags || []
 
     // Check for stella tag
     const stellaTag = tags.find((t) => t[0] === 'stella')
@@ -87,23 +101,26 @@ function extractStellaRecords(events: Event[]): Map<string, StellaRecord> {
     const stellaCount = parseInt(stellaTag[1], 10)
     if (isNaN(stellaCount) || stellaCount < 1 || stellaCount > 10) continue
 
-    // Get target event ID and author pubkey
+    // Get target event ID
     const eTag = tags.find((t) => t[0] === 'e')
-    const pTag = tags.find((t) => t[0] === 'p')
-    if (!eTag || !eTag[1] || !pTag || !pTag[1]) continue
+    if (!eTag || !eTag[1]) continue
 
-    const key = `${eTag[1]}:${event.pubkey}`
+    const eventId = eTag[1]
+    const authorPubkey = postAuthors.get(eventId)
+    if (!authorPubkey) continue
+
+    const key = `${eventId}:${reaction.pubkey}`
     const existing = recordMap.get(key)
 
     // Keep only the latest reaction (by created_at)
-    if (!existing || event.created_at > existing.createdAt) {
+    if (!existing || reaction.created_at > existing.createdAt) {
       recordMap.set(key, {
-        eventId: eTag[1],
-        authorPubkey: pTag[1],
-        reactorPubkey: event.pubkey,
+        eventId,
+        authorPubkey,
+        reactorPubkey: reaction.pubkey,
         stellaCount,
-        reactionId: event.id,
-        createdAt: event.created_at,
+        reactionId: reaction.id,
+        createdAt: reaction.created_at,
       })
     }
   }
@@ -120,7 +137,6 @@ function generateSQL(records: StellaRecord[], clear: boolean): string {
 
   for (const record of records) {
     const now = Math.floor(Date.now() / 1000)
-    // Escape single quotes in IDs (though hex IDs shouldn't have them)
     const escape = (s: string) => s.replace(/'/g, "''")
     lines.push(
       `INSERT INTO user_stella (event_id, author_pubkey, reactor_pubkey, stella_count, reaction_id, updated_at) ` +
@@ -141,32 +157,49 @@ async function main() {
   console.log(`Clear existing data: ${clear}`)
   console.log('')
 
-  // Fetch all reactions from relays
-  const events = await fetchAllReactions()
-  console.log(`\nTotal reactions fetched: ${events.length}`)
+  const pool = new SimplePool()
 
-  // Extract stella records (keeping latest per user per post)
-  const recordMap = extractStellaRecords(events)
-  const records = Array.from(recordMap.values())
-  console.log(`Stella records to insert: ${records.length}`)
-
-  if (records.length === 0) {
-    console.log('No stella records found. Exiting.')
-    return
-  }
-
-  // Generate SQL
-  const sql = generateSQL(records, clear)
-  const sqlFile = '/tmp/backfill-stella.sql'
-
-  // Write SQL to temp file
-  const fs = await import('fs')
-  fs.writeFileSync(sqlFile, sql)
-  console.log(`\nSQL written to: ${sqlFile}`)
-
-  // Execute via wrangler
-  console.log('\nExecuting SQL via wrangler d1...')
   try {
+    // Step 1: Fetch MY PACE posts
+    const posts = await fetchMyPacePosts(pool)
+    console.log(`\nTotal MY PACE posts: ${posts.length}`)
+
+    if (posts.length === 0) {
+      console.log('No MY PACE posts found. Exiting.')
+      return
+    }
+
+    // Build post ID -> author pubkey map
+    const postAuthors = new Map<string, string>()
+    for (const post of posts) {
+      postAuthors.set(post.id, post.pubkey)
+    }
+
+    // Step 2: Fetch reactions for these posts
+    const postIds = posts.map((p) => p.id)
+    const reactions = await fetchReactionsForPosts(pool, postIds)
+    console.log(`\nTotal reactions fetched: ${reactions.length}`)
+
+    // Step 3: Extract stella records
+    const recordMap = extractStellaRecords(reactions, postAuthors)
+    const records = Array.from(recordMap.values())
+    console.log(`Stella records to insert: ${records.length}`)
+
+    if (records.length === 0) {
+      console.log('No stella records found. Exiting.')
+      return
+    }
+
+    // Generate SQL
+    const sql = generateSQL(records, clear)
+    const sqlFile = '/tmp/backfill-stella.sql'
+
+    const fs = await import('fs')
+    fs.writeFileSync(sqlFile, sql)
+    console.log(`\nSQL written to: ${sqlFile}`)
+
+    // Execute via wrangler
+    console.log('\nExecuting SQL via wrangler d1...')
     execSync(`npx wrangler d1 execute ${DB_NAME} --remote --file=${sqlFile}`, {
       stdio: 'inherit',
       cwd: process.cwd(),
@@ -175,6 +208,8 @@ async function main() {
   } catch (error) {
     console.error('\n❌ Backfill failed:', error)
     process.exit(1)
+  } finally {
+    pool.close(RELAYS)
   }
 }
 
