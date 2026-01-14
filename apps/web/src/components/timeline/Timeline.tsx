@@ -55,6 +55,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
     myPubkey,
     loading,
     error,
+    views,
     likingId,
     repostingId,
     newEventCount,
@@ -190,6 +191,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
               reactions={reactions[event.id]}
               replies={replies[event.id]}
               reposts={reposts[event.id]}
+              views={views[event.id]}
               likingId={likingId}
               repostingId={repostingId}
               copiedId={copiedId}

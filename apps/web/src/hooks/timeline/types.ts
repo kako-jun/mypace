@@ -1,4 +1,4 @@
-import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../../types'
+import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData, TimelineItem } from '../../types'
 
 // ギャップ情報を表す型
 export interface GapInfo {
@@ -21,6 +21,7 @@ export interface UseTimelineResult {
   reactions: { [eventId: string]: ReactionData }
   replies: { [eventId: string]: ReplyData }
   reposts: { [eventId: string]: RepostData }
+  views: { [eventId: string]: ViewCountData }
   myPubkey: string | null
   loading: boolean
   error: string

@@ -9,13 +9,15 @@ import {
 } from '../../lib/nostr/events'
 import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage } from '../../lib/utils'
 import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
-import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, TimelineItem } from '../../types'
+import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData, TimelineItem } from '../../types'
 import type { GapInfo, UseTimelineOptions, UseTimelineResult } from './types'
 import {
   loadProfiles,
   loadReactionsForEvents,
   loadRepliesForEvents,
   loadRepostsForEvents,
+  loadViewsForEvents,
+  recordImpressionsForEvents,
   mergeProfiles,
 } from './useTimelineData'
 import { useTimelinePolling } from './useTimelinePolling'
@@ -33,6 +35,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const [reactions, setReactions] = useState<{ [eventId: string]: ReactionData }>({})
   const [replies, setReplies] = useState<{ [eventId: string]: ReplyData }>({})
   const [reposts, setReposts] = useState<{ [eventId: string]: RepostData }>({})
+  const [views, setViews] = useState<{ [eventId: string]: ViewCountData }>({})
   const [myPubkey, setMyPubkey] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -131,7 +134,11 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         loadReactionsForEvents(notes, pubkey, loadedProfiles, setReactions, setProfiles),
         loadRepliesForEvents(notes, loadedProfiles, setReplies, setProfiles),
         loadRepostsForEvents(notes, pubkey, setReposts),
+        loadViewsForEvents(notes, setViews),
       ])
+
+      // Record impressions (fire-and-forget)
+      recordImpressionsForEvents(notes, pubkey)
     } catch (err) {
       setError(getErrorMessage(err, 'Failed to load timeline'))
       setLoading(false)
@@ -359,6 +366,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     reactions,
     replies,
     reposts,
+    views,
     myPubkey,
     loading,
     error,

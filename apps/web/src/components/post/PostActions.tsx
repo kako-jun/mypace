@@ -5,13 +5,14 @@ import ReactorsPopup from './ReactorsPopup'
 import RepostConfirmPopup from './RepostConfirmPopup'
 import ShareMenu, { type ShareOption } from './ShareMenu'
 import { MAX_STELLA_PER_USER } from '../../lib/nostr/events'
-import type { ReactionData, ReplyData, RepostData } from '../../types'
+import type { ReactionData, ReplyData, RepostData, ViewCountData } from '../../types'
 
 interface PostActionsProps {
   isMyPost: boolean
   reactions: ReactionData | undefined
   replies: ReplyData | undefined
   reposts: RepostData | undefined
+  views: ViewCountData | undefined
   likingId: string | null
   repostingId: string | null
   eventId: string
@@ -33,6 +34,7 @@ export default function PostActions({
   reactions,
   replies,
   reposts,
+  views,
   likingId,
   repostingId,
   eventId,
@@ -338,6 +340,18 @@ export default function PostActions({
           <ShareMenu position={shareMenuPosition} onSelect={handleShareSelect} onClose={handleShareMenuClose} />
         )}
       </div>
+
+      {views !== undefined && (views.impression > 0 || views.detail > 0) && (
+        <div
+          className="view-count-display"
+          aria-label={`${views.detail} detail views, ${views.impression} impressions`}
+        >
+          <Icon name="BarChart2" size={16} />
+          <span className="view-count-text">
+            {views.detail} / {views.impression}
+          </span>
+        </div>
+      )}
     </>
   )
 }

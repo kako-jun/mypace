@@ -73,6 +73,12 @@ export interface RepostData {
   myRepost: boolean
 }
 
+// View count types
+export interface ViewCountData {
+  impression: number
+  detail: number
+}
+
 // Timeline types
 export interface TimelineItem {
   event: Event

@@ -88,6 +88,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     reactions,
     replies,
     reposts,
+    views,
     replyProfiles,
     parentEvent,
     parentProfile,
@@ -388,6 +389,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
               reactions={reactions}
               replies={replies}
               reposts={reposts}
+              views={views}
               likingId={likingId}
               repostingId={repostingId}
               eventId={event.id}

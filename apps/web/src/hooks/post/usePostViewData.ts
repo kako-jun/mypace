@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { fetchEventById, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts } from '../../lib/nostr/relay'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import { getCachedPost, getCachedProfile, getErrorMessage } from '../../lib/utils'
-import type { Event, LoadableProfile, ReactionData, Profile } from '../../types'
+import { hasMypaceTag } from '../../lib/nostr/tags'
+import { fetchViewCounts, recordView } from '../../lib/api/api'
+import type { Event, LoadableProfile, ReactionData, Profile, ViewCountData } from '../../types'
 
 interface PostViewData {
   event: Event | null
@@ -13,6 +15,7 @@ interface PostViewData {
   reactions: ReactionData
   replies: { count: number; replies: Event[] }
   reposts: { count: number; myRepost: boolean }
+  views: ViewCountData | undefined
   replyProfiles: { [pubkey: string]: Profile | null }
   parentEvent: Event | null
   parentProfile: Profile | null
@@ -37,6 +40,7 @@ export function usePostViewData(eventId: string): PostViewData {
   const [reactions, setReactions] = useState<ReactionData>(initialReactions)
   const [replies, setReplies] = useState<{ count: number; replies: Event[] }>({ count: 0, replies: [] })
   const [reposts, setReposts] = useState({ count: 0, myRepost: false })
+  const [views, setViews] = useState<ViewCountData | undefined>(undefined)
   const [replyProfiles, setReplyProfiles] = useState<{ [pubkey: string]: Profile | null }>({})
   const [parentEvent, setParentEvent] = useState<Event | null>(null)
   const [parentProfile, setParentProfile] = useState<Profile | null>(null)
@@ -92,6 +96,18 @@ export function usePostViewData(eventId: string): PostViewData {
       setReplies(replyData)
       setReposts(repostData)
 
+      // Fetch view counts and record detail view for mypace posts
+      if (hasMypaceTag(eventData)) {
+        // Record detail view (fire-and-forget)
+        if (pubkey) {
+          recordView(eventId, 'detail', pubkey).catch(() => {})
+        }
+        // Fetch view counts
+        fetchViewCounts(eventId)
+          .then(setViews)
+          .catch(() => {})
+      }
+
       const profiles: { [pubkey: string]: Profile | null } = {}
       const replyPubkeys = replyData.replies.map((r) => r.pubkey)
       const reactorPubkeys = reactionData.reactors.map((r) => r.pubkey)
@@ -137,6 +153,7 @@ export function usePostViewData(eventId: string): PostViewData {
     reactions,
     replies,
     reposts,
+    views,
     replyProfiles,
     parentEvent,
     parentProfile,

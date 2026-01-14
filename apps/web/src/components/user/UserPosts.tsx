@@ -10,6 +10,7 @@ import type {
   ReplyData,
   RepostData,
   TimelineItem,
+  ViewCountData,
 } from '../../types'
 import type { GapInfo } from '../../hooks/timeline/types'
 import type { ShareOption } from '../post/ShareMenu'
@@ -20,6 +21,7 @@ interface UserPostsProps {
   reactions: { [eventId: string]: ReactionData }
   replies: { [eventId: string]: ReplyData }
   reposts: { [eventId: string]: RepostData }
+  views: { [eventId: string]: ViewCountData }
   myPubkey: string | null
   authorPubkey: string
   authorProfile: LoadableProfile
@@ -52,6 +54,7 @@ export function UserPosts({
   reactions,
   replies,
   reposts,
+  views,
   myPubkey,
   authorPubkey,
   authorProfile,
@@ -119,6 +122,7 @@ export function UserPosts({
           reactions={reactions[event.id]}
           replies={replies[event.id]}
           reposts={reposts[event.id]}
+          views={views[event.id]}
           likingId={likingId}
           repostingId={repostingId}
           copiedId={copiedId}

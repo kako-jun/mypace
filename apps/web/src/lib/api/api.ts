@@ -462,3 +462,71 @@ export async function fetchUserPostsCount(pubkey: string): Promise<number | null
     return null
   }
 }
+
+// View counts
+export interface ViewCountData {
+  impression: number
+  detail: number
+}
+
+export async function fetchViewCounts(eventId: string): Promise<ViewCountData> {
+  try {
+    const res = await fetch(`${API_BASE}/api/views/${eventId}`)
+    if (!res.ok) return { impression: 0, detail: 0 }
+    return res.json()
+  } catch {
+    return { impression: 0, detail: 0 }
+  }
+}
+
+export async function fetchViewCountsBatch(eventIds: string[]): Promise<Record<string, ViewCountData>> {
+  if (eventIds.length === 0) return {}
+
+  try {
+    const res = await fetch(`${API_BASE}/api/views/batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventIds }),
+    })
+    if (!res.ok) return {}
+    return res.json()
+  } catch {
+    return {}
+  }
+}
+
+export async function recordView(
+  eventId: string,
+  viewType: 'impression' | 'detail',
+  viewerPubkey: string
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/views/${eventId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ viewType, viewerPubkey }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+export async function recordViewsBatch(
+  eventIds: string[],
+  viewType: 'impression' | 'detail',
+  viewerPubkey: string
+): Promise<boolean> {
+  if (eventIds.length === 0) return true
+
+  try {
+    const res = await fetch(`${API_BASE}/api/views/batch-record`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventIds, viewType, viewerPubkey }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}

@@ -1,5 +1,7 @@
 import { fetchProfiles, fetchReactions, fetchReplies, fetchReposts } from '../../lib/nostr/relay'
-import type { Event, ProfileCache, ReactionData, ReplyData, RepostData } from '../../types'
+import { fetchViewCountsBatch, recordViewsBatch } from '../../lib/api/api'
+import { hasMypaceTag } from '../../lib/nostr/tags'
+import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData } from '../../types'
 
 // プロフィール読み込み
 export async function loadProfiles(
@@ -140,4 +142,29 @@ export async function mergeProfiles(
       return newProfiles
     })
   } catch {}
+}
+
+// 閲覧数読み込み（mypaceタグ付き投稿のみ）
+export async function loadViewsForEvents(
+  events: Event[],
+  setViews: React.Dispatch<React.SetStateAction<{ [eventId: string]: ViewCountData }>>
+): Promise<void> {
+  // mypaceタグ付き投稿のIDのみ抽出
+  const mypaceEventIds = events.filter((e) => hasMypaceTag(e)).map((e) => e.id)
+  if (mypaceEventIds.length === 0) return
+
+  try {
+    const viewsData = await fetchViewCountsBatch(mypaceEventIds)
+    setViews((prev) => ({ ...prev, ...viewsData }))
+  } catch {}
+}
+
+// インプレッション一括記録（mypaceタグ付き投稿のみ）
+export async function recordImpressionsForEvents(events: Event[], viewerPubkey: string): Promise<void> {
+  // mypaceタグ付き投稿のIDのみ抽出
+  const mypaceEventIds = events.filter((e) => hasMypaceTag(e)).map((e) => e.id)
+  if (mypaceEventIds.length === 0 || !viewerPubkey) return
+
+  // fire-and-forget
+  recordViewsBatch(mypaceEventIds, 'impression', viewerPubkey).catch(() => {})
 }

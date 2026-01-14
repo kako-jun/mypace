@@ -34,6 +34,7 @@ MY PACEはNostrプロトコルの拡張性を活用し、独自機能を実装�
 | Webhook API | [webhook-api.md](./webhook-api.md) | 外部からの投稿API |
 | Dynamic OGP | [dynamic-ogp.md](./dynamic-ogp.md) | 動的OGP生成 |
 | Intent Share | [intent-share.md](./intent-share.md) | 外部サイトから投稿画面へテキスト渡し |
+| View Count | [view-count.md](./view-count.md) | 閲覧数（インプレッション/詳細）トラッキング |
 
 ### インフラ
 

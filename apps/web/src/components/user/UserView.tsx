@@ -99,6 +99,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     reactions,
     replies,
     reposts,
+    views,
     myPubkey,
     loading,
     error,
@@ -333,6 +334,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
         reactions={reactions}
         replies={replies}
         reposts={reposts}
+        views={views}
         myPubkey={myPubkey}
         authorPubkey={pubkey}
         authorProfile={profile}

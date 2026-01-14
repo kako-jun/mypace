@@ -14,7 +14,7 @@ import {
 import { cachePost, cacheProfile, navigateToPostModal, navigateToUser } from '../../lib/utils'
 import { parseStickers, hasTeaserTag } from '../../lib/nostr/tags'
 import { useDeleteConfirm } from '../../hooks'
-import type { Event, ReactionData, ReplyData, RepostData, ProfileCache } from '../../types'
+import type { Event, ReactionData, ReplyData, RepostData, ViewCountData, ProfileCache } from '../../types'
 import type { ShareOption } from '../post/ShareMenu'
 
 interface TimelinePostCardProps {
@@ -26,6 +26,7 @@ interface TimelinePostCardProps {
   reactions: ReactionData | undefined
   replies: ReplyData | undefined
   reposts: RepostData | undefined
+  views: ViewCountData | undefined
   likingId: string | null
   repostingId: string | null
   copiedId: string | null
@@ -53,6 +54,7 @@ export default function TimelinePostCard({
   reactions,
   replies,
   reposts,
+  views,
   likingId,
   repostingId,
   copiedId,
@@ -202,6 +204,7 @@ export default function TimelinePostCard({
               reactions={reactions}
               replies={replies}
               reposts={reposts}
+              views={views}
               likingId={likingId}
               repostingId={repostingId}
               eventId={event.id}

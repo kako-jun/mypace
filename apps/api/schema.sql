@@ -110,3 +110,16 @@ CREATE TABLE IF NOT EXISTS upload_history (
 
 CREATE INDEX IF NOT EXISTS idx_upload_history_pubkey ON upload_history(pubkey);
 CREATE INDEX IF NOT EXISTS idx_upload_history_uploaded_at ON upload_history(uploaded_at DESC);
+
+-- Event views table (for view count tracking)
+CREATE TABLE IF NOT EXISTS event_views (
+  event_id TEXT NOT NULL,
+  viewer_pubkey TEXT NOT NULL,
+  view_type TEXT NOT NULL,        -- 'impression' or 'detail'
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (event_id, viewer_pubkey, view_type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_event_views_event ON event_views(event_id);
+CREATE INDEX IF NOT EXISTS idx_event_views_viewer ON event_views(viewer_pubkey);
+CREATE INDEX IF NOT EXISTS idx_event_views_type ON event_views(view_type);
