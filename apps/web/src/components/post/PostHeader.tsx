@@ -58,12 +58,12 @@ export default function PostHeader({
       {formatTimestamp(createdAt)}
       {views && (
         <span className="view-count" aria-label={`${views.detail} detail views, ${views.impression} impressions`}>
-          {' · '}
+          &nbsp;·&nbsp;
           <Icon name="BarChart2" size={12} /> {views.detail} / {views.impression}
         </span>
       )}
-      {isBlogPost && <span className="kind-label kind-label-blog"> · Blog</span>}
-      {isNpcPost && <span className="kind-label kind-label-npc"> · NPC</span>}
+      {isBlogPost && <span className="kind-label kind-label-blog">&nbsp;·&nbsp;Blog</span>}
+      {isNpcPost && <span className="kind-label kind-label-npc">&nbsp;·&nbsp;NPC</span>}
     </>
   )
 
