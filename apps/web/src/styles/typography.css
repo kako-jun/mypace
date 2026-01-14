@@ -72,6 +72,7 @@
 .author-name.loading-rainbow {
   position: relative;
   color: transparent;
+  -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 0;
   text-shadow: none;
 }
