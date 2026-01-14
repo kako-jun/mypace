@@ -31,16 +31,19 @@ interface StellaRecord {
   createdAt: number
 }
 
+// Kind 1: Regular notes, Kind 42000: Sinov NPC posts
+const MY_PACE_KINDS = [1, 42000]
+
 async function fetchMyPacePosts(pool: SimplePool): Promise<Event[]> {
   const allPosts: Event[] = []
   let until: number | undefined = undefined
   const batchSize = 500
 
-  console.log('Fetching MY PACE posts...')
+  console.log('Fetching MY PACE posts (Kind 1 and 42000)...')
 
   while (true) {
     const filter: { kinds: number[]; '#t': string[]; limit: number; until?: number } = {
-      kinds: [1],
+      kinds: MY_PACE_KINDS,
       '#t': ['mypace'],
       limit: batchSize,
     }
