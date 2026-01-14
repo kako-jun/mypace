@@ -239,3 +239,38 @@ GET /api/user/:pubkey/stella
 
 - **MY PACE経由のみ**: 他のNostrクライアントからのリアクションは含まれない
 - **stellaタグ必須**: 通常のNIP-25リアクション（stellaタグなし）はカウントされない
+
+### バックフィル（初期データ投入）
+
+既存のステラをD1に一括登録するための管理用API。
+
+```
+POST /api/admin/backfill-stella?clear=true
+```
+
+**パラメータ:**
+
+| パラメータ | 説明 |
+|-----------|------|
+| `clear=true` | 実行前に全レコードを削除（オプション） |
+
+**処理内容:**
+
+1. リレーからKind 7（stellaタグ付き）を全取得
+2. stellaタグがないKind 7は無視
+3. D1にバッチUPSERT
+
+**特徴:**
+
+- **冪等性**: 何度実行しても安全（UPSERTで重複なし）
+- **全クリア対応**: `clear=true`でデータのズレをリセット可能
+
+**実行例:**
+
+```bash
+# 追加/上書きのみ
+curl -X POST https://api.mypace.llll-ll.com/api/admin/backfill-stella
+
+# 全クリアしてから再取得
+curl -X POST "https://api.mypace.llll-ll.com/api/admin/backfill-stella?clear=true"
+```

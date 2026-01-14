@@ -22,6 +22,7 @@ import {
   raw,
   serial,
   views,
+  admin,
 } from './routes'
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -55,6 +56,7 @@ app.route('/api/pins', pins)
 app.route('/api/uploads', uploads)
 app.route('/api/serial', serial)
 app.route('/api/views', views)
+app.route('/api/admin', admin)
 
 // Well-known
 app.route('/.well-known', wellKnown)
