@@ -53,11 +53,10 @@ export default function PostHeader({
   // Show labels for special event kinds
   const isBlogPost = eventKind === 30023
   const isNpcPost = eventKind === 42000
-  const hasViews = views && (views.impression > 0 || views.detail > 0)
   const timestampContent = (
     <>
       {formatTimestamp(createdAt)}
-      {hasViews && (
+      {views && (
         <span className="view-count" aria-label={`${views.detail} detail views, ${views.impression} impressions`}>
           {' · '}
           <Icon name="BarChart2" size={12} /> {views.detail} / {views.impression}
