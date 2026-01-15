@@ -109,23 +109,19 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       setEvents(notes)
       setLoading(false)
 
-      // 検索フィルタがある場合は、実際に過去データがなくなるまでhasMoreをtrueに維持
-      const hasSearchFilter = (q && q.length > 0) || (tags && tags.length > 0) || false
-
+      // hasMoreは「Load Older Posts」か「End of timeline (retry)」の表示切り替え用
+      // どちらでもボタンは押せるので、シンプルに件数で判定
       if (notes.length > 0) {
         const maxTime = Math.max(...notes.map((n) => n.created_at))
         const minTime = Math.min(...notes.map((n) => n.created_at))
         setLatestEventTime(maxTime)
         setOldestEventTime(minTime)
-        // 検索時はフィルタ後の件数では判定できないため、常にtrueにしてloadOlderEventsで確認
-        setHasMore(hasSearchFilter || notes.length >= LIMITS.TIMELINE_FETCH_LIMIT)
+        setHasMore(notes.length >= LIMITS.TIMELINE_FETCH_LIMIT)
       } else {
         const now = Math.floor(Date.now() / 1000)
         setLatestEventTime(now)
-        // 検索時は結果0件でも過去を検索できるように現在時刻をセット
-        setOldestEventTime(hasSearchFilter ? now : 0)
-        // 検索時は結果0件でもさらに過去にある可能性があるのでtrue
-        setHasMore(hasSearchFilter)
+        setOldestEventTime(now)
+        setHasMore(false)
       }
       setGaps([])
 
@@ -315,6 +311,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       }
 
       if (olderNotes.length === 0) {
+        // 0件でもボタンは押せる（retry可能）ので、ラベルをEnd of timelineに変えるだけ
         setHasMore(false)
         return
       }
@@ -355,8 +352,13 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   useEffect(() => {
     loadTimelineRef.current()
     const handleNewPost = () => setTimeout(() => loadTimelineRef.current(), TIMEOUTS.NEW_POST_RELOAD)
+    const handleFilterApplied = () => loadTimelineRef.current()
     window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
-    return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
+    window.addEventListener(CUSTOM_EVENTS.FILTER_APPLIED, handleFilterApplied)
+    return () => {
+      window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
+      window.removeEventListener(CUSTOM_EVENTS.FILTER_APPLIED, handleFilterApplied)
+    }
   }, [authorPubkey, tagsKey, qKey])
 
   return {

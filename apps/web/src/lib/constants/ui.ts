@@ -31,6 +31,7 @@ export const CUSTOM_EVENTS = {
   APP_THEME_CHANGED: 'appthemechanged',
   LOGO_CLICKED: 'logoclicked',
   OPEN_FILTER_PANEL: 'openfilterpanel',
+  FILTER_APPLIED: 'filterapplied',
 } as const
 
 // Supported languages for filtering

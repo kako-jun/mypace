@@ -166,12 +166,11 @@ export function UserPosts({
       {/* Regular posts */}
       {regularItems.map((item) => renderPostCard(item.event, false))}
       {items.length === 0 && <p className="empty">No posts yet</p>}
-      {items.length > 0 && hasMore && (
+      {items.length > 0 && (
         <TimelineActionButton onClick={loadOlderEvents} disabled={loadingMore}>
-          {loadingMore ? 'Loading...' : 'Load Older Posts'}
+          {loadingMore ? 'Loading...' : hasMore ? 'Load Older Posts' : 'End of timeline (retry)'}
         </TimelineActionButton>
       )}
-      {items.length > 0 && !hasMore && <p className="timeline-end">End of timeline</p>}
     </div>
   )
 }

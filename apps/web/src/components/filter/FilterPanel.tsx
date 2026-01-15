@@ -11,6 +11,7 @@ import {
   saveMuteList,
   type MuteEntry,
 } from '../../lib/utils'
+import { CUSTOM_EVENTS } from '../../lib/constants'
 import { FilterPresets } from './FilterPresets'
 import { SmartFilter } from './SmartFilter'
 import { MuteListManager } from './MuteListManager'
@@ -92,9 +93,10 @@ export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
     const newFilters = getCurrentFilters()
     saveFiltersToStorage(newFilters)
     saveMuteList(muteList)
-    // Reload current page to apply new filters
-    // This preserves the current URL (user page, home, etc.)
-    window.location.reload()
+    // Emit event to trigger timeline reload with new filters
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.FILTER_APPLIED))
+    // Close the popup if in popup mode
+    onClose?.()
   }
 
   // Clear all filters
@@ -111,9 +113,10 @@ export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
     setMuteList([])
     saveFiltersToStorage(DEFAULT_SEARCH_FILTERS)
     saveMuteList([])
-    // Reload current page to apply cleared filters
-    // This preserves the current URL (user page, home, etc.)
-    window.location.reload()
+    // Emit event to trigger timeline reload with cleared filters
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.FILTER_APPLIED))
+    // Close the popup if in popup mode
+    onClose?.()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
