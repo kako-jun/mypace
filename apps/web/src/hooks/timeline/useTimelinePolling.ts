@@ -89,6 +89,7 @@ export function useTimelinePolling({
   }, [latestEventTime, checkNewEvents])
 
   // 新着イベントをタイムラインに反映
+  // 新しい投稿を上に追加 → 200件を超えたら下（過去方向）から削除
   const loadNewEvents = useCallback(async () => {
     if (pendingNewEvents.length === 0) return
 
@@ -98,12 +99,15 @@ export function useTimelinePolling({
       const uniqueNewItems = newItems.filter((item) => !existingIds.has(item.event.id))
       const merged = [...uniqueNewItems, ...prev]
       merged.sort((a, b) => b.event.created_at - a.event.created_at)
-      return merged
+      // Trim from bottom (older items) if exceeding limit
+      return merged.slice(0, LIMITS.MAX_TIMELINE_ITEMS)
     })
     setEvents((prev) => {
       const existingIds = new Set(prev.map((e) => e.id))
       const uniqueNew = pendingNewEvents.filter((e) => !existingIds.has(e.id))
-      return [...uniqueNew, ...prev].sort((a, b) => b.created_at - a.created_at)
+      const merged = [...uniqueNew, ...prev].sort((a, b) => b.created_at - a.created_at)
+      // Trim from bottom (older items) if exceeding limit
+      return merged.slice(0, LIMITS.MAX_TIMELINE_ITEMS)
     })
 
     // 新着イベントの最新時刻を記録

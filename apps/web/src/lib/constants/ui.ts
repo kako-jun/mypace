@@ -14,6 +14,7 @@ export const LIMITS = {
   PREVIEW_LINE_THRESHOLD: 28,
   FOLD_THRESHOLD: 280, // Same as PREVIEW_TRUNCATE_LENGTH for consistency
   TIMELINE_FETCH_LIMIT: 50,
+  MAX_TIMELINE_ITEMS: 200, // DOM element limit to prevent performance degradation
   MAX_IMAGE_SIZE: 10 * 1024 * 1024, // 10MB
   MAX_VIDEO_SIZE: 10 * 1024 * 1024, // 10MB
   MAX_AUDIO_SIZE: 1 * 1024 * 1024, // 1MB
