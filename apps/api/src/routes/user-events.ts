@@ -59,9 +59,7 @@ userEvents.get('/:pubkey/events', async (c) => {
   }
 
   // サーバーサイドフィルタ（hideAds, hideNSFW等）で減る分を考慮して多めに取得
-  // 検索フィルタがある場合はさらに多めに取得
-  const hasSearchFilter = queries.length > 0 || filterTags.length > 0
-  const fetchMultiplier = hasSearchFilter ? 10 : 4
+  const fetchMultiplier = 4
 
   const pool = new SimplePool()
 
