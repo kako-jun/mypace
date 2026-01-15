@@ -9,6 +9,7 @@ import { UploadHistoryPage } from './pages/UploadHistoryPage'
 import { EmbedPage } from './pages/EmbedPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PostModal } from './components/post'
+import { MyStatsWidget } from './components/stats/MyStatsWidget'
 import { initializeNavigation } from './lib/utils'
 
 export default function App() {
@@ -52,6 +53,9 @@ export default function App() {
           <Route path="/post/:id" element={<PostModal />} />
         </Routes>
       )}
+
+      {/* My stats widget - not on embed page */}
+      {!location.pathname.startsWith('/embed/') && <MyStatsWidget />}
     </>
   )
 }
