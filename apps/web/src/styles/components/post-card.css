@@ -620,7 +620,7 @@
 }
 
 .post-card:hover .post-barcode {
-  opacity: 0.7;
+  opacity: 1;
   background-color: #fff;
 }
 
