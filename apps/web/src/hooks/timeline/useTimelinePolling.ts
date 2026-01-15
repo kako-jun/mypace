@@ -63,7 +63,9 @@ export function useTimelinePolling({
         setPendingNewEvents((prev) => {
           const prevIds = new Set(prev.map((e) => e.id))
           const unique = trulyNew.filter((e) => !prevIds.has(e.id))
-          return [...prev, ...unique].sort((a, b) => b.created_at - a.created_at)
+          const merged = [...prev, ...unique].sort((a, b) => b.created_at - a.created_at)
+          // 200件を超えたら古い方を削除（新しい方を保持）
+          return merged.slice(0, LIMITS.MAX_TIMELINE_ITEMS)
         })
       }
     } catch (err) {
