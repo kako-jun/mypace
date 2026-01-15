@@ -116,7 +116,7 @@ export function UserProfile({
             {viewsCount !== null ? `${viewsCount.details} / ${viewsCount.impressions}` : '...'}
           </span>
           <span>
-            <Icon name="Star" size={14} /> {stellaCount !== null ? stellaCount : '...'}
+            <Icon name="Star" size={14} fill="#f1c40f" /> {stellaCount !== null ? stellaCount : '...'}
           </span>
         </div>
       </div>

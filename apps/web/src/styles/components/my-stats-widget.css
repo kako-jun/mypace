@@ -1,0 +1,32 @@
+/* My Stats Widget - Fixed bottom-right stats display */
+
+.my-stats-widget {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 50; /* Above post cards (1-20), below post editor (1050) */
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+
+  /* Match user-stats font styling */
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+
+  /* Subtle background for readability */
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(4px);
+  padding: 8px 12px;
+  border-radius: 8px;
+
+  pointer-events: none;
+}
+
+.my-stats-widget > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

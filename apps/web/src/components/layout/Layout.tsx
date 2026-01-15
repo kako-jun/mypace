@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom'
 import { Icon } from '../ui/Icon'
 import { Settings } from '../settings'
 import { FilterPanel } from '../filter'
+import { MyStatsWidget } from '../stats/MyStatsWidget'
 import { loadFiltersFromStorage, getMutedPubkeys } from '../../lib/utils'
 import { CUSTOM_EVENTS } from '../../lib/constants'
 import { getStoredThemeColors, isDarkColor } from '../../lib/nostr/theme'
@@ -142,6 +143,7 @@ export function Layout() {
       <main className="main-content">
         <Outlet />
       </main>
+      <MyStatsWidget />
     </div>
   )
 }
