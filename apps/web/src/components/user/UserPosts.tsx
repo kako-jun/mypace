@@ -12,7 +12,6 @@ import type {
   TimelineItem,
   ViewCountData,
 } from '../../types'
-import type { GapInfo } from '../../hooks/timeline/types'
 import type { ShareOption } from '../post/ShareMenu'
 
 interface UserPostsProps {
@@ -31,10 +30,8 @@ interface UserPostsProps {
   deletedId: string | null
   pinnedEventId: string | null
   pinnedEvent: Event | null
-  gaps: GapInfo[]
   hasMore: boolean
   loadingMore: boolean
-  loadingGap: string | null
   onLike: (event: Event) => void
   onUnlike: (event: Event) => Promise<void>
   onRepost: (event: Event) => Promise<void>
@@ -44,7 +41,6 @@ interface UserPostsProps {
   onPin: (event: Event) => void
   onUnpin: () => void
   loadOlderEvents: () => Promise<void>
-  fillGap: (gapId: string) => Promise<void>
   onFiltersChange: (filters: { q: string[]; tags: string[] }) => void
 }
 
@@ -64,10 +60,8 @@ export function UserPosts({
   deletedId,
   pinnedEventId,
   pinnedEvent,
-  gaps,
   hasMore,
   loadingMore,
-  loadingGap,
   onLike,
   onUnlike,
   onRepost,
@@ -76,7 +70,6 @@ export function UserPosts({
   onPin,
   onUnpin,
   loadOlderEvents,
-  fillGap,
   onFiltersChange,
 }: UserPostsProps) {
   const handleEdit = useCallback((event: Event) => navigateToEdit(event.id), [])
@@ -100,9 +93,8 @@ export function UserPosts({
   // Filter out pinned post from regular timeline
   const regularItems = pinnedEventId ? items.filter((item) => item.event.id !== pinnedEventId) : items
 
-  const renderPostCard = (event: Event, isPinnedSection = false) => {
+  const renderPostCard = (event: Event, _isPinnedSection = false) => {
     const isMyPost = myPubkey === event.pubkey
-    const gapAfterThis = gaps.find((g) => g.afterEventId === event.id)
 
     if (deletedId === event.id) {
       return (
@@ -140,11 +132,6 @@ export function UserPosts({
           getDisplayName={getDisplayNameForEvent}
           getAvatarUrl={getAvatarUrlForEvent}
         />
-        {!isPinnedSection && gapAfterThis && (
-          <TimelineActionButton onClick={() => fillGap(gapAfterThis.id)} disabled={loadingGap === gapAfterThis.id}>
-            {loadingGap === gapAfterThis.id ? 'Loading...' : 'Load More'}
-          </TimelineActionButton>
-        )}
       </Fragment>
     )
   }

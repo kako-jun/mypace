@@ -1,5 +1,4 @@
 export * from './types'
 export * from './useTimelineData'
 export * from './useTimelinePolling'
-export * from './useGapDetection'
 export { useTimeline } from './useTimeline'

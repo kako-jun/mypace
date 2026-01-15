@@ -59,14 +59,11 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
     likingId,
     repostingId,
     newEventCount,
-    gaps,
     hasMore,
     loadingMore,
-    loadingGap,
     reload,
     loadNewEvents,
     loadOlderEvents,
-    fillGap,
     handleLike,
     handleUnlike,
     handleRepost,
@@ -169,9 +166,6 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
         const event = item.event
         const isMyPost = myPubkey === event.pubkey
 
-        // このイベントの後にギャップがあるか確認
-        const gapAfterThis = gaps.find((g) => g.afterEventId === event.id)
-
         if (deletedId === event.id) {
           return (
             <article key={event.id} className="post-card">
@@ -205,11 +199,6 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
               getDisplayName={getDisplayName}
               getAvatarUrl={getAvatarUrl}
             />
-            {gapAfterThis && (
-              <TimelineActionButton onClick={() => fillGap(gapAfterThis.id)} disabled={loadingGap === gapAfterThis.id}>
-                {loadingGap === gapAfterThis.id ? 'Loading...' : 'Load More'}
-              </TimelineActionButton>
-            )}
           </Fragment>
         )
       })}

@@ -10,7 +10,7 @@ import {
 import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage } from '../../lib/utils'
 import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
 import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData, TimelineItem } from '../../types'
-import type { GapInfo, UseTimelineOptions, UseTimelineResult } from './types'
+import type { UseTimelineOptions, UseTimelineResult } from './types'
 import {
   loadProfiles,
   loadReactionsForEvents,
@@ -21,9 +21,8 @@ import {
   mergeProfiles,
 } from './useTimelineData'
 import { useTimelinePolling } from './useTimelinePolling'
-import { useGapDetection } from './useGapDetection'
 
-export type { GapInfo, UseTimelineOptions, UseTimelineResult }
+export type { UseTimelineOptions, UseTimelineResult }
 
 export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult {
   const { authorPubkey, tags, q } = options
@@ -44,10 +43,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const [pendingNewEvents, setPendingNewEvents] = useState<Event[]>([])
   const [latestEventTime, setLatestEventTime] = useState(0)
   const [_oldestEventTime, setOldestEventTime] = useState(0)
-  const [gaps, setGaps] = useState<GapInfo[]>([])
   const [hasMore, setHasMore] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [loadingGap, setLoadingGap] = useState<string | null>(null)
   const [searchedUntil, setSearchedUntil] = useState<number | null>(null)
 
   // Debounce refs for stella clicks
@@ -66,25 +63,11 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     latestEventTime,
     events,
     setPendingNewEvents,
-    setGaps,
     setProfiles,
     setTimelineItems,
     setEvents,
     setLatestEventTime,
     pendingNewEvents,
-  })
-
-  // ギャップ検出
-  const { fillGap } = useGapDetection({
-    options,
-    gaps,
-    loadingGap,
-    events,
-    setGaps,
-    setLoadingGap,
-    setTimelineItems,
-    setEvents,
-    setProfiles,
   })
 
   // タイムライン読み込み
@@ -137,7 +120,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         setOldestEventTime(now)
         setHasMore(false)
       }
-      setGaps([])
 
       const loadedProfiles = await loadProfiles(notes, profiles, setProfiles)
       await Promise.all([
@@ -399,14 +381,11 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     likingId,
     repostingId,
     newEventCount: pendingNewEvents.length,
-    gaps,
     hasMore,
     loadingMore,
-    loadingGap,
     reload: loadTimeline,
     loadNewEvents,
     loadOlderEvents,
-    fillGap,
     handleLike,
     handleUnlike,
     handleRepost,

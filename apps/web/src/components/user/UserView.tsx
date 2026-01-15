@@ -109,12 +109,9 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     error,
     likingId,
     repostingId,
-    gaps,
     hasMore,
     loadingMore,
-    loadingGap,
     loadOlderEvents,
-    fillGap,
     handleLike,
     handleUnlike,
     handleRepost,
@@ -370,10 +367,8 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
         deletedId={deletedId}
         pinnedEventId={pinnedEventId}
         pinnedEvent={pinnedEvent}
-        gaps={gaps}
         hasMore={hasMore}
         loadingMore={loadingMore}
-        loadingGap={loadingGap}
         onLike={handleLike}
         onUnlike={handleUnlike}
         onRepost={handleRepost}
@@ -383,7 +378,6 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
         onPin={handlePin}
         onUnpin={handleUnpin}
         loadOlderEvents={loadOlderEvents}
-        fillGap={fillGap}
         onFiltersChange={handleFiltersChange}
       />
       <LightBox />

@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import { fetchEvents, fetchUserPosts } from '../../lib/nostr/relay'
 import { LIMITS } from '../../lib/constants'
 import type { Event, ProfileCache, TimelineItem } from '../../types'
-import type { GapInfo, UseTimelineOptions } from './types'
+import type { UseTimelineOptions } from './types'
 import { mergeProfiles } from './useTimelineData'
 
 export const POLLING_INTERVAL = 60 * 1000 // 1分
@@ -12,7 +12,6 @@ interface UseTimelinePollingOptions {
   latestEventTime: number
   events: Event[]
   setPendingNewEvents: React.Dispatch<React.SetStateAction<Event[]>>
-  setGaps: React.Dispatch<React.SetStateAction<GapInfo[]>>
   setProfiles: React.Dispatch<React.SetStateAction<ProfileCache>>
   setTimelineItems: React.Dispatch<React.SetStateAction<TimelineItem[]>>
   setEvents: React.Dispatch<React.SetStateAction<Event[]>>
@@ -25,7 +24,6 @@ export function useTimelinePolling({
   latestEventTime,
   events,
   setPendingNewEvents,
-  setGaps,
   setProfiles,
   setTimelineItems,
   setEvents,
@@ -38,7 +36,7 @@ export function useTimelinePolling({
   const qKey = q ? JSON.stringify(q) : ''
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // 新着チェック（ポーリング）- ギャップ検出付き
+  // 新着チェック（ポーリング）
   const checkNewEvents = useCallback(async () => {
     if (latestEventTime === 0) return
 
@@ -62,29 +60,6 @@ export function useTimelinePolling({
       const trulyNew = newNotes.filter((e) => !existingIds.has(e.id) && e.created_at > latestEventTime)
 
       if (trulyNew.length > 0) {
-        // ギャップ検出
-        const oldestNewTime = Math.min(...trulyNew.map((e) => e.created_at))
-        const hasGap = trulyNew.length >= LIMITS.TIMELINE_FETCH_LIMIT && oldestNewTime > latestEventTime + 1
-
-        if (hasGap) {
-          const oldestNewEvent = trulyNew.find((e) => e.created_at === oldestNewTime)
-          if (oldestNewEvent) {
-            const gapId = `gap-${latestEventTime}-${oldestNewTime}`
-            setGaps((prev) => {
-              if (prev.some((g) => g.id === gapId)) return prev
-              return [
-                ...prev,
-                {
-                  id: gapId,
-                  afterEventId: oldestNewEvent.id,
-                  since: latestEventTime,
-                  until: oldestNewTime,
-                },
-              ]
-            })
-          }
-        }
-
         setPendingNewEvents((prev) => {
           const prevIds = new Set(prev.map((e) => e.id))
           const unique = trulyNew.filter((e) => !prevIds.has(e.id))
@@ -94,7 +69,7 @@ export function useTimelinePolling({
     } catch (err) {
       console.error('Failed to check new events:', err)
     }
-  }, [latestEventTime, events, authorPubkey, tagsKey, qKey, setGaps, setPendingNewEvents])
+  }, [latestEventTime, events, authorPubkey, tagsKey, qKey, setPendingNewEvents])
 
   // 1分ごとのポーリング
   useEffect(() => {
