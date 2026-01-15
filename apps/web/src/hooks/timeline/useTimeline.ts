@@ -42,7 +42,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const [repostingId, setRepostingId] = useState<string | null>(null)
   const [pendingNewEvents, setPendingNewEvents] = useState<Event[]>([])
   const [latestEventTime, setLatestEventTime] = useState(0)
-  const [_oldestEventTime, setOldestEventTime] = useState(0)
   const [hasMore, setHasMore] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [searchedUntil, setSearchedUntil] = useState<number | null>(null)
@@ -103,21 +102,17 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       // loadOlderEventsでsearchedUntilが変化しなくなったらfalseになる
       if (notes.length > 0) {
         const maxTime = Math.max(...notes.map((n) => n.created_at))
-        const minTime = Math.min(...notes.map((n) => n.created_at))
         setLatestEventTime(maxTime)
-        setOldestEventTime(minTime)
         setHasMore(true)
       } else if (result.searchedUntil !== null) {
         // フィルタ後0件でも、searchedUntilがあれば過去に遡る余地がある
         const now = Math.floor(Date.now() / 1000)
         setLatestEventTime(now)
-        setOldestEventTime(now)
         setHasMore(true)
       } else {
         // searchedUntilもnull = リレーから0件 = 本当の終端
         const now = Math.floor(Date.now() / 1000)
         setLatestEventTime(now)
-        setOldestEventTime(now)
         setHasMore(false)
       }
 
@@ -295,7 +290,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     setLoadingMore(true)
     try {
       // searchedUntilは「フィルタ前の最古時刻」なので、これを基準に過去を探す
-      // フィルタ後の最古（oldestEventTime）ではなく、探索済み範囲の最古を使う
       const untilTime = searchedUntil - 1
       let result: { events: Event[]; searchedUntil: number | null }
       if (authorPubkey) {
@@ -350,8 +344,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
           return merged
         })
 
-        const minTime = Math.min(...newOlderNotes.map((e) => e.created_at))
-        setOldestEventTime(minTime)
         await mergeProfiles([...new Set(newOlderNotes.map((e) => e.pubkey))], setProfiles)
       }
     } catch (err) {

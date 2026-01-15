@@ -47,7 +47,6 @@ export interface TimelineState {
   repostingId: string | null
   pendingNewEvents: Event[]
   latestEventTime: number
-  oldestEventTime: number
   hasMore: boolean
   loadingMore: boolean
 }
