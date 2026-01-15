@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { PostForm } from '../components/form'
 import { Timeline } from '../components/timeline'
 import { LightBox, triggerLightBox } from '../components/ui'
+import { MyStatsWidget } from '../components/stats/MyStatsWidget'
 import { setImageClickHandler, clearImageClickHandler } from '../lib/parser'
 import { getUIThemeColors, applyThemeColors } from '../lib/utils'
 import { getDraft, setDraft, getDraftReplyTo, setDraftReplyTo, clearDraft } from '../lib/storage'
@@ -171,20 +172,23 @@ export function HomePage() {
 
   if (longMode) {
     return (
-      <PostForm
-        longMode={longMode}
-        onLongModeChange={handleLongModeChange}
-        content={content}
-        onContentChange={setContent}
-        showPreview={showPreview}
-        onShowPreviewChange={setShowPreview}
-        editingEvent={editingEvent}
-        onEditCancel={handleEditCancel}
-        onEditComplete={handleEditComplete}
-        replyingTo={replyingTo}
-        onReplyCancel={handleReplyCancel}
-        onReplyComplete={handleReplyComplete}
-      />
+      <>
+        <PostForm
+          longMode={longMode}
+          onLongModeChange={handleLongModeChange}
+          content={content}
+          onContentChange={setContent}
+          showPreview={showPreview}
+          onShowPreviewChange={setShowPreview}
+          editingEvent={editingEvent}
+          onEditCancel={handleEditCancel}
+          onEditComplete={handleEditComplete}
+          replyingTo={replyingTo}
+          onReplyCancel={handleReplyCancel}
+          onReplyComplete={handleReplyComplete}
+        />
+        <MyStatsWidget />
+      </>
     )
   }
 
@@ -208,6 +212,7 @@ export function HomePage() {
         <Timeline onEditStart={handleEditStart} onReplyStart={handleReplyStart} />
       </div>
       <LightBox />
+      <MyStatsWidget />
     </>
   )
 }
