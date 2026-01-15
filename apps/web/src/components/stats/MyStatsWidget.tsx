@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useMyStats } from '../../hooks/useMyStats'
 import { Icon } from '../ui'
 import '../../styles/components/my-stats-widget.css'
@@ -7,7 +8,7 @@ export function MyStatsWidget() {
 
   if (!visible || loading) return null
 
-  return (
+  const widget = (
     <div className="my-stats-widget">
       <span>{stats?.postsCount !== null ? stats?.postsCount : '...'} posts</span>
       <span>
@@ -19,4 +20,7 @@ export function MyStatsWidget() {
       </span>
     </div>
   )
+
+  // Render to body to ensure correct z-index stacking
+  return createPortal(widget, document.body)
 }

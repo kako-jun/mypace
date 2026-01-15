@@ -4,7 +4,7 @@
   position: fixed;
   right: 16px;
   bottom: 16px;
-  z-index: 50; /* Above post cards (1-20), below post editor (1050) */
+  z-index: 30; /* Above post cards (1-20), below post editor (1050) */
 
   display: flex;
   flex-direction: column;
@@ -16,8 +16,8 @@
   font-weight: 700;
   color: var(--text-primary);
 
-  /* Subtle background for readability */
-  background: rgba(255, 255, 255, 0.7);
+  /* Semi-transparent background for readability */
+  background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(4px);
   padding: 8px 12px;
   border-radius: 8px;
