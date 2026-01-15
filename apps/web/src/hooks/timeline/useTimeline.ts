@@ -113,7 +113,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
 
       // searchedUntilはAPIから返された「フィルタ前の最古時刻」
       // 次回のuntilにはこれを使う（フィルタ後の最古ではなく）
-      setSearchedUntil(result.searchedUntil)
+      if (result.searchedUntil !== null) {
+        setSearchedUntil(result.searchedUntil)
+      }
 
       // hasMoreは初回は常にtrue（まだ過去を探っていないため）
       // loadOlderEventsでsearchedUntilが変化しなくなったらfalseになる
@@ -329,9 +331,10 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       const newSearchedUntil = result.searchedUntil
 
       // hasMoreは「searchedUntilが変化したか」で判定
-      // リレーから0件（searchedUntil=null）なら、これ以上遡れない
+      // リレーから0件（newSearchedUntil=null）でもsearchedUntilは上書きしない（リトライ可能）
       if (newSearchedUntil === null) {
         setHasMore(false)
+        // searchedUntilは上書きしない（前回の値を維持してリトライ可能に）
         return
       }
 
