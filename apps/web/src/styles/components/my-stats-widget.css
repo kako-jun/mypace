@@ -36,3 +36,8 @@
   width: clamp(12px, 2.5vw, 14px);
   height: clamp(12px, 2.5vw, 14px);
 }
+
+/* Dark theme */
+[data-theme='dark'] .my-stats-widget {
+  background: rgba(0, 0, 0, 0.5);
+}
