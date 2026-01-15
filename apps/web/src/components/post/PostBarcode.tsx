@@ -44,7 +44,7 @@ export default function PostBarcode({ eventId }: PostBarcodeProps) {
     JsBarcode(svgRef.current, code, {
       format: 'CODE128',
       width: 1,
-      height: 60,
+      height: 10,
       displayValue: false,
       margin: 0,
       background: 'transparent',

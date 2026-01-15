@@ -602,9 +602,9 @@
   right: 0;
   top: 0;
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 2px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
   padding: 2px;
   color: #000;
   opacity: 0.3;
@@ -614,8 +614,7 @@
 
 .post-barcode svg {
   transform: rotate(90deg);
-  transform-origin: top left;
-  margin-left: 60px; /* height of barcode becomes width after rotation */
+  transform-origin: top right;
 }
 
 .post-card:hover .post-barcode {
@@ -639,5 +638,5 @@
   font-family: var(--font-mono);
   writing-mode: vertical-lr;
   transform: rotate(180deg);
-  padding-left: 4px;
+  padding-right: 2px;
 }
