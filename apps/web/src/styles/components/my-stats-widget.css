@@ -16,8 +16,10 @@
   font-weight: 700;
   color: var(--text-primary);
 
-  /* Semi-transparent background for readability */
+  /* Glass effect */
   background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   padding: clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px);
   border-radius: 8px;
 
