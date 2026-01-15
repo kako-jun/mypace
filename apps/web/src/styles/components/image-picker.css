@@ -144,12 +144,38 @@ body.long-mode-active .image-picker-modal {
   font-weight: 500;
 }
 
-.image-picker-clipboard-btn {
-  width: 52px;
-  height: auto;
-  padding: 0;
+.image-picker-paste-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-secondary);
+  border: 2px solid var(--border-primary, #666);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
   flex-shrink: 0;
-  aspect-ratio: 1;
+}
+
+.image-picker-paste-btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--text-muted);
+}
+
+.image-picker-paste-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.image-picker-clipboard-error {
+  font-size: 0.75rem;
+  color: var(--text-danger, #dc3545);
+  text-align: right;
+  margin-top: -0.25rem;
 }
 
 /* URL input */

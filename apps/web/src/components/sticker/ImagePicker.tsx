@@ -30,6 +30,7 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
   const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deletePopupPosition, setDeletePopupPosition] = useState<{ top: number; left: number } | null>(null)
+  const [clipboardError, setClipboardError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { uploading, uploadFile } = useImageUpload()
 
@@ -162,6 +163,7 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
   }
 
   const handleClipboardPaste = async () => {
+    setClipboardError('')
     try {
       const clipboardItems = await navigator.clipboard.read()
       for (const item of clipboardItems) {
@@ -175,10 +177,10 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
         }
       }
       // No image found
-      onError?.('クリップボードに画像がありません')
+      setClipboardError('No image in clipboard')
     } catch {
       // Permission denied or clipboard API not supported
-      onError?.('クリップボードにアクセスできません')
+      setClipboardError('Cannot access clipboard')
     }
   }
 
@@ -217,16 +219,16 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
                     </>
                   )}
                 </button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  className="image-picker-clipboard-btn"
+                <button
+                  type="button"
+                  className="image-picker-paste-btn"
                   onClick={handleClipboardPaste}
                   disabled={uploading}
                   title="Paste from clipboard"
                 >
-                  <Icon name="ClipboardPaste" size={20} />
-                </Button>
+                  <Icon name="Clipboard" size={18} />
+                  <span>Paste</span>
+                </button>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -235,6 +237,7 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
                   style={{ display: 'none' }}
                 />
               </div>
+              {clipboardError && <div className="image-picker-clipboard-error">{clipboardError}</div>}
 
               {/* URL input */}
               <div className="image-picker-url-section">
