@@ -144,16 +144,16 @@ timeline.get('/', async (c) => {
       events = filterByLanguage(events, langFilter)
     }
 
-    // キャッシュに保存（フィルタ前のデータを保存すべきだが、一旦フィルタ後を保存）
+    // キャッシュに保存（フィルタ前のデータを保存して全ユーザーで共有）
     // waitUntilでレスポンス返却後にバックグラウンドでキャッシュ保存
     if (c.executionCtx?.waitUntil) {
-      c.executionCtx.waitUntil(cacheEvents(db, events))
+      c.executionCtx.waitUntil(cacheEvents(db, rawEvents))
       // 1%の確率で古いキャッシュをクリーンアップ
       if (Math.random() < CACHE_CLEANUP_PROBABILITY) {
         c.executionCtx.waitUntil(cleanupOldCache(db))
       }
     } else {
-      void cacheEvents(db, events)
+      void cacheEvents(db, rawEvents)
     }
 
     return c.json({ events, source: 'relay', searchedUntil })
