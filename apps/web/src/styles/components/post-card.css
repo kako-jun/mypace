@@ -621,7 +621,7 @@
 
 .post-card:hover .post-barcode {
   opacity: 0.7;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: #fff;
 }
 
 /* Dark theme: white barcode, black background on hover */
@@ -630,7 +630,7 @@
 }
 
 [data-theme="dark"] .post-card:hover .post-barcode {
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: #000;
 }
 
 /* Rarity label below the barcode */
