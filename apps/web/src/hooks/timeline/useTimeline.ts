@@ -110,13 +110,14 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       setLoading(false)
 
       // hasMoreは「Load Older Posts」か「End of timeline (retry)」の表示切り替え用
-      // どちらでもボタンは押せるので、シンプルに件数で判定
+      // 初回読み込み時は常にtrue（まだ過去を探っていないため）
+      // loadOlderEventsで最古が変化しなくなったらfalseになる
       if (notes.length > 0) {
         const maxTime = Math.max(...notes.map((n) => n.created_at))
         const minTime = Math.min(...notes.map((n) => n.created_at))
         setLatestEventTime(maxTime)
         setOldestEventTime(minTime)
-        setHasMore(notes.length >= LIMITS.TIMELINE_FETCH_LIMIT)
+        setHasMore(true)
       } else {
         const now = Math.floor(Date.now() / 1000)
         setLatestEventTime(now)
@@ -292,8 +293,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   )
 
   // 古い投稿を読み込む（無限スクロール用）
+  // hasMore=falseでもリトライ可能（ネットワーク障害等からの復旧用）
   const loadOlderEvents = useCallback(async () => {
-    if (loadingMore || !hasMore || oldestEventTime === 0) return
+    if (loadingMore || oldestEventTime === 0) return
     setLoadingMore(true)
     try {
       // until は inclusive なので、-1 して既知の最古イベントを除外
@@ -333,10 +335,13 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         })
 
         const minTime = Math.min(...newOlderNotes.map((e) => e.created_at))
+        // hasMoreは「最古の投稿が変化したか」で判定
+        // 変化しなくなったら「いまのところEnd」と表示（リトライ可能）
+        setHasMore(minTime < oldestEventTime)
         setOldestEventTime(minTime)
         await mergeProfiles([...new Set(newOlderNotes.map((e) => e.pubkey))], setProfiles)
-        setHasMore(olderNotes.length >= LIMITS.TIMELINE_FETCH_LIMIT)
       } else {
+        // 新しい投稿が0件なら、最古は変化しないのでEnd
         setHasMore(false)
       }
     } catch (err) {
@@ -344,7 +349,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     } finally {
       setLoadingMore(false)
     }
-  }, [loadingMore, hasMore, oldestEventTime, events, authorPubkey, tagsKey, qKey])
+  }, [loadingMore, oldestEventTime, events, authorPubkey, tagsKey, qKey])
 
   const loadTimelineRef = useRef(loadTimeline)
   loadTimelineRef.current = loadTimeline

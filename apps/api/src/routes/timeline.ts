@@ -63,9 +63,10 @@ timeline.get('/', async (c) => {
     return c.json({ events: [], source: 'empty-filter' })
   }
 
-  // 検索フィルタがある場合はより多くの件数を取得する必要がある
+  // サーバーサイドフィルタ（hideAds, hideNSFW等）で減る分を考慮して多めに取得
+  // 検索フィルタがある場合はさらに多めに取得
   const hasSearchFilter = queries.length > 0 || okTags.length > 0
-  const fetchMultiplier = hasSearchFilter ? 20 : 2
+  const fetchMultiplier = hasSearchFilter ? 20 : 4
 
   // まずキャッシュから取得（TTL内のもののみ）
   try {
@@ -108,7 +109,7 @@ timeline.get('/', async (c) => {
   try {
     const filter: Filter = {
       kinds,
-      limit: hasSearchFilter ? limit * fetchMultiplier : limit,
+      limit: needsMoreFetch ? limit * fetchMultiplier : limit,
     }
     if (!showAll) {
       filter['#t'] = [MYPACE_TAG]
