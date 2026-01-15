@@ -10,6 +10,7 @@ import {
   PostContent,
   PostStickers,
   PostLocation,
+  PostBarcode,
 } from '../post'
 import { cachePost, cacheProfile, navigateToPostModal, navigateToUser } from '../../lib/utils'
 import { parseStickers, hasTeaserTag } from '../../lib/nostr/tags'
@@ -233,6 +234,9 @@ export default function TimelinePostCard({
           {/* Front layer stickers (above content) */}
           <PostStickers stickers={stickers} truncated={isTruncated} layer="front" />
         </div>
+
+        {/* Barcode on right edge */}
+        <PostBarcode eventId={event.id} />
 
         {replyList.length > 0 && (
           <ThreadReplies

@@ -37,7 +37,16 @@ import {
   setInternalLinkClickHandler,
 } from '../../lib/parser'
 import { LightBox, triggerLightBox } from '../ui'
-import { PostHeader, ReplyCard, PostActions, EditDeleteButtons, PostContent, PostStickers, PostLocation } from './index'
+import {
+  PostHeader,
+  ReplyCard,
+  PostActions,
+  EditDeleteButtons,
+  PostContent,
+  PostStickers,
+  PostLocation,
+  PostBarcode,
+} from './index'
 import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage } from '../ui'
 import { useDeleteConfirm, usePostViewData } from '../../hooks'
 import type { Profile, ReactionData } from '../../types'
@@ -417,6 +426,9 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
         {/* Front layer stickers (above content) */}
         <PostStickers stickers={stickers} layer="front" />
+
+        {/* Barcode on right edge */}
+        <PostBarcode eventId={event.id} />
       </article>
 
       {replies.count > 0 && (
