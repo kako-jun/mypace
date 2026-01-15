@@ -24,6 +24,7 @@
     "@lezer/highlight": "^1.2.3",
     "@replit/codemirror-vim": "^6.3.0",
     "codemirror": "^6.0.2",
+    "jsbarcode": "^3.12.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.556.0",
     "marked": "^17.0.1",

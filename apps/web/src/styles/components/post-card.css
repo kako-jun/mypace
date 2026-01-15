@@ -602,14 +602,20 @@
   right: 0;
   top: 0;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-direction: row;
+  align-items: flex-start;
   gap: 2px;
   padding: 2px;
   color: #000;
   opacity: 0.3;
   pointer-events: none;
   transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.post-barcode svg {
+  transform: rotate(90deg);
+  transform-origin: top left;
+  margin-left: 60px; /* height of barcode becomes width after rotation */
 }
 
 .post-card:hover .post-barcode {
@@ -626,12 +632,12 @@
   background-color: rgba(0, 0, 0, 0.9);
 }
 
-/* Rarity label below the barcode (rotated text) */
+/* Rarity label below the barcode (rotated text, bottom faces card's right edge) */
 .post-barcode-rarity {
   font-size: 10px;
   font-weight: bold;
   font-family: var(--font-mono);
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  padding-right: 4px;
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+  padding-left: 4px;
 }

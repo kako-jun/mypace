@@ -1,64 +1,65 @@
-import { useEffect, useState, useMemo } from 'react'
-import { generateStats, generateBarcode, getRarity, type BarcodeStats } from '../../lib/barcode/barcode'
+import { useEffect, useState, useRef } from 'react'
+import JsBarcode from 'jsbarcode'
+import { generateStats, getRarity, type BarcodeStats } from '../../lib/barcode/barcode'
 
 interface PostBarcodeProps {
   eventId: string
 }
 
-// Rarity display config: label and color
-const RARITY_CONFIG = {
-  common: { label: 'N', color: '#888' },
-  uncommon: { label: 'R', color: '#3b82f6' },
-  rare: { label: 'SR', color: '#a855f7' },
-  'super-rare': { label: 'UR', color: '#eab308' },
+// Rarity display config: label only (color matches barcode via CSS)
+const RARITY_LABEL = {
+  common: 'N',
+  uncommon: 'R',
+  rare: 'SR',
+  'super-rare': 'UR',
 } as const
 
 /**
- * Display a barcode on the right edge of a post card
- * Rotated 90 degrees to appear as a vertical strip
+ * Convert stats to a barcode-friendly string
+ * Format: AADDSS (ATK 2 digits, DEF 2 digits, SPD 2 digits)
+ */
+function statsToCode(stats: BarcodeStats): string {
+  const atk = stats.atk.toString().padStart(2, '0')
+  const def = stats.def.toString().padStart(2, '0')
+  const spd = stats.spd.toString().padStart(2, '0')
+  return `${atk}${def}${spd}`
+}
+
+/**
+ * Display a Code 128 barcode on the right edge of a post card
  */
 export default function PostBarcode({ eventId }: PostBarcodeProps) {
   const [stats, setStats] = useState<BarcodeStats | null>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
     generateStats(eventId).then(setStats)
   }, [eventId])
 
-  const barcode = useMemo(() => {
-    if (!stats) return null
-    return generateBarcode(stats)
+  useEffect(() => {
+    if (!stats || !svgRef.current) return
+
+    const code = statsToCode(stats)
+
+    JsBarcode(svgRef.current, code, {
+      format: 'CODE128',
+      width: 1,
+      height: 60,
+      displayValue: false,
+      margin: 0,
+      background: 'transparent',
+      lineColor: 'currentColor',
+    })
   }, [stats])
 
-  const rarity = useMemo(() => {
-    if (!stats) return null
-    return getRarity(stats)
-  }, [stats])
+  const rarity = stats ? getRarity(stats) : null
 
-  if (!barcode || !rarity) return null
-
-  // Each bit becomes a bar
-  // 1 = thick black bar, 0 = thin black bar with white space
-  const barWidth = 2
-  const gapWidth = 1
-  const totalWidth = barcode.length * (barWidth + gapWidth)
-  const barHeight = 20
-
-  const rarityConfig = RARITY_CONFIG[rarity]
+  if (!stats || !rarity) return null
 
   return (
     <div className="post-barcode">
-      <svg width={barHeight} height={totalWidth} viewBox={`0 0 ${barHeight} ${totalWidth}`} preserveAspectRatio="none">
-        {barcode.split('').map((bit, i) => {
-          const y = i * (barWidth + gapWidth)
-          const width = bit === '1' ? barHeight : barHeight * 0.6
-          const x = bit === '1' ? 0 : barHeight * 0.2
-          return <rect key={i} x={x} y={y} width={width} height={barWidth} fill="currentColor" />
-        })}
-      </svg>
-      {/* Rarity indicator below barcode */}
-      <span className="post-barcode-rarity" style={{ color: rarityConfig.color }}>
-        {rarityConfig.label}
-      </span>
+      <svg ref={svgRef} />
+      <span className="post-barcode-rarity">{RARITY_LABEL[rarity]}</span>
     </div>
   )
 }
