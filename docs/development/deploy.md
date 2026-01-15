@@ -115,3 +115,12 @@ Production environment variables are set in Cloudflare Pages dashboard:
 
 - Verify proxy is running and accessible from Workers
 - Check `SOCKS5_PROXY` format: `socks5://host:port`
+
+### 503 Service Unavailable on rapid requests
+
+短時間に連続してAPIリクエストを送ると、Cloudflareのレートリミット（またはDDoS防御）により503エラーが返されることがある。
+
+- APIコード側で503を返している箇所はない
+- Cloudflare側の自動的な保護機能が原因
+- 過去のタイムライン取得（青ボタン連打）で発生しやすい
+- 数秒待つと復旧する
