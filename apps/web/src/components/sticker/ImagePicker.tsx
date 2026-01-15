@@ -161,6 +161,27 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
     setPendingFile(null)
   }
 
+  const handleClipboardPaste = async () => {
+    try {
+      const clipboardItems = await navigator.clipboard.read()
+      for (const item of clipboardItems) {
+        // Find image type
+        const imageType = item.types.find((type) => type.startsWith('image/'))
+        if (imageType) {
+          const blob = await item.getType(imageType)
+          const file = new File([blob], `clipboard.${imageType.split('/')[1]}`, { type: imageType })
+          handleFileSelect(file)
+          return
+        }
+      }
+      // No image found
+      onError?.('クリップボードに画像がありません')
+    } catch {
+      // Permission denied or clipboard API not supported
+      onError?.('クリップボードにアクセスできません')
+    }
+  }
+
   return (
     <div className="image-picker">
       <button type="button" className="image-picker-toggle" onClick={() => setIsOpen(!isOpen)} title="Add image">
@@ -192,10 +213,20 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
                   ) : (
                     <>
                       <Icon name="Upload" size={24} />
-                      <span>Click or drag to upload</span>
+                      <span>Click or drag</span>
                     </>
                   )}
                 </button>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  className="image-picker-clipboard-btn"
+                  onClick={handleClipboardPaste}
+                  disabled={uploading}
+                  title="Paste from clipboard"
+                >
+                  <Icon name="ClipboardPaste" size={20} />
+                </Button>
                 <input
                   ref={fileInputRef}
                   type="file"
