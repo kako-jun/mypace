@@ -103,59 +103,51 @@ async function generateStats(eventId: string): Promise<Stats> {
 - 同じ投稿 = 同じバーコード = 同じステータス
 - 編集してもeventIdは変わらないため、バーコードも変わらない
 
-## バーコードの視覚表現
+## バーコードの視覚表現（実装済み）
+
+### バーコード規格
+
+**Code 128** を使用（JsBarcodeライブラリ）
+
+- 実際のバーコードリーダーで読み取り可能
+- バーの太さは1〜4単位（規格準拠）
 
 ### エンコード形式
 
 ```
-| ATK(7bit) | DEF(7bit) | SPD(7bit) | PARITY(4bit) | CHECK(3bit) |
+AADDSS （6桁の数字）
 ```
+
+| 位置 | 内容 | 例 |
+|------|------|-----|
+| 1-2桁 | ATK (00-99) | 78 |
+| 3-4桁 | DEF (00-99) | 34 |
+| 5-6桁 | SPD (00-99) | 56 |
+
+例: ATK=78, DEF=34, SPD=56 → `783456`
 
 ### バーコード生成
 
 ```typescript
-function generateBarcode(stats: Stats): string {
-  const { atk, def, spd, parity } = stats
+import JsBarcode from 'jsbarcode'
 
-  // 7bitずつ + パリティ + チェックサム
-  const binary =
-    atk.toString(2).padStart(7, '0') +
-    def.toString(2).padStart(7, '0') +
-    spd.toString(2).padStart(7, '0') +
-    parity.toString(2).padStart(4, '0')
-
-  // チェックサム（XOR）
-  const checksum = binary.split('').reduce((a, b) => a ^ parseInt(b), 0)
-
-  return binary + checksum.toString(2).padStart(3, '0')
+function statsToCode(stats: BarcodeStats): string {
+  const atk = stats.atk.toString().padStart(2, '0')
+  const def = stats.def.toString().padStart(2, '0')
+  const spd = stats.spd.toString().padStart(2, '0')
+  return `${atk}${def}${spd}`
 }
-```
 
-### SVG描画
-
-```tsx
-function BarcodeDisplay({ stats }: { stats: Stats }) {
-  const barcode = generateBarcode(stats)
-  const bars = barcode.split('').map((bit, i) => (
-    <rect
-      key={i}
-      x={i * 3}
-      y={0}
-      width={bit === '1' ? 2 : 1}
-      height={20}
-      fill={bit === '1' ? '#000' : '#fff'}
-    />
-  ))
-
-  return (
-    <svg width={barcode.length * 3} height={24}>
-      {bars}
-      <text x={0} y={24} fontSize={8}>
-        ATK {stats.atk}
-      </text>
-    </svg>
-  )
-}
+// SVG要素に描画
+JsBarcode(svgRef.current, statsToCode(stats), {
+  format: 'CODE128',
+  width: 1,
+  height: 60,
+  displayValue: false,
+  margin: 0,
+  background: 'transparent',
+  lineColor: 'currentColor',
+})
 ```
 
 ## バトルシステム
@@ -257,33 +249,53 @@ function beats(a: string, b: string): boolean {
 
 ### ファイル構成
 
-- `apps/web/src/lib/barcode/barcode.ts` - 生成ロジック
-- `apps/web/src/components/post/PostBarcode.tsx` - 表示コンポーネント
+- `apps/web/src/lib/barcode/barcode.ts` - ステータス生成ロジック
+- `apps/web/src/components/post/PostBarcode.tsx` - 表示コンポーネント（JsBarcode使用）
 - `apps/web/src/styles/components/post-card.css` - スタイル
+
+### 依存ライブラリ
+
+- `jsbarcode` - Code 128バーコード生成
 
 ### バーコードコンポーネント
 
 ```tsx
-interface PostBarcodeProps {
-  eventId: string
-}
+import JsBarcode from 'jsbarcode'
 
-// レアリティ設定
-const RARITY_CONFIG = {
-  common: { label: 'N', color: '#888' },
-  uncommon: { label: 'R', color: '#3b82f6' },
-  rare: { label: 'SR', color: '#a855f7' },
-  'super-rare': { label: 'UR', color: '#eab308' },
+const RARITY_LABEL = {
+  common: 'N',
+  uncommon: 'R',
+  rare: 'SR',
+  'super-rare': 'UR',
 } as const
 
-function PostBarcode({ eventId }: PostBarcodeProps) {
+function PostBarcode({ eventId }: { eventId: string }) {
   const [stats, setStats] = useState<BarcodeStats | null>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
     generateStats(eventId).then(setStats)
   }, [eventId])
 
-  // ... SVG描画 + レアリティ表示
+  useEffect(() => {
+    if (!stats || !svgRef.current) return
+    JsBarcode(svgRef.current, statsToCode(stats), {
+      format: 'CODE128',
+      width: 1,
+      height: 60,
+      displayValue: false,
+      margin: 0,
+      background: 'transparent',
+      lineColor: 'currentColor',
+    })
+  }, [stats])
+
+  return (
+    <div className="post-barcode">
+      <svg ref={svgRef} />
+      <span className="post-barcode-rarity">{RARITY_LABEL[rarity]}</span>
+    </div>
+  )
 }
 ```
 
@@ -295,13 +307,19 @@ function PostBarcode({ eventId }: PostBarcodeProps) {
   right: 0;
   top: 0;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-direction: row;
+  align-items: flex-start;
   gap: 2px;
   padding: 2px;
+  color: #000;
   opacity: 0.3;
   pointer-events: none;
-  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.post-barcode svg {
+  transform: rotate(90deg);
+  transform-origin: top left;
+  margin-left: 60px;
 }
 
 .post-card:hover .post-barcode {
@@ -309,13 +327,20 @@ function PostBarcode({ eventId }: PostBarcodeProps) {
   background-color: rgba(255, 255, 255, 0.9);
 }
 
+[data-theme="dark"] .post-barcode {
+  color: #fff;
+}
+
+[data-theme="dark"] .post-card:hover .post-barcode {
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
 .post-barcode-rarity {
   font-size: 10px;
   font-weight: bold;
   font-family: var(--font-mono);
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  padding-right: 4px;
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
 }
 ```
 
@@ -325,14 +350,15 @@ function PostBarcode({ eventId }: PostBarcodeProps) {
 
 合計値（ATK+DEF+SPD）でレアリティ判定（遊戯王風の4段階）:
 
-| 合計 | レアリティ | 表示 | 色 | 出現率 |
-|------|-----------|------|-----|--------|
-| 0-149 | Normal | N | グレー | ~50% |
-| 150-199 | Rare | R | 青 | ~33% |
-| 200-249 | Super Rare | SR | 紫 | ~15% |
-| 250-297 | Ultra Rare | UR | 金 | ~2% |
+| 合計 | レアリティ | 表示 | 出現率 |
+|------|-----------|------|--------|
+| 0-149 | Normal | N | ~50% |
+| 150-199 | Rare | R | ~33% |
+| 200-249 | Super Rare | SR | ~15% |
+| 250-297 | Ultra Rare | UR | ~2% |
 
-レアリティはバーコードの下に縦書きで表示される。
+- レアリティはバーコードの下に縦書き（太字）で表示
+- 色はバーコードと同じ（ライト=黒、ダーク=白）
 
 ### 強い投稿を探す遊び
 
@@ -347,15 +373,16 @@ function PostBarcode({ eventId }: PostBarcodeProps) {
 
 ## 実装優先度
 
-1. ✅ ステータス生成アルゴリズム
-2. ✅ バーコード表示（投稿カード右上・縦向き）
-3. ✅ レアリティ表示（N/R/SR/UR）
-4. ✅ ホバー時の白背景表示
-5. ステータス表示（バーコードリーダーで読み取り）
-6. バトル機能（1対1）
-7. バトル結果シェア
-8. ランダムマッチ
-9. トーナメント機能
+1. ✅ ステータス生成アルゴリズム（SHA-256ハッシュから生成）
+2. ✅ バーコード表示（Code 128規格、JsBarcode使用）
+3. ✅ バーコード縦向き配置（90度回転）
+4. ✅ レアリティ表示（N/R/SR/UR、太字）
+5. ✅ ホバー時の背景表示（ライト=白、ダーク=黒）
+6. ✅ ダークテーマ対応（白いバーコード）
+7. バトル機能（1対1）
+8. バトル結果シェア
+9. ランダムマッチ
+10. トーナメント機能
 
 ## 注意点
 
