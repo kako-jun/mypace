@@ -43,21 +43,23 @@ export function useGapDetection({
       try {
         let gapNotes: Event[]
         if (authorPubkey) {
-          gapNotes = await fetchUserPosts(authorPubkey, {
+          const result = await fetchUserPosts(authorPubkey, {
             limit: LIMITS.TIMELINE_FETCH_LIMIT,
             since: gap.since,
             until: gap.until,
             tags,
             q,
           })
+          gapNotes = result.events
         } else {
-          gapNotes = await fetchEvents({
+          const result = await fetchEvents({
             limit: LIMITS.TIMELINE_FETCH_LIMIT,
             since: gap.since,
             until: gap.until,
             q,
             tags,
           })
+          gapNotes = result.events
         }
 
         // 既存のイベントIDを除外

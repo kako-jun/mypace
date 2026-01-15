@@ -84,9 +84,13 @@ userEvents.get('/:pubkey/events', async (c) => {
       filter.until = until
     }
 
-    let events = await pool.querySync(RELAYS, filter)
-    events.sort((a, b) => b.created_at - a.created_at)
+    const rawEvents = await pool.querySync(RELAYS, filter)
+    rawEvents.sort((a, b) => b.created_at - a.created_at)
 
+    // フィルタ前の最古時刻を記録（次回のuntilに使用）
+    const searchedUntil = rawEvents.length > 0 ? Math.min(...rawEvents.map((e) => e.created_at)) : null
+
+    let events = rawEvents
     // Apply filters (same as timeline)
     events = filterBySmartFilters(events, hideAds, hideNSFW)
     events = filterByNPC(events, hideNPC)
@@ -99,7 +103,7 @@ userEvents.get('/:pubkey/events', async (c) => {
       events = filterByLanguage(events, langFilter)
     }
 
-    return c.json({ events: events.slice(0, limit) })
+    return c.json({ events: events.slice(0, limit), searchedUntil })
   } finally {
     pool.close(RELAYS)
   }

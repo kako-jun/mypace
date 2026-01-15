@@ -18,7 +18,9 @@ interface TimelineOptions {
 }
 
 // Timeline - loads filters from localStorage and sends to API
-export async function fetchTimeline(options: TimelineOptions = {}): Promise<{ events: Event[]; source: string }> {
+export async function fetchTimeline(
+  options: TimelineOptions = {}
+): Promise<{ events: Event[]; source: string; searchedUntil?: number | null }> {
   const { limit = 50, since = 0, until = 0, q = [], tags = [] } = options
 
   // Load filters from localStorage
@@ -123,7 +125,10 @@ interface UserEventsOptions {
   q?: string[] // Text search query (array of keywords)
 }
 
-export async function fetchUserEvents(pubkey: string, options: UserEventsOptions = {}): Promise<{ events: Event[] }> {
+export async function fetchUserEvents(
+  pubkey: string,
+  options: UserEventsOptions = {}
+): Promise<{ events: Event[]; searchedUntil?: number | null }> {
   const { limit = 50, since = 0, until = 0, tags = [], q = [] } = options
 
   // Load filters from localStorage (same as timeline)

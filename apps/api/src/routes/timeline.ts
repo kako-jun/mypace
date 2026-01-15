@@ -77,6 +77,9 @@ timeline.get('/', async (c) => {
     })
 
     if (cached.length > 0) {
+      // フィルタ前の最古時刻を記録
+      const searchedUntil = Math.min(...cached.map((e) => e.created_at))
+
       let events = cached
 
       // スマートフィルタ適用
@@ -94,7 +97,7 @@ timeline.get('/', async (c) => {
       }
 
       if (events.length >= limit) {
-        return c.json({ events: events.slice(0, limit), source: 'cache' })
+        return c.json({ events: events.slice(0, limit), source: 'cache', searchedUntil })
       }
     }
   } catch (e) {
@@ -119,9 +122,13 @@ timeline.get('/', async (c) => {
       filter.until = until
     }
 
-    let events = await pool.querySync(RELAYS, filter)
-    events.sort((a, b) => b.created_at - a.created_at)
+    const rawEvents = await pool.querySync(RELAYS, filter)
+    rawEvents.sort((a, b) => b.created_at - a.created_at)
 
+    // フィルタ前の最古時刻を記録（次回のuntilに使用）
+    const searchedUntil = rawEvents.length > 0 ? Math.min(...rawEvents.map((e) => e.created_at)) : null
+
+    let events = rawEvents
     // スマートフィルタ適用
     events = filterBySmartFilters(events, hideAds, hideNSFW)
     events = filterByNPC(events, hideNPC)
@@ -149,7 +156,7 @@ timeline.get('/', async (c) => {
       void cacheEvents(db, events)
     }
 
-    return c.json({ events, source: 'relay' })
+    return c.json({ events, source: 'relay', searchedUntil })
   } catch (e) {
     console.error('Relay fetch error:', e)
     return c.json({ events: [], error: 'Failed to fetch from relay' }, 500)

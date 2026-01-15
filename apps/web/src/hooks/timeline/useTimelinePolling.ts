@@ -45,14 +45,16 @@ export function useTimelinePolling({
     try {
       let newNotes: Event[]
       if (authorPubkey) {
-        newNotes = await fetchUserPosts(authorPubkey, {
+        const result = await fetchUserPosts(authorPubkey, {
           limit: LIMITS.TIMELINE_FETCH_LIMIT,
           since: latestEventTime,
           tags,
           q,
         })
+        newNotes = result.events
       } else {
-        newNotes = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, since: latestEventTime, q, tags })
+        const result = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, since: latestEventTime, q, tags })
+        newNotes = result.events
       }
 
       // 既存のイベントIDを除外

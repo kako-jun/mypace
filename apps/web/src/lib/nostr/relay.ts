@@ -19,14 +19,19 @@ interface FetchEventsOptions {
   tags?: string[]
 }
 
-export async function fetchEvents(options: FetchEventsOptions = {}): Promise<Event[]> {
+interface FetchEventsResult {
+  events: Event[]
+  searchedUntil: number | null
+}
+
+export async function fetchEvents(options: FetchEventsOptions = {}): Promise<FetchEventsResult> {
   const { limit = 50, since = 0, until = 0, q, tags } = options
   try {
     const result = await api.fetchTimeline({ limit, since, until, q, tags })
-    return result.events
+    return { events: result.events, searchedUntil: result.searchedUntil ?? null }
   } catch (e) {
     console.error('Failed to fetch events:', e)
-    return []
+    return { events: [], searchedUntil: null }
   }
 }
 
@@ -58,14 +63,22 @@ interface FetchUserPostsOptions {
   q?: string[]
 }
 
-export async function fetchUserPosts(pubkey: string, options: FetchUserPostsOptions = {}): Promise<Event[]> {
+interface FetchUserPostsResult {
+  events: Event[]
+  searchedUntil: number | null
+}
+
+export async function fetchUserPosts(
+  pubkey: string,
+  options: FetchUserPostsOptions = {}
+): Promise<FetchUserPostsResult> {
   const { limit = 50, since = 0, until = 0, tags = [], q = [] } = options
   try {
     const result = await api.fetchUserEvents(pubkey, { limit, since, until, tags, q })
-    return result.events
+    return { events: result.events, searchedUntil: result.searchedUntil ?? null }
   } catch (e) {
     console.error('Failed to fetch user posts:', e)
-    return []
+    return { events: [], searchedUntil: null }
   }
 }
 

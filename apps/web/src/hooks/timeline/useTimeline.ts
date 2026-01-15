@@ -43,11 +43,12 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const [repostingId, setRepostingId] = useState<string | null>(null)
   const [pendingNewEvents, setPendingNewEvents] = useState<Event[]>([])
   const [latestEventTime, setLatestEventTime] = useState(0)
-  const [oldestEventTime, setOldestEventTime] = useState(0)
+  const [_oldestEventTime, setOldestEventTime] = useState(0)
   const [gaps, setGaps] = useState<GapInfo[]>([])
   const [hasMore, setHasMore] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [loadingGap, setLoadingGap] = useState<string | null>(null)
+  const [searchedUntil, setSearchedUntil] = useState<number | null>(null)
 
   // Debounce refs for stella clicks
   const stellaDebounceTimers = useRef<{ [eventId: string]: ReturnType<typeof setTimeout> }>({})
@@ -96,12 +97,13 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       const pubkey = await getCurrentPubkey()
       setMyPubkey(pubkey)
 
-      let notes: Event[]
+      let result: { events: Event[]; searchedUntil: number | null }
       if (authorPubkey) {
-        notes = await fetchUserPosts(authorPubkey, { limit: LIMITS.TIMELINE_FETCH_LIMIT, tags, q })
+        result = await fetchUserPosts(authorPubkey, { limit: LIMITS.TIMELINE_FETCH_LIMIT, tags, q })
       } else {
-        notes = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, q, tags })
+        result = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, q, tags })
       }
+      const notes = result.events
 
       const initialItems: TimelineItem[] = notes.map((note) => ({ event: note }))
       initialItems.sort((a, b) => b.event.created_at - a.event.created_at)
@@ -109,16 +111,26 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       setEvents(notes)
       setLoading(false)
 
-      // hasMoreは「Load Older Posts」か「End of timeline (retry)」の表示切り替え用
-      // 初回読み込み時は常にtrue（まだ過去を探っていないため）
-      // loadOlderEventsで最古が変化しなくなったらfalseになる
+      // searchedUntilはAPIから返された「フィルタ前の最古時刻」
+      // 次回のuntilにはこれを使う（フィルタ後の最古ではなく）
+      setSearchedUntil(result.searchedUntil)
+
+      // hasMoreは初回は常にtrue（まだ過去を探っていないため）
+      // loadOlderEventsでsearchedUntilが変化しなくなったらfalseになる
       if (notes.length > 0) {
         const maxTime = Math.max(...notes.map((n) => n.created_at))
         const minTime = Math.min(...notes.map((n) => n.created_at))
         setLatestEventTime(maxTime)
         setOldestEventTime(minTime)
         setHasMore(true)
+      } else if (result.searchedUntil !== null) {
+        // フィルタ後0件でも、searchedUntilがあれば過去に遡る余地がある
+        const now = Math.floor(Date.now() / 1000)
+        setLatestEventTime(now)
+        setOldestEventTime(now)
+        setHasMore(true)
       } else {
+        // searchedUntilもnull = リレーから0件 = 本当の終端
         const now = Math.floor(Date.now() / 1000)
         setLatestEventTime(now)
         setOldestEventTime(now)
@@ -295,29 +307,40 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   // 古い投稿を読み込む（無限スクロール用）
   // hasMore=falseでもリトライ可能（ネットワーク障害等からの復旧用）
   const loadOlderEvents = useCallback(async () => {
-    if (loadingMore || oldestEventTime === 0) return
+    if (loadingMore || searchedUntil === null) return
     setLoadingMore(true)
     try {
-      // until は inclusive なので、-1 して既知の最古イベントを除外
-      const untilTime = oldestEventTime - 1
-      let olderNotes: Event[]
+      // searchedUntilは「フィルタ前の最古時刻」なので、これを基準に過去を探す
+      // フィルタ後の最古（oldestEventTime）ではなく、探索済み範囲の最古を使う
+      const untilTime = searchedUntil - 1
+      let result: { events: Event[]; searchedUntil: number | null }
       if (authorPubkey) {
-        olderNotes = await fetchUserPosts(authorPubkey, {
+        result = await fetchUserPosts(authorPubkey, {
           limit: LIMITS.TIMELINE_FETCH_LIMIT,
           until: untilTime,
           tags,
           q,
         })
       } else {
-        olderNotes = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, until: untilTime, q, tags })
+        result = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, until: untilTime, q, tags })
       }
 
-      if (olderNotes.length === 0) {
-        // 0件でもボタンは押せる（retry可能）ので、ラベルをEnd of timelineに変えるだけ
+      const olderNotes = result.events
+      const newSearchedUntil = result.searchedUntil
+
+      // hasMoreは「searchedUntilが変化したか」で判定
+      // リレーから0件（searchedUntil=null）なら、これ以上遡れない
+      if (newSearchedUntil === null) {
         setHasMore(false)
         return
       }
 
+      // searchedUntilが変化したか
+      const searchedUntilChanged = newSearchedUntil < searchedUntil
+      setSearchedUntil(newSearchedUntil)
+      setHasMore(searchedUntilChanged)
+
+      // フィルタ後の投稿を追加
       const existingIds = new Set(events.map((e) => e.id))
       const newOlderNotes = olderNotes.filter((e) => !existingIds.has(e.id))
 
@@ -335,21 +358,15 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         })
 
         const minTime = Math.min(...newOlderNotes.map((e) => e.created_at))
-        // hasMoreは「最古の投稿が変化したか」で判定
-        // 変化しなくなったら「いまのところEnd」と表示（リトライ可能）
-        setHasMore(minTime < oldestEventTime)
         setOldestEventTime(minTime)
         await mergeProfiles([...new Set(newOlderNotes.map((e) => e.pubkey))], setProfiles)
-      } else {
-        // 新しい投稿が0件なら、最古は変化しないのでEnd
-        setHasMore(false)
       }
     } catch (err) {
       console.error('Failed to load older events:', err)
     } finally {
       setLoadingMore(false)
     }
-  }, [loadingMore, oldestEventTime, events, authorPubkey, tagsKey, qKey])
+  }, [loadingMore, searchedUntil, events, authorPubkey, tagsKey, qKey])
 
   const loadTimelineRef = useRef(loadTimeline)
   loadTimelineRef.current = loadTimeline
