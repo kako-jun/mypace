@@ -8,10 +8,10 @@ interface PostBarcodeProps {
 
 // Rarity display config: label only (color matches barcode via CSS)
 const RARITY_LABEL = {
-  common: 'N',
-  uncommon: 'R',
-  rare: 'SR',
-  'super-rare': 'UR',
+  normal: 'N',
+  rare: 'R',
+  'super-rare': 'SR',
+  'ultra-rare': 'UR',
 } as const
 
 /**

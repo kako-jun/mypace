@@ -65,11 +65,11 @@ export function generateBarcode(stats: BarcodeStats): string {
  * Get rarity based on total stats (N/R/SR/UR)
  * N: 0-149 (~50%), R: 150-199 (~33%), SR: 200-249 (~15%), UR: 250+ (~2%)
  */
-export function getRarity(stats: BarcodeStats): 'common' | 'uncommon' | 'rare' | 'super-rare' {
+export function getRarity(stats: BarcodeStats): 'normal' | 'rare' | 'super-rare' | 'ultra-rare' {
   const total = stats.atk + stats.def + stats.spd
 
-  if (total >= 250) return 'super-rare' // UR
-  if (total >= 200) return 'rare' // SR
-  if (total >= 150) return 'uncommon' // R
-  return 'common' // N
+  if (total >= 250) return 'ultra-rare' // UR
+  if (total >= 200) return 'super-rare' // SR
+  if (total >= 150) return 'rare' // R
+  return 'normal' // N
 }
