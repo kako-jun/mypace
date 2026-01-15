@@ -107,7 +107,7 @@ timeline.get('/', async (c) => {
   try {
     const filter: Filter = {
       kinds,
-      limit: needsMoreFetch ? limit * fetchMultiplier : limit,
+      limit: limit * fetchMultiplier,
     }
     if (!showAll) {
       filter['#t'] = [MYPACE_TAG]
