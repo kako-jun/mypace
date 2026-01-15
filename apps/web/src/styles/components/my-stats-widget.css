@@ -12,14 +12,13 @@
   gap: 4px;
 
   /* Match user-stats font styling */
-  font-size: 1.5rem;
+  font-size: clamp(0.875rem, 2.5vw, 1.5rem);
   font-weight: 700;
   color: var(--text-primary);
 
   /* Semi-transparent background for readability */
   background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(4px);
-  padding: 8px 12px;
+  padding: clamp(4px, 1vw, 8px) clamp(6px, 1.5vw, 12px);
   border-radius: 8px;
 
   pointer-events: none;
@@ -28,5 +27,10 @@
 .my-stats-widget > span {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: clamp(2px, 0.5vw, 4px);
+}
+
+.my-stats-widget > span svg {
+  width: clamp(10px, 2vw, 14px);
+  height: clamp(10px, 2vw, 14px);
 }
