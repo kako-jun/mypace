@@ -113,9 +113,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
 
       // searchedUntilはAPIから返された「フィルタ前の最古時刻」
       // 次回のuntilにはこれを使う（フィルタ後の最古ではなく）
-      if (result.searchedUntil !== null) {
-        setSearchedUntil(result.searchedUntil)
-      }
+      // nullの場合は現在時刻をフォールバック（初回0件でもリトライ可能に）
+      setSearchedUntil(result.searchedUntil ?? Math.floor(Date.now() / 1000))
 
       // hasMoreは初回は常にtrue（まだ過去を探っていないため）
       // loadOlderEventsでsearchedUntilが変化しなくなったらfalseになる
