@@ -27,10 +27,11 @@
 
 ### バーコードのサイズ・位置
 
-- 幅: 20px
-- 高さ: 約84px（28bit × 3px）
-- 位置: 投稿カード右上（縦向き・90度回転）
-- カードの上辺がバーコードの終端線を兼ねる
+- コンテナ幅: 24px
+- コンテナ高さ: 90px
+- バーの長さ: 18px
+- 位置: 投稿カード右辺に接地（縦向き・90度回転）
+- コンテナはカード右辺から6px外側に配置（right: -6px）
 
 ### 表示箇所
 
@@ -51,8 +52,8 @@
 
 | テーマ | バーコード色 | ホバー時背景 |
 |--------|-------------|-------------|
-| ライト | 黒 | 白 (rgba(255,255,255,0.9)) |
-| ダーク | 白 | 黒 (rgba(0,0,0,0.9)) |
+| ライト | 黒 | 白 (#fff) |
+| ダーク | 白 | 黒 (#000) |
 
 ## ステータス生成アルゴリズム
 
@@ -142,7 +143,7 @@ function statsToCode(stats: BarcodeStats): string {
 JsBarcode(svgRef.current, statsToCode(stats), {
   format: 'CODE128',
   width: 1,
-  height: 60,
+  height: 18,
   displayValue: false,
   margin: 0,
   background: 'transparent',
@@ -282,7 +283,7 @@ function PostBarcode({ eventId }: { eventId: string }) {
     JsBarcode(svgRef.current, statsToCode(stats), {
       format: 'CODE128',
       width: 1,
-      height: 60,
+      height: 18,
       displayValue: false,
       margin: 0,
       background: 'transparent',
@@ -304,27 +305,29 @@ function PostBarcode({ eventId }: { eventId: string }) {
 ```css
 .post-barcode {
   position: absolute;
-  right: 0;
+  right: -6px;
   top: 0;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 2px;
+  width: 24px;
+  height: 90px;
+  padding: 2px 2px 2px 1px;
   color: #000;
   opacity: 0.3;
   pointer-events: none;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  overflow: visible;
 }
 
 .post-barcode svg {
+  position: absolute;
+  right: 4px;
+  top: 68px;
   transform: rotate(90deg);
-  transform-origin: top left;
-  margin-left: 60px;
+  transform-origin: top right;
 }
 
 .post-card:hover .post-barcode {
   opacity: 0.7;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: #fff;
 }
 
 [data-theme="dark"] .post-barcode {
@@ -332,13 +335,17 @@ function PostBarcode({ eventId }: { eventId: string }) {
 }
 
 [data-theme="dark"] .post-card:hover .post-barcode {
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: #000;
 }
 
 .post-barcode-rarity {
+  position: absolute;
+  right: 2px;
+  top: 74px;
   font-size: 10px;
   font-weight: bold;
   font-family: var(--font-mono);
+  text-shadow: none;
   writing-mode: vertical-lr;
   transform: rotate(180deg);
 }
