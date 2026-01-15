@@ -95,7 +95,11 @@ export function useTimelinePolling({
   const loadNewEvents = useCallback(async () => {
     if (pendingNewEvents.length === 0) return
 
-    const newItems: TimelineItem[] = pendingNewEvents.map((event) => ({ event }))
+    // 先にボタンを消す（入れ替わりを自然に見せる）
+    const eventsToAdd = [...pendingNewEvents]
+    setPendingNewEvents([])
+
+    const newItems: TimelineItem[] = eventsToAdd.map((event) => ({ event }))
     setTimelineItems((prev) => {
       const existingIds = new Set(prev.map((item) => item.event.id))
       const uniqueNewItems = newItems.filter((item) => !existingIds.has(item.event.id))
@@ -106,23 +110,19 @@ export function useTimelinePolling({
     })
     setEvents((prev) => {
       const existingIds = new Set(prev.map((e) => e.id))
-      const uniqueNew = pendingNewEvents.filter((e) => !existingIds.has(e.id))
+      const uniqueNew = eventsToAdd.filter((e) => !existingIds.has(e.id))
       const merged = [...uniqueNew, ...prev].sort((a, b) => b.created_at - a.created_at)
       // Trim from bottom (older items) if exceeding limit
       return merged.slice(0, LIMITS.MAX_TIMELINE_ITEMS)
     })
 
     // 新着イベントの最新時刻を記録
-    if (pendingNewEvents.length > 0) {
-      const maxTime = Math.max(...pendingNewEvents.map((e) => e.created_at))
-      setLatestEventTime((prev) => Math.max(prev, maxTime))
-    }
+    const maxTime = Math.max(...eventsToAdd.map((e) => e.created_at))
+    setLatestEventTime((prev) => Math.max(prev, maxTime))
 
     // プロフィール取得
-    const pubkeys = [...new Set(pendingNewEvents.map((e) => e.pubkey))]
+    const pubkeys = [...new Set(eventsToAdd.map((e) => e.pubkey))]
     await mergeProfiles(pubkeys, setProfiles)
-
-    setPendingNewEvents([])
   }, [pendingNewEvents, setTimelineItems, setEvents, setLatestEventTime, setProfiles, setPendingNewEvents])
 
   return { loadNewEvents, checkNewEvents }
