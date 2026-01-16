@@ -65,12 +65,19 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     latestEventTime,
     events,
     profiles,
+    myPubkey,
     setPendingNewEvents,
     setProfiles,
     setTimelineItems,
     setEvents,
     setLatestEventTime,
     pendingNewEvents,
+    setReactions,
+    setReplies,
+    setReposts,
+    setViews,
+    setWikidataMap,
+    setOgpMap,
   })
 
   // タイムライン読み込み

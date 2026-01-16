@@ -51,10 +51,11 @@ export async function loadEnrichForEvents(
       }
     }
 
-    setReactions(reactionMap)
-    setReplies(replyMap)
-    setReposts(repostMap)
-    setViews(viewMap)
+    // 既存データとマージ（上書きではなく追加）
+    setReactions((prev) => ({ ...prev, ...reactionMap }))
+    setReplies((prev) => ({ ...prev, ...replyMap }))
+    setReposts((prev) => ({ ...prev, ...repostMap }))
+    setViews((prev) => ({ ...prev, ...viewMap }))
 
     // プロフィールをマージ
     setProfiles((prev) => {
@@ -86,10 +87,11 @@ export async function loadEnrichForEvents(
       viewMap[eventId] = { impression: 0, detail: 0 }
     }
 
-    setReactions(reactionMap)
-    setReplies(replyMap)
-    setReposts(repostMap)
-    setViews(viewMap)
+    // 既存データとマージ（上書きではなく追加）
+    setReactions((prev) => ({ ...prev, ...reactionMap }))
+    setReplies((prev) => ({ ...prev, ...replyMap }))
+    setReposts((prev) => ({ ...prev, ...repostMap }))
+    setViews((prev) => ({ ...prev, ...viewMap }))
   }
 }
 

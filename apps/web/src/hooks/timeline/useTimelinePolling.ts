@@ -12,12 +12,19 @@ interface UseTimelinePollingOptions {
   latestEventTime: number
   events: Event[]
   profiles: ProfileCache
+  myPubkey: string | null
   setPendingNewEvents: React.Dispatch<React.SetStateAction<Event[]>>
   setProfiles: React.Dispatch<React.SetStateAction<ProfileCache>>
   setTimelineItems: React.Dispatch<React.SetStateAction<TimelineItem[]>>
   setEvents: React.Dispatch<React.SetStateAction<Event[]>>
   setLatestEventTime: React.Dispatch<React.SetStateAction<number>>
   pendingNewEvents: Event[]
+  setReactions: React.Dispatch<React.SetStateAction<{ [eventId: string]: import('../../types').ReactionData }>>
+  setReplies: React.Dispatch<React.SetStateAction<{ [eventId: string]: import('../../types').ReplyData }>>
+  setReposts: React.Dispatch<React.SetStateAction<{ [eventId: string]: import('../../types').RepostData }>>
+  setViews: React.Dispatch<React.SetStateAction<{ [eventId: string]: import('../../types').ViewCountData }>>
+  setWikidataMap: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  setOgpMap: React.Dispatch<React.SetStateAction<Record<string, import('../../types').OgpData>>>
 }
 
 export function useTimelinePolling({
@@ -25,12 +32,19 @@ export function useTimelinePolling({
   latestEventTime,
   events,
   profiles,
+  myPubkey,
   setPendingNewEvents,
   setProfiles,
   setTimelineItems,
   setEvents,
   setLatestEventTime,
   pendingNewEvents,
+  setReactions,
+  setReplies,
+  setReposts,
+  setViews,
+  setWikidataMap,
+  setOgpMap,
 }: UseTimelinePollingOptions) {
   const { authorPubkey, tags, q } = options
   // Serialize arrays for stable dependency comparison
@@ -122,10 +136,44 @@ export function useTimelinePolling({
     const maxTime = Math.max(...eventsToAdd.map((e) => e.created_at))
     setLatestEventTime((prev) => Math.max(prev, maxTime))
 
-    // プロフィール取得
+    // プロフィールとenrichデータを取得
     const pubkeys = [...new Set(eventsToAdd.map((e) => e.pubkey))]
     await mergeProfiles(pubkeys, profiles, setProfiles)
-  }, [pendingNewEvents, profiles, setTimelineItems, setEvents, setLatestEventTime, setProfiles, setPendingNewEvents])
+
+    // metadata + super-mention一括取得（過去分と同じ処理）
+    if (myPubkey) {
+      const { loadEnrichForEvents, recordImpressionsForEvents, loadOgpForEvents } = await import('./useTimelineData')
+      await loadEnrichForEvents(
+        eventsToAdd,
+        myPubkey,
+        setReactions,
+        setReplies,
+        setReposts,
+        setViews,
+        setProfiles,
+        setWikidataMap
+      )
+      // OGPデータ一括取得（非同期）
+      loadOgpForEvents(eventsToAdd, setOgpMap)
+      // Record impressions for new events (fire-and-forget)
+      recordImpressionsForEvents(eventsToAdd, myPubkey)
+    }
+  }, [
+    pendingNewEvents,
+    profiles,
+    myPubkey,
+    setTimelineItems,
+    setEvents,
+    setLatestEventTime,
+    setProfiles,
+    setPendingNewEvents,
+    setReactions,
+    setReplies,
+    setReposts,
+    setViews,
+    setWikidataMap,
+    setOgpMap,
+  ])
 
   return { loadNewEvents, checkNewEvents }
 }
