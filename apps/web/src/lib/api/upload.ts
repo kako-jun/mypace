@@ -118,9 +118,6 @@ export async function deleteFromNostrBuild(url: string): Promise<DeleteResult> {
       },
     })
 
-    const text = await response.text()
-    console.log('Delete response:', response.status, text)
-
     if (response.status === 403) {
       return { success: false, error: '403: Permission denied' }
     }
@@ -132,11 +129,10 @@ export async function deleteFromNostrBuild(url: string): Promise<DeleteResult> {
     }
 
     if (response.ok) {
-      // Show what server returned
-      return { success: true, message: `${response.status}: ${text.slice(0, 100)}` }
+      return { success: true, message: 'File deleted successfully' }
     }
 
-    return { success: false, error: `${response.status}: ${text.slice(0, 100)}` }
+    return { success: false, error: `Delete failed with status ${response.status}` }
   } catch (e) {
     return { success: false, error: getErrorMessage(e, 'Failed to delete') }
   }

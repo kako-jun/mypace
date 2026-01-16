@@ -81,9 +81,3 @@ export async function fetchEventById(eventId: string): Promise<Event | null> {
     return null
   }
 }
-
-// 互換性のために残す（何もしない）
-export function closePool(): void {}
-export function getPool(): null {
-  return null
-}

@@ -25,9 +25,6 @@ export const LIMITS = {
 export const CUSTOM_EVENTS = {
   NEW_POST: 'newpost',
   PROFILE_UPDATED: 'profileupdated',
-  MYPACE_FILTER_CHANGED: 'mypacefilterchanged',
-  LANGUAGE_FILTER_CHANGED: 'languagefilterchanged',
-  NG_WORDS_CHANGED: 'ngwordschanged',
   THEME_COLORS_CHANGED: 'themecolorschanged',
   APP_THEME_CHANGED: 'appthemechanged',
   LOGO_CLICKED: 'logoclicked',

@@ -221,7 +221,7 @@ export function setMuteList(muteList: MuteEntry[]): void {
 
 // ============ Auth ============
 
-// Legacy key for backward compatibility (remove after 2025-02-28)
+// Legacy key for backward compatibility (remove after 2026-12-31)
 const LEGACY_SK_KEY = 'mypace_sk'
 
 export function getSecretKey(): string {
@@ -231,7 +231,7 @@ export function getSecretKey(): string {
   }
 
   // Fallback: check legacy key for users who haven't migrated yet
-  // TODO: Remove this fallback after 2025-02-28
+  // TODO: Remove this fallback after 2026-12-31
   if (typeof localStorage !== 'undefined') {
     const legacySk = localStorage.getItem(LEGACY_SK_KEY)
     if (legacySk) {

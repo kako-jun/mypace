@@ -39,15 +39,11 @@ export function Layout() {
   useEffect(() => {
     const updateFilters = () => setHasActiveFilters(checkActiveFilters())
 
-    window.addEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, updateFilters)
-    window.addEventListener(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED, updateFilters)
-    window.addEventListener(CUSTOM_EVENTS.NG_WORDS_CHANGED, updateFilters)
+    window.addEventListener(CUSTOM_EVENTS.FILTER_APPLIED, updateFilters)
     window.addEventListener('storage', updateFilters)
 
     return () => {
-      window.removeEventListener(CUSTOM_EVENTS.MYPACE_FILTER_CHANGED, updateFilters)
-      window.removeEventListener(CUSTOM_EVENTS.LANGUAGE_FILTER_CHANGED, updateFilters)
-      window.removeEventListener(CUSTOM_EVENTS.NG_WORDS_CHANGED, updateFilters)
+      window.removeEventListener(CUSTOM_EVENTS.FILTER_APPLIED, updateFilters)
       window.removeEventListener('storage', updateFilters)
     }
   }, [checkActiveFilters])

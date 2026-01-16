@@ -43,21 +43,3 @@ export interface UseTimelineResult {
   getDisplayName: (pubkey: string) => string
   getAvatarUrl: (pubkey: string) => string | null
 }
-
-export interface TimelineState {
-  timelineItems: TimelineItem[]
-  events: Event[]
-  profiles: ProfileCache
-  reactions: { [eventId: string]: ReactionData }
-  replies: { [eventId: string]: ReplyData }
-  reposts: { [eventId: string]: RepostData }
-  myPubkey: string | null
-  loading: boolean
-  error: string
-  likingId: string | null
-  repostingId: string | null
-  pendingNewEvents: Event[]
-  latestEventTime: number
-  hasMore: boolean
-  loadingMore: boolean
-}
