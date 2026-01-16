@@ -57,12 +57,13 @@ export async function loadEnrichForEvents(
     setReposts((prev) => ({ ...prev, ...repostMap }))
     setViews((prev) => ({ ...prev, ...viewMap }))
 
-    // プロフィールをマージ
+    // プロフィールをマージ（リクエストした全pubkeyに対して設定）
     setProfiles((prev) => {
       const newProfiles = { ...prev }
-      for (const [pk, profile] of Object.entries(profiles)) {
+      for (const pk of authorPubkeys) {
         if (newProfiles[pk] === undefined) {
-          newProfiles[pk] = profile || null
+          // APIが返したprofileがあればそれを、なければnull（取得失敗 = マイペースさん表示）
+          newProfiles[pk] = profiles[pk] || null
         }
       }
       return newProfiles
@@ -92,6 +93,17 @@ export async function loadEnrichForEvents(
     setReplies((prev) => ({ ...prev, ...replyMap }))
     setReposts((prev) => ({ ...prev, ...repostMap }))
     setViews((prev) => ({ ...prev, ...viewMap }))
+
+    // エラー時もプロフィールをnullに設定（虹色アニメーション停止のため）
+    setProfiles((prev) => {
+      const newProfiles = { ...prev }
+      for (const pk of authorPubkeys) {
+        if (newProfiles[pk] === undefined) {
+          newProfiles[pk] = null
+        }
+      }
+      return newProfiles
+    })
   }
 }
 
