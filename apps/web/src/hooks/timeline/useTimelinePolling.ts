@@ -55,20 +55,15 @@ export function useTimelinePolling({
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // フィルター設定を取得するヘルパー（毎回最新を読む）
+  // 各フィルターは直交（独立）して動作する
   const getFilterOptions = useCallback(() => {
     const filters = getFilterSettings()
     const mutedPubkeys = getMutedPubkeys()
-    // showSNS/showBlogからkindsを構築（両方trueならundefinedでデフォルトを使う）
-    let kinds: number[] | undefined
-    if (!filters.showSNS || !filters.showBlog) {
-      kinds = []
-      if (filters.showSNS) kinds.push(1) // KIND_NOTE
-      if (filters.showBlog) kinds.push(30023) // KIND_LONG_FORM
-      // mypaceモード(!showAll)でNPC表示する場合はNPC kindも追加
-      if (!filters.mypace && !filters.hideNPC) {
-        kinds.push(42000) // KIND_SINOV_NPC
-      }
-    }
+    // kinds: 各設定が独立して効果を持つ
+    const kinds: number[] = []
+    if (filters.showSNS) kinds.push(1) // KIND_NOTE
+    if (filters.showBlog) kinds.push(30023) // KIND_LONG_FORM
+    if (!filters.hideNPC) kinds.push(42000) // KIND_SINOV_NPC（mypace設定とは独立）
     return {
       showAll: !filters.mypace,
       langFilter: filters.lang,
@@ -78,7 +73,7 @@ export function useTimelinePolling({
       mutedPubkeys,
       ngWords: filters.ngWords,
       ngTags: filters.ngTags,
-      kinds,
+      kinds: kinds.length > 0 ? kinds : undefined,
     }
   }, [])
 
