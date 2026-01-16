@@ -141,6 +141,7 @@ export interface FetchUserEventsOptions {
   hideAds?: boolean
   hideNSFW?: boolean
   hideNPC?: boolean
+  mutedPubkeys?: string[]
   ngWords?: string[]
   ngTags?: string[]
   kinds?: number[]
@@ -167,6 +168,7 @@ export async function fetchUserEvents(
     hideAds = true,
     hideNSFW = true,
     hideNPC = false,
+    mutedPubkeys = [],
     ngWords = [],
     ngTags = [],
     kinds,
@@ -210,6 +212,7 @@ export async function fetchUserEvents(
     let events = rawEvents.map(toEvent)
 
     // フィルタ適用
+    events = filterByMuteList(events, mutedPubkeys)
     events = filterBySmartFilters(events, hideAds, hideNSFW)
     events = filterByNPC(events, hideNPC)
     events = filterByNgWords(events, ngWords)
