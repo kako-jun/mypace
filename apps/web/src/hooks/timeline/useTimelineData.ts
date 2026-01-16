@@ -1,5 +1,5 @@
-import { fetchProfiles, fetchReactions, fetchReplies, fetchReposts } from '../../lib/nostr/relay'
-import { fetchViewCountsBatch, recordViewsBatch } from '../../lib/api/api'
+import { fetchProfiles } from '../../lib/nostr/relay'
+import { fetchEventsMetadata, recordViews } from '../../lib/api/api'
 import { hasMypaceTag } from '../../lib/nostr/tags'
 import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData } from '../../types'
 
@@ -26,103 +26,91 @@ export async function loadProfiles(
   }
 }
 
-// リアクション読み込み
-export async function loadReactionsForEvents(
+// メタデータ一括読み込み（reactions, replies, reposts, views）
+export async function loadMetadataForEvents(
   events: Event[],
   myPubkey: string,
-  currentProfiles: ProfileCache,
   setReactions: React.Dispatch<React.SetStateAction<{ [eventId: string]: ReactionData }>>,
-  setProfiles: React.Dispatch<React.SetStateAction<ProfileCache>>
-): Promise<void> {
-  const reactionMap: { [eventId: string]: ReactionData } = {}
-  const allReactorPubkeys: string[] = []
-
-  await Promise.all(
-    events.map(async (event) => {
-      try {
-        const result = await fetchReactions(event.id, myPubkey)
-        reactionMap[event.id] = result
-        result.reactors.forEach((r) => allReactorPubkeys.push(r.pubkey))
-      } catch {
-        reactionMap[event.id] = { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] }
-      }
-    })
-  )
-  setReactions(reactionMap)
-
-  // Load profiles for reactors
-  const missingPubkeys = [...new Set(allReactorPubkeys)].filter((pk) => currentProfiles[pk] === undefined)
-  if (missingPubkeys.length > 0) {
-    try {
-      const fetchedProfiles = await fetchProfiles(missingPubkeys)
-      setProfiles((prev) => {
-        const newProfiles = { ...prev }
-        for (const pk of missingPubkeys) {
-          newProfiles[pk] = fetchedProfiles[pk] || null
-        }
-        return newProfiles
-      })
-    } catch {}
-  }
-}
-
-// 返信読み込み
-export async function loadRepliesForEvents(
-  events: Event[],
-  currentProfiles: ProfileCache,
   setReplies: React.Dispatch<React.SetStateAction<{ [eventId: string]: ReplyData }>>,
+  setReposts: React.Dispatch<React.SetStateAction<{ [eventId: string]: RepostData }>>,
+  setViews: React.Dispatch<React.SetStateAction<{ [eventId: string]: ViewCountData }>>,
   setProfiles: React.Dispatch<React.SetStateAction<ProfileCache>>
 ): Promise<void> {
-  const replyMap: { [eventId: string]: ReplyData } = {}
-  const allReplyPubkeys: string[] = []
+  if (events.length === 0) return
 
-  await Promise.all(
-    events.map(async (event) => {
-      try {
-        const result = await fetchReplies(event.id)
-        replyMap[event.id] = result
-        result.replies.forEach((r) => allReplyPubkeys.push(r.pubkey))
-      } catch {
-        replyMap[event.id] = { count: 0, replies: [] }
+  const eventIds = events.map((e) => e.id)
+
+  try {
+    const metadata = await fetchEventsMetadata(eventIds, myPubkey)
+
+    // Batch update all states
+    const reactionMap: { [eventId: string]: ReactionData } = {}
+    const replyMap: { [eventId: string]: ReplyData } = {}
+    const repostMap: { [eventId: string]: RepostData } = {}
+    const viewMap: { [eventId: string]: ViewCountData } = {}
+    const allPubkeys: string[] = []
+
+    for (const eventId of eventIds) {
+      const data = metadata[eventId]
+      if (data) {
+        reactionMap[eventId] = data.reactions
+        replyMap[eventId] = data.replies
+        repostMap[eventId] = data.reposts
+        viewMap[eventId] = data.views
+
+        // Collect pubkeys for profile loading
+        data.reactions.reactors.forEach((r) => allPubkeys.push(r.pubkey))
+        data.replies.replies.forEach((r) => allPubkeys.push(r.pubkey))
+      } else {
+        // Initialize with defaults if not found
+        reactionMap[eventId] = { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] }
+        replyMap[eventId] = { count: 0, replies: [] }
+        repostMap[eventId] = { count: 0, myRepost: false }
+        viewMap[eventId] = { impression: 0, detail: 0 }
       }
-    })
-  )
-  setReplies(replyMap)
+    }
 
-  // Load profiles for reply authors
-  const missingPubkeys = [...new Set(allReplyPubkeys)].filter((pk) => currentProfiles[pk] === undefined)
-  if (missingPubkeys.length > 0) {
-    try {
-      const fetchedProfiles = await fetchProfiles(missingPubkeys)
-      setProfiles((prev) => {
-        const newProfiles = { ...prev }
-        for (const pk of missingPubkeys) {
-          newProfiles[pk] = fetchedProfiles[pk] || null
-        }
-        return newProfiles
-      })
-    } catch {}
+    setReactions(reactionMap)
+    setReplies(replyMap)
+    setReposts(repostMap)
+    setViews(viewMap)
+
+    // Load profiles for reactors and reply authors
+    const uniquePubkeys = [...new Set(allPubkeys)]
+    if (uniquePubkeys.length > 0) {
+      try {
+        const fetchedProfiles = await fetchProfiles(uniquePubkeys)
+        setProfiles((prev) => {
+          const newProfiles = { ...prev }
+          for (const pk of uniquePubkeys) {
+            if (newProfiles[pk] === undefined) {
+              newProfiles[pk] = fetchedProfiles[pk] || null
+            }
+          }
+          return newProfiles
+        })
+      } catch {}
+    }
+  } catch (error) {
+    console.error('Failed to load metadata:', error)
+    // Initialize with empty values on error
+    const reactionMap: { [eventId: string]: ReactionData } = {}
+    const replyMap: { [eventId: string]: ReplyData } = {}
+    const repostMap: { [eventId: string]: RepostData } = {}
+    const viewMap: { [eventId: string]: ViewCountData } = {}
+
+    for (const eventId of eventIds) {
+      reactionMap[eventId] = { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] }
+      replyMap[eventId] = { count: 0, replies: [] }
+      repostMap[eventId] = { count: 0, myRepost: false }
+      viewMap[eventId] = { impression: 0, detail: 0 }
+    }
+
+    setReactions(reactionMap)
+    setReplies(replyMap)
+    setReposts(repostMap)
+    setViews(viewMap)
   }
-}
-
-// リポスト読み込み
-export async function loadRepostsForEvents(
-  events: Event[],
-  myPubkey: string,
-  setReposts: React.Dispatch<React.SetStateAction<{ [eventId: string]: RepostData }>>
-): Promise<void> {
-  const repostMap: { [eventId: string]: RepostData } = {}
-  await Promise.all(
-    events.map(async (event) => {
-      try {
-        const result = await fetchReposts(event.id, myPubkey)
-        repostMap[event.id] = result
-      } catch {
-        repostMap[event.id] = { count: 0, myRepost: false }
-      }
-    })
-  )
-  setReposts(repostMap)
 }
 
 // プロフィールをマージして更新
@@ -144,21 +132,6 @@ export async function mergeProfiles(
   } catch {}
 }
 
-// 閲覧数読み込み（mypaceタグ付き投稿のみ）
-export async function loadViewsForEvents(
-  events: Event[],
-  setViews: React.Dispatch<React.SetStateAction<{ [eventId: string]: ViewCountData }>>
-): Promise<void> {
-  // mypaceタグ付き投稿のIDのみ抽出
-  const mypaceEventIds = events.filter((e) => hasMypaceTag(e)).map((e) => e.id)
-  if (mypaceEventIds.length === 0) return
-
-  try {
-    const viewsData = await fetchViewCountsBatch(mypaceEventIds)
-    setViews((prev) => ({ ...prev, ...viewsData }))
-  } catch {}
-}
-
 // インプレッション一括記録（mypaceタグ付き投稿のみ）
 export async function recordImpressionsForEvents(events: Event[], viewerPubkey: string): Promise<void> {
   // mypaceタグ付き投稿の { eventId, authorPubkey } を抽出
@@ -166,5 +139,59 @@ export async function recordImpressionsForEvents(events: Event[], viewerPubkey: 
   if (mypaceEvents.length === 0 || !viewerPubkey) return
 
   // fire-and-forget
-  recordViewsBatch(mypaceEvents, 'impression', viewerPubkey).catch(() => {})
+  recordViews(mypaceEvents, 'impression', viewerPubkey).catch(() => {})
+}
+
+// ==================== DEPRECATED FUNCTIONS (for backward compatibility during migration) ====================
+// These will be removed after migration is complete
+
+export async function loadReactionsForEvents(
+  events: Event[],
+  myPubkey: string,
+  _currentProfiles: ProfileCache,
+  setReactions: React.Dispatch<React.SetStateAction<{ [eventId: string]: ReactionData }>>,
+  setProfiles: React.Dispatch<React.SetStateAction<ProfileCache>>
+): Promise<void> {
+  const viewMap: { [eventId: string]: ViewCountData } = {}
+  const replyMap: { [eventId: string]: ReplyData } = {}
+  const repostMap: { [eventId: string]: RepostData } = {}
+  await loadMetadataForEvents(
+    events,
+    myPubkey,
+    setReactions,
+    (r) => {
+      for (const [k, v] of Object.entries(r)) replyMap[k] = v
+    },
+    (r) => {
+      for (const [k, v] of Object.entries(r)) repostMap[k] = v
+    },
+    (v) => {
+      for (const [k, val] of Object.entries(v)) viewMap[k] = val
+    },
+    setProfiles
+  )
+}
+
+export async function loadRepliesForEvents(
+  _events: Event[],
+  _currentProfiles: ProfileCache,
+  _setReplies: React.Dispatch<React.SetStateAction<{ [eventId: string]: ReplyData }>>,
+  _setProfiles: React.Dispatch<React.SetStateAction<ProfileCache>>
+): Promise<void> {
+  // No-op: handled by loadMetadataForEvents
+}
+
+export async function loadRepostsForEvents(
+  _events: Event[],
+  _myPubkey: string,
+  _setReposts: React.Dispatch<React.SetStateAction<{ [eventId: string]: RepostData }>>
+): Promise<void> {
+  // No-op: handled by loadMetadataForEvents
+}
+
+export async function loadViewsForEvents(
+  _events: Event[],
+  _setViews: React.Dispatch<React.SetStateAction<{ [eventId: string]: ViewCountData }>>
+): Promise<void> {
+  // No-op: handled by loadMetadataForEvents
 }

@@ -558,3 +558,86 @@ export async function fetchUserViewsCount(pubkey: string): Promise<{ details: nu
     return null
   }
 }
+
+// ==================== NEW BATCH APIs ====================
+
+// Batch fetch multiple events by ID
+export async function fetchEventsBatch(eventIds: string[]): Promise<Record<string, Event>> {
+  if (eventIds.length === 0) return {}
+
+  try {
+    const res = await fetch(`${API_BASE}/api/events/batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventIds }),
+    })
+    if (!res.ok) return {}
+    return res.json()
+  } catch {
+    return {}
+  }
+}
+
+// Batch fetch metadata (reactions, replies, reposts, views) for multiple events
+export interface EventMetadata {
+  reactions: ReactionData
+  replies: ReplyData
+  reposts: RepostData
+  views: ViewCountData
+}
+
+export async function fetchEventsMetadata(eventIds: string[], pubkey?: string): Promise<Record<string, EventMetadata>> {
+  if (eventIds.length === 0) return {}
+
+  try {
+    const res = await fetch(`${API_BASE}/api/events/metadata`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventIds, pubkey }),
+    })
+    if (!res.ok) return {}
+    return res.json()
+  } catch {
+    return {}
+  }
+}
+
+// Fetch all user stats in one call
+export interface UserStats {
+  postsCount: number | null
+  stellaCount: number
+  viewsCount: {
+    details: number
+    impressions: number
+  }
+}
+
+export async function fetchUserStats(pubkey: string): Promise<UserStats | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/user/${pubkey}/stats`)
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+// Record views (new unified API)
+export async function recordViews(
+  events: Array<{ eventId: string; authorPubkey: string }>,
+  type: 'impression' | 'detail',
+  viewerPubkey: string
+): Promise<boolean> {
+  if (events.length === 0) return true
+
+  try {
+    const res = await fetch(`${API_BASE}/api/views/record`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ events, type, viewerPubkey }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}

@@ -142,6 +142,31 @@ export async function getCachedEventById(db: D1Database, id: string): Promise<Ca
   }
 }
 
+// 複数IDでイベントを一括取得
+export async function getCachedEventsByIds(db: D1Database, ids: string[]): Promise<Map<string, CachedEvent>> {
+  if (ids.length === 0) return new Map()
+
+  const placeholders = ids.map(() => '?').join(',')
+  const cached = await db
+    .prepare(`SELECT id, pubkey, created_at, kind, tags, content, sig FROM events WHERE id IN (${placeholders})`)
+    .bind(...ids)
+    .all()
+
+  const result = new Map<string, CachedEvent>()
+  for (const row of cached.results) {
+    result.set(row.id as string, {
+      id: row.id as string,
+      pubkey: row.pubkey as string,
+      created_at: row.created_at as number,
+      kind: row.kind as number,
+      tags: JSON.parse(row.tags as string) as string[][],
+      content: row.content as string,
+      sig: row.sig as string,
+    })
+  }
+  return result
+}
+
 // キャッシュからプロフィールを取得
 export async function getCachedProfiles(db: D1Database, pubkeys: string[]): Promise<Map<string, CachedProfile>> {
   const cacheThreshold = Date.now() - CACHE_TTL_MS

@@ -59,6 +59,55 @@ async function fetchUserStatsFromPrimal(pubkey: string): Promise<UserStats | nul
   })
 }
 
+// GET /api/user/:pubkey/stats - ユーザースタッツ一括取得（新規統合API）
+userCount.get('/:pubkey/stats', async (c) => {
+  const pubkey = c.req.param('pubkey')
+
+  if (!pubkey || pubkey.length !== 64) {
+    return c.json({ error: 'Invalid pubkey' }, 400)
+  }
+
+  const db = c.env.DB
+
+  try {
+    // 並列で全てのスタッツを取得
+    const [primalStats, stellaResult, viewsResult] = await Promise.all([
+      fetchUserStatsFromPrimal(pubkey),
+      db
+        .prepare('SELECT COALESCE(SUM(stella_count), 0) as total FROM user_stella WHERE author_pubkey = ?')
+        .bind(pubkey)
+        .first<{ total: number }>(),
+      db
+        .prepare(
+          `SELECT
+            COUNT(CASE WHEN view_type = 'detail' THEN 1 END) as details,
+            COUNT(CASE WHEN view_type = 'impression' THEN 1 END) as impressions
+          FROM event_views
+          WHERE author_pubkey = ?`
+        )
+        .bind(pubkey)
+        .first<{ details: number; impressions: number }>(),
+    ])
+
+    return c.json({
+      postsCount: primalStats ? (primalStats.note_count || 0) + (primalStats.long_form_note_count || 0) : null,
+      stellaCount: stellaResult?.total ?? 0,
+      viewsCount: {
+        details: viewsResult?.details ?? 0,
+        impressions: viewsResult?.impressions ?? 0,
+      },
+    })
+  } catch (e) {
+    console.error('Stats fetch error:', e)
+    return c.json({
+      postsCount: null,
+      stellaCount: 0,
+      viewsCount: { details: 0, impressions: 0 },
+      error: String(e),
+    })
+  }
+})
+
 // GET /api/user/:pubkey/count - ユーザーの投稿数を取得
 userCount.get('/:pubkey/count', async (c) => {
   const pubkey = c.req.param('pubkey')

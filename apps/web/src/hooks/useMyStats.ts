@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getStoredSecretKey, getPublicKeyFromSecret } from '../lib/nostr/keys'
 import { fetchUserProfile } from '../lib/nostr/relay'
-import { fetchUserPostsCount, fetchUserStellaCount, fetchUserViewsCount } from '../lib/api'
+import { fetchUserStats } from '../lib/api'
 
 interface MyStats {
   postsCount: number | null
@@ -52,14 +52,16 @@ export function useMyStats(): UseMyStatsResult {
 
       setVisible(true)
 
-      // Fetch stats in parallel
-      const [postsCount, stellaCount, viewsCount] = await Promise.all([
-        fetchUserPostsCount(pubkey),
-        fetchUserStellaCount(pubkey),
-        fetchUserViewsCount(pubkey),
-      ])
+      // Fetch all stats in one call
+      const userStats = await fetchUserStats(pubkey)
 
-      setStats({ postsCount, stellaCount, viewsCount })
+      if (userStats) {
+        setStats({
+          postsCount: userStats.postsCount,
+          stellaCount: userStats.stellaCount,
+          viewsCount: userStats.viewsCount,
+        })
+      }
     } catch (error) {
       console.error('Failed to fetch my stats:', error)
     } finally {

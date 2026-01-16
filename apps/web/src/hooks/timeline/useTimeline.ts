@@ -11,15 +11,7 @@ import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage } from 
 import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
 import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData, TimelineItem } from '../../types'
 import type { UseTimelineOptions, UseTimelineResult } from './types'
-import {
-  loadProfiles,
-  loadReactionsForEvents,
-  loadRepliesForEvents,
-  loadRepostsForEvents,
-  loadViewsForEvents,
-  recordImpressionsForEvents,
-  mergeProfiles,
-} from './useTimelineData'
+import { loadProfiles, loadMetadataForEvents, recordImpressionsForEvents, mergeProfiles } from './useTimelineData'
 import { useTimelinePolling } from './useTimelinePolling'
 
 export type { UseTimelineOptions, UseTimelineResult }
@@ -116,13 +108,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         setHasMore(false)
       }
 
-      const loadedProfiles = await loadProfiles(notes, profiles, setProfiles)
-      await Promise.all([
-        loadReactionsForEvents(notes, pubkey, loadedProfiles, setReactions, setProfiles),
-        loadRepliesForEvents(notes, loadedProfiles, setReplies, setProfiles),
-        loadRepostsForEvents(notes, pubkey, setReposts),
-        loadViewsForEvents(notes, setViews),
-      ])
+      await loadProfiles(notes, profiles, setProfiles)
+      await loadMetadataForEvents(notes, pubkey, setReactions, setReplies, setReposts, setViews, setProfiles)
 
       // Record impressions (fire-and-forget)
       recordImpressionsForEvents(notes, pubkey)

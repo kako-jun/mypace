@@ -7,9 +7,7 @@ import {
   unpinPost,
   fetchEvent,
   fetchUserSerial,
-  fetchUserPostsCount,
-  fetchUserStellaCount,
-  fetchUserViewsCount,
+  fetchUserStats,
   type UserSerialData,
 } from '../../lib/api'
 import { getEventThemeColors } from '../../lib/nostr/events'
@@ -164,30 +162,16 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     }
   }, [pubkey])
 
-  const loadPostsCount = useCallback(async () => {
+  const loadUserStats = useCallback(async () => {
     try {
-      const count = await fetchUserPostsCount(pubkey)
-      setPostsCount(count)
+      const stats = await fetchUserStats(pubkey)
+      if (stats) {
+        setPostsCount(stats.postsCount)
+        setStellaCount(stats.stellaCount)
+        setViewsCount(stats.viewsCount)
+      }
     } catch (err) {
-      console.error('Failed to fetch posts count:', err)
-    }
-  }, [pubkey])
-
-  const loadStellaCount = useCallback(async () => {
-    try {
-      const count = await fetchUserStellaCount(pubkey)
-      setStellaCount(count)
-    } catch (err) {
-      console.error('Failed to fetch stella count:', err)
-    }
-  }, [pubkey])
-
-  const loadViewsCount = useCallback(async () => {
-    try {
-      const counts = await fetchUserViewsCount(pubkey)
-      setViewsCount(counts)
-    } catch (err) {
-      console.error('Failed to fetch views count:', err)
+      console.error('Failed to fetch user stats:', err)
     }
   }, [pubkey])
 
@@ -223,11 +207,9 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     loadProfile()
     loadPinnedPost()
     loadSerial()
-    loadPostsCount()
-    loadStellaCount()
-    loadViewsCount()
+    loadUserStats()
     return () => clearImageClickHandler()
-  }, [pubkey, loadPinnedPost, loadSerial, loadPostsCount, loadStellaCount, loadViewsCount])
+  }, [pubkey, loadPinnedPost, loadSerial, loadUserStats])
 
   useEffect(() => {
     if (profile?.nip05) {

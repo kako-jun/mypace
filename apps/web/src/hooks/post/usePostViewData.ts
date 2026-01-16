@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchEventById, fetchUserProfile, fetchReactions, fetchReplies, fetchReposts } from '../../lib/nostr/relay'
+import { fetchEventById, fetchProfiles } from '../../lib/nostr/relay'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import { getCachedPost, getCachedProfile, getErrorMessage } from '../../lib/utils'
 import { hasMypaceTag } from '../../lib/nostr/tags'
-import { fetchViewCounts, recordView } from '../../lib/api/api'
+import { fetchEventsMetadata, fetchEventsBatch, recordViews } from '../../lib/api/api'
 import type { Event, LoadableProfile, ReactionData, Profile, ViewCountData } from '../../types'
 
 interface PostViewData {
@@ -63,8 +63,9 @@ export function usePostViewData(eventId: string): PostViewData {
         if (cachedProfileData) {
           setProfile(cachedProfileData)
         } else {
-          fetchUserProfile(eventData.pubkey).then((userProfile) => {
-            if (userProfile) setProfile(userProfile)
+          const eventPubkey = eventData.pubkey
+          fetchProfiles([eventPubkey]).then((profiles) => {
+            if (profiles[eventPubkey]) setProfile(profiles[eventPubkey])
           })
         }
       } else {
@@ -78,58 +79,60 @@ export function usePostViewData(eventId: string): PostViewData {
         setEvent(eventData)
         setLoading(false)
 
-        const userProfile = await fetchUserProfile(eventData.pubkey)
-        if (userProfile) {
-          setProfile(userProfile)
+        const profilesData = await fetchProfiles([eventData.pubkey])
+        if (profilesData[eventData.pubkey]) {
+          setProfile(profilesData[eventData.pubkey])
         }
       }
 
       if (!eventData) return
 
-      const [reactionData, replyData, repostData] = await Promise.all([
-        fetchReactions(eventId, pubkey),
-        fetchReplies(eventId),
-        fetchReposts(eventId, pubkey),
-      ])
+      // Fetch all metadata in one call
+      const metadata = await fetchEventsMetadata([eventId], pubkey)
+      const eventMetadata = metadata[eventId]
 
-      setReactions(reactionData)
-      setReplies(replyData)
-      setReposts(repostData)
-
-      // Fetch view counts and record detail view for mypace posts
-      if (hasMypaceTag(eventData)) {
-        // Record detail view (fire-and-forget)
-        if (pubkey) {
-          recordView(eventId, eventData.pubkey, 'detail', pubkey).catch(() => {})
-        }
-        // Fetch view counts
-        fetchViewCounts(eventId)
-          .then(setViews)
-          .catch(() => {})
+      if (eventMetadata) {
+        setReactions(eventMetadata.reactions)
+        setReplies(eventMetadata.replies)
+        setReposts(eventMetadata.reposts)
+        setViews(eventMetadata.views)
       }
 
-      const profiles: { [pubkey: string]: Profile | null } = {}
-      const replyPubkeys = replyData.replies.map((r) => r.pubkey)
-      const reactorPubkeys = reactionData.reactors.map((r) => r.pubkey)
+      // Record detail view for mypace posts
+      if (hasMypaceTag(eventData) && pubkey) {
+        recordViews([{ eventId, authorPubkey: eventData.pubkey }], 'detail', pubkey).catch(() => {})
+      }
+
+      // Batch fetch profiles for reply authors and reactors
+      const replyPubkeys = eventMetadata?.replies.replies.map((r) => r.pubkey) || []
+      const reactorPubkeys = eventMetadata?.reactions.reactors.map((r) => r.pubkey) || []
       const allPubkeys = [...new Set([...replyPubkeys, ...reactorPubkeys])]
-      for (const pk of allPubkeys) {
+
+      if (allPubkeys.length > 0) {
         try {
-          const userProfile = await fetchUserProfile(pk)
-          if (userProfile) profiles[pk] = userProfile
+          const fetchedProfiles = await fetchProfiles(allPubkeys)
+          const profiles: { [pubkey: string]: Profile | null } = {}
+          for (const pk of allPubkeys) {
+            profiles[pk] = fetchedProfiles[pk] || null
+          }
+          setReplyProfiles(profiles)
         } catch {}
       }
-      setReplyProfiles(profiles)
 
       // Fetch parent event if this is a reply
       const replyTag = eventData.tags.find((tag) => tag[0] === 'e' && (tag[3] === 'reply' || tag[3] === 'root'))
       if (replyTag) {
         const parentId = replyTag[1]
         try {
-          const parent = await fetchEventById(parentId)
+          // Use batch API for parent event
+          const parentEvents = await fetchEventsBatch([parentId])
+          const parent = parentEvents[parentId]
           if (parent) {
-            setParentEvent(parent)
-            const parentUserProfile = await fetchUserProfile(parent.pubkey)
-            if (parentUserProfile) setParentProfile(parentUserProfile)
+            setParentEvent(parent as Event)
+            const parentProfiles = await fetchProfiles([parent.pubkey])
+            if (parentProfiles[parent.pubkey]) {
+              setParentProfile(parentProfiles[parent.pubkey])
+            }
           }
         } catch {}
       }
