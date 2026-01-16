@@ -414,7 +414,10 @@ export async function fetchEventsEnrich(
   viewerPubkey?: string,
   superMentionPaths: string[] = []
 ): Promise<EnrichResponse> {
-  if (eventIds.length === 0) return { metadata: {}, profiles: {}, superMentions: {} }
+  // Only skip if nothing to fetch (no events AND no profiles)
+  if (eventIds.length === 0 && authorPubkeys.length === 0) {
+    return { metadata: {}, profiles: {}, superMentions: {} }
+  }
 
   try {
     const res = await fetch(`${API_BASE}/api/events/enrich`, {
