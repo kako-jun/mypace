@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
-import { cleanupAllCaches } from '../services/cache'
+import { cleanupOgpCache } from '../services/cache'
 import { CACHE_CLEANUP_PROBABILITY } from '../constants'
 
 interface OgpData {
@@ -187,9 +187,9 @@ ogp.post('/by-urls', async (c) => {
     }
   }
 
-  // 1%の確率でクリーンアップ（非同期、DISABLE_CACHE=1 の場合はスキップ）
+  // 1%の確率でOGPキャッシュをクリーンアップ（非同期、DISABLE_CACHE=1 の場合はスキップ）
   if (!disableCache && Math.random() < CACHE_CLEANUP_PROBABILITY) {
-    c.executionCtx.waitUntil(cleanupAllCaches(db))
+    c.executionCtx.waitUntil(cleanupOgpCache(db))
   }
 
   return c.json(result)

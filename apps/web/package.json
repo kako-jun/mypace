@@ -29,7 +29,7 @@
     "lucide-react": "^0.556.0",
     "marked": "^17.0.1",
     "ngeohash": "^0.6.3",
-    "nostr-tools": "^2.10.0",
+    "nostr-tools": "^2.19.3",
     "prismjs": "^1.30.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

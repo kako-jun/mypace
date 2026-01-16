@@ -3,8 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom'
 import { nip19 } from 'nostr-tools'
 import { PostHeader, PostContent, PostStickers } from '../components/post'
 import { parseEmojiTags, Loading, ErrorMessage } from '../components/ui'
-import { fetchEventById, fetchEvents, fetchUserProfile } from '../lib/nostr/relay'
-import { fetchUserEvents } from '../lib/api'
+import { fetchEventById, fetchTimeline, fetchUserProfile, fetchUserEvents } from '../lib/nostr/relay'
 import { getEventThemeColors, getThemeCardProps } from '../lib/nostr/events'
 import { parseStickers } from '../lib/nostr/tags'
 import { getDisplayName, getAvatarUrl } from '../lib/utils'
@@ -76,7 +75,7 @@ export function EmbedPage() {
             const result = await fetchUserEvents(decodedPubkey, { limit: 1 })
             eventData = result.events[0] || null
           } else {
-            const result = await fetchEvents({ limit: 1 })
+            const result = await fetchTimeline({ limit: 1 })
             eventData = result.events[0] || null
           }
         } else if (noteId) {

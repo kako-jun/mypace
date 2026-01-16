@@ -1,6 +1,4 @@
-export { default as timeline } from './timeline'
 export { default as events } from './events'
-export { default as userEvents } from './user-events'
 export { default as publish } from './publish'
 export { default as ogp } from './ogp'
 export { default as tweet } from './tweet'

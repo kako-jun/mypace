@@ -103,8 +103,12 @@
 ### 残すテーブル（MY PACE独自データ）
 - `user_stella` - ステラ記録（Nostrにはない独自機能）
 - `user_serial` - 通し番号（MY PACE独自）
-- `view_counts` - インプレッション（MY PACE独自）
+- `event_views` - 閲覧記録（誰がどのイベントを見たか）
 - `ogp_cache` - OGPキャッシュ（APIプロキシ用、CORSの関係で必要）
+- `super_mention_paths` - スーパーメンション履歴（Wikidata連携用）
+- `sticker_history` - ステッカー履歴
+- `user_pins` - ピン留め投稿
+- `upload_history` - アップロード履歴
 
 ---
 

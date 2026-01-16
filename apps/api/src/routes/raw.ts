@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
 import { ALL_RELAYS } from '../constants'
-import { getCachedEventById } from '../services/cache'
 import { SimplePool } from 'nostr-tools/pool'
 
 const raw = new Hono<{ Bindings: Bindings }>()
@@ -25,34 +24,20 @@ function getFullContent(content: string, tags: string[][]): string {
   return removeReadMoreLink(content) + teaserContent
 }
 
-// GET /raw/:id - イベント本文をプレーンテキストで取得
+// GET /raw/:id - イベント本文をプレーンテキストで取得（直接リレーから取得）
 raw.get('/:id', async (c) => {
   // リレー設定
   const relayCount = c.env.RELAY_COUNT !== undefined ? parseInt(c.env.RELAY_COUNT, 10) : ALL_RELAYS.length
   const RELAYS = ALL_RELAYS.slice(0, Math.max(0, relayCount))
 
   const id = c.req.param('id')
-  const db = c.env.DB
-
-  // キャッシュから
-  try {
-    const cached = await getCachedEventById(db, id)
-    if (cached) {
-      const fullContent = getFullContent(cached.content, cached.tags || [])
-      return c.text(fullContent, 200, {
-        'Content-Type': 'text/plain; charset=utf-8',
-      })
-    }
-  } catch (e) {
-    console.error('Cache read error:', e)
-  }
 
   // RELAY_COUNT=0の場合はリレー接続をスキップ
   if (RELAYS.length === 0) {
     return c.text('Event not found (relay disabled)', 404)
   }
 
-  // リレーから
+  // リレーから直接取得
   const pool = new SimplePool()
 
   try {

@@ -1,9 +1,10 @@
-import { fetchEventsEnrich, fetchOgpByUrls, recordImpressions } from '../../lib/api/api'
+import { fetchOgpByUrls, recordImpressions } from '../../lib/api/api'
+import { fetchEventsEnrich, fetchProfiles } from '../../lib/nostr/relay'
 import { hasMypaceTag } from '../../lib/nostr/tags'
 import { extractFromContents } from '../../lib/utils/content'
 import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData, OgpData } from '../../types'
 
-// イベントのエンリッチメント一括読み込み（metadata + profiles + super-mentions）
+// イベントのエンリッチメント一括読み込み（metadata + profiles + super-mentions + views）
 export async function loadEnrichForEvents(
   events: Event[],
   viewerPubkey: string,
@@ -22,11 +23,12 @@ export async function loadEnrichForEvents(
   const { superMentionPaths } = extractFromContents(contents)
 
   try {
-    const { metadata, profiles, superMentions } = await fetchEventsEnrich(
+    // fetchEventsEnrich で一括取得（md計画通りの関数名）
+    const { metadata, profiles, views, superMentions } = await fetchEventsEnrich(
       eventIds,
       authorPubkeys,
-      viewerPubkey,
-      superMentionPaths
+      superMentionPaths,
+      viewerPubkey
     )
 
     // メタデータを各stateに展開
@@ -41,14 +43,14 @@ export async function loadEnrichForEvents(
         reactionMap[eventId] = data.reactions
         replyMap[eventId] = data.replies
         repostMap[eventId] = data.reposts
-        viewMap[eventId] = data.views
       } else {
         // デフォルト値で初期化
         reactionMap[eventId] = { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] }
         replyMap[eventId] = { count: 0, replies: [] }
         repostMap[eventId] = { count: 0, myRepost: false }
-        viewMap[eventId] = { impression: 0, detail: 0 }
       }
+      // views from API
+      viewMap[eventId] = views[eventId] || { impression: 0, detail: 0 }
     }
 
     // 既存データとマージ（上書きではなく追加）
@@ -62,7 +64,7 @@ export async function loadEnrichForEvents(
       const newProfiles = { ...prev }
       for (const pk of authorPubkeys) {
         if (newProfiles[pk] === undefined) {
-          // APIが返したprofileがあればそれを、なければnull（取得失敗 = マイペースさん表示）
+          // Nostrから取得したprofileがあればそれを、なければnull（取得失敗 = マイペースさん表示）
           newProfiles[pk] = profiles[pk] || null
         }
       }
@@ -117,8 +119,8 @@ export async function mergeProfiles(
   if (missingPubkeys.length === 0) return
 
   try {
-    // fetchEventsEnrichを使ってプロフィールのみ取得（eventIds空でOK）
-    const { profiles } = await fetchEventsEnrich([], missingPubkeys, undefined, [])
+    // Nostrリレーから直接取得
+    const profiles = await fetchProfiles(missingPubkeys)
     setProfiles((prev) => {
       const newProfiles = { ...prev }
       for (const pk of missingPubkeys) {

@@ -2,10 +2,7 @@ import { Hono } from 'hono'
 import type { Event } from 'nostr-tools'
 import type { Bindings } from '../types'
 import type { D1Database } from '@cloudflare/workers-types'
-import { publishToRelays } from '../services/relay'
-import { cacheEvent } from '../services/cache'
 import { registerUserSerial } from './serial'
-import { ALL_RELAYS } from '../constants'
 
 const publish = new Hono<{ Bindings: Bindings }>()
 
@@ -50,11 +47,8 @@ async function deleteStella(db: D1Database, eventIds: string[], pubkey: string):
     .run()
 }
 
-// POST /api/publish - 署名済みイベントをリレーに投稿
+// POST /api/publish - イベントのD1記録（リレー送信はブラウザから直接行う）
 publish.post('/', async (c) => {
-  // publishは常に全リレーを使用（RELAY_COUNTは読み取り専用の設定）
-  const RELAYS = ALL_RELAYS
-
   const body = await c.req.json<{ event: Event }>()
   const event = body.event
 
@@ -62,28 +56,10 @@ publish.post('/', async (c) => {
     return c.json({ error: 'Invalid event: missing id or sig' }, 400)
   }
 
+  const db = c.env.DB
+  const tags = event.tags || []
+
   try {
-    const result = await publishToRelays(event, RELAYS)
-
-    // Log all results for debugging
-    console.log('Publish results:', JSON.stringify(result.details))
-
-    if (!result.success) {
-      const failedRelays = result.details.filter((r) => !r.success)
-      console.error('All relays rejected:', failedRelays)
-      return c.json({ error: 'All relays rejected the event', details: failedRelays }, 500)
-    }
-
-    // キャッシュにも保存
-    const db = c.env.DB
-    try {
-      await cacheEvent(db, event)
-    } catch (e) {
-      console.error('Cache write error:', e)
-    }
-
-    const tags = event.tags || []
-
     // #mypaceタグ付きのkind:1投稿なら通し番号を登録
     if (event.kind === 1) {
       const hasMypaceTag = tags.some((tag: string[]) => tag[0] === 't' && tag[1]?.toLowerCase() === 'mypace')
@@ -127,18 +103,10 @@ publish.post('/', async (c) => {
       }
     }
 
-    return c.json({
-      success: true,
-      id: event.id,
-      relays: {
-        total: result.details.length,
-        success: result.successCount,
-        details: result.details,
-      },
-    })
+    return c.json({ success: true, id: event.id })
   } catch (e) {
-    console.error('Publish error:', e)
-    return c.json({ error: `Failed to publish: ${e instanceof Error ? e.message : 'Unknown error'}` }, 500)
+    console.error('Publish record error:', e)
+    return c.json({ error: `Failed to record: ${e instanceof Error ? e.message : 'Unknown error'}` }, 500)
   }
 })
 

@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchUserProfile } from '../../lib/nostr/relay'
+import { fetchUserProfile, fetchEventsByIds } from '../../lib/nostr/relay'
 import '../../styles/components/user-view.css'
 import {
   fetchPinnedPost,
   setPinnedPost,
   unpinPost,
-  fetchEventsByIds,
   fetchUserSerial,
   fetchUserStats,
   type UserSerialData,

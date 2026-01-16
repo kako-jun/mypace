@@ -16,9 +16,7 @@ export const ALL_RELAYS = [
   'wss://relay.snort.social',
 ]
 
-export const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7日（キャッシュのみモード対応）
-export const CACHE_CLEANUP_AGE_MS = 30 * 24 * 60 * 60 * 1000 // 30日（物理削除）
-export const CACHE_CLEANUP_PROBABILITY = 0.01 // 1%の確率でクリーンアップ
+export const CACHE_CLEANUP_PROBABILITY = 0.01 // 1%の確率でOGPキャッシュクリーンアップ
 
 // Smart filter: Ad-related tags
 export const AD_TAGS = [

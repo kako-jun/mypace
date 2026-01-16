@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchEventById } from '../../lib/nostr/relay'
+import { fetchEventById, fetchEventsByIds, fetchProfiles, fetchEventMetadata } from '../../lib/nostr/relay'
+import { fetchViewsAndSuperMentions, recordImpressions } from '../../lib/api/api'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import { getCachedPost, getCachedProfile, getCachedPostMetadata, getErrorMessage } from '../../lib/utils'
 import { hasMypaceTag } from '../../lib/nostr/tags'
-import { fetchEventsEnrich, fetchEventsByIds, recordImpressions } from '../../lib/api/api'
 import type { Event, LoadableProfile, ReactionData, Profile, ViewCountData } from '../../types'
 
 interface PostViewData {
@@ -65,7 +65,7 @@ export function usePostViewData(eventId: string): PostViewData {
           setProfile(cachedProfileData)
         } else {
           const eventPubkey = eventData.pubkey
-          fetchEventsEnrich([], [eventPubkey], undefined, []).then(({ profiles }) => {
+          fetchProfiles([eventPubkey]).then((profiles) => {
             if (profiles[eventPubkey]) setProfile(profiles[eventPubkey] as Profile)
           })
         }
@@ -88,7 +88,7 @@ export function usePostViewData(eventId: string): PostViewData {
         setEvent(eventData)
         setLoading(false)
 
-        const { profiles: profilesData } = await fetchEventsEnrich([], [eventData.pubkey], undefined, [])
+        const profilesData = await fetchProfiles([eventData.pubkey])
         if (profilesData[eventData.pubkey]) {
           setProfile(profilesData[eventData.pubkey] as Profile)
         }
@@ -111,7 +111,7 @@ export function usePostViewData(eventId: string): PostViewData {
 
         if (allPubkeys.length > 0) {
           try {
-            const { profiles: fetchedProfiles } = await fetchEventsEnrich([], allPubkeys, undefined, [])
+            const fetchedProfiles = await fetchProfiles(allPubkeys)
             const profiles: { [pubkey: string]: Profile | null } = {}
             for (const pk of allPubkeys) {
               profiles[pk] = (fetchedProfiles[pk] as Profile) || null
@@ -129,7 +129,7 @@ export function usePostViewData(eventId: string): PostViewData {
             const parent = parentEvents[parentId]
             if (parent) {
               setParentEvent(parent as Event)
-              const { profiles: parentProfiles } = await fetchEventsEnrich([], [parent.pubkey], undefined, [])
+              const parentProfiles = await fetchProfiles([parent.pubkey])
               if (parentProfiles[parent.pubkey]) {
                 setParentProfile(parentProfiles[parent.pubkey] as Profile)
               }
@@ -139,31 +139,36 @@ export function usePostViewData(eventId: string): PostViewData {
         return
       }
 
-      // Fetch all metadata + profiles in one call (only when not cached)
-      const { metadata, profiles: fetchedProfiles } = await fetchEventsEnrich([eventId], [eventData.pubkey], pubkey, [])
+      // Fetch all metadata + views in parallel (only when not cached)
+      // Profile is already fetched above, so we only fetch metadata and views here
+      const [metadata, { views: viewsData }] = await Promise.all([
+        fetchEventMetadata([eventId], pubkey || undefined),
+        fetchViewsAndSuperMentions([eventId], []),
+      ])
       const eventMetadata = metadata[eventId]
 
       if (eventMetadata) {
         setReactions(eventMetadata.reactions)
         setReplies(eventMetadata.replies)
         setReposts(eventMetadata.reposts)
-        setViews(eventMetadata.views)
       }
+      setViews(viewsData[eventId] || { impression: 0, detail: 0 })
 
       // Record detail view for mypace posts
       if (hasMypaceTag(eventData) && pubkey) {
         recordImpressions([{ eventId, authorPubkey: eventData.pubkey }], 'detail', pubkey).catch(() => {})
       }
 
-      // Use profiles from enrich response for reply authors and reactors
+      // Fetch profiles for reply authors and reactors
       const replyPubkeys = eventMetadata?.replies.replies.map((r) => r.pubkey) || []
       const reactorPubkeys = eventMetadata?.reactions.reactors.map((r) => r.pubkey) || []
       const allPubkeys = [...new Set([...replyPubkeys, ...reactorPubkeys])]
 
       if (allPubkeys.length > 0) {
+        const replyReactorProfiles = await fetchProfiles(allPubkeys)
         const profiles: { [pubkey: string]: Profile | null } = {}
         for (const pk of allPubkeys) {
-          profiles[pk] = (fetchedProfiles[pk] as Profile) || null
+          profiles[pk] = (replyReactorProfiles[pk] as Profile) || null
         }
         setReplyProfiles(profiles)
       }
@@ -173,12 +178,11 @@ export function usePostViewData(eventId: string): PostViewData {
       if (replyTag) {
         const parentId = replyTag[1]
         try {
-          // Use batch API for parent event
           const parentEvents = await fetchEventsByIds([parentId])
           const parent = parentEvents[parentId]
           if (parent) {
             setParentEvent(parent as Event)
-            const { profiles: parentProfiles } = await fetchEventsEnrich([], [parent.pubkey], undefined, [])
+            const parentProfiles = await fetchProfiles([parent.pubkey])
             if (parentProfiles[parent.pubkey]) {
               setParentProfile(parentProfiles[parent.pubkey] as Profile)
             }

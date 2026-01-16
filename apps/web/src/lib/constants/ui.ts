@@ -44,11 +44,6 @@ export const LANGUAGES = [
   { code: 'de', label: 'Deutsch' },
 ] as const
 
-// API endpoints
-export const API_ENDPOINTS = {
-  TIMELINE: '/api/timeline',
-} as const
-
 // Reaction content
 export const REACTION = {
   DEFAULT_CONTENT: '+',

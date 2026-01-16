@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { fetchEvents, fetchUserPosts, publishEvent } from '../../lib/nostr/relay'
+import { fetchTimeline, fetchUserEvents, publishEvent } from '../../lib/nostr/relay'
 import {
   getCurrentPubkey,
   createDeleteEvent,
@@ -93,9 +93,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
 
       let result: { events: Event[]; searchedUntil: number | null }
       if (authorPubkey) {
-        result = await fetchUserPosts(authorPubkey, { limit: LIMITS.TIMELINE_FETCH_LIMIT, tags, q })
+        result = await fetchUserEvents(authorPubkey, { limit: LIMITS.TIMELINE_FETCH_LIMIT, tags, q })
       } else {
-        result = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, q, tags })
+        result = await fetchTimeline({ limit: LIMITS.TIMELINE_FETCH_LIMIT, queries: q, okTags: tags })
       }
       const notes = result.events
 
@@ -313,14 +313,14 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       const untilTime = searchedUntil - 1
       let result: { events: Event[]; searchedUntil: number | null }
       if (authorPubkey) {
-        result = await fetchUserPosts(authorPubkey, {
+        result = await fetchUserEvents(authorPubkey, {
           limit: LIMITS.TIMELINE_FETCH_LIMIT,
           until: untilTime,
           tags,
           q,
         })
       } else {
-        result = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, until: untilTime, q, tags })
+        result = await fetchTimeline({ limit: LIMITS.TIMELINE_FETCH_LIMIT, until: untilTime, queries: q, okTags: tags })
       }
 
       const olderNotes = result.events

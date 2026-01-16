@@ -1,6 +1,5 @@
 // API client for mypace backend
 import type { Event, Profile, ReactionData, ReplyData, RepostData, OgpData } from '../../types'
-import { loadFiltersFromStorage, getMutedPubkeys } from '../utils'
 
 export const API_BASE =
   import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://api.mypace.llll-ll.com' : 'http://localhost:8787')
@@ -8,138 +7,15 @@ export const API_BASE =
 // Re-export types for convenience
 export type { Event, Profile, ReactionData, ReplyData, RepostData, OgpData }
 
-// Timeline options interface
-interface TimelineOptions {
-  limit?: number
-  since?: number
-  until?: number
-  q?: string[] // Text search query (array of keywords)
-  tags?: string[] // OK tags filter
-}
-
-// Timeline - loads filters from localStorage and sends to API
-export async function fetchTimeline(
-  options: TimelineOptions = {}
-): Promise<{ events: Event[]; source: string; searchedUntil?: number | null }> {
-  const { limit = 50, since = 0, until = 0, q = [], tags = [] } = options
-
-  // Load filters from localStorage
-  const filters = loadFiltersFromStorage()
-  const mutedPubkeys = getMutedPubkeys()
-
-  const params = new URLSearchParams({ limit: String(limit) })
-  if (since > 0) params.set('since', String(since))
-  if (until > 0) params.set('until', String(until))
-  if (!filters.mypace) params.set('all', '1')
-  if (filters.lang) params.set('lang', filters.lang)
-
-  // Set kinds parameter based on showSNS and showBlog
-  // Each parameter is orthogonal - kinds determines what types, hideNPC filters NPC separately
-  const kindsList: number[] = []
-  if (filters.showSNS) {
-    kindsList.push(1)
-    kindsList.push(42000) // NPC posts (filtered by hideNPC param if needed)
-  }
-  if (filters.showBlog) kindsList.push(30023)
-  // Always send kinds param (empty means no posts should match)
-  params.set('kinds', kindsList.join(','))
-
-  // Smart filters: send 0 when OFF (default is ON on server)
-  if (!filters.hideAds) params.set('hideAds', '0')
-  if (!filters.hideNSFW) params.set('hideNSFW', '0')
-  if (filters.hideNPC) params.set('hideNPC', '1')
-
-  // Mute list
-  if (mutedPubkeys.length > 0) {
-    params.set('mute', mutedPubkeys.join(','))
-  }
-
-  // NG words
-  if (filters.ngWords.length > 0) {
-    params.set('ng', filters.ngWords.join('+'))
-  }
-
-  // NG tags
-  if (filters.ngTags && filters.ngTags.length > 0) {
-    params.set('ngtags', filters.ngTags.join('+'))
-  }
-
-  // Public filters (from URL, not localStorage)
-  if (q.length > 0) params.set('q', q.join('+'))
-  if (tags.length > 0) params.set('tags', tags.join('+'))
-
-  const res = await fetch(`${API_BASE}/api/timeline?${params}`)
-  if (!res.ok) throw new Error('Failed to fetch timeline')
-  return res.json()
-}
-
-// User events
-interface UserEventsOptions {
-  limit?: number
-  since?: number
-  until?: number
-  tags?: string[] // Filter by hashtags
-  q?: string[] // Text search query (array of keywords)
-}
-
-export async function fetchUserEvents(
-  pubkey: string,
-  options: UserEventsOptions = {}
-): Promise<{ events: Event[]; searchedUntil?: number | null }> {
-  const { limit = 50, since = 0, until = 0, tags = [], q = [] } = options
-
-  // Load filters from localStorage (same as timeline)
-  const filters = loadFiltersFromStorage()
-
-  const params = new URLSearchParams({ limit: String(limit) })
-  if (since > 0) params.set('since', String(since))
-  if (until > 0) params.set('until', String(until))
-  if (tags.length > 0) params.set('tags', tags.join('+'))
-  if (q.length > 0) params.set('q', q.join('+'))
-  if (!filters.mypace) params.set('all', '1')
-  if (filters.lang) params.set('lang', filters.lang)
-
-  // Set kinds parameter based on showSNS and showBlog
-  const kindsList: number[] = []
-  if (filters.showSNS) {
-    kindsList.push(1)
-    kindsList.push(42000) // NPC posts
-  }
-  if (filters.showBlog) kindsList.push(30023)
-  params.set('kinds', kindsList.join(','))
-
-  // Smart filters
-  if (!filters.hideAds) params.set('hideAds', '0')
-  if (!filters.hideNSFW) params.set('hideNSFW', '0')
-  if (filters.hideNPC) params.set('hideNPC', '1')
-
-  // NG words/tags
-  if (filters.ngWords.length > 0) {
-    params.set('ng', filters.ngWords.join('+'))
-  }
-  if (filters.ngTags && filters.ngTags.length > 0) {
-    params.set('ngtags', filters.ngTags.join('+'))
-  }
-
-  const res = await fetch(`${API_BASE}/api/user/${pubkey}/events?${params}`)
-  if (!res.ok) throw new Error('Failed to fetch user events')
-  return res.json()
-}
-
-// Publish signed event
-export async function publishEvent(event: Event): Promise<{ success: boolean; id: string; relays?: number }> {
-  const res = await fetch(`${API_BASE}/api/publish`, {
+// Record event to D1 (stella, serial, etc.) - fire-and-forget
+export function recordEvent(event: Event): void {
+  fetch(`${API_BASE}/api/publish`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ event }),
+  }).catch((e) => {
+    console.error('Failed to record event:', e)
   })
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}))
-    const message = errorData.error || 'Failed to publish event'
-    console.error('Publish failed:', errorData)
-    throw new Error(message)
-  }
-  return res.json()
 }
 
 // Wikidata search
@@ -377,58 +253,30 @@ export interface ViewCountData {
 
 // ==================== BATCH APIs ====================
 
-// Batch fetch multiple events by ID
-export async function fetchEventsByIds(eventIds: string[]): Promise<Record<string, Event>> {
-  if (eventIds.length === 0) return {}
-
-  try {
-    const res = await fetch(`${API_BASE}/api/events/by-ids`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventIds }),
-    })
-    if (!res.ok) return {}
-    return res.json()
-  } catch {
-    return {}
-  }
-}
-
-// Batch fetch enrichment data (metadata + profiles + super-mentions) for multiple events
-export interface EventMetadata {
-  reactions: ReactionData
-  replies: ReplyData
-  reposts: RepostData
-  views: ViewCountData
-}
-
-export interface EnrichResponse {
-  metadata: Record<string, EventMetadata>
-  profiles: Record<string, Profile>
+// Batch fetch views and super-mentions from D1 (metadata/profiles are fetched directly from Nostr relays)
+export interface ViewsAndSuperMentionsResponse {
+  views: Record<string, ViewCountData>
   superMentions: Record<string, string>
 }
 
-export async function fetchEventsEnrich(
+export async function fetchViewsAndSuperMentions(
   eventIds: string[],
-  authorPubkeys: string[],
-  viewerPubkey?: string,
   superMentionPaths: string[] = []
-): Promise<EnrichResponse> {
-  // Only skip if nothing to fetch (no events AND no profiles)
-  if (eventIds.length === 0 && authorPubkeys.length === 0) {
-    return { metadata: {}, profiles: {}, superMentions: {} }
+): Promise<ViewsAndSuperMentionsResponse> {
+  if (eventIds.length === 0 && superMentionPaths.length === 0) {
+    return { views: {}, superMentions: {} }
   }
 
   try {
     const res = await fetch(`${API_BASE}/api/events/enrich`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventIds, authorPubkeys, viewerPubkey, superMentionPaths }),
+      body: JSON.stringify({ eventIds, superMentionPaths }),
     })
-    if (!res.ok) return { metadata: {}, profiles: {}, superMentions: {} }
+    if (!res.ok) return { views: {}, superMentions: {} }
     return res.json()
   } catch {
-    return { metadata: {}, profiles: {}, superMentions: {} }
+    return { views: {}, superMentions: {} }
   }
 }
 

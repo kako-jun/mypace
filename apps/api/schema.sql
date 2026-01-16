@@ -1,48 +1,3 @@
--- Events cache table
-CREATE TABLE IF NOT EXISTS events (
-  id TEXT PRIMARY KEY,
-  pubkey TEXT NOT NULL,
-  created_at INTEGER NOT NULL,
-  kind INTEGER NOT NULL,
-  tags TEXT NOT NULL,
-  content TEXT NOT NULL,
-  sig TEXT NOT NULL,
-  cached_at INTEGER NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_events_pubkey ON events(pubkey);
-CREATE INDEX IF NOT EXISTS idx_events_kind ON events(kind);
-CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_events_cached_at ON events(cached_at);
-
--- Migration: Add has_mypace_tag column for filtering (run manually if table exists)
--- ALTER TABLE events ADD COLUMN has_mypace_tag INTEGER DEFAULT 0;
--- CREATE INDEX IF NOT EXISTS idx_events_has_mypace_tag ON events(has_mypace_tag);
--- UPDATE events SET has_mypace_tag = 1 WHERE tags LIKE '%"t","mypace"%';
-
--- Profiles cache table
-CREATE TABLE IF NOT EXISTS profiles (
-  pubkey TEXT PRIMARY KEY,
-  name TEXT,
-  display_name TEXT,
-  picture TEXT,
-  about TEXT,
-  nip05 TEXT,
-  banner TEXT,
-  website TEXT,
-  websites TEXT,
-  lud16 TEXT,
-  emojis TEXT,
-  cached_at INTEGER NOT NULL
-);
-
--- Migration: Add new profile columns (run manually if table exists)
--- ALTER TABLE profiles ADD COLUMN banner TEXT;
--- ALTER TABLE profiles ADD COLUMN website TEXT;
--- ALTER TABLE profiles ADD COLUMN websites TEXT;
--- ALTER TABLE profiles ADD COLUMN lud16 TEXT;
--- ALTER TABLE profiles ADD COLUMN emojis TEXT;
-
 -- Super mention paths table (for Wikidata mapping)
 CREATE TABLE IF NOT EXISTS super_mention_paths (
   path TEXT PRIMARY KEY,              -- "/manga/ハンチョウ"
@@ -70,9 +25,6 @@ CREATE TABLE IF NOT EXISTS sticker_history (
 
 CREATE INDEX IF NOT EXISTS idx_sticker_updated_at ON sticker_history(updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_sticker_first_used_by ON sticker_history(first_used_by);
-
--- Migration: Add first_used_by column (run manually if table exists)
--- ALTER TABLE sticker_history ADD COLUMN first_used_by TEXT;
 
 -- User pinned posts table
 CREATE TABLE IF NOT EXISTS user_pins (

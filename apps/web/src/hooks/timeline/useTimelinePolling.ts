@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react'
-import { fetchEvents, fetchUserPosts } from '../../lib/nostr/relay'
+import { fetchTimeline, fetchUserEvents } from '../../lib/nostr/relay'
 import { LIMITS } from '../../lib/constants'
 import type { Event, ProfileCache, TimelineItem } from '../../types'
 import type { UseTimelineOptions } from './types'
@@ -59,7 +59,7 @@ export function useTimelinePolling({
     try {
       let newNotes: Event[]
       if (authorPubkey) {
-        const result = await fetchUserPosts(authorPubkey, {
+        const result = await fetchUserEvents(authorPubkey, {
           limit: LIMITS.TIMELINE_FETCH_LIMIT,
           since: latestEventTime,
           tags,
@@ -67,7 +67,12 @@ export function useTimelinePolling({
         })
         newNotes = result.events
       } else {
-        const result = await fetchEvents({ limit: LIMITS.TIMELINE_FETCH_LIMIT, since: latestEventTime, q, tags })
+        const result = await fetchTimeline({
+          limit: LIMITS.TIMELINE_FETCH_LIMIT,
+          since: latestEventTime,
+          queries: q,
+          okTags: tags,
+        })
         newNotes = result.events
       }
 
