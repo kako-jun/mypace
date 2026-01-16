@@ -84,6 +84,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const loadTimeline = useCallback(async () => {
     setTimelineItems([])
     setEvents([])
+    setSearchedUntil(Math.floor(Date.now() / 1000)) // 現在時刻にリセット（エラー時も過去分取得でリトライ可能に）
     setLoading(true)
     setError('')
     try {
