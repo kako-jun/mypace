@@ -326,8 +326,8 @@ async function fetchProfilesInternal(
   }
 
   // キャッシュにないものをリレーから取得
-  const cachedPubkeys = Object.keys(result)
-  const missingPubkeys = pubkeys.filter((pk) => !cachedPubkeys.includes(pk))
+  const cachedSet = new Set(Object.keys(result))
+  const missingPubkeys = pubkeys.filter((pk) => !cachedSet.has(pk))
 
   if (missingPubkeys.length > 0) {
     try {
@@ -343,6 +343,11 @@ async function fetchProfilesInternal(
       }
 
       const now = Date.now()
+      const profilesData: Array<{
+        pubkey: string
+        profile: any
+        emojis: Array<{ shortcode: string; url: string }>
+      }> = []
 
       for (const event of latestEvents.values()) {
         try {
@@ -351,25 +356,42 @@ async function fetchProfilesInternal(
             .filter((t: string[]) => t[0] === 'emoji' && t[1] && t[2])
             .map((t: string[]) => ({ shortcode: t[1], url: t[2] }))
           result[event.pubkey] = { ...profile, emojis }
-
-          // キャッシュに保存
-          await db
-            .prepare(
-              `INSERT OR REPLACE INTO profiles (pubkey, name, display_name, picture, about, nip05, emojis, cached_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-            )
-            .bind(
-              event.pubkey,
-              profile.name || null,
-              profile.display_name || null,
-              profile.picture || null,
-              profile.about || null,
-              profile.nip05 || null,
-              emojis.length > 0 ? JSON.stringify(emojis) : null,
-              now
-            )
-            .run()
+          profilesData.push({ pubkey: event.pubkey, profile, emojis })
         } catch (e) {
           console.error('Profile parse error:', e)
+        }
+      }
+
+      // バッチINSERTでキャッシュに保存（50件ずつ）
+      const batchSize = 50
+      for (let i = 0; i < profilesData.length; i += batchSize) {
+        const batch = profilesData.slice(i, i + batchSize)
+        const values: string[] = []
+        const params: any[] = []
+
+        for (const { pubkey, profile, emojis } of batch) {
+          values.push('(?, ?, ?, ?, ?, ?, ?, ?)')
+          params.push(
+            pubkey,
+            profile.name || null,
+            profile.display_name || null,
+            profile.picture || null,
+            profile.about || null,
+            profile.nip05 || null,
+            emojis.length > 0 ? JSON.stringify(emojis) : null,
+            now
+          )
+        }
+
+        try {
+          await db
+            .prepare(
+              `INSERT OR REPLACE INTO profiles (pubkey, name, display_name, picture, about, nip05, emojis, cached_at) VALUES ${values.join(', ')}`
+            )
+            .bind(...params)
+            .run()
+        } catch (e) {
+          console.error('Profile batch write error:', e)
         }
       }
     } catch (e) {

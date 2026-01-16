@@ -91,7 +91,7 @@ userEvents.get('/:pubkey/events', async (c) => {
     const searchedUntil = rawEvents.length > 0 ? Math.min(...rawEvents.map((e) => e.created_at)) : null
 
     let events = rawEvents
-    // Apply filters (same as timeline)
+    // フィルタ適用（除外率の高い順に実行）
     events = filterBySmartFilters(events, hideAds, hideNSFW)
     events = filterByNPC(events, hideNPC)
     events = filterByNgWords(events, ngWords)

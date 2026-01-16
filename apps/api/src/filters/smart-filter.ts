@@ -16,7 +16,8 @@ export function filterByNPC<T extends { kind: number }>(events: T[], hideNPC: bo
 // ミュートリストフィルタ: 指定pubkeyを除外
 export function filterByMuteList<T extends { pubkey: string }>(events: T[], mutedPubkeys: string[]): T[] {
   if (mutedPubkeys.length === 0) return events
-  return events.filter((e) => !mutedPubkeys.includes(e.pubkey))
+  const mutedSet = new Set(mutedPubkeys)
+  return events.filter((e) => !mutedSet.has(e.pubkey))
 }
 
 // NGワードフィルタ: 本文にNGワードを含む投稿を除外
@@ -33,6 +34,14 @@ export function filterByNgWords<T extends { content: string }>(events: T[], ngWo
 export function filterByNgTags<T extends { content: string; tags: string[][] }>(events: T[], ngTags: string[]): T[] {
   if (ngTags.length === 0) return events
   const ngTagsLower = ngTags.map((t) => t.toLowerCase())
+  // 正規表現を事前コンパイル
+  const patterns = ngTagsLower.map(
+    (ngTag) =>
+      new RegExp(
+        `#${escapeRegex(ngTag)}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`,
+        'i'
+      )
+  )
   return events.filter((e) => {
     // タグ配列をチェック
     const eventTags = e.tags
@@ -44,15 +53,8 @@ export function filterByNgTags<T extends { content: string; tags: string[][] }>(
     }
     // 本文中の#tagもチェック
     const contentLower = e.content.toLowerCase()
-    for (const ngTag of ngTagsLower) {
-      // #tag の形式で本文内を検索（日本語対応）
-      const pattern = new RegExp(
-        `#${escapeRegex(ngTag)}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`,
-        'i'
-      )
-      if (pattern.test(contentLower)) {
-        return false
-      }
+    if (patterns.some((pattern) => pattern.test(contentLower))) {
+      return false
     }
     return true
   })
@@ -78,6 +80,14 @@ export function filterByQuery<T extends { content: string }>(events: T[], querie
 export function filterByOkTags<T extends { content: string; tags: string[][] }>(events: T[], okTags: string[]): T[] {
   if (okTags.length === 0) return events
   const okTagsLower = okTags.map((t) => t.toLowerCase())
+  // 正規表現を事前コンパイル
+  const patterns = okTagsLower.map(
+    (okTag) =>
+      new RegExp(
+        `#${escapeRegex(okTag)}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`,
+        'i'
+      )
+  )
   return events.filter((e) => {
     // タグ配列をチェック
     const eventTags = e.tags
@@ -87,18 +97,27 @@ export function filterByOkTags<T extends { content: string; tags: string[][] }>(
     // 本文中の#tagもチェック
     const contentLower = e.content.toLowerCase()
     // 全てのOKタグが含まれているか確認（AND条件）
-    return okTagsLower.every((okTag) => {
+    return okTagsLower.every((okTag, i) => {
       // タグ配列に含まれるか
       if (eventTags.includes(okTag)) return true
       // 本文中に#tag形式で含まれるか
-      const pattern = new RegExp(
-        `#${escapeRegex(okTag)}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`,
-        'i'
-      )
-      return pattern.test(contentLower)
+      return patterns[i].test(contentLower)
     })
   })
 }
+
+// 正規表現を事前コンパイル（モジュールレベルで1回のみ）
+const adPatterns = AD_TAGS.map(
+  (tag) =>
+    new RegExp(`#${escapeRegex(tag)}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`, 'i')
+)
+const nsfwPatterns = NSFW_TAGS.map(
+  (tag) =>
+    new RegExp(`#${escapeRegex(tag)}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`, 'i')
+)
+const adKeywordsLower = AD_KEYWORDS.map((kw) => kw.toLowerCase())
+const nsfwKeywordsLower = NSFW_KEYWORDS.map((kw) => kw.toLowerCase())
+const onionPattern = /\.onion(?:\/|$|\s)/i
 
 // スマートフィルタ: 広告/NSFWコンテンツをフィルタ
 export function filterBySmartFilters<T extends { content: string; tags: string[][] }>(
@@ -110,6 +129,7 @@ export function filterBySmartFilters<T extends { content: string; tags: string[]
 
   return events.filter((e) => {
     const contentLower = e.content.toLowerCase()
+    // タグを1回だけ抽出（広告とNSFWで共有）
     const eventTags = e.tags
       .filter((t) => t[0] === 't')
       .map((t) => t[1]?.toLowerCase())
@@ -122,17 +142,11 @@ export function filterBySmartFilters<T extends { content: string; tags: string[]
         return false
       }
       // 本文中の#tagもチェック（filterByNgTagsと同様）
-      for (const adTag of AD_TAGS) {
-        const pattern = new RegExp(
-          `#${escapeRegex(adTag)}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`,
-          'i'
-        )
-        if (pattern.test(contentLower)) {
-          return false
-        }
+      if (adPatterns.some((pattern) => pattern.test(contentLower))) {
+        return false
       }
       // キーワードチェック（本文）
-      if (AD_KEYWORDS.some((kw) => contentLower.includes(kw.toLowerCase()))) {
+      if (adKeywordsLower.some((kw) => contentLower.includes(kw))) {
         return false
       }
       // リンクが多すぎる（11個以上）はスパム判定
@@ -147,22 +161,16 @@ export function filterBySmartFilters<T extends { content: string; tags: string[]
       if (eventTags.some((tag) => NSFW_TAGS.includes(tag))) {
         return false
       }
-      // 本文中の#tagもチェック（filterByNgTagsと同様）
-      for (const nsfwTag of NSFW_TAGS) {
-        const pattern = new RegExp(
-          `#${escapeRegex(nsfwTag)}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`,
-          'i'
-        )
-        if (pattern.test(contentLower)) {
-          return false
-        }
+      // 本文中の#tagもチェック（事前コンパイル済みパターン使用）
+      if (nsfwPatterns.some((pattern) => pattern.test(contentLower))) {
+        return false
       }
       // キーワードチェック（本文）
-      if (NSFW_KEYWORDS.some((kw) => contentLower.includes(kw.toLowerCase()))) {
+      if (nsfwKeywordsLower.some((kw) => contentLower.includes(kw))) {
         return false
       }
       // .onionリンクはダークウェブへのリンクなのでフィルタ
-      if (/\.onion(?:\/|$|\s)/i.test(e.content)) {
+      if (onionPattern.test(e.content)) {
         return false
       }
     }

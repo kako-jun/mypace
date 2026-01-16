@@ -47,41 +47,64 @@ export async function getCachedEvents(
     .bind(...params)
     .all()
 
-  return cached.results.map((row) => ({
-    id: row.id as string,
-    pubkey: row.pubkey as string,
-    created_at: row.created_at as number,
-    kind: row.kind as number,
-    tags: JSON.parse(row.tags as string) as string[][],
-    content: row.content as string,
-    sig: row.sig as string,
-  }))
+  // JSON.parseを一度だけ実行するよう最適化
+  const results: CachedEvent[] = []
+  for (const row of cached.results) {
+    try {
+      results.push({
+        id: row.id as string,
+        pubkey: row.pubkey as string,
+        created_at: row.created_at as number,
+        kind: row.kind as number,
+        tags: JSON.parse(row.tags as string) as string[][],
+        content: row.content as string,
+        sig: row.sig as string,
+      })
+    } catch (e) {
+      console.error('Failed to parse cached event tags:', e)
+    }
+  }
+  return results
 }
 
 // イベントをキャッシュに保存
 export async function cacheEvents(db: D1Database, events: Event[]): Promise<void> {
+  if (events.length === 0) return
+
   const now = Date.now()
-  for (const event of events) {
-    try {
+  const batchSize = 50 // D1のパラメータ制限を考慮したバッチサイズ
+
+  // バッチ処理
+  for (let i = 0; i < events.length; i += batchSize) {
+    const batch = events.slice(i, i + batchSize)
+    const values: string[] = []
+    const params: any[] = []
+
+    for (const event of batch) {
+      values.push('(?, ?, ?, ?, ?, ?, ?, ?, ?)')
       const hasMypace = hasMypaceTag(event) ? 1 : 0
+      params.push(
+        event.id,
+        event.pubkey,
+        event.created_at,
+        event.kind,
+        JSON.stringify(event.tags),
+        event.content,
+        event.sig,
+        now,
+        hasMypace
+      )
+    }
+
+    try {
       await db
         .prepare(
           `
         INSERT OR REPLACE INTO events (id, pubkey, created_at, kind, tags, content, sig, cached_at, has_mypace_tag)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ${values.join(', ')}
       `
         )
-        .bind(
-          event.id,
-          event.pubkey,
-          event.created_at,
-          event.kind,
-          JSON.stringify(event.tags),
-          event.content,
-          event.sig,
-          now,
-          hasMypace
-        )
+        .bind(...params)
         .run()
     } catch (e) {
       console.error('Cache write error:', e)

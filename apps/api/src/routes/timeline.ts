@@ -82,10 +82,10 @@ timeline.get('/', async (c) => {
 
       let events = cached
 
-      // スマートフィルタ適用
+      // フィルタ適用（除外率の高い順に実行）
+      events = filterByMuteList(events, mutedPubkeys)
       events = filterBySmartFilters(events, hideAds, hideNSFW)
       events = filterByNPC(events, hideNPC)
-      events = filterByMuteList(events, mutedPubkeys)
       events = filterByNgWords(events, ngWords)
       events = filterByNgTags(events, ngTags)
       // 公開フィルタ（OKワード、OKタグ）
@@ -129,10 +129,10 @@ timeline.get('/', async (c) => {
     const searchedUntil = rawEvents.length > 0 ? Math.min(...rawEvents.map((e) => e.created_at)) : null
 
     let events = rawEvents
-    // スマートフィルタ適用
+    // フィルタ適用（除外率の高い順に実行）
+    events = filterByMuteList(events, mutedPubkeys)
     events = filterBySmartFilters(events, hideAds, hideNSFW)
     events = filterByNPC(events, hideNPC)
-    events = filterByMuteList(events, mutedPubkeys)
     events = filterByNgWords(events, ngWords)
     events = filterByNgTags(events, ngTags)
     // 公開フィルタ（OKワード、OKタグ）

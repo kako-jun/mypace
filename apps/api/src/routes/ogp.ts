@@ -142,29 +142,42 @@ ogp.post('/by-urls', async (c) => {
     const now = Math.floor(Date.now() / 1000)
     const expiresAt = now + 86400 // 24 hours
 
+    // バッチINSERTのためのデータ準備
+    const cacheData: Array<{ url: string; ogpData: OgpData }> = []
     for (const { url, ogpData } of fetchResults) {
       if (ogpData && (ogpData.title || ogpData.description || ogpData.image)) {
         result[url] = ogpData
+        cacheData.push({ url, ogpData })
+      }
+    }
 
-        // キャッシュに保存
-        try {
-          await db
-            .prepare(
-              `INSERT OR REPLACE INTO ogp_cache (url, title, description, image, site_name, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)`
-            )
-            .bind(
-              url,
-              ogpData.title || null,
-              ogpData.description || null,
-              ogpData.image || null,
-              ogpData.siteName || null,
-              now,
-              expiresAt
-            )
-            .run()
-        } catch (e) {
-          console.error('OGP cache write error:', e)
-        }
+    // バッチINSERTでキャッシュに保存
+    if (cacheData.length > 0) {
+      const values: string[] = []
+      const params: any[] = []
+
+      for (const { url, ogpData } of cacheData) {
+        values.push('(?, ?, ?, ?, ?, ?, ?)')
+        params.push(
+          url,
+          ogpData.title || null,
+          ogpData.description || null,
+          ogpData.image || null,
+          ogpData.siteName || null,
+          now,
+          expiresAt
+        )
+      }
+
+      try {
+        await db
+          .prepare(
+            `INSERT OR REPLACE INTO ogp_cache (url, title, description, image, site_name, created_at, expires_at) VALUES ${values.join(', ')}`
+          )
+          .bind(...params)
+          .run()
+      } catch (e) {
+        console.error('OGP cache batch write error:', e)
       }
     }
   }
