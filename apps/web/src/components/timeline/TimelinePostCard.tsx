@@ -96,11 +96,12 @@ export default function TimelinePostCard({
 
   const handleCardClick = (e: React.MouseEvent<HTMLElement>) => {
     const target = e.target as HTMLElement
+    // Allow clicking through empty space in footer, but block interactive elements
     if (
       target.closest('button') ||
       target.closest('a') ||
-      target.closest('.post-footer') ||
-      target.closest('.thread-section')
+      target.closest('.thread-section') ||
+      target.closest('.post-actions')
     )
       return
     // Cache event, profile, and metadata from timeline for instant display in detail view
@@ -213,24 +214,26 @@ export default function TimelinePostCard({
           ))}
 
           <div className="post-footer">
-            <PostActions
-              isMyPost={isMyPost}
-              reactions={reactions}
-              replies={replies}
-              reposts={reposts}
-              likingId={likingId}
-              repostingId={repostingId}
-              eventId={event.id}
-              copied={copiedId === event.id}
-              myPubkey={myPubkey}
-              getDisplayName={getDisplayName}
-              onLike={() => onLike(event)}
-              onUnlike={() => onUnlike(event)}
-              onReply={() => onReply(event)}
-              onRepost={() => onRepost(event)}
-              onShareOption={(option) => onShareOption(event.id, event.content, option)}
-              onNavigateToProfile={navigateToUser}
-            />
+            <div className="post-actions">
+              <PostActions
+                isMyPost={isMyPost}
+                reactions={reactions}
+                replies={replies}
+                reposts={reposts}
+                likingId={likingId}
+                repostingId={repostingId}
+                eventId={event.id}
+                copied={copiedId === event.id}
+                myPubkey={myPubkey}
+                getDisplayName={getDisplayName}
+                onLike={() => onLike(event)}
+                onUnlike={() => onUnlike(event)}
+                onReply={() => onReply(event)}
+                onRepost={() => onRepost(event)}
+                onShareOption={(option) => onShareOption(event.id, event.content, option)}
+                onNavigateToProfile={navigateToUser}
+              />
+            </div>
 
             {isMyPost && (
               <EditDeleteButtons

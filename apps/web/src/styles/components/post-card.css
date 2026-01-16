@@ -227,6 +227,13 @@
   padding-left: 0.25rem;
 }
 
+/* Post actions wrapper - contains reaction buttons with gaps */
+.post-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* Action buttons with semi-transparent white background for visibility */
 .post-footer .icon-button,
 .post-footer .like-count {
