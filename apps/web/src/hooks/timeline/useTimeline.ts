@@ -141,7 +141,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       setError(getErrorMessage(err, 'Failed to load timeline'))
       setLoading(false)
     }
-  }, [authorPubkey, tagsKey, qKey, profiles])
+  }, [authorPubkey, tagsKey, qKey])
 
   // Stella送信
   const flushStella = async (targetEvent: Event) => {

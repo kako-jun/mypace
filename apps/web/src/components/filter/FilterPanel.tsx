@@ -93,10 +93,10 @@ export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
     const newFilters = getCurrentFilters()
     saveFiltersToStorage(newFilters)
     saveMuteList(muteList)
-    // Emit event to trigger timeline reload with new filters
-    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.FILTER_APPLIED))
     // Close the popup if in popup mode
     onClose?.()
+    // Emit event to trigger timeline reload with new filters (after closing)
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.FILTER_APPLIED))
   }
 
   // Clear all filters
@@ -113,10 +113,10 @@ export function FilterPanel({ isPopup = false, onClose }: FilterPanelProps) {
     setMuteList([])
     saveFiltersToStorage(DEFAULT_SEARCH_FILTERS)
     saveMuteList([])
-    // Emit event to trigger timeline reload with cleared filters
-    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.FILTER_APPLIED))
     // Close the popup if in popup mode
     onClose?.()
+    // Emit event to trigger timeline reload with cleared filters (after closing)
+    window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.FILTER_APPLIED))
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
