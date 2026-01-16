@@ -97,7 +97,13 @@ timeline.get('/', async (c) => {
       }
 
       if (events.length >= limit) {
-        return c.json({ events: events.slice(0, limit), source: 'cache', searchedUntil })
+        // レスポンスサイズ削減: contentを切り詰め
+        const MAX_CONTENT_LENGTH = 5000
+        const trimmedEvents = events.slice(0, limit).map((e) => ({
+          ...e,
+          content: e.content.length > MAX_CONTENT_LENGTH ? e.content.slice(0, MAX_CONTENT_LENGTH) + '...' : e.content,
+        }))
+        return c.json({ events: trimmedEvents, source: 'cache', searchedUntil })
       }
     }
   } catch (e) {
@@ -156,7 +162,14 @@ timeline.get('/', async (c) => {
       void cacheEvents(db, rawEvents)
     }
 
-    return c.json({ events, source: 'relay', searchedUntil })
+    // レスポンスサイズ削減: contentを切り詰め（タイムラインでは省略表示なので問題なし）
+    const MAX_CONTENT_LENGTH = 5000
+    const trimmedEvents = events.map((e) => ({
+      ...e,
+      content: e.content.length > MAX_CONTENT_LENGTH ? e.content.slice(0, MAX_CONTENT_LENGTH) + '...' : e.content,
+    }))
+
+    return c.json({ events: trimmedEvents, source: 'relay', searchedUntil })
   } catch (e) {
     console.error('Relay fetch error:', e)
     return c.json({ events: [], error: 'Failed to fetch from relay' }, 500)

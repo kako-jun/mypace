@@ -103,7 +103,13 @@ userEvents.get('/:pubkey/events', async (c) => {
       events = filterByLanguage(events, langFilter)
     }
 
-    return c.json({ events: events.slice(0, limit), searchedUntil })
+    // レスポンスサイズ削減: contentを切り詰め
+    const MAX_CONTENT_LENGTH = 5000
+    const trimmedEvents = events.slice(0, limit).map((e) => ({
+      ...e,
+      content: e.content.length > MAX_CONTENT_LENGTH ? e.content.slice(0, MAX_CONTENT_LENGTH) + '...' : e.content,
+    }))
+    return c.json({ events: trimmedEvents, searchedUntil })
   } finally {
     pool.close(RELAYS)
   }
