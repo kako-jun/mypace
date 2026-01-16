@@ -17,8 +17,8 @@ function getStellaCount(event: Event): number {
 
 const events = new Hono<{ Bindings: Bindings }>()
 
-// POST /api/events/batch - 複数イベント一括取得
-events.post('/batch', async (c) => {
+// POST /api/events/by-ids - 複数イベントをIDで一括取得
+events.post('/by-ids', async (c) => {
   const { eventIds } = await c.req.json<{ eventIds: string[] }>()
 
   if (!eventIds || !Array.isArray(eventIds) || eventIds.length === 0) {

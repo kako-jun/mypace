@@ -5,7 +5,7 @@ import {
   fetchPinnedPost,
   setPinnedPost,
   unpinPost,
-  fetchEventsBatch,
+  fetchEventsByIds,
   fetchUserSerial,
   fetchUserStats,
   type UserSerialData,
@@ -141,7 +141,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
       // Fetch the actual event data if pinned
       if (data.eventId) {
         try {
-          const eventData = await fetchEventsBatch([data.eventId])
+          const eventData = await fetchEventsByIds([data.eventId])
           const event = eventData[data.eventId]
           setPinnedEvent(event || null)
         } catch {

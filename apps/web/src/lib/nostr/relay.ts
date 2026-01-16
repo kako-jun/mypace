@@ -74,7 +74,7 @@ export async function fetchUserPosts(
 
 export async function fetchEventById(eventId: string): Promise<Event | null> {
   try {
-    const result = await api.fetchEventsBatch([eventId])
+    const result = await api.fetchEventsByIds([eventId])
     return result[eventId] || null
   } catch (e) {
     console.error('Failed to fetch event by ID:', e)

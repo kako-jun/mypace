@@ -1,4 +1,4 @@
-import { fetchEventsEnrich, fetchOgpBatch, recordViews } from '../../lib/api/api'
+import { fetchEventsEnrich, fetchOgpBatch, recordImpressions } from '../../lib/api/api'
 import { hasMypaceTag } from '../../lib/nostr/tags'
 import { extractFromContents } from '../../lib/utils/content'
 import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData, OgpData } from '../../types'
@@ -122,7 +122,7 @@ export async function recordImpressionsForEvents(events: Event[], viewerPubkey: 
   if (mypaceEvents.length === 0 || !viewerPubkey) return
 
   // fire-and-forget
-  recordViews(mypaceEvents, 'impression', viewerPubkey).catch(() => {})
+  recordImpressions(mypaceEvents, 'impression', viewerPubkey).catch(() => {})
 }
 
 // OGPデータ一括読み込み

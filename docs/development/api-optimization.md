@@ -98,7 +98,7 @@
 |-----|------|------|
 | `GET /api/timeline` | タイムライン | 既存維持 |
 | `GET /api/users/:pubkey/events` | ユーザー投稿一覧 | 既存維持 |
-| `POST /api/events/batch` | 複数イベント一括取得 | **新規** |
+| `POST /api/events/by-ids` | 複数イベント一括取得 | **新規** |
 | `POST /api/events/enrich` | メタデータ+プロフィール+super-mention一括取得 | **新規** |
 | `POST /api/ogp/batch` | OGP一括取得 | **新規** |
 | `GET /api/users/:pubkey/stats` | スタッツ一括取得 | **新規** |
@@ -108,7 +108,7 @@
 | API | 用途 | 状態 |
 |-----|------|------|
 | `POST /api/publish` | 投稿 | 既存維持 |
-| `POST /api/views/record` | 閲覧記録 | 改名（batch-record統合） |
+| `POST /api/views/impressions` | 閲覧記録 | 改名（batch-record統合） |
 
 ### その他機能（変更なし）
 
@@ -125,7 +125,7 @@
 
 | 削除API | 統合先 |
 |---------|--------|
-| `GET /api/events/:id` | `POST /api/events/batch` |
+| `GET /api/events/:id` | `POST /api/events/by-ids` |
 | `GET /api/reactions/:eventId` | `POST /api/events/enrich` |
 | `GET /api/replies/:eventId` | `POST /api/events/enrich` |
 | `GET /api/reposts/:eventId` | `POST /api/events/enrich` |
@@ -134,7 +134,7 @@
 | `POST /api/profiles` | `POST /api/events/enrich` |
 | `POST /api/super-mention/lookup` | `POST /api/events/enrich` |
 | `GET /api/ogp` | `POST /api/ogp/batch` |
-| `POST /api/views/:id` | `POST /api/views/record` |
+| `POST /api/views/:id` | `POST /api/views/impressions` |
 | `GET /api/user/:pubkey/count` | `GET /api/users/:pubkey/stats` |
 | `GET /api/user/:pubkey/stella` | `GET /api/users/:pubkey/stats` |
 | `GET /api/user/:pubkey/views` | `GET /api/users/:pubkey/stats` |
@@ -143,7 +143,7 @@
 
 ## 新規APIエンドポイント詳細
 
-### 1. POST `/api/events/batch`
+### 1. POST `/api/events/by-ids`
 
 複数イベントを一括取得する。
 
@@ -242,7 +242,7 @@
 }
 ```
 
-### 4. POST `/api/views/record`
+### 4. POST `/api/views/impressions`
 
 閲覧記録を一括登録する（旧 batch-record を統合）。
 
@@ -307,7 +307,7 @@
 | 1 | `GET /api/timeline` | 1 | 投稿イベント配列 |
 | 2 | `POST /api/events/enrich` | 1 | **メタデータ+プロフィール+super-mention** |
 | 3 | `POST /api/ogp/batch` | 1 | 全リンクのOGP |
-| 4 | `POST /api/views/record` | 1 | インプレッション記録 |
+| 4 | `POST /api/views/impressions` | 1 | インプレッション記録 |
 | 5 | `GET /api/users/:pubkey/stats` | 1 | 右下スタッツ |
 | | **合計** | **5** | |
 
@@ -318,17 +318,17 @@
 | 1 | `GET /api/users/:pubkey/events` | 1 | ユーザー投稿配列 |
 | 2 | `POST /api/events/enrich` | 1 | メタデータ+プロフィール+super-mention |
 | 3 | `POST /api/ogp/batch` | 1 | 全リンクのOGP |
-| 4 | `POST /api/views/record` | 1 | インプレッション記録 |
+| 4 | `POST /api/views/impressions` | 1 | インプレッション記録 |
 | | **合計** | **4** | |
 
 ### 記事個別ページ（直接アクセス）
 
 | # | API | 回数 | 内容 |
 |---|-----|------|------|
-| 1 | `POST /api/events/batch` | 1 | メイン記事 + リプライ元 |
+| 1 | `POST /api/events/by-ids` | 1 | メイン記事 + リプライ元 |
 | 2 | `POST /api/events/enrich` | 1 | メタデータ+プロフィール+super-mention |
 | 3 | `POST /api/ogp/batch` | 1 | 記事内リンクのOGP |
-| 4 | `POST /api/views/record` | 1 | detail記録 |
+| 4 | `POST /api/views/impressions` | 1 | detail記録 |
 | | **合計** | **4** | |
 
 ### 記事個別ページ（タイムラインから遷移）
@@ -336,9 +336,9 @@
 | # | API | 回数 | 内容 |
 |---|-----|------|------|
 | 1 | - | 0 | state/contextの取得済みデータを再利用 |
-| 2 | `POST /api/events/batch` | 0〜1 | リプライ元（未取得の場合のみ） |
+| 2 | `POST /api/events/by-ids` | 0〜1 | リプライ元（未取得の場合のみ） |
 | 3 | `POST /api/events/enrich` | 0〜1 | リプライ元のenrich（未取得の場合のみ） |
-| 4 | `POST /api/views/record` | 1 | detail記録 |
+| 4 | `POST /api/views/impressions` | 1 | detail記録 |
 | | **合計** | **1〜3** | 多くの場合は1回 |
 
 **補足:** タイムラインではリプライ元イベント本文を取得していないため、リプライ投稿の個別ページを開く場合は追加取得が必要。ただし、多くの投稿はリプライではないため、平均的には1回で済む。
@@ -398,20 +398,20 @@
 
 ### API側（apps/api）
 
-- [x] `POST /api/events/batch` 新規作成
+- [x] `POST /api/events/by-ids` 新規作成
 - [x] `POST /api/events/enrich` 新規作成（metadata + profiles + super-mention統合）
 - [x] `POST /api/ogp/batch` 新規作成
 - [x] `GET /api/users/:pubkey/stats` 新規作成
-- [x] `POST /api/views/record` 作成（batch-record統合）
+- [x] `POST /api/views/impressions` 作成（batch-record統合）
 - [x] 削除対象のエンドポイントを削除（profiles, ogp GET）
 
 ### フロントエンド側（apps/web）
 
-- [x] `fetchEventsBatch(eventIds[])` API関数作成
+- [x] `fetchEventsByIds(eventIds[])` API関数作成
 - [x] `fetchEventsEnrich(eventIds[], authorPubkeys[], viewerPubkey, superMentionPaths[])` API関数作成
 - [x] `fetchOgpBatch(urls[])` API関数作成
 - [x] `fetchUserStats(pubkey)` API関数作成
-- [x] `recordViews(events[], type, viewerPubkey)` API関数作成
+- [x] `recordImpressions(events[], type, viewerPubkey)` API関数作成
 - [x] `extractSuperMentionPaths(content)` ユーティリティ作成
 - [x] `extractOgpUrls(content)` ユーティリティ作成
 - [x] `useTimelineData.ts` 書き換え
@@ -443,7 +443,7 @@
 ### 読み取り vs 書き込み
 
 - **読み取り**: `POST /api/events/enrich` でカウント値を取得
-- **書き込み**: `POST /api/views/record` でカウントを+1
+- **書き込み**: `POST /api/views/impressions` でカウントを+1
 
 投稿カードの「10/50」表示：
 - 分子（10）= detail

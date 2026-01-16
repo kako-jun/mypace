@@ -378,11 +378,11 @@ export interface ViewCountData {
 // ==================== BATCH APIs ====================
 
 // Batch fetch multiple events by ID
-export async function fetchEventsBatch(eventIds: string[]): Promise<Record<string, Event>> {
+export async function fetchEventsByIds(eventIds: string[]): Promise<Record<string, Event>> {
   if (eventIds.length === 0) return {}
 
   try {
-    const res = await fetch(`${API_BASE}/api/events/batch`, {
+    const res = await fetch(`${API_BASE}/api/events/by-ids`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ eventIds }),
@@ -470,7 +470,7 @@ export async function fetchUserStats(pubkey: string): Promise<UserStats | null> 
 }
 
 // Record views (new unified API)
-export async function recordViews(
+export async function recordImpressions(
   events: Array<{ eventId: string; authorPubkey: string }>,
   type: 'impression' | 'detail',
   viewerPubkey: string
@@ -478,7 +478,7 @@ export async function recordViews(
   if (events.length === 0) return true
 
   try {
-    const res = await fetch(`${API_BASE}/api/views/record`, {
+    const res = await fetch(`${API_BASE}/api/views/impressions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ events, type, viewerPubkey }),

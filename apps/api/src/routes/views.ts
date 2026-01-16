@@ -3,8 +3,8 @@ import type { Bindings } from '../types'
 
 const views = new Hono<{ Bindings: Bindings }>()
 
-// POST /api/views/record - 閲覧一括記録
-views.post('/record', async (c) => {
+// POST /api/views/impressions - 閲覧数（impression/detail）一括記録
+views.post('/impressions', async (c) => {
   const { events, type, viewerPubkey } = await c.req.json<{
     events: Array<{ eventId: string; authorPubkey: string }>
     type: 'impression' | 'detail'

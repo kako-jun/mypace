@@ -3,7 +3,7 @@ import { fetchEventById } from '../../lib/nostr/relay'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import { getCachedPost, getCachedProfile, getCachedPostMetadata, getErrorMessage } from '../../lib/utils'
 import { hasMypaceTag } from '../../lib/nostr/tags'
-import { fetchEventsEnrich, fetchEventsBatch, recordViews } from '../../lib/api/api'
+import { fetchEventsEnrich, fetchEventsByIds, recordImpressions } from '../../lib/api/api'
 import type { Event, LoadableProfile, ReactionData, Profile, ViewCountData } from '../../types'
 
 interface PostViewData {
@@ -101,7 +101,7 @@ export function usePostViewData(eventId: string): PostViewData {
       if (cachedMetadata) {
         // Record detail view for mypace posts (still needed even with cached data)
         if (hasMypaceTag(eventData) && pubkey) {
-          recordViews([{ eventId, authorPubkey: eventData.pubkey }], 'detail', pubkey).catch(() => {})
+          recordImpressions([{ eventId, authorPubkey: eventData.pubkey }], 'detail', pubkey).catch(() => {})
         }
 
         // Batch fetch profiles for reply authors and reactors (from cached data)
@@ -125,7 +125,7 @@ export function usePostViewData(eventId: string): PostViewData {
         if (replyTag) {
           const parentId = replyTag[1]
           try {
-            const parentEvents = await fetchEventsBatch([parentId])
+            const parentEvents = await fetchEventsByIds([parentId])
             const parent = parentEvents[parentId]
             if (parent) {
               setParentEvent(parent as Event)
@@ -152,7 +152,7 @@ export function usePostViewData(eventId: string): PostViewData {
 
       // Record detail view for mypace posts
       if (hasMypaceTag(eventData) && pubkey) {
-        recordViews([{ eventId, authorPubkey: eventData.pubkey }], 'detail', pubkey).catch(() => {})
+        recordImpressions([{ eventId, authorPubkey: eventData.pubkey }], 'detail', pubkey).catch(() => {})
       }
 
       // Use profiles from enrich response for reply authors and reactors
@@ -174,7 +174,7 @@ export function usePostViewData(eventId: string): PostViewData {
         const parentId = replyTag[1]
         try {
           // Use batch API for parent event
-          const parentEvents = await fetchEventsBatch([parentId])
+          const parentEvents = await fetchEventsByIds([parentId])
           const parent = parentEvents[parentId]
           if (parent) {
             setParentEvent(parent as Event)
