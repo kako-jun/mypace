@@ -1,6 +1,8 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { fetchTimeline, fetchUserEvents } from '../../lib/nostr/relay'
 import { LIMITS } from '../../lib/constants'
+import { getFilterSettings } from '../../lib/storage'
+import { getMutedPubkeys } from '../../lib/utils'
 import type { Event, ProfileCache, TimelineItem } from '../../types'
 import type { UseTimelineOptions } from './types'
 import { mergeProfiles } from './useTimelineData'
@@ -52,11 +54,28 @@ export function useTimelinePolling({
   const qKey = q ? JSON.stringify(q) : ''
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // フィルター設定を取得するヘルパー（毎回最新を読む）
+  const getFilterOptions = useCallback(() => {
+    const filters = getFilterSettings()
+    const mutedPubkeys = getMutedPubkeys()
+    return {
+      showAll: !filters.mypace,
+      langFilter: filters.lang,
+      hideAds: filters.hideAds,
+      hideNSFW: filters.hideNSFW,
+      hideNPC: filters.hideNPC,
+      mutedPubkeys,
+      ngWords: filters.ngWords,
+      ngTags: filters.ngTags,
+    }
+  }, [])
+
   // 新着チェック（ポーリング）
   const checkNewEvents = useCallback(async () => {
     if (latestEventTime === 0) return
 
     try {
+      const filterOpts = getFilterOptions()
       let newNotes: Event[]
       if (authorPubkey) {
         const result = await fetchUserEvents(authorPubkey, {
@@ -64,6 +83,7 @@ export function useTimelinePolling({
           since: latestEventTime,
           tags,
           q,
+          ...filterOpts,
         })
         newNotes = result.events
       } else {
@@ -72,6 +92,7 @@ export function useTimelinePolling({
           since: latestEventTime,
           queries: q,
           okTags: tags,
+          ...filterOpts,
         })
         newNotes = result.events
       }
@@ -92,7 +113,7 @@ export function useTimelinePolling({
     } catch (err) {
       console.error('Failed to check new events:', err)
     }
-  }, [latestEventTime, events, authorPubkey, tagsKey, qKey, setPendingNewEvents])
+  }, [latestEventTime, events, authorPubkey, tagsKey, qKey, setPendingNewEvents, getFilterOptions])
 
   // 1分ごとのポーリング
   useEffect(() => {

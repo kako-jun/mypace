@@ -7,7 +7,8 @@ import {
   createRepostEvent,
   MAX_STELLA_PER_USER,
 } from '../../lib/nostr/events'
-import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage } from '../../lib/utils'
+import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage, getMutedPubkeys } from '../../lib/utils'
+import { getFilterSettings } from '../../lib/storage'
 import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
 import type {
   Event,
@@ -59,6 +60,22 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const tagsKey = tags ? JSON.stringify(tags) : ''
   const qKey = q ? JSON.stringify(q) : ''
 
+  // フィルター設定を取得するヘルパー（毎回最新を読む）
+  const getFilterOptions = useCallback(() => {
+    const filters = getFilterSettings()
+    const mutedPubkeys = getMutedPubkeys()
+    return {
+      showAll: !filters.mypace,
+      langFilter: filters.lang,
+      hideAds: filters.hideAds,
+      hideNSFW: filters.hideNSFW,
+      hideNPC: filters.hideNPC,
+      mutedPubkeys,
+      ngWords: filters.ngWords,
+      ngTags: filters.ngTags,
+    }
+  }, [])
+
   // ポーリング機構
   const { loadNewEvents } = useTimelinePolling({
     options,
@@ -91,11 +108,12 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       const pubkey = await getCurrentPubkey()
       setMyPubkey(pubkey)
 
+      const filterOpts = getFilterOptions()
       let result: { events: Event[]; searchedUntil: number | null }
       if (authorPubkey) {
-        result = await fetchUserEvents(authorPubkey, { limit: LIMITS.TIMELINE_FETCH_LIMIT, tags, q })
+        result = await fetchUserEvents(authorPubkey, { limit: LIMITS.TIMELINE_FETCH_LIMIT, tags, q, ...filterOpts })
       } else {
-        result = await fetchTimeline({ limit: LIMITS.TIMELINE_FETCH_LIMIT, queries: q, okTags: tags })
+        result = await fetchTimeline({ limit: LIMITS.TIMELINE_FETCH_LIMIT, queries: q, okTags: tags, ...filterOpts })
       }
       const notes = result.events
 
@@ -149,7 +167,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       setError(getErrorMessage(err, 'Failed to load timeline'))
       setLoading(false)
     }
-  }, [authorPubkey, tagsKey, qKey])
+  }, [authorPubkey, tagsKey, qKey, getFilterOptions])
 
   // Stella送信
   const flushStella = async (targetEvent: Event) => {
@@ -311,6 +329,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     try {
       // searchedUntilは「フィルタ前の最古時刻」なので、これを基準に過去を探す
       const untilTime = searchedUntil - 1
+      const filterOpts = getFilterOptions()
       let result: { events: Event[]; searchedUntil: number | null }
       if (authorPubkey) {
         result = await fetchUserEvents(authorPubkey, {
@@ -318,9 +337,16 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
           until: untilTime,
           tags,
           q,
+          ...filterOpts,
         })
       } else {
-        result = await fetchTimeline({ limit: LIMITS.TIMELINE_FETCH_LIMIT, until: untilTime, queries: q, okTags: tags })
+        result = await fetchTimeline({
+          limit: LIMITS.TIMELINE_FETCH_LIMIT,
+          until: untilTime,
+          queries: q,
+          okTags: tags,
+          ...filterOpts,
+        })
       }
 
       const olderNotes = result.events
@@ -387,7 +413,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     } finally {
       setLoadingMore(false)
     }
-  }, [loadingMore, searchedUntil, events, authorPubkey, tagsKey, qKey, myPubkey])
+  }, [loadingMore, searchedUntil, events, authorPubkey, tagsKey, qKey, myPubkey, getFilterOptions])
 
   const loadTimelineRef = useRef(loadTimeline)
   loadTimelineRef.current = loadTimeline
