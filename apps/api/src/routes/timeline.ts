@@ -110,14 +110,16 @@ timeline.get('/', async (c) => {
           events = filterByLanguage(events, langFilter)
         }
 
-        if (events.length >= limit) {
+        // キャッシュのみモード(RELAY_COUNT=0)または十分な件数がある場合はキャッシュから返す
+        if (events.length >= limit || RELAYS.length === 0) {
           // レスポンスサイズ削減: contentを切り詰め
           const MAX_CONTENT_LENGTH = 5000
           const trimmedEvents = events.slice(0, limit).map((e) => ({
             ...e,
             content: e.content.length > MAX_CONTENT_LENGTH ? e.content.slice(0, MAX_CONTENT_LENGTH) + '...' : e.content,
           }))
-          return c.json({ events: trimmedEvents, source: 'cache', searchedUntil })
+          const source = RELAYS.length === 0 ? 'cache-only' : 'cache'
+          return c.json({ events: trimmedEvents, source, searchedUntil })
         }
       }
     } catch (e) {

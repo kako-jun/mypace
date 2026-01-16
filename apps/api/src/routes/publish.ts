@@ -52,20 +52,14 @@ async function deleteStella(db: D1Database, eventIds: string[], pubkey: string):
 
 // POST /api/publish - 署名済みイベントをリレーに投稿
 publish.post('/', async (c) => {
-  // リレー設定
-  const relayCount = c.env.RELAY_COUNT !== undefined ? parseInt(c.env.RELAY_COUNT, 10) : ALL_RELAYS.length
-  const RELAYS = ALL_RELAYS.slice(0, Math.max(0, relayCount))
+  // publishは常に全リレーを使用（RELAY_COUNTは読み取り専用の設定）
+  const RELAYS = ALL_RELAYS
 
   const body = await c.req.json<{ event: Event }>()
   const event = body.event
 
   if (!event || !event.id || !event.sig) {
     return c.json({ error: 'Invalid event: missing id or sig' }, 400)
-  }
-
-  // RELAY_COUNT=0の場合はリレー接続をスキップ
-  if (RELAYS.length === 0) {
-    return c.json({ error: 'Relay connection disabled' }, 503)
   }
 
   try {

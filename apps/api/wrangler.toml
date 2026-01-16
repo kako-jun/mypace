@@ -14,5 +14,5 @@ database_id = "3aa18b16-681c-467c-980e-9e2fa9b966d4"
 
 [vars]
 DISABLE_CACHE = "0"  # キャッシュ有効
-RELAY_COUNT = "2"  # リレー接続数（0=リレー接続しない、デフォルト5）
+RELAY_COUNT = "0"  # リレー接続数（0=リレー接続しない、デフォルト5）
 FETCH_MULTIPLIER = "1"  # 取得倍数（デフォルト1、増やすと503エラーのリスク増）
