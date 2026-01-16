@@ -602,7 +602,7 @@
   right: -6px;
   top: 0;
   width: 24px;
-  height: 90px;
+  height: 100px; /* 90px + 10px for quiet zone */
   padding: 2px 2px 2px 1px;
   color: #000;
   opacity: 0.3;
@@ -614,9 +614,9 @@
 .post-barcode svg {
   position: absolute;
   right: 4px;
-  top: 68px;
-  transform: rotate(90deg);
-  transform-origin: top right;
+  top: -10px;
+  transform: rotate(-90deg);
+  transform-origin: bottom right;
 }
 
 .post-card:hover .post-barcode {
@@ -637,7 +637,7 @@
 .post-barcode-rarity {
   position: absolute;
   right: 2px;
-  top: 74px;
+  top: 84px; /* 74px + 10px to match SVG quiet zone offset */
   font-size: 10px;
   font-weight: bold;
   font-family: var(--font-mono);
