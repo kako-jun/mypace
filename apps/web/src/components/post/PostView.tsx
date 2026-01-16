@@ -384,6 +384,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
             content={fullContent}
             emojis={parseEmojiTags(event.tags)}
             profiles={{ ...(profile ? { [event.pubkey]: profile } : {}), ...replyProfiles }}
+            enableOgpFallback={true}
           />
         </div>
 

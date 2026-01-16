@@ -13,6 +13,7 @@ interface PostContentProps {
   profiles?: ProfileMap
   wikidataMap?: Record<string, string> // Super-mention path -> Wikidata ID mapping
   ogpMap?: Record<string, OgpData> // URL -> OGP data mapping
+  enableOgpFallback?: boolean // Enable OGP fetching for direct page access
   onReadMore?: () => void
   tags?: string[][] // Event tags for fold detection
 }
@@ -25,6 +26,7 @@ export function PostContent({
   profiles = {},
   wikidataMap = {},
   ogpMap = {},
+  enableOgpFallback = false,
   onReadMore,
   tags,
 }: PostContentProps) {
@@ -61,7 +63,7 @@ export function PostContent({
           )}
         </>
       )}
-      <PostEmbeds content={displayContent} ogpMap={ogpMap} />
+      <PostEmbeds content={displayContent} ogpMap={ogpMap} enableOgpFallback={enableOgpFallback} />
     </>
   )
 }

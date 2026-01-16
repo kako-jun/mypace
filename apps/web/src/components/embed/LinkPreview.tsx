@@ -6,15 +6,15 @@ import type { OgpData } from '../../types'
 interface LinkPreviewProps {
   url: string
   ogpData?: OgpData // Pre-fetched OGP data from batch API
+  enableFallback?: boolean // Enable fetching if ogpData not provided (for direct page access)
 }
 
-export default function LinkPreview({ url, ogpData }: LinkPreviewProps) {
+export default function LinkPreview({ url, ogpData, enableFallback = false }: LinkPreviewProps) {
   const [ogp, setOgp] = useState<OgpData | undefined>(ogpData)
-  const [loading, setLoading] = useState(!ogpData)
+  const [loading, setLoading] = useState(!ogpData && enableFallback)
   const [imageError, setImageError] = useState(false)
 
-  // Fetch OGP if not provided (e.g., direct access to detail page)
-  // Delay fallback fetch to allow parent's batch fetch to complete first
+  // Fetch OGP only if enableFallback is true (e.g., direct access to detail page)
   useEffect(() => {
     if (ogpData) {
       setOgp(ogpData)
@@ -22,23 +22,23 @@ export default function LinkPreview({ url, ogpData }: LinkPreviewProps) {
       return
     }
 
-    let mounted = true
-    // Wait 500ms before fallback fetch - parent batch should complete by then
-    const timer = setTimeout(() => {
-      if (!mounted) return
-      fetchOgpBatch([url]).then((result) => {
-        if (mounted) {
-          setOgp(result[url])
-          setLoading(false)
-        }
-      })
-    }, 500)
+    // Only fetch if fallback is explicitly enabled
+    if (!enableFallback) {
+      setLoading(false)
+      return
+    }
 
+    let mounted = true
+    fetchOgpBatch([url]).then((result) => {
+      if (mounted) {
+        setOgp(result[url])
+        setLoading(false)
+      }
+    })
     return () => {
       mounted = false
-      clearTimeout(timer)
     }
-  }, [url, ogpData])
+  }, [url, ogpData, enableFallback])
 
   // Extract domain for fallback display
   let displayDomain = ''

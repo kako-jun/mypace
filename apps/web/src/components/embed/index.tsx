@@ -24,9 +24,10 @@ export {
 interface EmbedRendererProps {
   embed: EmbedInfo
   ogpMap?: Record<string, OgpData>
+  enableOgpFallback?: boolean
 }
 
-function EmbedRenderer({ embed, ogpMap = {} }: EmbedRendererProps) {
+function EmbedRenderer({ embed, ogpMap = {}, enableOgpFallback = false }: EmbedRendererProps) {
   switch (embed.type) {
     case 'youtube':
       return embed.videoId ? <YouTubeEmbed videoId={embed.videoId} /> : null
@@ -54,7 +55,7 @@ function EmbedRenderer({ embed, ogpMap = {} }: EmbedRendererProps) {
       return <IframeEmbed url={embed.url} />
 
     case 'ogp':
-      return <LinkPreview url={embed.url} ogpData={ogpMap[embed.url]} />
+      return <LinkPreview url={embed.url} ogpData={ogpMap[embed.url]} enableFallback={enableOgpFallback} />
 
     default:
       return null
@@ -64,9 +65,10 @@ function EmbedRenderer({ embed, ogpMap = {} }: EmbedRendererProps) {
 interface PostEmbedsProps {
   content: string
   ogpMap?: Record<string, OgpData>
+  enableOgpFallback?: boolean
 }
 
-export function PostEmbeds({ content, ogpMap = {} }: PostEmbedsProps) {
+export function PostEmbeds({ content, ogpMap = {}, enableOgpFallback = false }: PostEmbedsProps) {
   const embeds = extractEmbeds(content)
 
   if (embeds.length === 0) return null
@@ -74,7 +76,12 @@ export function PostEmbeds({ content, ogpMap = {} }: PostEmbedsProps) {
   return (
     <div className="post-embeds">
       {embeds.map((embed, index) => (
-        <EmbedRenderer key={`${embed.type}-${embed.url}-${index}`} embed={embed} ogpMap={ogpMap} />
+        <EmbedRenderer
+          key={`${embed.type}-${embed.url}-${index}`}
+          embed={embed}
+          ogpMap={ogpMap}
+          enableOgpFallback={enableOgpFallback}
+        />
       ))}
     </div>
   )
