@@ -298,6 +298,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   // 古い投稿を下に追加 → 200件を超えたら上（新しい方）から削除
   const loadOlderEvents = useCallback(async () => {
     if (loadingMore || searchedUntil === null) return
+    // 先にローディング状態にする（ボタンを消す/入れ替わりを自然に見せる）
     setLoadingMore(true)
     try {
       // searchedUntilは「フィルタ前の最古時刻」なので、これを基準に過去を探す

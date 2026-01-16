@@ -207,9 +207,12 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
         )
       })}
       {items.length === 0 && <p className="empty">No posts yet</p>}
-      <TimelineActionButton onClick={loadOlderEvents} disabled={loadingMore}>
-        {loadingMore ? 'Loading...' : hasMore ? 'Load Older Posts' : 'End of timeline (retry)'}
-      </TimelineActionButton>
+      {!loadingMore && (
+        <TimelineActionButton onClick={loadOlderEvents}>
+          {hasMore ? 'Load Older Posts' : 'End of timeline (retry)'}
+        </TimelineActionButton>
+      )}
+      {loadingMore && <TimelineActionButton disabled>Loading...</TimelineActionButton>}
     </div>
   )
 })
