@@ -15,8 +15,6 @@ interface UseMyStatsResult {
   visible: boolean
 }
 
-const REFRESH_INTERVAL = 60000 // 60 seconds
-
 export function useMyStats(): UseMyStatsResult {
   const [stats, setStats] = useState<MyStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -69,14 +67,10 @@ export function useMyStats(): UseMyStatsResult {
     }
   }, [pubkey])
 
-  // Initial fetch and periodic refresh
+  // Initial fetch only (no periodic refresh - stats don't need real-time updates)
   useEffect(() => {
     if (!pubkey) return
-
     checkProfileAndFetchStats()
-
-    const interval = setInterval(checkProfileAndFetchStats, REFRESH_INTERVAL)
-    return () => clearInterval(interval)
   }, [pubkey, checkProfileAndFetchStats])
 
   return { stats, loading, visible }
