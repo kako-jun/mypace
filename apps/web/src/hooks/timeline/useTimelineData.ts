@@ -75,6 +75,27 @@ export async function loadEnrichForEvents(
     if (Object.keys(superMentions).length > 0) {
       setWikidataMap((prev) => ({ ...prev, ...superMentions }))
     }
+
+    // リアクター（ステラを押した人）のプロフィールも取得
+    const reactorPubkeys = Object.values(metadata)
+      .flatMap((m) => m.reactions.reactors.map((r) => r.pubkey))
+      .filter((pk) => profiles[pk] === undefined)
+    const uniqueReactorPubkeys = [...new Set(reactorPubkeys)]
+
+    if (uniqueReactorPubkeys.length > 0) {
+      // fire-and-forget でリアクターのプロフィールを取得
+      fetchProfiles(uniqueReactorPubkeys).then((reactorProfiles) => {
+        setProfiles((prev) => {
+          const newProfiles = { ...prev }
+          for (const pk of uniqueReactorPubkeys) {
+            if (newProfiles[pk] === undefined) {
+              newProfiles[pk] = reactorProfiles[pk] || null
+            }
+          }
+          return newProfiles
+        })
+      })
+    }
   } catch (error) {
     console.error('Failed to load enrich data:', error)
     // エラー時は空の値で初期化
