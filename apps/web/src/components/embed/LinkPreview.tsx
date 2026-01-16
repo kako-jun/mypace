@@ -14,6 +14,7 @@ export default function LinkPreview({ url, ogpData }: LinkPreviewProps) {
   const [imageError, setImageError] = useState(false)
 
   // Fetch OGP if not provided (e.g., direct access to detail page)
+  // Delay fallback fetch to allow parent's batch fetch to complete first
   useEffect(() => {
     if (ogpData) {
       setOgp(ogpData)
@@ -22,14 +23,20 @@ export default function LinkPreview({ url, ogpData }: LinkPreviewProps) {
     }
 
     let mounted = true
-    fetchOgpBatch([url]).then((result) => {
-      if (mounted) {
-        setOgp(result[url])
-        setLoading(false)
-      }
-    })
+    // Wait 500ms before fallback fetch - parent batch should complete by then
+    const timer = setTimeout(() => {
+      if (!mounted) return
+      fetchOgpBatch([url]).then((result) => {
+        if (mounted) {
+          setOgp(result[url])
+          setLoading(false)
+        }
+      })
+    }, 500)
+
     return () => {
       mounted = false
+      clearTimeout(timer)
     }
   }, [url, ogpData])
 

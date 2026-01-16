@@ -68,19 +68,20 @@ events.post('/batch', async (c) => {
 // POST /api/events/enrich - メタデータ+プロフィール+super-mention一括取得
 events.post('/enrich', async (c) => {
   const {
-    eventIds,
+    eventIds = [],
     authorPubkeys = [],
     viewerPubkey,
     superMentionPaths = [],
   } = await c.req.json<{
-    eventIds: string[]
+    eventIds?: string[]
     authorPubkeys?: string[]
     viewerPubkey?: string
     superMentionPaths?: string[]
   }>()
 
-  if (!eventIds || !Array.isArray(eventIds) || eventIds.length === 0) {
-    return c.json({ error: 'eventIds array is required' }, 400)
+  // eventIds can be empty if only fetching profiles
+  if (!Array.isArray(eventIds)) {
+    return c.json({ error: 'eventIds must be an array' }, 400)
   }
 
   // Limit batch sizes
@@ -90,6 +91,30 @@ events.post('/enrich', async (c) => {
   const pool = new SimplePool()
 
   try {
+    // If no eventIds, skip metadata fetching and only fetch profiles
+    if (limitedIds.length === 0) {
+      const superMentionRows =
+        limitedPaths.length > 0
+          ? await db
+              .prepare(
+                `SELECT path, wikidata_id FROM super_mention_paths WHERE path IN (${limitedPaths.map(() => '?').join(',')}) AND wikidata_id IS NOT NULL`
+              )
+              .bind(...limitedPaths)
+              .all()
+          : { results: [] }
+
+      const superMentions: Record<string, string> = {}
+      for (const row of superMentionRows.results || []) {
+        if (row.path && row.wikidata_id) {
+          superMentions[row.path as string] = row.wikidata_id as string
+        }
+      }
+
+      const profiles = await fetchProfilesInternal(db, pool, authorPubkeys)
+      pool.close(RELAYS)
+      return c.json({ metadata: {}, profiles, superMentions })
+    }
+
     // 並列でNostrクエリとD1クエリを実行
     const [reactionEvents, replyEvents, repostEvents, viewRows, superMentionRows] = await Promise.all([
       // reactions (kind 7)
@@ -99,15 +124,12 @@ events.post('/enrich', async (c) => {
       // reposts (kind 6)
       pool.querySync(RELAYS, { kinds: [6], '#e': limitedIds }),
       // views from D1
-      (async () => {
-        const placeholders = limitedIds.map(() => '?').join(',')
-        return db
-          .prepare(
-            `SELECT event_id, view_type, COUNT(*) as count FROM event_views WHERE event_id IN (${placeholders}) GROUP BY event_id, view_type`
-          )
-          .bind(...limitedIds)
-          .all()
-      })(),
+      db
+        .prepare(
+          `SELECT event_id, view_type, COUNT(*) as count FROM event_views WHERE event_id IN (${limitedIds.map(() => '?').join(',')}) GROUP BY event_id, view_type`
+        )
+        .bind(...limitedIds)
+        .all(),
       // super-mention lookup from D1
       (async () => {
         if (limitedPaths.length === 0) return { results: [] }
