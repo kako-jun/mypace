@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { fetchEventById, fetchProfiles } from '../../lib/nostr/relay'
 import { getCurrentPubkey } from '../../lib/nostr/events'
-import { getCachedPost, getCachedProfile, getErrorMessage } from '../../lib/utils'
+import { getCachedPost, getCachedProfile, getCachedPostMetadata, getErrorMessage } from '../../lib/utils'
 import { hasMypaceTag } from '../../lib/nostr/tags'
 import { fetchEventsMetadata, fetchEventsBatch, recordViews } from '../../lib/api/api'
 import type { Event, LoadableProfile, ReactionData, Profile, ViewCountData } from '../../types'
@@ -54,6 +54,7 @@ export function usePostViewData(eventId: string): PostViewData {
       setMyPubkey(pubkey)
 
       let eventData: Event | null = getCachedPost(eventId)
+      const cachedMetadata = getCachedPostMetadata(eventId)
 
       if (eventData) {
         setEvent(eventData)
@@ -67,6 +68,14 @@ export function usePostViewData(eventId: string): PostViewData {
           fetchProfiles([eventPubkey]).then((profiles) => {
             if (profiles[eventPubkey]) setProfile(profiles[eventPubkey])
           })
+        }
+
+        // Use cached metadata from timeline if available (instant display)
+        if (cachedMetadata) {
+          setReactions(cachedMetadata.reactions)
+          setReplies(cachedMetadata.replies)
+          setReposts(cachedMetadata.reposts)
+          setViews(cachedMetadata.views)
         }
       } else {
         setLoading(true)
@@ -87,7 +96,50 @@ export function usePostViewData(eventId: string): PostViewData {
 
       if (!eventData) return
 
-      // Fetch all metadata in one call
+      // Skip API fetch if we already have cached metadata from timeline
+      // This avoids unnecessary network requests and keeps the UI consistent
+      if (cachedMetadata) {
+        // Record detail view for mypace posts (still needed even with cached data)
+        if (hasMypaceTag(eventData) && pubkey) {
+          recordViews([{ eventId, authorPubkey: eventData.pubkey }], 'detail', pubkey).catch(() => {})
+        }
+
+        // Batch fetch profiles for reply authors and reactors (from cached data)
+        const replyPubkeys = cachedMetadata.replies.replies.map((r) => r.pubkey)
+        const reactorPubkeys = cachedMetadata.reactions.reactors.map((r) => r.pubkey)
+        const allPubkeys = [...new Set([...replyPubkeys, ...reactorPubkeys])]
+
+        if (allPubkeys.length > 0) {
+          try {
+            const fetchedProfiles = await fetchProfiles(allPubkeys)
+            const profiles: { [pubkey: string]: Profile | null } = {}
+            for (const pk of allPubkeys) {
+              profiles[pk] = fetchedProfiles[pk] || null
+            }
+            setReplyProfiles(profiles)
+          } catch {}
+        }
+
+        // Fetch parent event if this is a reply
+        const replyTag = eventData.tags.find((tag) => tag[0] === 'e' && (tag[3] === 'reply' || tag[3] === 'root'))
+        if (replyTag) {
+          const parentId = replyTag[1]
+          try {
+            const parentEvents = await fetchEventsBatch([parentId])
+            const parent = parentEvents[parentId]
+            if (parent) {
+              setParentEvent(parent as Event)
+              const parentProfiles = await fetchProfiles([parent.pubkey])
+              if (parentProfiles[parent.pubkey]) {
+                setParentProfile(parentProfiles[parent.pubkey])
+              }
+            }
+          } catch {}
+        }
+        return
+      }
+
+      // Fetch all metadata in one call (only when not cached)
       const metadata = await fetchEventsMetadata([eventId], pubkey)
       const eventMetadata = metadata[eventId]
 

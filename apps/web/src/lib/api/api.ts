@@ -73,46 +73,12 @@ export async function fetchTimeline(
   return res.json()
 }
 
-// Single event
-export async function fetchEvent(id: string): Promise<{ event: Event; source: string }> {
-  const res = await fetch(`${API_BASE}/api/events/${id}`)
-  if (!res.ok) throw new Error('Failed to fetch event')
-  return res.json()
-}
-
 // Profiles
 export async function fetchProfiles(pubkeys: string[]): Promise<{ profiles: Record<string, Profile> }> {
   if (pubkeys.length === 0) return { profiles: {} }
 
   const res = await fetch(`${API_BASE}/api/profiles?pubkeys=${pubkeys.join(',')}`)
   if (!res.ok) throw new Error('Failed to fetch profiles')
-  return res.json()
-}
-
-// Reactions
-export async function fetchReactions(eventId: string, myPubkey?: string): Promise<ReactionData> {
-  const params = new URLSearchParams()
-  if (myPubkey) params.set('pubkey', myPubkey)
-
-  const res = await fetch(`${API_BASE}/api/reactions/${eventId}?${params}`)
-  if (!res.ok) throw new Error('Failed to fetch reactions')
-  return res.json()
-}
-
-// Replies
-export async function fetchReplies(eventId: string): Promise<ReplyData> {
-  const res = await fetch(`${API_BASE}/api/replies/${eventId}`)
-  if (!res.ok) throw new Error('Failed to fetch replies')
-  return res.json()
-}
-
-// Reposts
-export async function fetchReposts(eventId: string, myPubkey?: string): Promise<RepostData> {
-  const params = new URLSearchParams()
-  if (myPubkey) params.set('pubkey', myPubkey)
-
-  const res = await fetch(`${API_BASE}/api/reposts/${eventId}?${params}`)
-  if (!res.ok) throw new Error('Failed to fetch reposts')
   return res.json()
 }
 
@@ -456,110 +422,13 @@ export async function deleteUploadFromHistory(pubkey: string, url: string): Prom
   }
 }
 
-// User posts count (NIP-45)
-export async function fetchUserPostsCount(pubkey: string): Promise<number | null> {
-  try {
-    const res = await fetch(`${API_BASE}/api/user/${pubkey}/count`)
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.count
-  } catch {
-    return null
-  }
-}
-
-// User stella count (cumulative stella received)
-export async function fetchUserStellaCount(pubkey: string): Promise<number | null> {
-  try {
-    const res = await fetch(`${API_BASE}/api/user/${pubkey}/stella`)
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.total
-  } catch {
-    return null
-  }
-}
-
-// View counts
+// View counts type (used by metadata API)
 export interface ViewCountData {
   impression: number
   detail: number
 }
 
-export async function fetchViewCounts(eventId: string): Promise<ViewCountData> {
-  try {
-    const res = await fetch(`${API_BASE}/api/views/${eventId}`)
-    if (!res.ok) return { impression: 0, detail: 0 }
-    return res.json()
-  } catch {
-    return { impression: 0, detail: 0 }
-  }
-}
-
-export async function fetchViewCountsBatch(eventIds: string[]): Promise<Record<string, ViewCountData>> {
-  if (eventIds.length === 0) return {}
-
-  try {
-    const res = await fetch(`${API_BASE}/api/views/batch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventIds }),
-    })
-    if (!res.ok) return {}
-    return res.json()
-  } catch {
-    return {}
-  }
-}
-
-export async function recordView(
-  eventId: string,
-  authorPubkey: string,
-  viewType: 'impression' | 'detail',
-  viewerPubkey: string
-): Promise<boolean> {
-  try {
-    const res = await fetch(`${API_BASE}/api/views/${eventId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ viewType, viewerPubkey, authorPubkey }),
-    })
-    return res.ok
-  } catch {
-    return false
-  }
-}
-
-export async function recordViewsBatch(
-  events: Array<{ eventId: string; authorPubkey: string }>,
-  viewType: 'impression' | 'detail',
-  viewerPubkey: string
-): Promise<boolean> {
-  if (events.length === 0) return true
-
-  try {
-    const res = await fetch(`${API_BASE}/api/views/batch-record`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ events, viewType, viewerPubkey }),
-    })
-    return res.ok
-  } catch {
-    return false
-  }
-}
-
-export async function fetchUserViewsCount(pubkey: string): Promise<{ details: number; impressions: number } | null> {
-  try {
-    const res = await fetch(`${API_BASE}/api/user/${pubkey}/views`)
-    if (!res.ok) return null
-    return await res.json()
-  } catch {
-    return null
-  }
-}
-
-// ==================== NEW BATCH APIs ====================
+// ==================== BATCH APIs ====================
 
 // Batch fetch multiple events by ID
 export async function fetchEventsBatch(eventIds: string[]): Promise<Record<string, Event>> {

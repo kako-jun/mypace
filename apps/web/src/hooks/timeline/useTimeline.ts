@@ -332,13 +332,27 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         })
 
         await mergeProfiles([...new Set(newOlderNotes.map((e) => e.pubkey))], setProfiles)
+        // Load metadata for older events (stella, replies, reposts, views)
+        if (myPubkey) {
+          await loadMetadataForEvents(
+            newOlderNotes,
+            myPubkey,
+            setReactions,
+            setReplies,
+            setReposts,
+            setViews,
+            setProfiles
+          )
+          // Record impressions for older events (fire-and-forget)
+          recordImpressionsForEvents(newOlderNotes, myPubkey)
+        }
       }
     } catch (err) {
       console.error('Failed to load older events:', err)
     } finally {
       setLoadingMore(false)
     }
-  }, [loadingMore, searchedUntil, events, authorPubkey, tagsKey, qKey])
+  }, [loadingMore, searchedUntil, events, authorPubkey, tagsKey, qKey, myPubkey])
 
   const loadTimelineRef = useRef(loadTimeline)
   loadTimelineRef.current = loadTimeline

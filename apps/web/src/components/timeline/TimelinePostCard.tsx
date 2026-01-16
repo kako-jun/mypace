@@ -12,7 +12,7 @@ import {
   PostLocation,
   PostBarcode,
 } from '../post'
-import { cachePost, cacheProfile, navigateToPostModal, navigateToUser } from '../../lib/utils'
+import { cachePostWithMetadata, navigateToPostModal, navigateToUser } from '../../lib/utils'
 import { parseStickers, hasTeaserTag } from '../../lib/nostr/tags'
 import { useDeleteConfirm } from '../../hooks'
 import type { Event, ReactionData, ReplyData, RepostData, ViewCountData, ProfileCache } from '../../types'
@@ -99,9 +99,15 @@ export default function TimelinePostCard({
       target.closest('.thread-section')
     )
       return
-    cachePost(event)
-    const profile = profiles[event.pubkey]
-    if (profile) cacheProfile(event.pubkey, profile)
+    // Cache event, profile, and metadata from timeline for instant display in detail view
+    const profile = profiles[event.pubkey] || null
+    const metadata = {
+      reactions: reactions || { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] },
+      replies: replies || { count: 0, replies: [] },
+      reposts: reposts || { count: 0, myRepost: false },
+      views: views || { detail: 0, impression: 0 },
+    }
+    cachePostWithMetadata(event, profile, metadata)
     navigateToPostModal(event.id)
   }
 

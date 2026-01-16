@@ -59,7 +59,7 @@ async function fetchUserStatsFromPrimal(pubkey: string): Promise<UserStats | nul
   })
 }
 
-// GET /api/user/:pubkey/stats - ユーザースタッツ一括取得（新規統合API）
+// GET /api/user/:pubkey/stats - ユーザースタッツ一括取得
 userCount.get('/:pubkey/stats', async (c) => {
   const pubkey = c.req.param('pubkey')
 
@@ -105,84 +105,6 @@ userCount.get('/:pubkey/stats', async (c) => {
       viewsCount: { details: 0, impressions: 0 },
       error: String(e),
     })
-  }
-})
-
-// GET /api/user/:pubkey/count - ユーザーの投稿数を取得
-userCount.get('/:pubkey/count', async (c) => {
-  const pubkey = c.req.param('pubkey')
-
-  if (!pubkey || pubkey.length !== 64) {
-    return c.json({ error: 'Invalid pubkey' }, 400)
-  }
-
-  try {
-    const stats = await fetchUserStatsFromPrimal(pubkey)
-
-    if (stats && typeof stats.note_count === 'number') {
-      return c.json({
-        count: stats.note_count + (stats.long_form_note_count || 0),
-        noteCount: stats.note_count,
-        longFormCount: stats.long_form_note_count || 0,
-      })
-    }
-
-    return c.json({ count: null, error: 'Could not fetch user stats' })
-  } catch (e) {
-    return c.json({ count: null, error: String(e) })
-  }
-})
-
-// GET /api/user/:pubkey/stella - ユーザーの累計ステラ数を取得
-userCount.get('/:pubkey/stella', async (c) => {
-  const pubkey = c.req.param('pubkey')
-
-  if (!pubkey || pubkey.length !== 64) {
-    return c.json({ error: 'Invalid pubkey' }, 400)
-  }
-
-  try {
-    const db = c.env.DB
-    const result = await db
-      .prepare('SELECT COALESCE(SUM(stella_count), 0) as total FROM user_stella WHERE author_pubkey = ?')
-      .bind(pubkey)
-      .first<{ total: number }>()
-
-    return c.json({ total: result?.total ?? 0 })
-  } catch (e) {
-    console.error('Stella count error:', e)
-    return c.json({ total: 0, error: String(e) })
-  }
-})
-
-// GET /api/user/:pubkey/views - ユーザーの累計閲覧数を取得
-userCount.get('/:pubkey/views', async (c) => {
-  const pubkey = c.req.param('pubkey')
-
-  if (!pubkey || pubkey.length !== 64) {
-    return c.json({ error: 'Invalid pubkey' }, 400)
-  }
-
-  try {
-    const db = c.env.DB
-    const result = await db
-      .prepare(
-        `SELECT
-          COUNT(CASE WHEN view_type = 'detail' THEN 1 END) as details,
-          COUNT(CASE WHEN view_type = 'impression' THEN 1 END) as impressions
-        FROM event_views
-        WHERE author_pubkey = ?`
-      )
-      .bind(pubkey)
-      .first<{ details: number; impressions: number }>()
-
-    return c.json({
-      details: result?.details ?? 0,
-      impressions: result?.impressions ?? 0,
-    })
-  } catch (e) {
-    console.error('Views count error:', e)
-    return c.json({ details: 0, impressions: 0, error: String(e) })
   }
 })
 

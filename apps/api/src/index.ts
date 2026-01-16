@@ -5,9 +5,6 @@ import {
   timeline,
   events,
   profiles,
-  reactions,
-  replies,
-  reposts,
   userEvents,
   userCount,
   publish,
@@ -36,13 +33,20 @@ app.use(
   })
 )
 
+// エラーハンドラ - アプリ内エラーにもCORSヘッダーを付与
+app.onError((err, c) => {
+  console.error('API Error:', err)
+  return c.json({ error: err.message || 'Internal Server Error' }, 500, {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  })
+})
+
 // API Routes
 app.route('/api/timeline', timeline)
 app.route('/api/events', events)
 app.route('/api/profiles', profiles)
-app.route('/api/reactions', reactions)
-app.route('/api/replies', replies)
-app.route('/api/reposts', reposts)
 app.route('/api/user', userEvents)
 app.route('/api/user', userCount)
 app.route('/api/publish', publish)

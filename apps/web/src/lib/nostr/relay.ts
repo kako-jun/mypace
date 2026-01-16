@@ -1,6 +1,6 @@
 // API経由でリレーと通信する（直接リレーには接続しない）
 import * as api from '../api'
-import type { Event, Profile, ReactionData } from '../../types'
+import type { Event, Profile } from '../../types'
 
 export async function publishEvent(event: Event): Promise<void> {
   try {
@@ -84,38 +84,11 @@ export async function fetchUserPosts(
 
 export async function fetchEventById(eventId: string): Promise<Event | null> {
   try {
-    const result = await api.fetchEvent(eventId)
-    return result.event
+    const result = await api.fetchEventsBatch([eventId])
+    return result[eventId] || null
   } catch (e) {
     console.error('Failed to fetch event by ID:', e)
     return null
-  }
-}
-
-export async function fetchReactions(eventId: string, myPubkey?: string): Promise<ReactionData> {
-  try {
-    return await api.fetchReactions(eventId, myPubkey)
-  } catch (e) {
-    console.error('Failed to fetch reactions:', e)
-    return { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] }
-  }
-}
-
-export async function fetchReplies(eventId: string): Promise<{ count: number; replies: Event[] }> {
-  try {
-    return await api.fetchReplies(eventId)
-  } catch (e) {
-    console.error('Failed to fetch replies:', e)
-    return { count: 0, replies: [] }
-  }
-}
-
-export async function fetchReposts(eventId: string, myPubkey?: string): Promise<{ count: number; myRepost: boolean }> {
-  try {
-    return await api.fetchReposts(eventId, myPubkey)
-  } catch (e) {
-    console.error('Failed to fetch reposts:', e)
-    return { count: 0, myRepost: false }
   }
 }
 

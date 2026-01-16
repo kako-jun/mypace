@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import type { Event } from 'nostr-tools'
 import type { Bindings } from '../types'
 import { RELAYS, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC, STELLA_TAG } from '../constants'
-import { getCachedEventById, getCachedEventsByIds, cacheEvents } from '../services/cache'
+import { getCachedEventsByIds, cacheEvents } from '../services/cache'
 import { SimplePool } from 'nostr-tools/pool'
 
 // Helper: Get stella count from reaction event tags
@@ -200,35 +200,6 @@ events.post('/metadata', async (c) => {
     }
 
     return c.json(result)
-  } finally {
-    pool.close(RELAYS)
-  }
-})
-
-// GET /api/events/:id - 単一イベント取得
-events.get('/:id', async (c) => {
-  const id = c.req.param('id')
-  const db = c.env.DB
-
-  // キャッシュから
-  try {
-    const cached = await getCachedEventById(db, id)
-    if (cached) {
-      return c.json({ event: cached, source: 'cache' })
-    }
-  } catch (e) {
-    console.error('Cache read error:', e)
-  }
-
-  // リレーから
-  const pool = new SimplePool()
-
-  try {
-    const relayEvents = await pool.querySync(RELAYS, { ids: [id] })
-    if (relayEvents.length > 0) {
-      return c.json({ event: relayEvents[0], source: 'relay' })
-    }
-    return c.json({ error: 'Event not found' }, 404)
   } finally {
     pool.close(RELAYS)
   }
