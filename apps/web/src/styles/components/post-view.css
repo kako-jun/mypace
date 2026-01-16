@@ -78,6 +78,7 @@
   padding: 2rem;
   border-radius: 0;
   margin-bottom: 2rem;
+  isolation: isolate;
 }
 
 .post-card-large .post-header {
@@ -172,9 +173,9 @@
 .post-view-modal .post-card-large {
   border-radius: 0;
   margin-bottom: 1rem;
-  transform: none !important;
   filter: none !important;
   cursor: default;
+  isolation: isolate;
 }
 
 /* Dark theme adjustments */
