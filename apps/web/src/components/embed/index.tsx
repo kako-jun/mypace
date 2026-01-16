@@ -8,6 +8,7 @@ import TikTokEmbed from './TikTokEmbed'
 import SpotifyEmbed from './SpotifyEmbed'
 import IframeEmbed from './IframeEmbed'
 import LinkPreview from './LinkPreview'
+import type { OgpData } from '../../types'
 
 export {
   YouTubeEmbed,
@@ -22,9 +23,10 @@ export {
 
 interface EmbedRendererProps {
   embed: EmbedInfo
+  ogpMap?: Record<string, OgpData>
 }
 
-function EmbedRenderer({ embed }: EmbedRendererProps) {
+function EmbedRenderer({ embed, ogpMap = {} }: EmbedRendererProps) {
   switch (embed.type) {
     case 'youtube':
       return embed.videoId ? <YouTubeEmbed videoId={embed.videoId} /> : null
@@ -52,7 +54,7 @@ function EmbedRenderer({ embed }: EmbedRendererProps) {
       return <IframeEmbed url={embed.url} />
 
     case 'ogp':
-      return <LinkPreview url={embed.url} />
+      return <LinkPreview url={embed.url} ogpData={ogpMap[embed.url]} />
 
     default:
       return null
@@ -61,9 +63,10 @@ function EmbedRenderer({ embed }: EmbedRendererProps) {
 
 interface PostEmbedsProps {
   content: string
+  ogpMap?: Record<string, OgpData>
 }
 
-export function PostEmbeds({ content }: PostEmbedsProps) {
+export function PostEmbeds({ content, ogpMap = {} }: PostEmbedsProps) {
   const embeds = extractEmbeds(content)
 
   if (embeds.length === 0) return null
@@ -71,7 +74,7 @@ export function PostEmbeds({ content }: PostEmbedsProps) {
   return (
     <div className="post-embeds">
       {embeds.map((embed, index) => (
-        <EmbedRenderer key={`${embed.type}-${embed.url}-${index}`} embed={embed} />
+        <EmbedRenderer key={`${embed.type}-${embed.url}-${index}`} embed={embed} ogpMap={ogpMap} />
       ))}
     </div>
   )

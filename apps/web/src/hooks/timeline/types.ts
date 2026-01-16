@@ -1,4 +1,13 @@
-import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData, TimelineItem } from '../../types'
+import type {
+  Event,
+  ProfileCache,
+  ReactionData,
+  ReplyData,
+  RepostData,
+  ViewCountData,
+  TimelineItem,
+  OgpData,
+} from '../../types'
 
 export interface UseTimelineOptions {
   authorPubkey?: string // 特定ユーザーの投稿のみ取得（ユーザーページ用）
@@ -14,6 +23,8 @@ export interface UseTimelineResult {
   replies: { [eventId: string]: ReplyData }
   reposts: { [eventId: string]: RepostData }
   views: { [eventId: string]: ViewCountData }
+  wikidataMap: Record<string, string>
+  ogpMap: Record<string, OgpData>
   myPubkey: string | null
   loading: boolean
   error: string

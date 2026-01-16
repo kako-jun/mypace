@@ -37,21 +37,11 @@ export async function fetchEvents(options: FetchEventsOptions = {}): Promise<Fet
 
 export async function fetchUserProfile(pubkey: string): Promise<Profile | null> {
   try {
-    const result = await api.fetchProfiles([pubkey])
-    return result.profiles[pubkey] || null
+    const { profiles } = await api.fetchEventsEnrich([], [pubkey], undefined, [])
+    return (profiles[pubkey] as Profile) || null
   } catch (e) {
     console.error('Failed to fetch user profile:', e)
     return null
-  }
-}
-
-export async function fetchProfiles(pubkeys: string[]): Promise<Record<string, Profile>> {
-  try {
-    const result = await api.fetchProfiles(pubkeys)
-    return result.profiles
-  } catch (e) {
-    console.error('Failed to fetch profiles:', e)
-    return {}
   }
 }
 

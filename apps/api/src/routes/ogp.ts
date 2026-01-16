@@ -1,35 +1,69 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
+import { cleanupAllCaches } from '../services/cache'
+import { CACHE_CLEANUP_PROBABILITY } from '../constants'
+
+interface OgpData {
+  title?: string
+  description?: string
+  image?: string
+  siteName?: string
+}
 
 const ogp = new Hono<{ Bindings: Bindings }>()
 
-// GET /api/ogp - OGPメタデータ取得
-ogp.get('/', async (c) => {
-  const url = c.req.query('url')
-  if (!url) {
-    return c.json({ error: 'URL is required' }, 400)
+// OGPをHTMLから抽出する共通関数
+function extractOgpFromHtml(html: string): OgpData {
+  const getMetaContent = (property: string): string | undefined => {
+    const regex = new RegExp(`<meta[^>]*(?:property|name)=["']${property}["'][^>]*content=["']([^"']*)["']`, 'i')
+    const match = html.match(regex)
+    if (match) return match[1]
+
+    // Try reverse order (content before property)
+    const reverseRegex = new RegExp(`<meta[^>]*content=["']([^"']*)["'][^>]*(?:property|name)=["']${property}["']`, 'i')
+    const reverseMatch = html.match(reverseRegex)
+    return reverseMatch?.[1]
   }
 
+  const getTitle = (): string | undefined => {
+    const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i)
+    return titleMatch?.[1]
+  }
+
+  return {
+    title: getMetaContent('og:title') || getMetaContent('twitter:title') || getTitle(),
+    description:
+      getMetaContent('og:description') || getMetaContent('twitter:description') || getMetaContent('description'),
+    image: getMetaContent('og:image') || getMetaContent('twitter:image'),
+    siteName: getMetaContent('og:site_name'),
+  }
+}
+
+// URLのバリデーション
+function validateUrl(url: string): URL | null {
   try {
-    // Validate URL
     const parsedUrl = new URL(url)
-
-    // Only allow http/https
     if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-      return c.json({ error: 'Invalid URL protocol' }, 400)
+      return null
     }
-
-    // Reject URLs with suspicious characters (backticks, etc.)
     if (/[`<>{}|\\^~[\]]/.test(url)) {
-      return c.json({ error: 'Invalid URL characters' }, 400)
+      return null
     }
-
-    // Block reserved/test domains that don't serve real content
     const blockedDomains = ['example.com', 'example.org', 'example.net', 'localhost', '127.0.0.1']
     if (blockedDomains.some((d) => parsedUrl.hostname === d || parsedUrl.hostname.endsWith('.' + d))) {
-      return c.json({ error: 'Reserved domain' }, 400)
+      return null
     }
+    return parsedUrl
+  } catch {
+    return null
+  }
+}
 
+// 単一URLのOGP取得
+async function fetchSingleOgp(url: string): Promise<OgpData | null> {
+  if (!validateUrl(url)) return null
+
+  try {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000)
 
@@ -41,54 +75,106 @@ ogp.get('/', async (c) => {
       signal: controller.signal,
     }).finally(() => clearTimeout(timeoutId))
 
-    if (!response.ok) {
-      return c.json({ error: 'Failed to fetch URL' }, 502)
-    }
+    if (!response.ok) return null
 
     const html = await response.text()
-
-    // Extract OGP meta tags
-    const getMetaContent = (property: string): string | undefined => {
-      const regex = new RegExp(`<meta[^>]*(?:property|name)=["']${property}["'][^>]*content=["']([^"']*)["']`, 'i')
-      const match = html.match(regex)
-      if (match) return match[1]
-
-      // Try reverse order (content before property)
-      const reverseRegex = new RegExp(
-        `<meta[^>]*content=["']([^"']*)["'][^>]*(?:property|name)=["']${property}["']`,
-        'i'
-      )
-      const reverseMatch = html.match(reverseRegex)
-      return reverseMatch?.[1]
-    }
-
-    const getTitle = (): string | undefined => {
-      const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i)
-      return titleMatch?.[1]
-    }
-
-    const title = getMetaContent('og:title') || getMetaContent('twitter:title') || getTitle()
-    const description =
-      getMetaContent('og:description') || getMetaContent('twitter:description') || getMetaContent('description')
-    const image = getMetaContent('og:image') || getMetaContent('twitter:image')
-    const siteName = getMetaContent('og:site_name')
-
-    return c.json({
-      title,
-      description,
-      image,
-      siteName,
-    })
-  } catch (e) {
-    if (e instanceof TypeError && e.message.includes('Invalid URL')) {
-      return c.json({ error: 'Invalid URL format' }, 400)
-    }
-    if (e instanceof DOMException && e.name === 'AbortError') {
-      return c.json({ error: 'Request timeout' }, 504)
-    }
-    console.error('OGP fetch error:', e)
-    return c.json({ error: 'Failed to fetch OGP' }, 500)
+    return extractOgpFromHtml(html)
+  } catch {
+    return null
   }
+}
+
+// POST /api/ogp/batch - 複数URLのOGP一括取得
+ogp.post('/batch', async (c) => {
+  const { urls } = await c.req.json<{ urls: string[] }>()
+
+  if (!urls || !Array.isArray(urls) || urls.length === 0) {
+    return c.json({})
+  }
+
+  // Limit batch size
+  const limitedUrls = [...new Set(urls)].slice(0, 50)
+  const db = c.env.DB
+  const result: Record<string, OgpData> = {}
+
+  // D1キャッシュから取得
+  const uncachedUrls: string[] = []
+  try {
+    const placeholders = limitedUrls.map(() => '?').join(',')
+    const now = Math.floor(Date.now() / 1000)
+    const cached = await db
+      .prepare(
+        `SELECT url, title, description, image, site_name FROM ogp_cache WHERE url IN (${placeholders}) AND expires_at > ?`
+      )
+      .bind(...limitedUrls, now)
+      .all()
+
+    const cachedUrls = new Set<string>()
+    for (const row of cached.results || []) {
+      const url = row.url as string
+      cachedUrls.add(url)
+      result[url] = {
+        title: row.title as string | undefined,
+        description: row.description as string | undefined,
+        image: row.image as string | undefined,
+        siteName: row.site_name as string | undefined,
+      }
+    }
+
+    for (const url of limitedUrls) {
+      if (!cachedUrls.has(url)) {
+        uncachedUrls.push(url)
+      }
+    }
+  } catch (e) {
+    console.error('OGP cache read error:', e)
+    uncachedUrls.push(...limitedUrls)
+  }
+
+  // 未キャッシュのURLを並列fetch
+  if (uncachedUrls.length > 0) {
+    const fetchPromises = uncachedUrls.map(async (url) => {
+      const ogpData = await fetchSingleOgp(url)
+      return { url, ogpData }
+    })
+
+    const fetchResults = await Promise.all(fetchPromises)
+    const now = Math.floor(Date.now() / 1000)
+    const expiresAt = now + 86400 // 24 hours
+
+    for (const { url, ogpData } of fetchResults) {
+      if (ogpData && (ogpData.title || ogpData.description || ogpData.image)) {
+        result[url] = ogpData
+
+        // キャッシュに保存
+        try {
+          await db
+            .prepare(
+              `INSERT OR REPLACE INTO ogp_cache (url, title, description, image, site_name, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)`
+            )
+            .bind(
+              url,
+              ogpData.title || null,
+              ogpData.description || null,
+              ogpData.image || null,
+              ogpData.siteName || null,
+              now,
+              expiresAt
+            )
+            .run()
+        } catch (e) {
+          console.error('OGP cache write error:', e)
+        }
+      }
+    }
+  }
+
+  // 1%の確率でクリーンアップ（非同期）
+  if (Math.random() < CACHE_CLEANUP_PROBABILITY) {
+    c.executionCtx.waitUntil(cleanupAllCaches(db))
+  }
+
+  return c.json(result)
 })
 
 export default ogp

@@ -1,12 +1,12 @@
 // API client for mypace backend
-import type { Event, Profile, ReactionData, ReplyData, RepostData } from '../../types'
+import type { Event, Profile, ReactionData, ReplyData, RepostData, OgpData } from '../../types'
 import { loadFiltersFromStorage, getMutedPubkeys } from '../utils'
 
 export const API_BASE =
   import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://api.mypace.llll-ll.com' : 'http://localhost:8787')
 
 // Re-export types for convenience
-export type { Event, Profile, ReactionData, ReplyData, RepostData }
+export type { Event, Profile, ReactionData, ReplyData, RepostData, OgpData }
 
 // Timeline options interface
 interface TimelineOptions {
@@ -70,15 +70,6 @@ export async function fetchTimeline(
 
   const res = await fetch(`${API_BASE}/api/timeline?${params}`)
   if (!res.ok) throw new Error('Failed to fetch timeline')
-  return res.json()
-}
-
-// Profiles
-export async function fetchProfiles(pubkeys: string[]): Promise<{ profiles: Record<string, Profile> }> {
-  if (pubkeys.length === 0) return { profiles: {} }
-
-  const res = await fetch(`${API_BASE}/api/profiles?pubkeys=${pubkeys.join(',')}`)
-  if (!res.ok) throw new Error('Failed to fetch profiles')
   return res.json()
 }
 
@@ -225,50 +216,6 @@ export async function deleteSuperMentionPath(path: string): Promise<boolean> {
     return res.ok
   } catch {
     return false
-  }
-}
-
-// Lookup wikidata_id for multiple paths (with cache)
-const wikidataCache = new Map<string, string>()
-
-export async function lookupSuperMentionPaths(paths: string[]): Promise<Record<string, string>> {
-  // Filter out already cached paths
-  const uncachedPaths = paths.filter((p) => !wikidataCache.has(p))
-
-  // Return from cache if all paths are cached
-  if (uncachedPaths.length === 0) {
-    const result: Record<string, string> = {}
-    for (const p of paths) {
-      const cached = wikidataCache.get(p)
-      if (cached) result[p] = cached
-    }
-    return result
-  }
-
-  try {
-    const res = await fetch(`${API_BASE}/api/super-mention/lookup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paths: uncachedPaths }),
-    })
-    if (!res.ok) return {}
-
-    const data = (await res.json()) as { mapping: Record<string, string> }
-
-    // Cache the results
-    for (const [path, wikidataId] of Object.entries(data.mapping)) {
-      wikidataCache.set(path, wikidataId)
-    }
-
-    // Return all requested paths from cache
-    const result: Record<string, string> = {}
-    for (const p of paths) {
-      const cached = wikidataCache.get(p)
-      if (cached) result[p] = cached
-    }
-    return result
-  } catch {
-    return {}
   }
 }
 
@@ -447,7 +394,7 @@ export async function fetchEventsBatch(eventIds: string[]): Promise<Record<strin
   }
 }
 
-// Batch fetch metadata (reactions, replies, reposts, views) for multiple events
+// Batch fetch enrichment data (metadata + profiles + super-mentions) for multiple events
 export interface EventMetadata {
   reactions: ReactionData
   replies: ReplyData
@@ -455,14 +402,42 @@ export interface EventMetadata {
   views: ViewCountData
 }
 
-export async function fetchEventsMetadata(eventIds: string[], pubkey?: string): Promise<Record<string, EventMetadata>> {
-  if (eventIds.length === 0) return {}
+export interface EnrichResponse {
+  metadata: Record<string, EventMetadata>
+  profiles: Record<string, Profile>
+  superMentions: Record<string, string>
+}
+
+export async function fetchEventsEnrich(
+  eventIds: string[],
+  authorPubkeys: string[],
+  viewerPubkey?: string,
+  superMentionPaths: string[] = []
+): Promise<EnrichResponse> {
+  if (eventIds.length === 0) return { metadata: {}, profiles: {}, superMentions: {} }
 
   try {
-    const res = await fetch(`${API_BASE}/api/events/metadata`, {
+    const res = await fetch(`${API_BASE}/api/events/enrich`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventIds, pubkey }),
+      body: JSON.stringify({ eventIds, authorPubkeys, viewerPubkey, superMentionPaths }),
+    })
+    if (!res.ok) return { metadata: {}, profiles: {}, superMentions: {} }
+    return res.json()
+  } catch {
+    return { metadata: {}, profiles: {}, superMentions: {} }
+  }
+}
+
+// Batch fetch OGP data for multiple URLs
+export async function fetchOgpBatch(urls: string[]): Promise<Record<string, OgpData>> {
+  if (urls.length === 0) return {}
+
+  try {
+    const res = await fetch(`${API_BASE}/api/ogp/batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ urls }),
     })
     if (!res.ok) return {}
     return res.json()

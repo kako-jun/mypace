@@ -11,12 +11,15 @@ import type {
   RepostData,
   TimelineItem,
   ViewCountData,
+  OgpData,
 } from '../../types'
 import type { ShareOption } from '../post/ShareMenu'
 
 interface UserPostsProps {
   items: TimelineItem[]
   profiles: ProfileCache
+  wikidataMap: Record<string, string>
+  ogpMap: Record<string, OgpData>
   reactions: { [eventId: string]: ReactionData }
   replies: { [eventId: string]: ReplyData }
   reposts: { [eventId: string]: RepostData }
@@ -47,6 +50,8 @@ interface UserPostsProps {
 export function UserPosts({
   items,
   profiles,
+  wikidataMap,
+  ogpMap,
   reactions,
   replies,
   reposts,
@@ -111,6 +116,8 @@ export function UserPosts({
           isMyPost={isMyPost}
           myPubkey={myPubkey}
           profiles={{ ...profiles, [authorPubkey]: authorProfile ?? null }}
+          wikidataMap={wikidataMap}
+          ogpMap={ogpMap}
           reactions={reactions[event.id]}
           replies={replies[event.id]}
           reposts={reposts[event.id]}

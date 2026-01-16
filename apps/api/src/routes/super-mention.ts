@@ -117,40 +117,4 @@ superMention.get('/suggest', async (c) => {
   }
 })
 
-// POST /api/super-mention/lookup - 複数パスのwikidata_id一括取得
-superMention.post('/lookup', async (c) => {
-  const db = c.env.DB
-
-  try {
-    const body = await c.req.json<{ paths: string[] }>()
-
-    if (!body.paths || !Array.isArray(body.paths) || body.paths.length === 0) {
-      return c.json({ mapping: {} })
-    }
-
-    // 最大50パスまで
-    const paths = body.paths.slice(0, 50)
-    const placeholders = paths.map(() => '?').join(',')
-
-    const result = await db
-      .prepare(
-        `SELECT path, wikidata_id FROM super_mention_paths WHERE path IN (${placeholders}) AND wikidata_id IS NOT NULL`
-      )
-      .bind(...paths)
-      .all()
-
-    const mapping: Record<string, string> = {}
-    for (const row of result.results || []) {
-      if (row.path && row.wikidata_id) {
-        mapping[row.path as string] = row.wikidata_id as string
-      }
-    }
-
-    return c.json({ mapping })
-  } catch (e) {
-    console.error('Lookup error:', e)
-    return c.json({ error: 'Failed to lookup paths' }, 500)
-  }
-})
-
 export default superMention

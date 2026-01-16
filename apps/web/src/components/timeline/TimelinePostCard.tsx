@@ -15,7 +15,7 @@ import {
 import { cachePostWithMetadata, navigateToPostModal, navigateToUser } from '../../lib/utils'
 import { parseStickers, hasTeaserTag } from '../../lib/nostr/tags'
 import { useDeleteConfirm } from '../../hooks'
-import type { Event, ReactionData, ReplyData, RepostData, ViewCountData, ProfileCache } from '../../types'
+import type { Event, ReactionData, ReplyData, RepostData, ViewCountData, ProfileCache, OgpData } from '../../types'
 import type { ShareOption } from '../post/ShareMenu'
 
 interface TimelinePostCardProps {
@@ -24,6 +24,8 @@ interface TimelinePostCardProps {
   isMyPost: boolean
   myPubkey: string | null
   profiles: ProfileCache
+  wikidataMap: Record<string, string>
+  ogpMap: Record<string, OgpData>
   reactions: ReactionData | undefined
   replies: ReplyData | undefined
   reposts: RepostData | undefined
@@ -52,6 +54,8 @@ export default function TimelinePostCard({
   isMyPost,
   myPubkey,
   profiles,
+  wikidataMap,
+  ogpMap,
   reactions,
   replies,
   reposts,
@@ -197,6 +201,8 @@ export default function TimelinePostCard({
               truncate
               emojis={parseEmojiTags(event.tags)}
               profiles={profiles}
+              wikidataMap={wikidataMap}
+              ogpMap={ogpMap}
               onReadMore={() => navigateToPostModal(event.id)}
               tags={event.tags}
             />

@@ -102,6 +102,8 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     replies,
     reposts,
     views,
+    wikidataMap,
+    ogpMap,
     myPubkey,
     loading,
     error,
@@ -337,6 +339,8 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
       <UserPosts
         items={items}
         profiles={profiles}
+        wikidataMap={wikidataMap}
+        ogpMap={ogpMap}
         reactions={reactions}
         replies={replies}
         reposts={reposts}

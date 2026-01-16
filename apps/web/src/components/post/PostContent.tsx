@@ -1,30 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
 import { renderContent } from '../../lib/parser'
 import { PostEmbeds } from '../embed'
 import { TextButton } from '../ui'
 import { LIMITS } from '../../lib/constants'
 import { hasTeaserTag as checkTeaserTag, removeReadMoreLink } from '../../lib/nostr/tags'
-import { lookupSuperMentionPaths } from '../../lib/api'
-import type { EmojiTag, ProfileMap, Event } from '../../types'
-
-// Regex to extract super mention paths from content (@@path format)
-const SUPER_MENTION_REGEX = /@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
-
-// URL pattern to distinguish URLs from Wikidata references
-const URL_PATTERN = /^(https?:\/\/)?[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(\/.*)?$/
-
-function extractSuperMentionPaths(content: string): string[] {
-  const paths: string[] = []
-  let match
-  while ((match = SUPER_MENTION_REGEX.exec(content)) !== null) {
-    const path = match[1]
-    // Skip URL references - they don't need Wikidata lookup
-    if (!URL_PATTERN.test(path)) {
-      paths.push(path)
-    }
-  }
-  return [...new Set(paths)]
-}
+import type { EmojiTag, ProfileMap, Event, OgpData } from '../../types'
 
 interface PostContentProps {
   content: string
@@ -32,6 +11,8 @@ interface PostContentProps {
   forceTruncate?: boolean // Always show READ MORE regardless of content length
   emojis?: EmojiTag[]
   profiles?: ProfileMap
+  wikidataMap?: Record<string, string> // Super-mention path -> Wikidata ID mapping
+  ogpMap?: Record<string, OgpData> // URL -> OGP data mapping
   onReadMore?: () => void
   tags?: string[][] // Event tags for fold detection
 }
@@ -42,21 +23,11 @@ export function PostContent({
   forceTruncate = false,
   emojis = [],
   profiles = {},
+  wikidataMap = {},
+  ogpMap = {},
   onReadMore,
   tags,
 }: PostContentProps) {
-  const [wikidataMap, setWikidataMap] = useState<Record<string, string>>({})
-
-  // Extract paths from content
-  const superMentionPaths = useMemo(() => extractSuperMentionPaths(content), [content])
-
-  // Fetch wikidata IDs for super mentions
-  useEffect(() => {
-    if (superMentionPaths.length === 0) return
-    lookupSuperMentionPaths(superMentionPaths)
-      .then(setWikidataMap)
-      .catch(() => {})
-  }, [superMentionPaths])
   // If event has teaser tag, content is already properly sized (280 chars + READ MORE link)
   // So we skip GUI truncation for long posts with teaser
   const hasTeaser = tags ? checkTeaserTag({ tags } as Event) : false
@@ -90,7 +61,7 @@ export function PostContent({
           )}
         </>
       )}
-      <PostEmbeds content={displayContent} />
+      <PostEmbeds content={displayContent} ogpMap={ogpMap} />
     </>
   )
 }

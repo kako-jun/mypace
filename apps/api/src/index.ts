@@ -4,7 +4,6 @@ import type { Bindings } from './types'
 import {
   timeline,
   events,
-  profiles,
   userEvents,
   userCount,
   publish,
@@ -46,7 +45,6 @@ app.onError((err, c) => {
 // API Routes
 app.route('/api/timeline', timeline)
 app.route('/api/events', events)
-app.route('/api/profiles', profiles)
 app.route('/api/user', userEvents)
 app.route('/api/user', userCount)
 app.route('/api/publish', publish)

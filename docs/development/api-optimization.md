@@ -99,8 +99,8 @@
 | `GET /api/timeline` | タイムライン | 既存維持 |
 | `GET /api/users/:pubkey/events` | ユーザー投稿一覧 | 既存維持 |
 | `POST /api/events/batch` | 複数イベント一括取得 | **新規** |
-| `POST /api/events/metadata` | メタデータ一括取得 | **新規** |
-| `POST /api/profiles` | プロフィール一括取得 | 既存維持 |
+| `POST /api/events/enrich` | メタデータ+プロフィール+super-mention一括取得 | **新規** |
+| `POST /api/ogp/batch` | OGP一括取得 | **新規** |
 | `GET /api/users/:pubkey/stats` | スタッツ一括取得 | **新規** |
 
 ### 書き込み系
@@ -121,16 +121,19 @@
 | serial | `GET /api/serial/:pubkey` |
 | uploads | `GET/POST/DELETE /api/uploads/*` |
 
-### 削除するAPI（10個）
+### 削除するAPI（13個）
 
 | 削除API | 統合先 |
 |---------|--------|
 | `GET /api/events/:id` | `POST /api/events/batch` |
-| `GET /api/reactions/:eventId` | `POST /api/events/metadata` |
-| `GET /api/replies/:eventId` | `POST /api/events/metadata` |
-| `GET /api/reposts/:eventId` | `POST /api/events/metadata` |
-| `GET /api/views/:eventId` | `POST /api/events/metadata` |
-| `POST /api/views/batch` | `POST /api/events/metadata` |
+| `GET /api/reactions/:eventId` | `POST /api/events/enrich` |
+| `GET /api/replies/:eventId` | `POST /api/events/enrich` |
+| `GET /api/reposts/:eventId` | `POST /api/events/enrich` |
+| `GET /api/views/:eventId` | `POST /api/events/enrich` |
+| `POST /api/views/batch` | `POST /api/events/enrich` |
+| `POST /api/profiles` | `POST /api/events/enrich` |
+| `POST /api/super-mention/lookup` | `POST /api/events/enrich` |
+| `GET /api/ogp` | `POST /api/ogp/batch` |
 | `POST /api/views/:id` | `POST /api/views/record` |
 | `GET /api/user/:pubkey/count` | `GET /api/users/:pubkey/stats` |
 | `GET /api/user/:pubkey/stella` | `GET /api/users/:pubkey/stats` |
@@ -163,43 +166,54 @@
 - 個別ページでメイン記事 + リプライ元を1回で取得
 - 存在しないIDはレスポンスに含まれない
 
-### 2. POST `/api/events/metadata`
+### 2. POST `/api/events/enrich`
 
-複数イベントのメタデータを一括取得する。
+複数イベントのメタデータ・プロフィール・super-mentionを一括取得する。
 
 **Request:**
 ```json
 {
   "eventIds": ["id1", "id2", ...],
-  "pubkey": "user_pubkey"
+  "viewerPubkey": "viewer_pubkey",
+  "superMentionPaths": ["path1", "path2", ...]
 }
 ```
 
 **Response:**
 ```json
 {
-  "id1": {
-    "reactions": {
-      "count": 5,
-      "myReaction": true,
-      "myStella": 3,
-      "myReactionId": "...",
-      "reactors": [...]
+  "metadata": {
+    "id1": {
+      "reactions": {
+        "count": 5,
+        "myReaction": true,
+        "myStella": 3,
+        "myReactionId": "...",
+        "reactors": [...]
+      },
+      "replies": {
+        "count": 3,
+        "replies": [{ "id": "...", "pubkey": "...", "content": "...", ... }, ...]
+      },
+      "reposts": {
+        "count": 2,
+        "myRepost": true
+      },
+      "views": {
+        "detail": 10,
+        "impression": 50
+      }
     },
-    "replies": {
-      "count": 3,
-      "replies": [{ "id": "...", "pubkey": "...", "content": "...", ... }, ...]
-    },
-    "reposts": {
-      "count": 2,
-      "myRepost": true
-    },
-    "views": {
-      "detail": 10,
-      "impression": 50
-    }
+    "id2": { ... }
   },
-  "id2": { ... }
+  "profiles": {
+    "pubkey1": { "name": "...", "picture": "...", "about": "...", ... },
+    "pubkey2": { ... }
+  },
+  "superMentions": {
+    "path1": "Q12345",
+    "path2": "Q67890"
+  }
 }
 ```
 
@@ -209,6 +223,8 @@
 - replies: `pool.querySync(RELAYS, { kinds: [1, 30023, 42000], '#e': eventIds })`
 - reposts: `pool.querySync(RELAYS, { kinds: [6], '#e': eventIds })`
 - views: D1から一括取得（既存のbatchロジック流用）
+- profiles: 投稿者 + リアクター + リプライ投稿者のpubkeyを収集し一括取得
+- superMentions: D1から一括lookup
 
 ### 3. GET `/api/users/:pubkey/stats`
 
@@ -250,6 +266,36 @@
 }
 ```
 
+### 5. POST `/api/ogp/batch`
+
+複数URLのOGPを一括取得する。
+
+**Request:**
+```json
+{
+  "urls": ["https://example.com/page1", "https://example.com/page2", ...]
+}
+```
+
+**Response:**
+```json
+{
+  "https://example.com/page1": {
+    "title": "Page Title",
+    "description": "Page description...",
+    "image": "https://example.com/image.jpg",
+    "siteName": "Example Site"
+  },
+  "https://example.com/page2": { ... }
+}
+```
+
+**実装メモ:**
+- D1キャッシュを先に確認し、未キャッシュのURLのみ外部fetch
+- 外部fetchは並列処理（Promise.all）
+- 取得したOGPはD1に24時間キャッシュ
+- 失敗したURLはレスポンスに含めない（または `null`）
+
 ---
 
 ## 改善後の通信パターン
@@ -259,8 +305,8 @@
 | # | API | 回数 | 内容 |
 |---|-----|------|------|
 | 1 | `GET /api/timeline` | 1 | 投稿イベント配列 |
-| 2 | `POST /api/events/metadata` | 1 | **全投稿のメタデータ一括** |
-| 3 | `POST /api/profiles` | 1 | 投稿者 + リプライ先 + リプライ投稿者 |
+| 2 | `POST /api/events/enrich` | 1 | **メタデータ+プロフィール+super-mention** |
+| 3 | `POST /api/ogp/batch` | 1 | 全リンクのOGP |
 | 4 | `POST /api/views/record` | 1 | インプレッション記録 |
 | 5 | `GET /api/users/:pubkey/stats` | 1 | 右下スタッツ |
 | | **合計** | **5** | |
@@ -270,8 +316,8 @@
 | # | API | 回数 | 内容 |
 |---|-----|------|------|
 | 1 | `GET /api/users/:pubkey/events` | 1 | ユーザー投稿配列 |
-| 2 | `POST /api/events/metadata` | 1 | メタデータ一括 |
-| 3 | `POST /api/profiles` | 1 | プロフィール一括 |
+| 2 | `POST /api/events/enrich` | 1 | メタデータ+プロフィール+super-mention |
+| 3 | `POST /api/ogp/batch` | 1 | 全リンクのOGP |
 | 4 | `POST /api/views/record` | 1 | インプレッション記録 |
 | | **合計** | **4** | |
 
@@ -280,8 +326,8 @@
 | # | API | 回数 | 内容 |
 |---|-----|------|------|
 | 1 | `POST /api/events/batch` | 1 | メイン記事 + リプライ元 |
-| 2 | `POST /api/events/metadata` | 1 | メタデータ一括 |
-| 3 | `POST /api/profiles` | 1 | 全関係者のプロフィール |
+| 2 | `POST /api/events/enrich` | 1 | メタデータ+プロフィール+super-mention |
+| 3 | `POST /api/ogp/batch` | 1 | 記事内リンクのOGP |
 | 4 | `POST /api/views/record` | 1 | detail記録 |
 | | **合計** | **4** | |
 
@@ -291,7 +337,7 @@
 |---|-----|------|------|
 | 1 | - | 0 | state/contextの取得済みデータを再利用 |
 | 2 | `POST /api/events/batch` | 0〜1 | リプライ元（未取得の場合のみ） |
-| 3 | `POST /api/profiles` | 0〜1 | リプライ元投稿者（未取得の場合のみ） |
+| 3 | `POST /api/events/enrich` | 0〜1 | リプライ元のenrich（未取得の場合のみ） |
 | 4 | `POST /api/views/record` | 1 | detail記録 |
 | | **合計** | **1〜3** | 多くの場合は1回 |
 
@@ -301,7 +347,7 @@
 
 | # | API | 回数 | 内容 |
 |---|-----|------|------|
-| 1 | `POST /api/profiles` | 1 | リプライ先プロフィール |
+| 1 | `POST /api/events/enrich` | 1 | リプライ先のプロフィール |
 | | **合計** | **1** | |
 
 ---
@@ -310,7 +356,7 @@
 
 | 画面 | 現状 | 改善後 | 削減率 |
 |------|------|--------|--------|
-| タイムライン（50件） | 157回 | **5回** | 97% |
+| タイムライン（50件） | 157回+super-mention+OGP | **5回** | 97%+ |
 | ユーザーページ（50件） | 157回+ | **4回** | 97%+ |
 | 個別ページ（直接） | 24回+ | **4回** | 83%+ |
 | 個別ページ（遷移） | 数回 | **1〜3回** | - |
@@ -352,33 +398,36 @@
 
 ### API側（apps/api）
 
-- [ ] `POST /api/events/batch` 新規作成
-- [ ] `POST /api/events/metadata` 新規作成
-- [ ] `GET /api/users/:pubkey/stats` 新規作成
-- [ ] `POST /api/views/record` 作成（batch-record統合）
-- [ ] 削除対象の10個のエンドポイントを削除
+- [x] `POST /api/events/batch` 新規作成
+- [x] `POST /api/events/enrich` 新規作成（metadata + profiles + super-mention統合）
+- [x] `POST /api/ogp/batch` 新規作成
+- [x] `GET /api/users/:pubkey/stats` 新規作成
+- [x] `POST /api/views/record` 作成（batch-record統合）
+- [x] 削除対象のエンドポイントを削除（profiles, ogp GET）
 
 ### フロントエンド側（apps/web）
 
-- [ ] `fetchEventsBatch(eventIds[])` API関数作成
-- [ ] `fetchEventsMetadata(eventIds[], pubkey)` API関数作成
-- [ ] `fetchUserStats(pubkey)` API関数作成
-- [ ] `recordViews(events[], type, viewerPubkey)` API関数作成
-- [ ] `useTimelineData.ts` 書き換え
-  - `loadReactionsForEvents` → 削除
-  - `loadRepliesForEvents` → 削除
-  - `loadRepostsForEvents` → 削除
-  - `loadViewsForEvents` → 削除
-  - 新規: `loadMetadataForEvents` でバッチAPI呼び出し
-- [ ] `usePostViewData.ts` 書き換え
-  - 個別API呼び出しをバッチAPIに統合
-  - リプライ投稿者・リアクターのプロフィールをまとめてfetchProfiles
-- [ ] `useMyStats.ts` 書き換え
+- [x] `fetchEventsBatch(eventIds[])` API関数作成
+- [x] `fetchEventsEnrich(eventIds[], authorPubkeys[], viewerPubkey, superMentionPaths[])` API関数作成
+- [x] `fetchOgpBatch(urls[])` API関数作成
+- [x] `fetchUserStats(pubkey)` API関数作成
+- [x] `recordViews(events[], type, viewerPubkey)` API関数作成
+- [x] `extractSuperMentionPaths(content)` ユーティリティ作成
+- [x] `extractOgpUrls(content)` ユーティリティ作成
+- [x] `useTimelineData.ts` 書き換え
+  - `loadEnrichForEvents` でenrich API呼び出し
+  - `loadOgpForEvents` でOGP batch API呼び出し
+- [x] `useTimeline.ts` に `wikidataMap`, `ogpMap` state追加
+- [x] `usePostViewData.ts` 書き換え
+  - 個別API呼び出しをenrich APIに統合
+- [x] `useMyStats.ts` 書き換え
   - 3つの個別API → `fetchUserStats` 1回に統合
-- [ ] タイムライン → 個別ページ遷移時のローカルデータ再利用
+- [x] タイムライン → 個別ページ遷移時のローカルデータ再利用
   - state/context でタイムラインのデータを保持
   - 遷移時にデータを渡す
-- [ ] 削除対象のAPI関数を削除
+- [x] 削除対象のAPI関数を削除（fetchProfiles）
+- [x] `PostContent` にwikidataMap, ogpMap propsを追加
+- [x] `LinkPreview` にogpData propsを追加
 
 ---
 
@@ -393,9 +442,51 @@
 
 ### 読み取り vs 書き込み
 
-- **読み取り**: `POST /api/events/metadata` でカウント値を取得
+- **読み取り**: `POST /api/events/enrich` でカウント値を取得
 - **書き込み**: `POST /api/views/record` でカウントを+1
 
 投稿カードの「10/50」表示：
 - 分子（10）= detail
 - 分母（50）= impression
+
+---
+
+## Super-mention Lookup 最適化
+
+> **統合済み:** `POST /api/events/enrich` に統合。以下は課題と解決方針の記録。
+
+### 背景（課題）
+
+タイムライン表示時に、各投稿カード内のPostContentコンポーネントが独立して `/api/super-mention/lookup` を呼び出している。
+super-mention（@@path形式）を含む投稿が多いと、50件のタイムラインで数十回のAPI呼び出しが発生する。
+
+### 解決
+
+`POST /api/events/enrich` にsuper-mentionパスを含めて送信し、レスポンスで `superMentions` マッピングを受け取る。
+
+```
+フロントエンド:
+  1. 全投稿のcontentからsuper-mentionパスを抽出
+  2. POST /api/events/enrich { eventIds, viewerPubkey, superMentionPaths }
+  3. レスポンスの superMentions をPostContentにpropsで渡す
+```
+
+---
+
+## OGP Lookup 最適化
+
+> **新規API:** `POST /api/ogp/batch` で一括取得。
+
+### 背景（課題）
+
+投稿内のリンクごとに `LinkPreview` コンポーネントが独立して `/api/ogp` を呼び出している。
+リンクを多く含むタイムラインでは大量のOGP取得リクエストが発生する。
+
+### 解決
+
+```
+フロントエンド:
+  1. 全投稿のcontentからリンクプレビュー対象URLを抽出（重複除去）
+  2. POST /api/ogp/batch { urls: [...] }
+  3. レスポンスの ogpMap をLinkPreviewにpropsで渡す
+```

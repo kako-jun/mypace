@@ -9,9 +9,18 @@ import {
 } from '../../lib/nostr/events'
 import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage } from '../../lib/utils'
 import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
-import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData, TimelineItem } from '../../types'
+import type {
+  Event,
+  ProfileCache,
+  ReactionData,
+  ReplyData,
+  RepostData,
+  ViewCountData,
+  TimelineItem,
+  OgpData,
+} from '../../types'
 import type { UseTimelineOptions, UseTimelineResult } from './types'
-import { loadProfiles, loadMetadataForEvents, recordImpressionsForEvents, mergeProfiles } from './useTimelineData'
+import { loadEnrichForEvents, recordImpressionsForEvents, loadOgpForEvents } from './useTimelineData'
 import { useTimelinePolling } from './useTimelinePolling'
 
 export type { UseTimelineOptions, UseTimelineResult }
@@ -27,6 +36,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const [replies, setReplies] = useState<{ [eventId: string]: ReplyData }>({})
   const [reposts, setReposts] = useState<{ [eventId: string]: RepostData }>({})
   const [views, setViews] = useState<{ [eventId: string]: ViewCountData }>({})
+  const [wikidataMap, setWikidataMap] = useState<Record<string, string>>({})
+  const [ogpMap, setOgpMap] = useState<Record<string, OgpData>>({})
   const [myPubkey, setMyPubkey] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -53,6 +64,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     options,
     latestEventTime,
     events,
+    profiles,
     setPendingNewEvents,
     setProfiles,
     setTimelineItems,
@@ -108,8 +120,20 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         setHasMore(false)
       }
 
-      await loadProfiles(notes, profiles, setProfiles)
-      await loadMetadataForEvents(notes, pubkey, setReactions, setReplies, setReposts, setViews, setProfiles)
+      // metadata + profiles + super-mention一括取得
+      await loadEnrichForEvents(
+        notes,
+        pubkey,
+        setReactions,
+        setReplies,
+        setReposts,
+        setViews,
+        setProfiles,
+        setWikidataMap
+      )
+
+      // OGPデータ一括取得（非同期、fire-and-forget）
+      loadOgpForEvents(notes, setOgpMap)
 
       // Record impressions (fire-and-forget)
       recordImpressionsForEvents(notes, pubkey)
@@ -331,18 +355,20 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
           return merged
         })
 
-        await mergeProfiles([...new Set(newOlderNotes.map((e) => e.pubkey))], setProfiles)
-        // Load metadata for older events (stella, replies, reposts, views)
+        // metadata + profiles + super-mention一括取得
         if (myPubkey) {
-          await loadMetadataForEvents(
+          await loadEnrichForEvents(
             newOlderNotes,
             myPubkey,
             setReactions,
             setReplies,
             setReposts,
             setViews,
-            setProfiles
+            setProfiles,
+            setWikidataMap
           )
+          // OGPデータ一括取得（非同期）
+          loadOgpForEvents(newOlderNotes, setOgpMap)
           // Record impressions for older events (fire-and-forget)
           recordImpressionsForEvents(newOlderNotes, myPubkey)
         }
@@ -377,6 +403,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     replies,
     reposts,
     views,
+    wikidataMap,
+    ogpMap,
     myPubkey,
     loading,
     error,

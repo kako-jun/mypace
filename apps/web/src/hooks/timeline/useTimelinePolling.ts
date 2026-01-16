@@ -11,6 +11,7 @@ interface UseTimelinePollingOptions {
   options: UseTimelineOptions
   latestEventTime: number
   events: Event[]
+  profiles: ProfileCache
   setPendingNewEvents: React.Dispatch<React.SetStateAction<Event[]>>
   setProfiles: React.Dispatch<React.SetStateAction<ProfileCache>>
   setTimelineItems: React.Dispatch<React.SetStateAction<TimelineItem[]>>
@@ -23,6 +24,7 @@ export function useTimelinePolling({
   options,
   latestEventTime,
   events,
+  profiles,
   setPendingNewEvents,
   setProfiles,
   setTimelineItems,
@@ -122,8 +124,8 @@ export function useTimelinePolling({
 
     // プロフィール取得
     const pubkeys = [...new Set(eventsToAdd.map((e) => e.pubkey))]
-    await mergeProfiles(pubkeys, setProfiles)
-  }, [pendingNewEvents, setTimelineItems, setEvents, setLatestEventTime, setProfiles, setPendingNewEvents])
+    await mergeProfiles(pubkeys, profiles, setProfiles)
+  }, [pendingNewEvents, profiles, setTimelineItems, setEvents, setLatestEventTime, setProfiles, setPendingNewEvents])
 
   return { loadNewEvents, checkNewEvents }
 }

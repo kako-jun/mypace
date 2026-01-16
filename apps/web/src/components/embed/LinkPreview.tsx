@@ -1,51 +1,37 @@
 import { useState, useEffect } from 'react'
 import { Icon, ExternalLink } from '../ui'
-import { API_BASE } from '../../lib/api'
-
-interface OgpData {
-  title?: string
-  description?: string
-  image?: string
-  siteName?: string
-}
+import { fetchOgpBatch } from '../../lib/api'
+import type { OgpData } from '../../types'
 
 interface LinkPreviewProps {
   url: string
+  ogpData?: OgpData // Pre-fetched OGP data from batch API
 }
 
-export default function LinkPreview({ url }: LinkPreviewProps) {
-  const [ogp, setOgp] = useState<OgpData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+export default function LinkPreview({ url, ogpData }: LinkPreviewProps) {
+  const [ogp, setOgp] = useState<OgpData | undefined>(ogpData)
+  const [loading, setLoading] = useState(!ogpData)
   const [imageError, setImageError] = useState(false)
 
+  // Fetch OGP if not provided (e.g., direct access to detail page)
   useEffect(() => {
-    let mounted = true
-
-    const fetchOgp = async () => {
-      try {
-        const response = await fetch(`${API_BASE}/api/ogp?url=${encodeURIComponent(url)}`)
-        if (!response.ok) throw new Error('Failed to fetch OGP')
-        const data = await response.json()
-        if (mounted) {
-          setOgp(data)
-          setImageError(false)
-          setLoading(false)
-        }
-      } catch {
-        if (mounted) {
-          setError(true)
-          setLoading(false)
-        }
-      }
+    if (ogpData) {
+      setOgp(ogpData)
+      setLoading(false)
+      return
     }
 
-    fetchOgp()
-
+    let mounted = true
+    fetchOgpBatch([url]).then((result) => {
+      if (mounted) {
+        setOgp(result[url])
+        setLoading(false)
+      }
+    })
     return () => {
       mounted = false
     }
-  }, [url])
+  }, [url, ogpData])
 
   // Extract domain for fallback display
   let displayDomain = ''
@@ -55,6 +41,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
     displayDomain = url
   }
 
+  // Loading state
   if (loading) {
     return (
       <ExternalLink href={url} className="embed-container embed-link embed-loading">
@@ -66,8 +53,8 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
     )
   }
 
-  if (error || !ogp?.title) {
-    // Simple link fallback
+  // No OGP data - show simple link
+  if (!ogp?.title) {
     return (
       <ExternalLink href={url} className="embed-container embed-link embed-simple">
         <Icon name="ExternalLink" size={14} />

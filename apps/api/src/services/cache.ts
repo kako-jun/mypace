@@ -116,11 +116,20 @@ export async function deleteEventsFromCache(db: D1Database, eventIds: string[]):
   }
 }
 
-// 古いキャッシュを削除（1日以上古いもの）
-export async function cleanupOldCache(db: D1Database): Promise<void> {
+// 全キャッシュを一括クリーンアップ（events, profiles, ogp_cache）
+export async function cleanupAllCaches(db: D1Database): Promise<void> {
   const threshold = Date.now() - CACHE_CLEANUP_AGE_MS
+  const nowSeconds = Math.floor(Date.now() / 1000)
+
   try {
-    await db.prepare('DELETE FROM events WHERE cached_at < ?').bind(threshold).run()
+    await Promise.all([
+      // events: cached_atベース
+      db.prepare('DELETE FROM events WHERE cached_at < ?').bind(threshold).run(),
+      // profiles: cached_atベース
+      db.prepare('DELETE FROM profiles WHERE cached_at < ?').bind(threshold).run(),
+      // ogp_cache: expires_atベース（秒単位）
+      db.prepare('DELETE FROM ogp_cache WHERE expires_at < ?').bind(nowSeconds).run(),
+    ])
   } catch (e) {
     console.error('Cache cleanup error:', e)
   }

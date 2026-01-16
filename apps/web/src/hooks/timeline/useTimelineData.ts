@@ -1,54 +1,39 @@
-import { fetchProfiles } from '../../lib/nostr/relay'
-import { fetchEventsMetadata, recordViews } from '../../lib/api/api'
+import { fetchEventsEnrich, fetchOgpBatch, recordViews } from '../../lib/api/api'
 import { hasMypaceTag } from '../../lib/nostr/tags'
-import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData } from '../../types'
+import { extractFromContents } from '../../lib/utils/content'
+import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData, OgpData } from '../../types'
 
-// プロフィール読み込み
-export async function loadProfiles(
+// イベントのエンリッチメント一括読み込み（metadata + profiles + super-mentions）
+export async function loadEnrichForEvents(
   events: Event[],
-  currentProfiles: ProfileCache,
-  setProfiles: React.Dispatch<React.SetStateAction<ProfileCache>>
-): Promise<ProfileCache> {
-  const pubkeys = [...new Set(events.map((e) => e.pubkey))]
-  const missingPubkeys = pubkeys.filter((pk) => currentProfiles[pk] === undefined)
-  if (missingPubkeys.length === 0) return currentProfiles
-
-  try {
-    const fetchedProfiles = await fetchProfiles(missingPubkeys)
-    const newProfiles: ProfileCache = { ...currentProfiles }
-    for (const pk of missingPubkeys) {
-      newProfiles[pk] = fetchedProfiles[pk] || null
-    }
-    setProfiles(newProfiles)
-    return newProfiles
-  } catch {
-    return currentProfiles
-  }
-}
-
-// メタデータ一括読み込み（reactions, replies, reposts, views）
-export async function loadMetadataForEvents(
-  events: Event[],
-  myPubkey: string,
+  viewerPubkey: string,
   setReactions: React.Dispatch<React.SetStateAction<{ [eventId: string]: ReactionData }>>,
   setReplies: React.Dispatch<React.SetStateAction<{ [eventId: string]: ReplyData }>>,
   setReposts: React.Dispatch<React.SetStateAction<{ [eventId: string]: RepostData }>>,
   setViews: React.Dispatch<React.SetStateAction<{ [eventId: string]: ViewCountData }>>,
-  setProfiles: React.Dispatch<React.SetStateAction<ProfileCache>>
+  setProfiles: React.Dispatch<React.SetStateAction<ProfileCache>>,
+  setWikidataMap: React.Dispatch<React.SetStateAction<Record<string, string>>>
 ): Promise<void> {
   if (events.length === 0) return
 
   const eventIds = events.map((e) => e.id)
+  const authorPubkeys = [...new Set(events.map((e) => e.pubkey))]
+  const contents = events.map((e) => e.content)
+  const { superMentionPaths } = extractFromContents(contents)
 
   try {
-    const metadata = await fetchEventsMetadata(eventIds, myPubkey)
+    const { metadata, profiles, superMentions } = await fetchEventsEnrich(
+      eventIds,
+      authorPubkeys,
+      viewerPubkey,
+      superMentionPaths
+    )
 
-    // Batch update all states
+    // メタデータを各stateに展開
     const reactionMap: { [eventId: string]: ReactionData } = {}
     const replyMap: { [eventId: string]: ReplyData } = {}
     const repostMap: { [eventId: string]: RepostData } = {}
     const viewMap: { [eventId: string]: ViewCountData } = {}
-    const allPubkeys: string[] = []
 
     for (const eventId of eventIds) {
       const data = metadata[eventId]
@@ -57,12 +42,8 @@ export async function loadMetadataForEvents(
         replyMap[eventId] = data.replies
         repostMap[eventId] = data.reposts
         viewMap[eventId] = data.views
-
-        // Collect pubkeys for profile loading
-        data.reactions.reactors.forEach((r) => allPubkeys.push(r.pubkey))
-        data.replies.replies.forEach((r) => allPubkeys.push(r.pubkey))
       } else {
-        // Initialize with defaults if not found
+        // デフォルト値で初期化
         reactionMap[eventId] = { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] }
         replyMap[eventId] = { count: 0, replies: [] }
         repostMap[eventId] = { count: 0, myRepost: false }
@@ -75,25 +56,24 @@ export async function loadMetadataForEvents(
     setReposts(repostMap)
     setViews(viewMap)
 
-    // Load profiles for reactors and reply authors
-    const uniquePubkeys = [...new Set(allPubkeys)]
-    if (uniquePubkeys.length > 0) {
-      try {
-        const fetchedProfiles = await fetchProfiles(uniquePubkeys)
-        setProfiles((prev) => {
-          const newProfiles = { ...prev }
-          for (const pk of uniquePubkeys) {
-            if (newProfiles[pk] === undefined) {
-              newProfiles[pk] = fetchedProfiles[pk] || null
-            }
-          }
-          return newProfiles
-        })
-      } catch {}
+    // プロフィールをマージ
+    setProfiles((prev) => {
+      const newProfiles = { ...prev }
+      for (const [pk, profile] of Object.entries(profiles)) {
+        if (newProfiles[pk] === undefined) {
+          newProfiles[pk] = profile || null
+        }
+      }
+      return newProfiles
+    })
+
+    // WikidataMapをマージ
+    if (Object.keys(superMentions).length > 0) {
+      setWikidataMap((prev) => ({ ...prev, ...superMentions }))
     }
   } catch (error) {
-    console.error('Failed to load metadata:', error)
-    // Initialize with empty values on error
+    console.error('Failed to load enrich data:', error)
+    // エラー時は空の値で初期化
     const reactionMap: { [eventId: string]: ReactionData } = {}
     const replyMap: { [eventId: string]: ReplyData } = {}
     const repostMap: { [eventId: string]: RepostData } = {}
@@ -113,19 +93,22 @@ export async function loadMetadataForEvents(
   }
 }
 
-// プロフィールをマージして更新
+// プロフィールをマージして更新（新しいpubkeysのみfetch）
 export async function mergeProfiles(
   pubkeys: string[],
+  currentProfiles: ProfileCache,
   setProfiles: React.Dispatch<React.SetStateAction<ProfileCache>>
 ): Promise<void> {
+  const missingPubkeys = pubkeys.filter((pk) => currentProfiles[pk] === undefined)
+  if (missingPubkeys.length === 0) return
+
   try {
-    const fetchedProfiles = await fetchProfiles(pubkeys)
+    // fetchEventsEnrichを使ってプロフィールのみ取得（eventIds空でOK）
+    const { profiles } = await fetchEventsEnrich([], missingPubkeys, undefined, [])
     setProfiles((prev) => {
       const newProfiles = { ...prev }
-      for (const pk of pubkeys) {
-        if (newProfiles[pk] === undefined) {
-          newProfiles[pk] = fetchedProfiles[pk] || null
-        }
+      for (const pk of missingPubkeys) {
+        newProfiles[pk] = profiles[pk] || null
       }
       return newProfiles
     })
@@ -140,4 +123,26 @@ export async function recordImpressionsForEvents(events: Event[], viewerPubkey: 
 
   // fire-and-forget
   recordViews(mypaceEvents, 'impression', viewerPubkey).catch(() => {})
+}
+
+// OGPデータ一括読み込み
+export async function loadOgpForEvents(
+  events: Event[],
+  setOgpMap: React.Dispatch<React.SetStateAction<Record<string, OgpData>>>
+): Promise<void> {
+  if (events.length === 0) return
+
+  const contents = events.map((e) => e.content)
+  const { ogpUrls } = extractFromContents(contents)
+
+  if (ogpUrls.length === 0) return
+
+  try {
+    const ogpData = await fetchOgpBatch(ogpUrls)
+    if (Object.keys(ogpData).length > 0) {
+      setOgpMap((prev) => ({ ...prev, ...ogpData }))
+    }
+  } catch (error) {
+    console.error('Failed to load OGP data:', error)
+  }
 }

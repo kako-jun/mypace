@@ -56,6 +56,8 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
     loading,
     error,
     views,
+    wikidataMap,
+    ogpMap,
     likingId,
     repostingId,
     newEventCount,
@@ -182,6 +184,8 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
               isMyPost={isMyPost}
               myPubkey={myPubkey}
               profiles={profiles}
+              wikidataMap={wikidataMap}
+              ogpMap={ogpMap}
               reactions={reactions[event.id]}
               replies={replies[event.id]}
               reposts={reposts[event.id]}

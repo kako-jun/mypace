@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import type { Filter } from 'nostr-tools'
 import type { Bindings } from '../types'
 import { MYPACE_TAG, RELAYS, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC, CACHE_CLEANUP_PROBABILITY } from '../constants'
-import { getCachedEvents, cacheEvents, cleanupOldCache } from '../services/cache'
+import { getCachedEvents, cacheEvents, cleanupAllCaches } from '../services/cache'
 import { filterByLanguage } from '../filters/language'
 import {
   filterBySmartFilters,
@@ -150,7 +150,7 @@ timeline.get('/', async (c) => {
       c.executionCtx.waitUntil(cacheEvents(db, rawEvents))
       // 1%の確率で古いキャッシュをクリーンアップ
       if (Math.random() < CACHE_CLEANUP_PROBABILITY) {
-        c.executionCtx.waitUntil(cleanupOldCache(db))
+        c.executionCtx.waitUntil(cleanupAllCaches(db))
       }
     } else {
       void cacheEvents(db, rawEvents)

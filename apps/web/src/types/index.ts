@@ -120,6 +120,14 @@ export interface FilterPreset {
   createdAt: number // timestamp
 }
 
+// OGP data types
+export interface OgpData {
+  title?: string
+  description?: string
+  image?: string
+  siteName?: string
+}
+
 // Sticker types
 export type StickerQuadrant = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
 export type StickerLayer = 'front' | 'back'
