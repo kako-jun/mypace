@@ -647,13 +647,14 @@
   background-color: #fff;
 }
 
-/* Dark theme: white barcode, black background on hover */
+/* Dark theme: white barcode normally, black barcode on hover (for scanner readability) */
 [data-theme="dark"] .post-barcode {
   color: #fff;
 }
 
 [data-theme="dark"] .post-card:hover .post-barcode {
-  background-color: #000;
+  color: #000;
+  background-color: #fff;
 }
 
 /* Rarity label below the barcode */
