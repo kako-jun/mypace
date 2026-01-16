@@ -78,7 +78,7 @@
   padding: 2rem;
   border-radius: 0;
   margin-bottom: 2rem;
-  transform: translateZ(0);
+  overflow: hidden;
 }
 
 .post-card-large .post-header {
