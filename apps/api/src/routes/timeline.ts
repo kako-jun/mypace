@@ -1,14 +1,7 @@
 import { Hono } from 'hono'
 import type { Filter } from 'nostr-tools'
 import type { Bindings } from '../types'
-import {
-  MYPACE_TAG,
-  ALL_RELAYS,
-  KIND_NOTE,
-  KIND_LONG_FORM,
-  KIND_SINOV_NPC,
-  CACHE_CLEANUP_PROBABILITY,
-} from '../constants'
+import { MYPACE_TAG, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC, CACHE_CLEANUP_PROBABILITY } from '../constants'
 import { getCachedEvents, cacheEvents, cleanupAllCaches } from '../services/cache'
 import { filterByLanguage } from '../filters/language'
 import {
@@ -25,13 +18,14 @@ import { SimplePool } from 'nostr-tools/pool'
 const timeline = new Hono<{ Bindings: Bindings }>()
 
 // GET /api/timeline - タイムライン取得
+// 503エラー対策: タイムラインは常にキャッシュのみ（リレー接続しない）
+// 他のエンドポイント(enrich等)はリレーを使用するため、表示されたイベントの詳細は取得可能
 timeline.get('/', async (c) => {
   const db = c.env.DB
   const disableCache = c.env.DISABLE_CACHE === '1'
-  // リレー設定: RELAY_COUNT=0でリレー接続をスキップ
-  const relayCount = c.env.RELAY_COUNT !== undefined ? parseInt(c.env.RELAY_COUNT, 10) : ALL_RELAYS.length
+  // タイムラインは常にキャッシュのみモード（RELAY_COUNTを無視）
   const fetchMultiplier = c.env.FETCH_MULTIPLIER !== undefined ? parseInt(c.env.FETCH_MULTIPLIER, 10) : 1
-  const RELAYS = ALL_RELAYS.slice(0, Math.max(0, relayCount))
+  const RELAYS: string[] = [] // 常に空配列 = キャッシュのみ
   const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
   const since = Number(c.req.query('since')) || 0
   const until = Number(c.req.query('until')) || 0
