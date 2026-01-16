@@ -185,6 +185,29 @@
   font-family: var(--font-mono);
 }
 
+/* Tables in post content */
+.post-content table {
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  width: 100%;
+}
+
+.post-content th,
+.post-content td {
+  padding: 0.4rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.15));
+}
+
+.post-content th {
+  font-weight: 600;
+  border-bottom-width: 2px;
+}
+
+.post-content tr:last-child td {
+  border-bottom: none;
+}
+
 /* READ MORE button - uses same classes as EDIT button */
 /* Override .post-content inherited styles */
 .read-more-btn {
