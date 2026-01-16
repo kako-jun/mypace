@@ -6,4 +6,5 @@ dev-dist/
 .mf/
 .serena/
 .env
+.env.*
 .mcp.json
