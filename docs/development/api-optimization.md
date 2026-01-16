@@ -100,7 +100,7 @@
 | `GET /api/users/:pubkey/events` | ユーザー投稿一覧 | 既存維持 |
 | `POST /api/events/by-ids` | 複数イベント一括取得 | **新規** |
 | `POST /api/events/enrich` | メタデータ+プロフィール+super-mention一括取得 | **新規** |
-| `POST /api/ogp/batch` | OGP一括取得 | **新規** |
+| `POST /api/ogp/by-urls` | OGP一括取得 | **新規** |
 | `GET /api/users/:pubkey/stats` | スタッツ一括取得 | **新規** |
 
 ### 書き込み系
@@ -133,7 +133,7 @@
 | `POST /api/views/batch` | `POST /api/events/enrich` |
 | `POST /api/profiles` | `POST /api/events/enrich` |
 | `POST /api/super-mention/lookup` | `POST /api/events/enrich` |
-| `GET /api/ogp` | `POST /api/ogp/batch` |
+| `GET /api/ogp` | `POST /api/ogp/by-urls` |
 | `POST /api/views/:id` | `POST /api/views/impressions` |
 | `GET /api/user/:pubkey/count` | `GET /api/users/:pubkey/stats` |
 | `GET /api/user/:pubkey/stella` | `GET /api/users/:pubkey/stats` |
@@ -266,7 +266,7 @@
 }
 ```
 
-### 5. POST `/api/ogp/batch`
+### 5. POST `/api/ogp/by-urls`
 
 複数URLのOGPを一括取得する。
 
@@ -306,7 +306,7 @@
 |---|-----|------|------|
 | 1 | `GET /api/timeline` | 1 | 投稿イベント配列 |
 | 2 | `POST /api/events/enrich` | 1 | **メタデータ+プロフィール+super-mention** |
-| 3 | `POST /api/ogp/batch` | 1 | 全リンクのOGP |
+| 3 | `POST /api/ogp/by-urls` | 1 | 全リンクのOGP |
 | 4 | `POST /api/views/impressions` | 1 | インプレッション記録 |
 | 5 | `GET /api/users/:pubkey/stats` | 1 | 右下スタッツ |
 | | **合計** | **5** | |
@@ -317,7 +317,7 @@
 |---|-----|------|------|
 | 1 | `GET /api/users/:pubkey/events` | 1 | ユーザー投稿配列 |
 | 2 | `POST /api/events/enrich` | 1 | メタデータ+プロフィール+super-mention |
-| 3 | `POST /api/ogp/batch` | 1 | 全リンクのOGP |
+| 3 | `POST /api/ogp/by-urls` | 1 | 全リンクのOGP |
 | 4 | `POST /api/views/impressions` | 1 | インプレッション記録 |
 | | **合計** | **4** | |
 
@@ -327,7 +327,7 @@
 |---|-----|------|------|
 | 1 | `POST /api/events/by-ids` | 1 | メイン記事 + リプライ元 |
 | 2 | `POST /api/events/enrich` | 1 | メタデータ+プロフィール+super-mention |
-| 3 | `POST /api/ogp/batch` | 1 | 記事内リンクのOGP |
+| 3 | `POST /api/ogp/by-urls` | 1 | 記事内リンクのOGP |
 | 4 | `POST /api/views/impressions` | 1 | detail記録 |
 | | **合計** | **4** | |
 
@@ -400,7 +400,7 @@
 
 - [x] `POST /api/events/by-ids` 新規作成
 - [x] `POST /api/events/enrich` 新規作成（metadata + profiles + super-mention統合）
-- [x] `POST /api/ogp/batch` 新規作成
+- [x] `POST /api/ogp/by-urls` 新規作成
 - [x] `GET /api/users/:pubkey/stats` 新規作成
 - [x] `POST /api/views/impressions` 作成（batch-record統合）
 - [x] 削除対象のエンドポイントを削除（profiles, ogp GET）
@@ -409,7 +409,7 @@
 
 - [x] `fetchEventsByIds(eventIds[])` API関数作成
 - [x] `fetchEventsEnrich(eventIds[], authorPubkeys[], viewerPubkey, superMentionPaths[])` API関数作成
-- [x] `fetchOgpBatch(urls[])` API関数作成
+- [x] `fetchOgpByUrls(urls[])` API関数作成
 - [x] `fetchUserStats(pubkey)` API関数作成
 - [x] `recordImpressions(events[], type, viewerPubkey)` API関数作成
 - [x] `extractSuperMentionPaths(content)` ユーティリティ作成
@@ -475,7 +475,7 @@ super-mention（@@path形式）を含む投稿が多いと、50件のタイム�
 
 ## OGP Lookup 最適化
 
-> **新規API:** `POST /api/ogp/batch` で一括取得。
+> **新規API:** `POST /api/ogp/by-urls` で一括取得。
 
 ### 背景（課題）
 
@@ -487,6 +487,6 @@ super-mention（@@path形式）を含む投稿が多いと、50件のタイム�
 ```
 フロントエンド:
   1. 全投稿のcontentからリンクプレビュー対象URLを抽出（重複除去）
-  2. POST /api/ogp/batch { urls: [...] }
+  2. POST /api/ogp/by-urls { urls: [...] }
   3. レスポンスの ogpMap をLinkPreviewにpropsで渡す
 ```

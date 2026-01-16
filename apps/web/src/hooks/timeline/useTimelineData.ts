@@ -1,4 +1,4 @@
-import { fetchEventsEnrich, fetchOgpBatch, recordImpressions } from '../../lib/api/api'
+import { fetchEventsEnrich, fetchOgpByUrls, recordImpressions } from '../../lib/api/api'
 import { hasMypaceTag } from '../../lib/nostr/tags'
 import { extractFromContents } from '../../lib/utils/content'
 import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData, OgpData } from '../../types'
@@ -138,7 +138,7 @@ export async function loadOgpForEvents(
   if (ogpUrls.length === 0) return
 
   try {
-    const ogpData = await fetchOgpBatch(ogpUrls)
+    const ogpData = await fetchOgpByUrls(ogpUrls)
     if (Object.keys(ogpData).length > 0) {
       setOgpMap((prev) => ({ ...prev, ...ogpData }))
     }

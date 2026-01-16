@@ -84,8 +84,8 @@ async function fetchSingleOgp(url: string): Promise<OgpData | null> {
   }
 }
 
-// POST /api/ogp/batch - 複数URLのOGP一括取得
-ogp.post('/batch', async (c) => {
+// POST /api/ogp/by-urls - 複数URLのOGP一括取得
+ogp.post('/by-urls', async (c) => {
   const { urls } = await c.req.json<{ urls: string[] }>()
 
   if (!urls || !Array.isArray(urls) || urls.length === 0) {

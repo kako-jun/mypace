@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Icon, ExternalLink } from '../ui'
-import { fetchOgpBatch } from '../../lib/api'
+import { fetchOgpByUrls } from '../../lib/api'
 import type { OgpData } from '../../types'
 
 interface LinkPreviewProps {
@@ -29,7 +29,7 @@ export default function LinkPreview({ url, ogpData, enableFallback = false }: Li
     }
 
     let mounted = true
-    fetchOgpBatch([url]).then((result) => {
+    fetchOgpByUrls([url]).then((result) => {
       if (mounted) {
         setOgp(result[url])
         setLoading(false)

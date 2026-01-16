@@ -432,12 +432,12 @@ export async function fetchEventsEnrich(
   }
 }
 
-// Batch fetch OGP data for multiple URLs
-export async function fetchOgpBatch(urls: string[]): Promise<Record<string, OgpData>> {
+// Fetch OGP data for multiple URLs
+export async function fetchOgpByUrls(urls: string[]): Promise<Record<string, OgpData>> {
   if (urls.length === 0) return {}
 
   try {
-    const res = await fetch(`${API_BASE}/api/ogp/batch`, {
+    const res = await fetch(`${API_BASE}/api/ogp/by-urls`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ urls }),
