@@ -3,7 +3,7 @@ import type { D1Database } from '@cloudflare/workers-types'
 import type { Filter } from 'nostr-tools'
 import { SimplePool } from 'nostr-tools/pool'
 import type { Bindings } from '../types'
-import { MYPACE_TAG, RELAYS } from '../constants'
+import { MYPACE_TAG, ALL_RELAYS } from '../constants'
 
 const serial = new Hono<{ Bindings: Bindings }>()
 
@@ -150,6 +150,15 @@ serial.post('/visibility', async (c) => {
 // POST /api/serial/init - 既存ユーザーの初期化（管理用）
 // Nostrリレーから過去の#mypace投稿を取得して番号を付与
 serial.post('/init', async (c) => {
+  // リレー設定
+  const relayCount = c.env.RELAY_COUNT !== undefined ? parseInt(c.env.RELAY_COUNT, 10) : ALL_RELAYS.length
+  const RELAYS = ALL_RELAYS.slice(0, Math.max(0, relayCount))
+
+  // RELAY_COUNT=0の場合はリレー接続をスキップ
+  if (RELAYS.length === 0) {
+    return c.json({ error: 'Relay connection disabled' }, 503)
+  }
+
   const db = c.env.DB
   const pool = new SimplePool()
 

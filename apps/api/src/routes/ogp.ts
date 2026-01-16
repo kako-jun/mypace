@@ -86,6 +86,7 @@ async function fetchSingleOgp(url: string): Promise<OgpData | null> {
 
 // POST /api/ogp/by-urls - 複数URLのOGP一括取得
 ogp.post('/by-urls', async (c) => {
+  const disableCache = c.env.DISABLE_CACHE === '1'
   const { urls } = await c.req.json<{ urls: string[] }>()
 
   if (!urls || !Array.isArray(urls) || urls.length === 0) {
@@ -97,37 +98,41 @@ ogp.post('/by-urls', async (c) => {
   const db = c.env.DB
   const result: Record<string, OgpData> = {}
 
-  // D1キャッシュから取得
+  // D1キャッシュから取得（DISABLE_CACHE=1 の場合はスキップ）
   const uncachedUrls: string[] = []
-  try {
-    const placeholders = limitedUrls.map(() => '?').join(',')
-    const now = Math.floor(Date.now() / 1000)
-    const cached = await db
-      .prepare(
-        `SELECT url, title, description, image, site_name FROM ogp_cache WHERE url IN (${placeholders}) AND expires_at > ?`
-      )
-      .bind(...limitedUrls, now)
-      .all()
+  if (!disableCache) {
+    try {
+      const placeholders = limitedUrls.map(() => '?').join(',')
+      const now = Math.floor(Date.now() / 1000)
+      const cached = await db
+        .prepare(
+          `SELECT url, title, description, image, site_name FROM ogp_cache WHERE url IN (${placeholders}) AND expires_at > ?`
+        )
+        .bind(...limitedUrls, now)
+        .all()
 
-    const cachedUrls = new Set<string>()
-    for (const row of cached.results || []) {
-      const url = row.url as string
-      cachedUrls.add(url)
-      result[url] = {
-        title: row.title as string | undefined,
-        description: row.description as string | undefined,
-        image: row.image as string | undefined,
-        siteName: row.site_name as string | undefined,
+      const cachedUrls = new Set<string>()
+      for (const row of cached.results || []) {
+        const url = row.url as string
+        cachedUrls.add(url)
+        result[url] = {
+          title: row.title as string | undefined,
+          description: row.description as string | undefined,
+          image: row.image as string | undefined,
+          siteName: row.site_name as string | undefined,
+        }
       }
-    }
 
-    for (const url of limitedUrls) {
-      if (!cachedUrls.has(url)) {
-        uncachedUrls.push(url)
+      for (const url of limitedUrls) {
+        if (!cachedUrls.has(url)) {
+          uncachedUrls.push(url)
+        }
       }
+    } catch (e) {
+      console.error('OGP cache read error:', e)
+      uncachedUrls.push(...limitedUrls)
     }
-  } catch (e) {
-    console.error('OGP cache read error:', e)
+  } else {
     uncachedUrls.push(...limitedUrls)
   }
 
@@ -151,8 +156,8 @@ ogp.post('/by-urls', async (c) => {
       }
     }
 
-    // バッチINSERTでキャッシュに保存
-    if (cacheData.length > 0) {
+    // バッチINSERTでキャッシュに保存（DISABLE_CACHE=1 の場合はスキップ）
+    if (!disableCache && cacheData.length > 0) {
       const values: string[] = []
       const params: any[] = []
 
@@ -182,8 +187,8 @@ ogp.post('/by-urls', async (c) => {
     }
   }
 
-  // 1%の確率でクリーンアップ（非同期）
-  if (Math.random() < CACHE_CLEANUP_PROBABILITY) {
+  // 1%の確率でクリーンアップ（非同期、DISABLE_CACHE=1 の場合はスキップ）
+  if (!disableCache && Math.random() < CACHE_CLEANUP_PROBABILITY) {
     c.executionCtx.waitUntil(cleanupAllCaches(db))
   }
 

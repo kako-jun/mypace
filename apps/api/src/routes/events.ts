@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import type { Event } from 'nostr-tools'
 import type { Bindings } from '../types'
-import { RELAYS, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC, STELLA_TAG } from '../constants'
+import { ALL_RELAYS, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC, STELLA_TAG } from '../constants'
 import { getCachedEventsByIds, cacheEvents } from '../services/cache'
 import { SimplePool } from 'nostr-tools/pool'
 
@@ -19,6 +19,10 @@ const events = new Hono<{ Bindings: Bindings }>()
 
 // POST /api/events/by-ids - 複数イベントをIDで一括取得
 events.post('/by-ids', async (c) => {
+  const disableCache = c.env.DISABLE_CACHE === '1'
+  // リレー設定
+  const relayCount = c.env.RELAY_COUNT !== undefined ? parseInt(c.env.RELAY_COUNT, 10) : ALL_RELAYS.length
+  const RELAYS = ALL_RELAYS.slice(0, Math.max(0, relayCount))
   const { eventIds } = await c.req.json<{ eventIds: string[] }>()
 
   if (!eventIds || !Array.isArray(eventIds) || eventIds.length === 0) {
@@ -30,27 +34,29 @@ events.post('/by-ids', async (c) => {
   const db = c.env.DB
   const result: Record<string, unknown> = {}
 
-  // キャッシュから取得
-  try {
-    const cached = await getCachedEventsByIds(db, limitedIds)
-    for (const [id, event] of cached) {
-      result[id] = event
+  // キャッシュから取得（DISABLE_CACHE=1 の場合はスキップ）
+  if (!disableCache) {
+    try {
+      const cached = await getCachedEventsByIds(db, limitedIds)
+      for (const [id, event] of cached) {
+        result[id] = event
+      }
+    } catch (e) {
+      console.error('Cache read error:', e)
     }
-  } catch (e) {
-    console.error('Cache read error:', e)
   }
 
-  // キャッシュにないIDをリレーから取得
+  // キャッシュにないIDをリレーから取得（RELAY_COUNT=0の場合はスキップ）
   const missingIds = limitedIds.filter((id) => !result[id])
-  if (missingIds.length > 0) {
+  if (missingIds.length > 0 && RELAYS.length > 0) {
     const pool = new SimplePool()
     try {
       const relayEvents = await pool.querySync(RELAYS, { ids: missingIds })
       for (const event of relayEvents) {
         result[event.id] = event
       }
-      // キャッシュに保存
-      if (relayEvents.length > 0) {
+      // キャッシュに保存（DISABLE_CACHE=1 の場合はスキップ）
+      if (!disableCache && relayEvents.length > 0) {
         try {
           await cacheEvents(db, relayEvents)
         } catch (e) {
@@ -67,6 +73,10 @@ events.post('/by-ids', async (c) => {
 
 // POST /api/events/enrich - メタデータ+プロフィール+super-mention一括取得
 events.post('/enrich', async (c) => {
+  // リレー設定
+  const relayCount = c.env.RELAY_COUNT !== undefined ? parseInt(c.env.RELAY_COUNT, 10) : ALL_RELAYS.length
+  const RELAYS = ALL_RELAYS.slice(0, Math.max(0, relayCount))
+
   const {
     eventIds = [],
     authorPubkeys = [],
@@ -110,7 +120,7 @@ events.post('/enrich', async (c) => {
         }
       }
 
-      const profiles = await fetchProfilesInternal(db, pool, authorPubkeys)
+      const profiles = await fetchProfilesInternal(db, pool, authorPubkeys, RELAYS)
       pool.close(RELAYS)
       return c.json({ metadata: {}, profiles, superMentions })
     }
@@ -258,7 +268,7 @@ events.post('/enrich', async (c) => {
     }
 
     // プロフィール取得
-    const profiles = await fetchProfilesInternal(db, pool, Array.from(allPubkeys))
+    const profiles = await fetchProfilesInternal(db, pool, Array.from(allPubkeys), RELAYS)
 
     return c.json({ metadata, profiles, superMentions })
   } finally {
@@ -270,7 +280,8 @@ events.post('/enrich', async (c) => {
 async function fetchProfilesInternal(
   db: D1Database,
   pool: SimplePool,
-  pubkeys: string[]
+  pubkeys: string[],
+  RELAYS: string[]
 ): Promise<
   Record<
     string,
@@ -325,11 +336,11 @@ async function fetchProfilesInternal(
     console.error('Profile cache read error:', e)
   }
 
-  // キャッシュにないものをリレーから取得
+  // キャッシュにないものをリレーから取得（RELAY_COUNT=0の場合はスキップ）
   const cachedSet = new Set(Object.keys(result))
   const missingPubkeys = pubkeys.filter((pk) => !cachedSet.has(pk))
 
-  if (missingPubkeys.length > 0) {
+  if (missingPubkeys.length > 0 && RELAYS.length > 0) {
     try {
       const events = await pool.querySync(RELAYS, { kinds: [0], authors: missingPubkeys })
 

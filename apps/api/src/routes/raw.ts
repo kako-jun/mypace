@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
-import { RELAYS } from '../constants'
+import { ALL_RELAYS } from '../constants'
 import { getCachedEventById } from '../services/cache'
 import { SimplePool } from 'nostr-tools/pool'
 
@@ -27,6 +27,10 @@ function getFullContent(content: string, tags: string[][]): string {
 
 // GET /raw/:id - イベント本文をプレーンテキストで取得
 raw.get('/:id', async (c) => {
+  // リレー設定
+  const relayCount = c.env.RELAY_COUNT !== undefined ? parseInt(c.env.RELAY_COUNT, 10) : ALL_RELAYS.length
+  const RELAYS = ALL_RELAYS.slice(0, Math.max(0, relayCount))
+
   const id = c.req.param('id')
   const db = c.env.DB
 
@@ -41,6 +45,11 @@ raw.get('/:id', async (c) => {
     }
   } catch (e) {
     console.error('Cache read error:', e)
+  }
+
+  // RELAY_COUNT=0の場合はリレー接続をスキップ
+  if (RELAYS.length === 0) {
+    return c.text('Event not found (relay disabled)', 404)
   }
 
   // リレーから

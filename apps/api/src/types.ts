@@ -2,6 +2,9 @@ import type { D1Database } from '@cloudflare/workers-types'
 
 export type Bindings = {
   DB: D1Database
+  DISABLE_CACHE?: string // '1' to disable cache completely
+  RELAY_COUNT?: string // リレー数（0=リレー接続しない、デフォルト=ALL_RELAYS.length）
+  FETCH_MULTIPLIER?: string // 取得倍数（デフォルト1、増やすと503エラーのリスク増）
 }
 
 export type CachedEvent = {

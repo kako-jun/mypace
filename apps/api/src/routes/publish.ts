@@ -5,6 +5,7 @@ import type { D1Database } from '@cloudflare/workers-types'
 import { publishToRelays } from '../services/relay'
 import { cacheEvent } from '../services/cache'
 import { registerUserSerial } from './serial'
+import { ALL_RELAYS } from '../constants'
 
 const publish = new Hono<{ Bindings: Bindings }>()
 
@@ -51,6 +52,10 @@ async function deleteStella(db: D1Database, eventIds: string[], pubkey: string):
 
 // POST /api/publish - 署名済みイベントをリレーに投稿
 publish.post('/', async (c) => {
+  // リレー設定
+  const relayCount = c.env.RELAY_COUNT !== undefined ? parseInt(c.env.RELAY_COUNT, 10) : ALL_RELAYS.length
+  const RELAYS = ALL_RELAYS.slice(0, Math.max(0, relayCount))
+
   const body = await c.req.json<{ event: Event }>()
   const event = body.event
 
@@ -58,8 +63,13 @@ publish.post('/', async (c) => {
     return c.json({ error: 'Invalid event: missing id or sig' }, 400)
   }
 
+  // RELAY_COUNT=0の場合はリレー接続をスキップ
+  if (RELAYS.length === 0) {
+    return c.json({ error: 'Relay connection disabled' }, 503)
+  }
+
   try {
-    const result = await publishToRelays(event)
+    const result = await publishToRelays(event, RELAYS)
 
     // Log all results for debugging
     console.log('Publish results:', JSON.stringify(result.details))

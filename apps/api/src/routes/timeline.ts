@@ -1,7 +1,14 @@
 import { Hono } from 'hono'
 import type { Filter } from 'nostr-tools'
 import type { Bindings } from '../types'
-import { MYPACE_TAG, RELAYS, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC, CACHE_CLEANUP_PROBABILITY } from '../constants'
+import {
+  MYPACE_TAG,
+  ALL_RELAYS,
+  KIND_NOTE,
+  KIND_LONG_FORM,
+  KIND_SINOV_NPC,
+  CACHE_CLEANUP_PROBABILITY,
+} from '../constants'
 import { getCachedEvents, cacheEvents, cleanupAllCaches } from '../services/cache'
 import { filterByLanguage } from '../filters/language'
 import {
@@ -20,6 +27,11 @@ const timeline = new Hono<{ Bindings: Bindings }>()
 // GET /api/timeline - タイムライン取得
 timeline.get('/', async (c) => {
   const db = c.env.DB
+  const disableCache = c.env.DISABLE_CACHE === '1'
+  // リレー設定: RELAY_COUNT=0でリレー接続をスキップ
+  const relayCount = c.env.RELAY_COUNT !== undefined ? parseInt(c.env.RELAY_COUNT, 10) : ALL_RELAYS.length
+  const fetchMultiplier = c.env.FETCH_MULTIPLIER !== undefined ? parseInt(c.env.FETCH_MULTIPLIER, 10) : 1
+  const RELAYS = ALL_RELAYS.slice(0, Math.max(0, relayCount))
   const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
   const since = Number(c.req.query('since')) || 0
   const until = Number(c.req.query('until')) || 0
@@ -64,53 +76,61 @@ timeline.get('/', async (c) => {
   }
 
   // サーバーサイドフィルタ（hideAds, hideNSFW等）で減る分を考慮して多めに取得
-  const fetchMultiplier = 4
+  // fetchMultiplierは環境変数で設定（デフォルト1）
 
   // まずキャッシュから取得（TTL内のもののみ）
-  try {
-    const cached = await getCachedEvents(db, {
-      kinds,
-      since,
-      until,
-      limit: limit * fetchMultiplier, // フィルタリング後に足りなくならないよう多めに取得
-      mypaceOnly: !showAll, // mypaceフィルタONの場合はhas_mypace_tag=1でフィルタ
-    })
+  // DISABLE_CACHE=1 の場合はスキップ
+  if (!disableCache) {
+    try {
+      const cached = await getCachedEvents(db, {
+        kinds,
+        since,
+        until,
+        limit: limit * fetchMultiplier, // フィルタリング後に足りなくならないよう多めに取得
+        mypaceOnly: !showAll, // mypaceフィルタONの場合はhas_mypace_tag=1でフィルタ
+      })
 
-    if (cached.length > 0) {
-      // フィルタ前の最古時刻を記録
-      const searchedUntil = Math.min(...cached.map((e) => e.created_at))
+      if (cached.length > 0) {
+        // フィルタ前の最古時刻を記録
+        const searchedUntil = Math.min(...cached.map((e) => e.created_at))
 
-      let events = cached
+        let events = cached
 
-      // フィルタ適用（除外率の高い順に実行）
-      events = filterByMuteList(events, mutedPubkeys)
-      events = filterBySmartFilters(events, hideAds, hideNSFW)
-      events = filterByNPC(events, hideNPC)
-      events = filterByNgWords(events, ngWords)
-      events = filterByNgTags(events, ngTags)
-      // 公開フィルタ（OKワード、OKタグ）
-      events = filterByQuery(events, queries)
-      events = filterByOkTags(events, okTags)
+        // フィルタ適用（除外率の高い順に実行）
+        events = filterByMuteList(events, mutedPubkeys)
+        events = filterBySmartFilters(events, hideAds, hideNSFW)
+        events = filterByNPC(events, hideNPC)
+        events = filterByNgWords(events, ngWords)
+        events = filterByNgTags(events, ngTags)
+        // 公開フィルタ（OKワード、OKタグ）
+        events = filterByQuery(events, queries)
+        events = filterByOkTags(events, okTags)
 
-      if (langFilter) {
-        events = filterByLanguage(events, langFilter)
+        if (langFilter) {
+          events = filterByLanguage(events, langFilter)
+        }
+
+        if (events.length >= limit) {
+          // レスポンスサイズ削減: contentを切り詰め
+          const MAX_CONTENT_LENGTH = 5000
+          const trimmedEvents = events.slice(0, limit).map((e) => ({
+            ...e,
+            content: e.content.length > MAX_CONTENT_LENGTH ? e.content.slice(0, MAX_CONTENT_LENGTH) + '...' : e.content,
+          }))
+          return c.json({ events: trimmedEvents, source: 'cache', searchedUntil })
+        }
       }
-
-      if (events.length >= limit) {
-        // レスポンスサイズ削減: contentを切り詰め
-        const MAX_CONTENT_LENGTH = 5000
-        const trimmedEvents = events.slice(0, limit).map((e) => ({
-          ...e,
-          content: e.content.length > MAX_CONTENT_LENGTH ? e.content.slice(0, MAX_CONTENT_LENGTH) + '...' : e.content,
-        }))
-        return c.json({ events: trimmedEvents, source: 'cache', searchedUntil })
-      }
+    } catch (e) {
+      console.error('Cache read error:', e)
     }
-  } catch (e) {
-    console.error('Cache read error:', e)
   }
 
   // キャッシュにない/不十分な場合はリレーから取得
+  // RELAY_COUNT=0の場合はリレー接続をスキップ
+  if (RELAYS.length === 0) {
+    return c.json({ events: [], source: 'cache-only', searchedUntil: null })
+  }
+
   const pool = new SimplePool()
 
   try {
@@ -150,16 +170,15 @@ timeline.get('/', async (c) => {
       events = filterByLanguage(events, langFilter)
     }
 
-    // キャッシュに保存（フィルタ前のデータを保存して全ユーザーで共有）
-    // waitUntilでレスポンス返却後にバックグラウンドでキャッシュ保存
-    if (c.executionCtx?.waitUntil) {
-      c.executionCtx.waitUntil(cacheEvents(db, rawEvents))
-      // 1%の確率で古いキャッシュをクリーンアップ
-      if (Math.random() < CACHE_CLEANUP_PROBABILITY) {
+    // キャッシュに保存（DISABLE_CACHE=1 の場合はスキップ）
+    if (!disableCache && c.executionCtx?.waitUntil && rawEvents.length > 0) {
+      // リソース制限対策: 最新50件のみキャッシュ
+      const eventsToCache = rawEvents.slice(0, 50)
+      c.executionCtx.waitUntil(cacheEvents(db, eventsToCache))
+      // 0.5%の確率で古いキャッシュをクリーンアップ
+      if (Math.random() < CACHE_CLEANUP_PROBABILITY / 2) {
         c.executionCtx.waitUntil(cleanupAllCaches(db))
       }
-    } else {
-      void cacheEvents(db, rawEvents)
     }
 
     // レスポンスサイズ削減: contentを切り詰め（タイムラインでは省略表示なので問題なし）

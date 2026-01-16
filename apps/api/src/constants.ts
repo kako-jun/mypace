@@ -7,7 +7,8 @@ export const KIND_NOTE = 1
 export const KIND_LONG_FORM = 30023
 export const KIND_SINOV_NPC = 42000 // Sinov NPC posts (hidden from other clients)
 
-export const RELAYS = [
+// 全リレーリスト（環境変数RELAY_COUNTで使用数を制御）
+export const ALL_RELAYS = [
   'wss://relay.damus.io',
   'wss://nos.lol',
   'wss://relay.nostr.band',

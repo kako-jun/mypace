@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import type { Filter } from 'nostr-tools'
 import type { Bindings } from '../types'
-import { RELAYS, MYPACE_TAG, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC } from '../constants'
+import { ALL_RELAYS, MYPACE_TAG, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC } from '../constants'
 import { SimplePool } from 'nostr-tools/pool'
 import { filterByLanguage } from '../filters/language'
 import {
@@ -17,6 +17,11 @@ const userEvents = new Hono<{ Bindings: Bindings }>()
 
 // GET /api/user/:pubkey/events - ユーザーの投稿取得
 userEvents.get('/:pubkey/events', async (c) => {
+  // リレー設定: RELAY_COUNT=0でリレー接続をスキップ
+  const relayCount = c.env.RELAY_COUNT !== undefined ? parseInt(c.env.RELAY_COUNT, 10) : ALL_RELAYS.length
+  const fetchMultiplier = c.env.FETCH_MULTIPLIER !== undefined ? parseInt(c.env.FETCH_MULTIPLIER, 10) : 1
+  const RELAYS = ALL_RELAYS.slice(0, Math.max(0, relayCount))
+
   const pubkey = c.req.param('pubkey')
   const limit = Math.min(Number(c.req.query('limit')) || 50, 100)
   const since = Number(c.req.query('since')) || 0
@@ -59,7 +64,12 @@ userEvents.get('/:pubkey/events', async (c) => {
   }
 
   // サーバーサイドフィルタ（hideAds, hideNSFW等）で減る分を考慮して多めに取得
-  const fetchMultiplier = 4
+  // fetchMultiplierは環境変数で設定（デフォルト1）
+
+  // RELAY_COUNT=0の場合はリレー接続をスキップ
+  if (RELAYS.length === 0) {
+    return c.json({ events: [], searchedUntil: null })
+  }
 
   const pool = new SimplePool()
 
