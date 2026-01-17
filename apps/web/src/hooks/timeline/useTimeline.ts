@@ -108,6 +108,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const loadTimeline = useCallback(async () => {
     setTimelineItems([])
     setEvents([])
+    setPendingNewEvents([]) // フィルター変更時など、古いポーリング結果を破棄
     setSearchedUntil(Math.floor(Date.now() / 1000)) // 現在時刻にリセット（エラー時も過去分取得でリトライ可能に）
     setLoading(true)
     setError('')
