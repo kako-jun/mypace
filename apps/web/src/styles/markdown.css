@@ -237,11 +237,12 @@
   -webkit-text-fill-color: #fd0;
   -webkit-text-stroke: 3px #000;
   paint-order: stroke fill;
-  font-weight: 700;
+  font-weight: 900;
+  letter-spacing: 0.05em;
   cursor: pointer;
   padding: 0;
   font-size: 1.1em;
-  font-family: inherit;
+  font-family: var(--font-sans);
   transition: all 0.15s ease;
 }
 
@@ -257,8 +258,10 @@
   -webkit-text-fill-color: #fd0;
   -webkit-text-stroke: 3px #000;
   paint-order: stroke fill;
-  font-weight: 700;
+  font-weight: 900;
+  letter-spacing: 0.05em;
   font-size: 1.1em;
+  font-family: var(--font-sans);
   text-decoration: none;
   transition: all 0.15s ease;
 }
@@ -270,12 +273,13 @@
 }
 
 .super-mention-prefix {
-  font-weight: 800;
+  font-weight: 900;
   color: #fe0;
   -webkit-text-fill-color: #fe0;
   -webkit-text-stroke: 3px #000;
   paint-order: stroke fill;
-  letter-spacing: -0.05em;
+  letter-spacing: 0.05em;
+  font-family: var(--font-sans);
 }
 
 /* Q badge in post content - matches suggest popup style */

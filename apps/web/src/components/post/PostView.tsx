@@ -49,7 +49,7 @@ import {
 } from './index'
 import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage } from '../ui'
 import { useDeleteConfirm, usePostViewData } from '../../hooks'
-import type { Profile, ReactionData } from '../../types'
+import type { Profile, ReactionData, LoadableProfile } from '../../types'
 import type { ShareOption } from './ShareMenu'
 
 interface PostViewProps {
@@ -131,8 +131,8 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
   if (!mounted) return null
 
-  const getProfileDisplayName = (pubkey: string, profileData?: Profile | null): string => {
-    const effectiveProfile = profileData ?? (pubkey === event?.pubkey ? profile : null)
+  const getProfileDisplayName = (pubkey: string, profileData?: LoadableProfile): string => {
+    const effectiveProfile = profileData ?? (pubkey === event?.pubkey ? profile : undefined)
     return getDisplayName(effectiveProfile, pubkey)
   }
 

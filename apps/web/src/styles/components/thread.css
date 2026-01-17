@@ -131,9 +131,13 @@
 .reply-header .author-name,
 .reply-card .author-name {
   font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-secondary);
   text-shadow: none;
+  -webkit-text-stroke: 2px #555;
+}
+
+[data-theme="dark"] .reply-header .author-name,
+[data-theme="dark"] .reply-card .author-name {
+  -webkit-text-stroke: 2px #222;
 }
 
 .reply-header .timestamp {

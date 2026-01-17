@@ -16,9 +16,9 @@ interface PostViewData {
   replies: { count: number; replies: Event[] }
   reposts: { count: number; myRepost: boolean }
   views: ViewCountData | undefined
-  replyProfiles: { [pubkey: string]: Profile | null }
+  replyProfiles: { [pubkey: string]: LoadableProfile }
   parentEvent: Event | null
-  parentProfile: Profile | null
+  parentProfile: LoadableProfile
   setReactions: React.Dispatch<React.SetStateAction<ReactionData>>
   setReposts: React.Dispatch<React.SetStateAction<{ count: number; myRepost: boolean }>>
 }
@@ -41,14 +41,14 @@ export function usePostViewData(eventId: string): PostViewData {
   const [replies, setReplies] = useState<{ count: number; replies: Event[] }>({ count: 0, replies: [] })
   const [reposts, setReposts] = useState({ count: 0, myRepost: false })
   const [views, setViews] = useState<ViewCountData | undefined>(undefined)
-  const [replyProfiles, setReplyProfiles] = useState<{ [pubkey: string]: Profile | null }>({})
+  const [replyProfiles, setReplyProfiles] = useState<{ [pubkey: string]: LoadableProfile }>({})
   const [parentEvent, setParentEvent] = useState<Event | null>(null)
-  const [parentProfile, setParentProfile] = useState<Profile | null>(null)
+  const [parentProfile, setParentProfile] = useState<LoadableProfile>(undefined)
 
   const loadPost = useCallback(async () => {
     setError('')
     setParentEvent(null)
-    setParentProfile(null)
+    setParentProfile(undefined)
     try {
       const pubkey = await getCurrentPubkey()
       setMyPubkey(pubkey)
@@ -112,9 +112,9 @@ export function usePostViewData(eventId: string): PostViewData {
         if (allPubkeys.length > 0) {
           try {
             const fetchedProfiles = await fetchProfiles(allPubkeys)
-            const profiles: { [pubkey: string]: Profile | null } = {}
+            const profiles: { [pubkey: string]: LoadableProfile } = {}
             for (const pk of allPubkeys) {
-              profiles[pk] = (fetchedProfiles[pk] as Profile) || null
+              profiles[pk] = fetchedProfiles[pk] as LoadableProfile
             }
             setReplyProfiles(profiles)
           } catch {}
@@ -166,9 +166,9 @@ export function usePostViewData(eventId: string): PostViewData {
 
       if (allPubkeys.length > 0) {
         const replyReactorProfiles = await fetchProfiles(allPubkeys)
-        const profiles: { [pubkey: string]: Profile | null } = {}
+        const profiles: { [pubkey: string]: LoadableProfile } = {}
         for (const pk of allPubkeys) {
-          profiles[pk] = (replyReactorProfiles[pk] as Profile) || null
+          profiles[pk] = replyReactorProfiles[pk] as LoadableProfile
         }
         setReplyProfiles(profiles)
       }
