@@ -105,9 +105,6 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
     const rawEvents = await p.querySync(RELAYS, filter)
     rawEvents.sort((a, b) => b.created_at - a.created_at)
 
-    // フィルタ前の最古時刻を記録
-    const searchedUntil = rawEvents.length > 0 ? Math.min(...rawEvents.map((e) => e.created_at)) : null
-
     let events = rawEvents.map(toEvent)
 
     // フィルタ適用（除外率の高い順に実行）
@@ -123,7 +120,20 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
       events = filterByLanguage(events, langFilter)
     }
 
-    return { events: events.slice(0, limit), searchedUntil }
+    // limit件に切り詰め
+    const result = events.slice(0, limit)
+
+    // searchedUntilは「返却するイベントの最古時刻」
+    // sliceで切り捨てられたイベントも次回取得できるようにする
+    // result が0件の場合はrawEventsの最古を使う（フィルタ後0件でも過去を探れるように）
+    const searchedUntil =
+      result.length > 0
+        ? Math.min(...result.map((e) => e.created_at))
+        : rawEvents.length > 0
+          ? Math.min(...rawEvents.map((e) => e.created_at))
+          : null
+
+    return { events: result, searchedUntil }
   } catch (e) {
     console.error('Failed to fetch timeline:', e)
     return { events: [], searchedUntil: null }
@@ -207,8 +217,6 @@ export async function fetchUserEvents(
     const rawEvents = await p.querySync(RELAYS, filter)
     rawEvents.sort((a, b) => b.created_at - a.created_at)
 
-    const searchedUntil = rawEvents.length > 0 ? Math.min(...rawEvents.map((e) => e.created_at)) : null
-
     let events = rawEvents.map(toEvent)
 
     // フィルタ適用
@@ -224,7 +232,20 @@ export async function fetchUserEvents(
       events = filterByLanguage(events, langFilter)
     }
 
-    return { events: events.slice(0, limit), searchedUntil }
+    // limit件に切り詰め
+    const result = events.slice(0, limit)
+
+    // searchedUntilは「返却するイベントの最古時刻」
+    // sliceで切り捨てられたイベントも次回取得できるようにする
+    // result が0件の場合はrawEventsの最古を使う（フィルタ後0件でも過去を探れるように）
+    const searchedUntil =
+      result.length > 0
+        ? Math.min(...result.map((e) => e.created_at))
+        : rawEvents.length > 0
+          ? Math.min(...rawEvents.map((e) => e.created_at))
+          : null
+
+    return { events: result, searchedUntil }
   } catch (e) {
     console.error('Failed to fetch user events:', e)
     return { events: [], searchedUntil: null }
