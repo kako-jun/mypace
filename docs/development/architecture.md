@@ -2,53 +2,95 @@
 
 ## 概要
 
+ブラウザがNostrリレーに直接接続するアーキテクチャ。APIは補助的な役割のみ。
+
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                           Browser                                    │
 │  ┌─────────────┐  ┌─────────────────────────────────────────────┐   │
 │  │ NIP-07 Ext  │  │ React SPA                                   │   │
-│  │ (optional)  │  │  ├─ PostForm (署名 → API)                   │   │
-│  └──────┬──────┘  │  └─ Timeline (← API)                        │   │
+│  │ (optional)  │  │  ├─ nostr-tools (リレー直接接続)            │   │
+│  └──────┬──────┘  │  ├─ タイムライン取得                        │   │
+│         │         │  ├─ プロフィール取得                        │   │
+│         │         │  ├─ 投稿(publish)                           │   │
+│         │         │  └─ リアクション/リポスト                   │   │
 │         │         └──────────────────┬──────────────────────────┘   │
 └─────────┼────────────────────────────┼──────────────────────────────┘
           │                            │
-          │                            ▼
-          │    ┌─────────────────────────────────────────────────────┐
-          │    │              Hono API (Cloudflare Workers)          │
-          │    │                                                     │
-          │    │  GET /api/timeline     ← タイムライン取得           │
-          │    │  GET /api/events/:id   ← 単一イベント取得           │
-          │    │  GET /api/profiles     ← プロフィール取得           │
-          │    │  GET /api/reactions/:id                             │
-          │    │  GET /api/replies/:id                               │
-          │    │  GET /api/reposts/:id                               │
-          │    │  GET /api/user/:pubkey/events                       │
-          │    │  POST /api/publish     ← 署名済みイベント投稿       │
-          │    │                                                     │
-          │    │  ┌─────────────────┐  ┌─────────────────────────┐   │
-          │    │  │ Cloudflare D1   │  │ SOCKS5 Proxy (optional) │   │
-          │    │  │ (cache)         │  └───────────┬─────────────┘   │
-          │    │  └────────┬────────┘              │                 │
-          │    └───────────┼───────────────────────┼─────────────────┘
-          │                │                       │
-          │                │                       ▼
-          │                │           ┌─────────────────────┐
-          │                │           │   Nostr Relays      │
-          │                │           │ (nos.lol, etc.)     │
-          │                │           └─────────────────────┘
-          │                │
-    ┌─────▼─────┐          │
-    │ Secret Key│          │
-    │ (local)   │          │
-    └───────────┘          │
-                           │
-                    ┌──────▼──────┐
-                    │ React SPA   │
-                    │ (static)    │
-                    │ Cloudflare  │
-                    │ Pages       │
-                    └─────────────┘
+          │              ┌─────────────┴─────────────┐
+          │              │                           │
+          │              ▼                           ▼
+          │    ┌─────────────────────┐     ┌─────────────────────────────┐
+          │    │   Nostr Relays      │     │  Hono API (CF Workers)      │
+          │    │ (nos.lol, etc.)     │     │                             │
+          │    │                     │     │  - OGP取得                  │
+          │    │  - タイムライン     │     │  - views記録 (D1)           │
+          │    │  - プロフィール     │     │  - stella記録 (D1)          │
+          │    │  - 投稿/削除        │     │  - tweet埋め込み            │
+          │    │  - リアクション     │     │  - serial/sticker/pins      │
+          │    │  - リポスト         │     │                             │
+          │    └─────────────────────┘     │  ┌─────────────────────┐    │
+          │                                │  │ Cloudflare D1       │    │
+          │                                │  │ (独自データ)        │    │
+          │                                │  └─────────────────────┘    │
+          │                                └─────────────────────────────┘
+          │
+    ┌─────▼─────┐
+    │ Secret Key│
+    │ (local)   │
+    └───────────┘
 ```
+
+## データフロー
+
+### ブラウザ側の責務
+
+1. **タイムライン取得**
+   - nostr-toolsでリレーに直接接続
+   - フィルタリング（mypace/all、言語、NG等）はAPI側で実行
+   - 取得件数: 200件
+
+2. **ユーザー投稿取得**
+   - ユーザーページの投稿一覧
+
+3. **プロフィール取得**
+   - kind:0イベントを直接取得
+
+4. **投稿・リアクション・リポスト**
+   - 署名はブラウザ（NIP-07 or 秘密鍵）
+   - リレーへ直接送信
+
+5. **メタデータ取得**
+   - reactions, replies, reposts をリレーから直接取得
+
+### API側の責務（補助のみ）
+
+1. **X埋め込み取得** (`/api/tweet/:id`)
+   - Twitter/X APIへのプロキシ（CORSの関係で必要）
+
+2. **OGP取得** (`/api/ogp`)
+   - URLのOGP情報取得（CORSの関係で必要）
+   - D1にキャッシュ
+
+3. **Wikidata取得** (`/api/wikidata`)
+   - super-mention用
+
+4. **インプレッション記録** (`/api/views`)
+   - 表示回数の記録（D1）
+
+5. **ステラ記録** (`/api/stella`)
+   - ステラ情報を記録（D1）
+   - **0→1**：ブラウザがkind:7をリレーに送信 + APIにステラ記録
+   - **1→2, 2→3, ...10**：APIにステラ記録を更新するだけ
+   - **削除（1→0）**：ブラウザがkind:5をリレーに送信 + APIからステラ記録を削除
+
+6. **その他の独自機能**
+   - `/api/serial` - 通し番号
+   - `/api/sticker` - ステッカー
+   - `/api/pins` - ピン留め
+   - `/api/uploads` - アップロード履歴
+
+---
 
 ## パッケージ
 
@@ -60,105 +102,39 @@ Cloudflare Pages にデプロイされる静的 SPA。
 src/
 ├── components/          # UIコンポーネント
 │   ├── post/            # 投稿関連
-│   │   ├── PostHeader.tsx
-│   │   ├── PostActions.tsx
-│   │   ├── PostPreview.tsx
-│   │   ├── EditDeleteButtons.tsx
-│   │   ├── DeleteConfirmDialog.tsx
-│   │   ├── AttachedImages.tsx
-│   │   ├── ImageDropZone.tsx
-│   │   ├── ThreadReplies.tsx
-│   │   └── ReplyCard.tsx
 │   ├── settings/        # 設定パネルセクション
-│   │   ├── ProfileSection.tsx
-│   │   ├── ThemeSection.tsx
-│   │   ├── EditorSection.tsx
-│   │   ├── KeysSection.tsx
-│   │   └── ShareSection.tsx
 │   ├── embed/           # 外部埋め込みコンポーネント
-│   │   ├── YouTubeEmbed.tsx
-│   │   ├── YouTubeShortsEmbed.tsx
-│   │   ├── TwitterEmbed.tsx
-│   │   ├── InstagramEmbed.tsx
-│   │   ├── TikTokEmbed.tsx
-│   │   ├── SpotifyEmbed.tsx
-│   │   ├── VideoEmbed.tsx
-│   │   ├── IframeEmbed.tsx
-│   │   └── LinkPreview.tsx
 │   ├── timeline/        # タイムライン関連
-│   │   └── TimelinePostCard.tsx
-│   ├── ui/              # 汎用UIコンポーネント
-│   │   ├── Button.tsx
-│   │   ├── Input.tsx
-│   │   ├── Toggle.tsx
-│   │   ├── ColorPicker.tsx
-│   │   ├── Icon.tsx
-│   │   ├── Avatar.tsx
-│   │   ├── Loading.tsx    # ローディングオーバーレイ
-│   │   └── SearchButton.tsx
-│   ├── PostForm.tsx
-│   ├── Timeline.tsx
-│   ├── PostView.tsx
-│   ├── PostModal.tsx       # モーダル投稿詳細
-│   ├── UserView.tsx
-│   ├── Settings.tsx
-│   ├── ProfileSetup.tsx
-│   ├── LongModeEditor.tsx
-│   ├── Layout.tsx
-│   ├── FilterPanel.tsx
-│   └── LightBox.tsx
+│   ├── filter/          # フィルター関連
+│   ├── location/        # 位置情報
+│   ├── user/            # ユーザー関連
+│   ├── stats/           # 統計ウィジェット
+│   └── ui/              # 汎用UIコンポーネント
 │
 ├── hooks/               # カスタムフック
-│   ├── useTimeline.ts   # タイムライン取得・更新
-│   ├── useDeleteConfirm.ts
-│   ├── useImageUpload.ts
-│   ├── useDragDrop.ts
-│   ├── useShare.ts
-│   └── useTemporaryState.ts
+│   ├── timeline/        # タイムライン関連
+│   │   ├── useTimeline.ts
+│   │   ├── useTimelinePolling.ts
+│   │   └── useTimelineData.ts
+│   ├── post/            # 投稿関連
+│   └── ...
 │
 ├── lib/                 # ライブラリ
-│   ├── api.ts           # APIクライアント
 │   ├── nostr/           # Nostr関連
 │   │   ├── events.ts    # イベント生成・署名
-│   │   ├── relay.ts     # API経由のリレー通信ラッパー
+│   │   ├── relay.ts     # リレー直接接続
 │   │   ├── keys.ts      # 鍵管理
 │   │   ├── tags.ts      # タグ解析
-│   │   ├── theme.ts     # テーマ関連
-│   │   ├── format.ts    # npub/nsec変換
 │   │   └── constants.ts # Nostr定数
+│   ├── api.ts           # APIクライアント（補助API用）
 │   ├── utils/           # ユーティリティ
-│   │   ├── navigation/         # URL遷移
-│   │   ├── storage/            # sessionStorageキャッシュ
-│   │   ├── filter/             # フィルタ・ミュートリスト
-│   │   ├── profile/            # プロフィール
-│   │   ├── embed/              # 埋め込み判定
-│   │   ├── image.ts
-│   │   ├── content.ts
-│   │   ├── clipboard.ts
-│   │   ├── settings.ts
-│   │   ├── time.ts
-│   │   ├── error.ts
-│   │   ├── json.ts
-│   │   └── animated.ts
-│   ├── storage/         # localStorage管理（統合）
-│   │   └── index.ts     # 全設定を単一キー"mypace"で管理
+│   ├── storage/         # localStorage管理
 │   ├── constants/       # 定数
-│   │   └── ui.ts
-│   ├── content-parser.tsx
-│   └── upload.ts        # 画像アップロード
+│   └── parser.tsx       # コンテンツパーサー
 │
 ├── pages/               # ルートコンポーネント
-│   ├── HomePage.tsx
-│   └── (react-router routes)
-│
 ├── styles/              # CSS
-│   ├── tailwind.css
-│   ├── base.css
-│   └── components/
-│
-├── types/
-│   └── index.ts         # TypeScript型定義
-│
+├── types/               # TypeScript型定義
 ├── App.tsx              # ルーティング
 └── main.tsx             # エントリポイント
 ```
@@ -169,156 +145,62 @@ Cloudflare Workers にデプロイされる API サーバー。
 
 ```
 src/
-└── index.ts             # 全APIエンドポイント
+├── index.ts             # ルーティング
+├── routes/              # 各エンドポイント
+│   ├── ogp.ts
+│   ├── views.ts
+│   ├── stella.ts
+│   ├── tweet.ts
+│   ├── wikidata.ts
+│   ├── serial.ts
+│   ├── sticker.ts
+│   ├── pins.ts
+│   └── uploads.ts
+└── lib/                 # 共通ライブラリ
 ```
 
-## データフロー
+---
 
-### 読み取り (クライアント → API → リレー)
+## D1データベース
 
-1. フロントエンドが `/api/timeline` 等をfetch
-2. APIがD1キャッシュをチェック
-3. キャッシュミス → SOCKS5プロキシ経由でリレーに接続
-4. イベント取得 → D1にキャッシュ → JSONで返却
+MY PACE独自データのみ保存（Nostrイベントのキャッシュは持たない）。
 
-### 書き込み (クライアント → API → リレー)
+### テーブル
 
-1. ユーザーがコンテンツを入力
-2. クライアントでNostrイベント(kind:1等)を生成
-3. localStorageの秘密鍵またはNIP-07で署名
-4. 署名済みイベントを `POST /api/publish` に送信
-5. APIがSOCKS5経由でリレーに publish
+| テーブル | 用途 |
+|----------|------|
+| `user_stella` | ステラ記録（Nostrにはない独自機能） |
+| `user_serial` | 通し番号（MY PACE独自） |
+| `event_views` | 閲覧記録（誰がどのイベントを見たか） |
+| `ogp_cache` | OGPキャッシュ（APIプロキシ用） |
+| `super_mention_paths` | スーパーメンション履歴 |
+| `sticker_history` | ステッカー履歴 |
+| `user_pins` | ピン留め投稿 |
+| `upload_history` | アップロード履歴 |
 
-**重要**: 秘密鍵はサーバーに送信されない。署名は常にクライアント側で行う。
+---
 
-## APIエンドポイント
+## 定数
 
-| メソッド | エンドポイント | 説明 |
-|--------|----------|-------------|
-| GET | /api/timeline | mypaceタグ付き投稿一覧 |
-| GET | /api/events/:id | 単一イベント取得 |
-| GET | /api/profiles | プロフィール取得（複数pubkey） |
-| GET | /api/reactions/:eventId | リアクション数・自分のリアクション |
-| GET | /api/replies/:eventId | 返信一覧（古い順） |
-| GET | /api/reposts/:eventId | リポスト数・自分のリポスト |
-| GET | /api/user/:pubkey/events | ユーザーの投稿一覧 |
-| GET | /api/user/:pubkey/count | ユーザーの投稿数（Primal cache経由） |
-| GET | /api/ogp | OGPメタデータ取得（リンクプレビュー用） |
-| GET | /api/tweet/:id | ツイートデータ取得（react-tweet用） |
-| POST | /api/publish | 署名済みイベントをリレーに投稿 |
-| GET | /health | ヘルスチェック |
+### タイムライン
 
-### タイムラインページネーション
+| 定数 | 値 | 説明 |
+|------|-----|------|
+| `TIMELINE_FETCH_LIMIT` | 200 | 1回の取得件数 |
+| `MAX_TIMELINE_ITEMS` | 200 | DOM要素上限（パフォーマンス対策） |
+| `POLLING_INTERVAL` | 60秒 | 新着チェック間隔 |
 
-`/api/timeline` と `/api/user/:pubkey/events` は以下のクエリパラメータでページネーションをサポート:
-
-| パラメータ | 説明 |
-|-----------|-------------|
-| limit | 取得件数（最大100、デフォルト50） |
-| since | この時刻より新しい投稿を取得（Unix timestamp） |
-| until | この時刻より古い投稿を取得（Unix timestamp） |
-
-**使用例:**
-- 初回読み込み: `?limit=50`
-- 新着取得: `?limit=50&since=1234567890`
-- 過去読み込み: `?limit=50&until=1234567890`
-- ギャップ埋め: `?limit=50&since=1234567800&until=1234567890`
+---
 
 ## Cloudflareサービス
 
 | サービス | パッケージ | 用途 |
 |---------|---------|---------|
 | Pages | web | 静的SPAホスティング |
-| Workers | api | APIサーバー |
-| D1 | api | SQLiteキャッシュ |
+| Workers | api | 補助APIサーバー |
+| D1 | api | 独自データ保存 |
 
-## D1キャッシュ（サーバーサイド）
-
-### 概要
-
-APIサーバーはNostrリレーから取得したイベントをCloudflare D1にキャッシュする。
-MYPACEタグ付き投稿もそれ以外も同様にキャッシュし、`has_mypace_tag`カラムで区別する。
-
-### eventsテーブル
-
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| id | TEXT | イベントID（主キー） |
-| pubkey | TEXT | 投稿者の公開鍵 |
-| created_at | INTEGER | イベント作成時刻 |
-| kind | INTEGER | イベント種別 |
-| tags | TEXT | タグ（JSON） |
-| content | TEXT | 本文 |
-| sig | TEXT | 署名 |
-| cached_at | INTEGER | キャッシュ保存時刻 |
-| has_mypace_tag | INTEGER | mypaceタグの有無（0 or 1） |
-
-### TTLと物理削除
-
-| 設定 | 値 | 説明 |
-|------|-----|------|
-| 論理TTL | 5分 | これより古いキャッシュは取得されない |
-| 物理削除 | 1日 | これより古いキャッシュはDBから削除 |
-
-### 確率的クリーンアップ
-
-キャッシュ書き込み時、**1%の確率**でバックグラウンドクリーンアップを実行:
-
-```typescript
-if (Math.random() < 0.01) {
-  executionCtx.waitUntil(
-    db.prepare('DELETE FROM events WHERE cached_at < ?')
-      .bind(Date.now() - 24 * 60 * 60 * 1000) // 1日
-      .run()
-  )
-}
-```
-
-- レスポンスに影響しない（waitUntilでバックグラウンド実行）
-- 平均100リクエストに1回なので負荷分散
-- 1日以上古いキャッシュは確実に削除される
-
-## SOCKS5プロキシサポート
-
-APIサーバーはオプションでSOCKS5プロキシ経由でリレーに接続可能。
-`wrangler.toml` の `SOCKS5_PROXY` 環境変数で設定。
-
-```toml
-[vars]
-SOCKS5_PROXY = "socks5://localhost:1080"
-```
-
-## コンポーネント階層
-
-```
-App.tsx (react-router)
-├── HomePage
-│   ├── PostForm
-│   │   ├── AttachedImages
-│   │   ├── ImageDropZone
-│   │   └── LongModeEditor
-│   ├── Timeline
-│   │   └── TimelinePostCard
-│   │       ├── PostHeader
-│   │       ├── PostActions
-│   │       └── ThreadReplies
-│   ├── Settings
-│   │   ├── ProfileSection
-│   │   ├── ThemeSection
-│   │   ├── EditorSection
-│   │   ├── KeysSection
-│   │   └── ShareSection
-│   └── LightBox
-│
-├── PostView (/:postId)
-│   └── ...
-│
-├── PostModal (モーダル表示時)
-│   └── PostView
-│
-└── UserView (/user/:pubkey)
-    └── ...
-```
+---
 
 ## PWAサポート
 
@@ -329,6 +211,8 @@ vite-plugin-pwaによるPWA対応:
   - 静的アセット（JS、CSS、HTML、画像）をプリキャッシュ
   - Google Fontsを1年間キャッシュ
 - **インストール**: ホーム画面追加でネイティブアプリ風に起動
+
+---
 
 ## モーダルナビゲーション
 
@@ -342,6 +226,8 @@ vite-plugin-pwaによるPWA対応:
 
 直接 `/post/:id` にアクセスした場合は通常のフルページ表示。
 
+---
+
 ## クライアントサイドキャッシュ
 
 `sessionStorage` を使用したクライアント側キャッシュ:
@@ -349,14 +235,11 @@ vite-plugin-pwaによるPWA対応:
 | 関数 | 説明 |
 |------|------|
 | `cachePost(event)` | 投稿をキャッシュに保存 |
-| `getCachedPost(eventId)` | キャッシュから投稿を取得（削除しない） |
-| `clearCachedPost(eventId)` | キャッシュから投稿を削除 |
+| `getCachedPost(eventId)` | キャッシュから投稿を取得 |
 | `cacheProfile(pubkey, profile)` | プロフィールをキャッシュに保存 |
-| `getCachedProfile(pubkey)` | キャッシュからプロフィールを取得（削除しない） |
-| `clearCachedProfile(pubkey)` | キャッシュからプロフィールを削除 |
+| `getCachedProfile(pubkey)` | キャッシュからプロフィールを取得 |
 
-**注意**: `getCachedPost` / `getCachedProfile` は読み取り時にキャッシュを削除しない。
-これはReact 18 StrictModeでエフェクトが2回実行されても問題なく動作するため。
+---
 
 ## localStorageの構造
 

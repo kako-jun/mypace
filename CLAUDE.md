@@ -51,7 +51,7 @@ pnpm typecheck     # TypeScript型チェック
 |---------|------|
 | フロントエンド | Vite + React 19 SPA |
 | API | Hono on Cloudflare Workers |
-| データベース | Cloudflare D1 (cache) |
+| データベース | Cloudflare D1 (独自データ) |
 | スタイリング | Tailwind CSS |
 | プロトコル | Nostr (NIP-01, NIP-07, NIP-25, etc.) |
 

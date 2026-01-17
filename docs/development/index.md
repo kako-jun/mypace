@@ -10,7 +10,6 @@ MY PACEの技術ドキュメントです。
 
 - [アーキテクチャ](./architecture.md) - システム構成図、データフロー
 - [Nostr統合](./nostr.md) - 認証、イベント、NIP対応
-- [API通信最適化](./api-optimization.md) - バッチ処理によるリクエスト削減
 
 ## デプロイ・運用
 

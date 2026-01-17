@@ -170,8 +170,7 @@ const RELAYS = [
 ## Filtering
 
 タイムライン取得時に `#t: ['mypace']` フィルターを適用:
-- `fetchEvents()` - クライアント直接取得
-- `/api/timeline` - サーバーAPI経由
+- `fetchTimeline()` - ブラウザからリレーに直接接続して取得
 
 ## Security
 
