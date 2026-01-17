@@ -32,11 +32,38 @@
 }
 
 .parent-post-card {
+  position: relative;
   padding: 0.75rem 1rem;
   background: var(--surface-primary);
   border: 2px solid #000;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
   cursor: pointer;
   transition: opacity 0.15s ease;
+}
+
+/* Folded corner effect */
+.parent-post-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, var(--surface-fold) 50%, transparent 50%);
+  border-left: 2px solid #000;
+  border-top: 2px solid #000;
+}
+
+/* Diagonal line on fold */
+.parent-post-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, transparent calc(50% + 1px), #000 calc(50% + 1px), #000 calc(50% + 4px), transparent calc(50% + 4px));
+  pointer-events: none;
 }
 
 .parent-post-card:hover {
@@ -48,11 +75,11 @@
 }
 
 .parent-post-card .author-name {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .parent-post-card .timestamp {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 .parent-post-content {
@@ -77,7 +104,6 @@
 .post-card-large {
   padding: 2rem;
   border-radius: 0;
-  margin-bottom: 2rem;
   overflow: hidden;
 }
 
@@ -87,7 +113,7 @@
 }
 
 .post-card-large .author-name {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 .post-card-large .post-content,
@@ -118,6 +144,44 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+/* Reply cards in PostView - same style as post-card */
+.replies-list .reply-card {
+  border-radius: 0;
+  border: 2px solid #000;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+/* Folded corner effect */
+.replies-list .reply-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, var(--surface-fold) 50%, transparent 50%);
+  border-left: 2px solid #000;
+  border-top: 2px solid #000;
+}
+
+/* Diagonal line on fold */
+.replies-list .reply-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, transparent calc(50% + 1px), #000 calc(50% + 1px), #000 calc(50% + 4px), transparent calc(50% + 4px));
+  pointer-events: none;
+}
+
+.replies-list .reply-card:hover {
+  opacity: 0.9;
 }
 
 .replies-list .post-card {

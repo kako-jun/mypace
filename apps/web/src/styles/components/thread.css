@@ -128,14 +128,16 @@
   flex: 1;
 }
 
-.reply-header .author-name {
+.reply-header .author-name,
+.reply-card .author-name {
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-secondary);
+  text-shadow: none;
 }
 
 .reply-header .timestamp {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
