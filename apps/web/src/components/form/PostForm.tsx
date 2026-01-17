@@ -536,6 +536,7 @@ export function PostForm({
         content={content}
         onContentChange={onContentChange}
         onSuperMentionTrigger={() => setShowSuperMentionPopup(true)}
+        placeholder={stickers.length > 0 ? '投稿するには1文字以上必要です' : 'マイペースで書こう'}
       />
 
       <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />

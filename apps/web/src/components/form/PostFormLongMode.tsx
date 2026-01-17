@@ -206,7 +206,7 @@ export function PostFormLongMode({
             ref={editorRef}
             value={content}
             onChange={onContentChange}
-            placeholder="マイペースで書こう"
+            placeholder={stickers.length > 0 ? '投稿するには1文字以上必要です' : 'マイペースで書こう'}
             vimMode={vimMode}
             darkTheme={darkTheme}
             onWrite={() => longModeFormRef.current?.requestSubmit()}

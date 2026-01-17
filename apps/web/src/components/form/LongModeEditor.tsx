@@ -20,7 +20,16 @@ export interface LongModeEditorRef {
 }
 
 export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>(function LongModeEditor(
-  { value, onChange, placeholder = '', vimMode = false, darkTheme = false, onWrite, onQuit, onSuperMentionTrigger },
+  {
+    value,
+    onChange,
+    placeholder = 'マイペースで書こう',
+    vimMode = false,
+    darkTheme = false,
+    onWrite,
+    onQuit,
+    onSuperMentionTrigger,
+  },
   ref
 ) {
   const editorRef = useRef<HTMLDivElement>(null)
