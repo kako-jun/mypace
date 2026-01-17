@@ -26,6 +26,7 @@ import {
   downloadAsMarkdown,
   openRawUrl,
   shareOrCopy,
+  formatNumber,
 } from '../../lib/utils'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import { hasTeaserTag, getTeaserContent, removeReadMoreLink, parseStickers } from '../../lib/nostr/tags'
@@ -434,7 +435,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
       {replies.count > 0 && (
         <div className="replies-section">
-          <h3 className="replies-heading">{replies.count} Replies</h3>
+          <h3 className="replies-heading">{formatNumber(replies.count)} Replies</h3>
           <div className="replies-list">
             {replies.replies.map((reply) => (
               <ReplyCard

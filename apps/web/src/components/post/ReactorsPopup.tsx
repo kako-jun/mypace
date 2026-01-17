@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom'
 import { Icon, CloseButton } from '../ui'
+import { formatNumber } from '../../lib/utils'
 
 interface Reactor {
   pubkey: string
@@ -45,7 +46,7 @@ export default function ReactorsPopup({
               </span>
               <span className="reactor-stella">
                 <Icon name="Star" size={14} fill="#f1c40f" />
-                {reactor.stella}
+                {formatNumber(reactor.stella)}
               </span>
               {reactor.pubkey === myPubkey && (
                 <button className="reactor-remove" onClick={onRemove}>

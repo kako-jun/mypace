@@ -1,5 +1,5 @@
 import { Icon, Avatar, TextButton, CopyButton, ExternalLink } from '../ui'
-import { getWebsites, getWebsiteIcon } from '../../lib/utils'
+import { getWebsites, getWebsiteIcon, formatNumber } from '../../lib/utils'
 import { nip19 } from 'nostr-tools'
 import type { LoadableProfile, ThemeColors } from '../../types'
 import type { UserSerialData } from '../../lib/api'
@@ -110,14 +110,20 @@ export function UserProfile({
         </div>
 
         <div className="user-stats">
-          <span>{postsCount !== null ? postsCount : '...'} posts</span>
-          <span>
-            <Icon name="BarChart2" size={14} />{' '}
-            {viewsCount !== null ? `${viewsCount.details} / ${viewsCount.impressions}` : '...'}
-          </span>
-          <span>
-            <Icon name="Star" size={14} fill="#f1c40f" /> {stellaCount !== null ? stellaCount : '...'}
-          </span>
+          <div className="user-stats-row">
+            <span>{formatNumber(postsCount)} posts</span>
+            <span>
+              <Icon name="BarChart2" size={14} />{' '}
+              {viewsCount !== null
+                ? `${formatNumber(viewsCount.details)} / ${formatNumber(viewsCount.impressions)}`
+                : '...'}
+            </span>
+          </div>
+          <div className="user-stats-row">
+            <span>
+              <Icon name="Star" size={14} fill="#f1c40f" /> {formatNumber(stellaCount)}
+            </span>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Icon, Button, Input } from '../ui'
-import { loadPresets, savePreset, deletePreset, MAX_PRESETS } from '../../lib/utils'
+import { loadPresets, savePreset, deletePreset, MAX_PRESETS, formatNumber } from '../../lib/utils'
 import type { SearchFilters, FilterPreset } from '../../types'
 
 interface FilterPresetsProps {
@@ -75,7 +75,7 @@ export function FilterPresets({
           value={selectedPresetId}
           onChange={(e) => handlePresetSelectWithReset(e.target.value)}
         >
-          <option value="">{presets.length} presets</option>
+          <option value="">{formatNumber(presets.length)} presets</option>
           {presets.map((preset) => (
             <option key={preset.id} value={preset.id}>
               {preset.name}

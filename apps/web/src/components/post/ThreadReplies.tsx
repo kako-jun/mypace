@@ -4,7 +4,7 @@ import PostHeader from './PostHeader'
 import { PostContent } from './PostContent'
 import { parseEmojiTags } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
-import { navigateToPost } from '../../lib/utils'
+import { navigateToPost, formatNumber } from '../../lib/utils'
 
 interface ThreadRepliesProps {
   replies: Event[]
@@ -28,7 +28,7 @@ export default function ThreadReplies({
   return (
     <div className="thread-section">
       <button className="thread-toggle" onClick={onToggle}>
-        {expanded ? '▼' : '▶'} {replies.length} replies
+        {expanded ? '▼' : '▶'} {formatNumber(replies.length)} replies
       </button>
 
       {expanded && (

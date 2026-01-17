@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import L from 'leaflet'
 import geohash from 'ngeohash'
 import { Icon, CloseButton, Toggle, Portal } from '../ui'
+import { formatNumber } from '../../lib/utils'
 import Button from '../ui/Button'
 import 'leaflet/dist/leaflet.css'
 
@@ -179,7 +180,7 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
         type="button"
         className="location-picker-button"
         onClick={handleOpen}
-        title={currentLocations.length > 0 ? `${currentLocations.length} location(s)` : 'Add location'}
+        title={currentLocations.length > 0 ? `${formatNumber(currentLocations.length)} location(s)` : 'Add location'}
       >
         <Icon name="MapPin" size={16} />
       </button>

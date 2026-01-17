@@ -14,6 +14,7 @@ import {
   navigateToEdit,
   navigateTo,
   navigateToTag,
+  formatNumber,
 } from '../../lib/utils'
 import type { Event } from '../../types'
 import type { ShareOption } from '../post/ShareMenu'
@@ -162,7 +163,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
     <div className="timeline">
       <TimelineSearch onFiltersChange={handleFiltersChange} />
       {newEventCount > 0 && (
-        <TimelineActionButton onClick={loadNewEvents}>{newEventCount} New Posts</TimelineActionButton>
+        <TimelineActionButton onClick={loadNewEvents}>{formatNumber(newEventCount)} New Posts</TimelineActionButton>
       )}
       {items.map((item) => {
         const event = item.event

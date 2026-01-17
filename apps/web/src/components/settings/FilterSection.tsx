@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { loadPresets } from '../../lib/utils'
+import { loadPresets, formatNumber } from '../../lib/utils'
 import { CUSTOM_EVENTS } from '../../lib/constants'
 import { SettingsSection } from '../ui'
 
@@ -24,7 +24,7 @@ export default function FilterSection({ onClose }: FilterSectionProps) {
 
   return (
     <SettingsSection title="Filters">
-      <p className="filter-summary-text">{presetCount} presets</p>
+      <p className="filter-summary-text">{formatNumber(presetCount)} presets</p>
       <button className="profile-edit-link" onClick={handleOpenFilter}>
         Edit Filters →
       </button>

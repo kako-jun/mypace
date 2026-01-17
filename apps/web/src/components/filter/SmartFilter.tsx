@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Icon } from '../ui/Icon'
 import Toggle from '../ui/Toggle'
 import { LANGUAGES } from '../../lib/constants'
+import { formatNumber } from '../../lib/utils'
 
 interface SmartFilterProps {
   hideAds: boolean
@@ -52,7 +53,7 @@ export function SmartFilter({
       >
         <Icon name="Sparkles" size={14} />
         <span>Smart Filter</span>
-        {smartFilterCount > 0 && <span className="smart-filter-count">{smartFilterCount}</span>}
+        {smartFilterCount > 0 && <span className="smart-filter-count">{formatNumber(smartFilterCount)}</span>}
         <Icon name={showPopup ? 'ChevronUp' : 'ChevronDown'} size={14} />
       </button>
 

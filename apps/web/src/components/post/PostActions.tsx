@@ -1,5 +1,6 @@
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react'
 import { Icon } from '../ui'
+import { formatNumber } from '../../lib/utils'
 import '../../styles/components/post-actions.css'
 import ReactorsPopup from './ReactorsPopup'
 import RepostConfirmPopup from './RepostConfirmPopup'
@@ -232,7 +233,7 @@ export default function PostActions({
         className={`action-count ${isClickable ? 'action-count-clickable' : ''}`}
         onClick={isClickable ? onClick : undefined}
       >
-        {data.count}
+        {formatNumber(data.count)}
       </span>
     )
   }

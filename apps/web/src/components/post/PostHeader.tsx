@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { formatTimestamp } from '../../lib/nostr/events'
-import { navigateToUser } from '../../lib/utils'
+import { navigateToUser, formatNumber } from '../../lib/utils'
 import { Avatar, EmojiText, Icon } from '../ui'
 import type { EmojiTag, ViewCountData } from '../../types'
 
@@ -59,7 +59,7 @@ export default function PostHeader({
       {views && (
         <span className="view-count" aria-label={`${views.detail} detail views, ${views.impression} impressions`}>
           &nbsp;·&nbsp;
-          <Icon name="BarChart2" size={12} /> {views.detail} / {views.impression}
+          <Icon name="BarChart2" size={12} /> {formatNumber(views.detail)} / {formatNumber(views.impression)}
         </span>
       )}
       {isBlogPost && <span className="kind-label kind-label-blog">&nbsp;·&nbsp;Blog</span>}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Icon, Button, Input, CloseButton } from '../ui'
-import { npubToHex, hexToNpub, type MuteEntry } from '../../lib/utils'
+import { npubToHex, hexToNpub, formatNumber, type MuteEntry } from '../../lib/utils'
 
 interface MuteListManagerProps {
   muteList: MuteEntry[]
@@ -83,7 +83,7 @@ export function MuteListManager({ muteList, onMuteListChange }: MuteListManagerP
       >
         <Icon name="UserX" size={14} />
         <span>Mute List</span>
-        {muteList.length > 0 && <span className="mute-list-count">{muteList.length}</span>}
+        {muteList.length > 0 && <span className="mute-list-count">{formatNumber(muteList.length)}</span>}
         <Icon name={showPopup ? 'ChevronUp' : 'ChevronDown'} size={14} />
       </button>
 
