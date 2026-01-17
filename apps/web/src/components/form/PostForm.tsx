@@ -313,7 +313,7 @@ export function PostForm({
 
   const handleAddSticker = (sticker: Omit<Sticker, 'x' | 'y' | 'size' | 'rotation' | 'quadrant'>) => {
     if (stickers.length >= LIMITS.MAX_STICKERS) return
-    const newSticker: Sticker = { ...sticker, x: 50, y: 50, size: 15, rotation: 0, quadrant: 'top-left' }
+    const newSticker: Sticker = { ...sticker, x: 50, y: 50, size: 15, rotation: 0, quadrant: 'top-left', layer: 'back' }
     setStickers([...stickers, newSticker])
     if (!showPreview) {
       onShowPreviewChange(true)

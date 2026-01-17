@@ -6,7 +6,7 @@ interface PostStickersProps {
   stickers: Sticker[]
   editable?: boolean
   truncated?: boolean // When true, only show top quadrant stickers
-  layer?: StickerLayer // Filter by layer: 'front' (default), 'back'
+  layer?: StickerLayer // Filter by layer: 'back' (default), 'front'
   onStickerMove?: (index: number, x: number, y: number, quadrant: StickerQuadrant) => void
   onStickerResize?: (index: number, size: number) => void
   onStickerRotate?: (index: number, rotation: number) => void
@@ -89,7 +89,7 @@ export function PostStickers({
     .filter(({ sticker }) => {
       // Filter by layer if specified
       if (layer) {
-        const stickerLayer = sticker.layer || 'front' // default to front
+        const stickerLayer = sticker.layer || 'back' // default to back
         if (stickerLayer !== layer) return false
       }
       // Filter by truncated mode

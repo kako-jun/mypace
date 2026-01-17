@@ -4,13 +4,11 @@ MY PACEのフィルタ機能の全体設計。
 
 ## 設計原則
 
-### 1. 全フィルタはAPI側で処理
+### 1. 全フィルタはリレー取得時に適用
 
-フロントエンドでフィルタすると、APIから50件取得後に除外するため、全件NGの場合0件表示になる問題がある。
+ブラウザがNostrリレーから直接取得する際、フィルタを適用して結果を絞り込む。
 
-**正しい設計**: 全てAPI側でフィルタし、フィルタ後の結果を返す。
-
-**取得件数**: サーバーサイドフィルタ（hideAds, hideNSFW等）で除外される分を考慮し、リレーからは要求件数の4倍を取得。
+**取得件数**: フィルタで除外される分を考慮し、リレーからは200件を取得（`TIMELINE_FETCH_LIMIT`）。
 
 ### 2. 公開フィルタ vs 個人フィルタ
 
@@ -20,7 +18,7 @@ MY PACEのフィルタ機能の全体設計。
 | 個人 | mute, ng, ngtags, hideNPC等 | localStorage | ✗ | 不可 |
 
 **公開フィルタ**: ブラウザURLに含まれ、共有可能。
-**個人フィルタ**: localStorageに保存、APIリクエスト時のみ送信。URLには含まれない（プライバシー保護）。
+**個人フィルタ**: localStorageに保存、取得時のみ適用。URLには含まれない（プライバシー保護）。
 
 ### 3. 共有URLは本人と他人で同じ見た目
 
@@ -69,65 +67,33 @@ MY PACEのフィルタ機能の全体設計。
 
 ---
 
-## APIパラメータ一覧
+## フィルタパラメータ一覧
 
-### タイムラインAPI `/api/timeline`
-
-**リクエストパラメータ**:
+`fetchTimeline()` および `fetchUserEvents()` に渡されるパラメータ:
 
 | パラメータ | 型 | デフォルト | 説明 |
 |-----------|-----|----------|------|
-| `limit` | number | 50 | 取得件数（最大100） |
+| `limit` | number | 200 | 取得件数 |
 | `since` | number | 0 | この時刻以降 |
 | `until` | number | 0 | この時刻以前 |
-| `all` | `1` | - | #mypaceフィルタOFF |
-| `kinds` | string | `1,30023,42000` | カンマ区切りkind |
-| `lang` | string | - | 言語コード |
-| `hideAds` | `0` | ON | 広告フィルタOFF |
-| `hideNSFW` | `0` | ON | NSFWフィルタOFF |
-| `hideNPC` | `1` | OFF | NPCフィルタON |
-| `mute` | string | - | ミュートpubkey（カンマ区切り） |
-| `ng` | string | - | NGワード（カンマ区切り） |
-| `ngtags` | string | - | NGタグ（カンマ区切り） |
-| `q` | string | - | 検索クエリ |
-| `tags` | string | - | OKタグ（カンマ/+区切り、+はAND） |
+| `showAll` | boolean | false | #mypaceフィルタOFF |
+| `kinds` | number[] | [1,30023,42000] | 取得するkind |
+| `langFilter` | string | - | 言語コード |
+| `hideAds` | boolean | true | 広告フィルタ |
+| `hideNSFW` | boolean | true | NSFWフィルタ |
+| `hideNPC` | boolean | false | NPCフィルタ |
+| `mutedPubkeys` | string[] | - | ミュートpubkey |
+| `ngWords` | string[] | - | NGワード |
+| `ngTags` | string[] | - | NGタグ |
+| `queries` | string[] | - | 検索クエリ（q） |
+| `okTags` | string[] | - | OKタグ |
 
-**レスポンス**:
-
-| フィールド | 型 | 説明 |
-|-----------|-----|------|
-| `events` | Event[] | フィルタ後のイベント |
-| `source` | string | `cache` または `relay` |
-| `searchedUntil` | number \| null | フィルタ前の最古時刻（次回のuntilに使用） |
-
-### ユーザー投稿API `/api/user/:pubkey/events`
-
-**リクエストパラメータ**:
-
-| パラメータ | 型 | デフォルト | 説明 |
-|-----------|-----|----------|------|
-| `limit` | number | 50 | 取得件数（最大100） |
-| `since` | number | 0 | この時刻以降 |
-| `until` | number | 0 | この時刻以前 |
-| `all` | `1` | - | #mypaceフィルタOFF |
-| `kinds` | string | `1,30023,42000` | カンマ区切りkind |
-| `lang` | string | - | 言語コード |
-| `hideAds` | `0` | ON | 広告フィルタOFF |
-| `hideNSFW` | `0` | ON | NSFWフィルタOFF |
-| `hideNPC` | `1` | OFF | NPCフィルタON |
-| `ng` | string | - | NGワード（+区切り） |
-| `ngtags` | string | - | NGタグ（+区切り） |
-| `q` | string | - | 検索クエリ |
-| `tags` | string | - | OKタグ（+区切り、AND検索） |
-
-**レスポンス**:
+### レスポンス
 
 | フィールド | 型 | 説明 |
 |-----------|-----|------|
 | `events` | Event[] | フィルタ後のイベント |
 | `searchedUntil` | number \| null | フィルタ前の最古時刻（次回のuntilに使用） |
-
-> **注意**: タイムラインAPIと異なり、`mute`（ミュートリスト）は適用されない。
 
 ---
 
@@ -138,7 +104,8 @@ FilterPanelで「Apply」または「Clear」を押すと、以下の処理が�
 1. 新しいフィルタ設定をlocalStorageに保存
 2. `FILTER_APPLIED`カスタムイベントを発火
 3. `useTimeline`フックがイベントをリッスンし、`loadTimeline()`を呼び出し
-4. ポップアップを閉じる
+4. `pendingNewEvents`（新着待機キュー）をクリア（古いフィルターの結果を破棄）
+5. ポップアップを閉じる
 
 **ページリロードなし**: イベント駆動でタイムラインのみを再取得するため、現在のURLを維持したままフィルタが即座に反映される。ポーリングのタイマーもリセットされる（`latestEventTime`が変更されるため）。
 
@@ -161,7 +128,7 @@ FilterPanelで「Apply」または「Clear」を押すと、以下の処理が�
 
 ### リトライの意義
 
-APIから0件返ってきても、以下の理由でリトライの機会を残す：
+リレーから0件返ってきても、以下の理由でリトライの機会を残す：
 - リレーの一時的な障害
 - ネットワーク接続の問題
 - タイミングによるデータ欠損
@@ -170,17 +137,17 @@ APIから0件返ってきても、以下の理由でリトライの機会を残�
 
 ### searchedUntilによる探索範囲の管理
 
-マイナー言語フィルタ使用時など、フィルタ後の投稿が少ない場合でも確実に過去を遡れるよう、APIは`searchedUntil`を返す。
+マイナー言語フィルタ使用時など、フィルタ後の投稿が少ない場合でも確実に過去を遡れるよう、`searchedUntil`を返す。
 
 **問題**: リレーから200件取得 → 言語フィルタで20件 → 次回は20件の最古から探索 → 180件分の範囲をスキップしてしまう
 
 **解決**:
-- APIが`searchedUntil`（フィルタ前の最古時刻）を返す
+- `searchedUntil`（フィルタ前の最古時刻）を返す
 - フロントエンドは次回の`until`に`searchedUntil`を使用
 - フィルタ後0件でも、探索済み範囲は進む
 
 ```
-// APIレスポンス例
+// レスポンス例
 {
   events: [...],           // フィルタ後のイベント
   searchedUntil: 1704067200  // フィルタ前の最古時刻（次回のuntilに使用）
@@ -206,13 +173,11 @@ APIから0件返ってきても、以下の理由でリトライの機会を残�
 | ポーリング | `since` | 新しい投稿を探す | 使用しない |
 | Load Older Posts | `until` | 過去を遡る | 使用する |
 
-APIエンドポイントは同じ（`/api/timeline`）で、範囲指定パラメータが異なる。
-
 ---
 
 ## DOM要素数の制限
 
-無限に過去を遡れるUIでは、DOM要素が際限なく増加しパフォーマンスが劣化する。これを防ぐため、タイムライン上の投稿カード数を最大200件に制限する。
+無限に過去を遡れるUIでは、DOM要素が際限なく増加しパフォーマンスが劣化する。これを防ぐため、タイムライン上の投稿カード数を最大200件に制限する（`MAX_TIMELINE_ITEMS`）。
 
 ### トリミングのタイミング
 
@@ -276,7 +241,7 @@ DOM制限により、表示中の投稿と実際の投稿範囲の間にギャ�
 
 ## スマートフィルタの詳細
 
-`filterBySmartFilters` が検出する内容：
+スマートフィルタが検出する内容：
 
 ### 広告フィルタ (hideAds)
 
@@ -301,12 +266,12 @@ DOM制限により、表示中の投稿と実際の投稿範囲の間にギャ�
 
 | ファイル | 役割 |
 |----------|------|
-| `apps/api/src/filters/smart-filter.ts` | サーバーサイドフィルタロジック |
-| `apps/api/src/routes/timeline.ts` | タイムラインAPI |
-| `apps/api/src/routes/user-events.ts` | ユーザー投稿API |
+| `apps/web/src/lib/nostr/relay.ts` | リレー接続・フィルタ適用 |
+| `apps/web/src/hooks/timeline/useTimeline.ts` | タイムライン管理 |
+| `apps/web/src/hooks/timeline/useTimelinePolling.ts` | ポーリング |
 | `apps/web/src/components/timeline/TimelineSearch.tsx` | 公開フィルタUI |
-| `apps/web/src/components/filter/FilterPanel.tsx` | 個人フィルタUI（Apply/Clear時はフルリロード） |
-| `apps/web/src/lib/api/api.ts` | APIクライアント（フィルタをlocalStorageから読み込み） |
+| `apps/web/src/components/filter/FilterPanel.tsx` | 個人フィルタUI |
+| `apps/web/src/lib/storage/index.ts` | フィルタ設定保存 |
 
 ---
 

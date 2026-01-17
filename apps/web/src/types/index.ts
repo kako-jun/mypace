@@ -139,5 +139,5 @@ export interface Sticker {
   size: number // Width (5-100%)
   rotation: number // Rotation angle (0-360 degrees)
   quadrant: StickerQuadrant // Anchor corner for positioning
-  layer?: StickerLayer // front (default) or back (behind text)
+  layer?: StickerLayer // back (default, behind text) or front
 }
