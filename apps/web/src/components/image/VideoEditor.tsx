@@ -288,7 +288,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
         startTime,
         endTime,
         crop: cropPixels,
-        fps: 10,
+        fps: 24,
         maxDimension: 320,
         onProgress: setProgress,
       })
