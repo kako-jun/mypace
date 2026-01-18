@@ -559,12 +559,13 @@
 
 /* Post location display */
 .post-location {
-  display: flex;
-  flex-direction: column;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.25rem;
+  padding-right: 0.5rem;
   margin-top: 0.5rem;
+  margin-left: 0.25rem;
   background: var(--surface-secondary);
   border: 1px solid var(--border-subtle);
   border-radius: 4px;
@@ -573,6 +574,17 @@
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
   max-width: 100%;
+}
+
+/* Narrow screens: vertical layout */
+@media (max-width: 480px) {
+  .post-location {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+    margin-left: 0;
+  }
 }
 
 .post-location:hover {
