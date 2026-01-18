@@ -1,6 +1,7 @@
 import { finalizeEvent, type EventTemplate } from 'nostr-tools'
 import { hasNip07, getOrCreateSecretKey, getPublicKeyFromSecret } from './keys'
 import { MYPACE_TAG, AURORA_TAG } from './constants'
+import { hasMypaceTag } from './tags'
 import { getStoredThemeColors } from './theme'
 import { unixNow } from '../utils'
 import type { Event, Profile } from '../../types'
@@ -150,13 +151,20 @@ export async function createReactionEvent(
 }
 
 export async function createRepostEvent(targetEvent: Event): Promise<Event> {
+  const tags: string[][] = [
+    ['e', targetEvent.id, ''],
+    ['p', targetEvent.pubkey],
+  ]
+
+  // 元投稿がmypaceタグ付きなら、リポストにもmypaceタグを付ける
+  if (hasMypaceTag(targetEvent)) {
+    tags.push(['t', MYPACE_TAG])
+  }
+
   const template: EventTemplate = {
     kind: 6,
     created_at: unixNow(),
-    tags: [
-      ['e', targetEvent.id, ''],
-      ['p', targetEvent.pubkey],
-    ],
+    tags,
     content: JSON.stringify(targetEvent),
   }
 

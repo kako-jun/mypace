@@ -108,11 +108,43 @@
 /* Reply card - default background for non-mypace posts, themed posts override via inline style */
 .reply-card {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   background: var(--surface-secondary);
-  padding: 0.75rem;
-  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border: 2px solid #000;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
   margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+/* Folded corner effect */
+.reply-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, var(--surface-fold) 50%, transparent 50%);
+  border-left: 2px solid #000;
+  border-top: 2px solid #000;
+}
+
+/* Diagonal line on fold */
+.reply-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, transparent calc(50% + 1px), #000 calc(50% + 1px), #000 calc(50% + 3px), transparent calc(50% + 3px));
+  pointer-events: none;
+}
+
+.reply-card:hover {
+  opacity: 0.85;
 }
 
 .reply-header {
