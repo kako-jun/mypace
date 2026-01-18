@@ -35,7 +35,8 @@ MY PACEはNostr標準のリポスト（kind:6）イベントをタイムライ�
   "created_at": 1234567890,
   "tags": [
     ["e", "元イベントのID", "リレーURL"],
-    ["p", "元投稿者のpubkey"]
+    ["p", "元投稿者のpubkey"],
+    ["t", "mypace"]  // 元投稿がmypaceタグ付きの場合のみ
   ],
   "content": "{元イベントのJSON}",
   "sig": "..."
@@ -45,6 +46,7 @@ MY PACEはNostr標準のリポスト（kind:6）イベントをタイムライ�
 - `content`: 元イベントの完全なJSONが格納される（NIP-18準拠）
 - `e`タグ: 元イベントへの参照
 - `p`タグ: 元投稿者への参照
+- `t`タグ: 元投稿が`#mypace`タグ付きの場合、リポストにも継承
 
 ## 実装詳細
 
@@ -123,7 +125,9 @@ TimelinePostCard
 
 ### mypaceタグフィルタ
 
-- mypaceモード（`#mypace`タグフィルタ）では、リポストイベント自体に`#mypace`タグがない場合は取得されない
+- mypaceモード（`#mypace`タグフィルタ）では、`#mypace`タグ付きのリポストのみ表示
+- MY PACEクライアントでリポストを作成する際、元投稿が`#mypace`タグ付きなら、リポストにも自動的に`#mypace`タグが付与される
+- これにより、mypaceモードでもmypace投稿のリポストが正しく表示される
 - showAll=trueモードでは全てのリポストが取得される
 
 ### contentが空の場合
@@ -143,6 +147,7 @@ TimelinePostCard
 | ファイル | 役割 |
 |---------|------|
 | `lib/nostr/constants.ts` | `KIND_REPOST = 6` 定義 |
+| `lib/nostr/events.ts` | `createRepostEvent()` 実装（mypaceタグ継承） |
 | `lib/nostr/relay.ts` | `parseRepostEvent()` 実装 |
 | `types/index.ts` | `TimelineItem.originalEvent` 型定義 |
 | `hooks/timeline/useTimeline.ts` | リポスト処理ロジック |
