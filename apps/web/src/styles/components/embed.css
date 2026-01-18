@@ -575,8 +575,9 @@
 }
 
 .embed-link-image {
-  flex-shrink: 0;
+  flex-shrink: 1;
   width: 120px;
+  min-width: 80px;
   height: 90px;
   overflow: hidden;
 }

@@ -13,6 +13,7 @@ superMention.post('/paths', async (c) => {
       wikidataId?: string
       wikidataLabel?: string
       wikidataDescription?: string
+      clearWikidata?: boolean
     }>()
 
     if (!body.path) {
@@ -21,22 +22,48 @@ superMention.post('/paths', async (c) => {
 
     const now = Math.floor(Date.now() / 1000)
 
-    // UPSERT: 存在すれば use_count を増加、なければ新規作成
-    await db
-      .prepare(
+    // If clearWikidata is true, explicitly set wikidata fields to NULL
+    if (body.clearWikidata) {
+      await db
+        .prepare(
+          `
+          INSERT INTO super_mention_paths (path, category, wikidata_id, wikidata_label, wikidata_description, use_count, created_at, updated_at)
+          VALUES (?, '', NULL, NULL, NULL, 1, ?, ?)
+          ON CONFLICT(path) DO UPDATE SET
+            use_count = use_count + 1,
+            wikidata_id = NULL,
+            wikidata_label = NULL,
+            wikidata_description = NULL,
+            updated_at = excluded.updated_at
         `
-        INSERT INTO super_mention_paths (path, category, wikidata_id, wikidata_label, wikidata_description, use_count, created_at, updated_at)
-        VALUES (?, '', ?, ?, ?, 1, ?, ?)
-        ON CONFLICT(path) DO UPDATE SET
-          use_count = use_count + 1,
-          wikidata_id = COALESCE(excluded.wikidata_id, wikidata_id),
-          wikidata_label = COALESCE(excluded.wikidata_label, wikidata_label),
-          wikidata_description = COALESCE(excluded.wikidata_description, wikidata_description),
-          updated_at = excluded.updated_at
-      `
-      )
-      .bind(body.path, body.wikidataId || null, body.wikidataLabel || null, body.wikidataDescription || null, now, now)
-      .run()
+        )
+        .bind(body.path, now, now)
+        .run()
+    } else {
+      // UPSERT: 存在すれば use_count を増加、なければ新規作成
+      await db
+        .prepare(
+          `
+          INSERT INTO super_mention_paths (path, category, wikidata_id, wikidata_label, wikidata_description, use_count, created_at, updated_at)
+          VALUES (?, '', ?, ?, ?, 1, ?, ?)
+          ON CONFLICT(path) DO UPDATE SET
+            use_count = use_count + 1,
+            wikidata_id = COALESCE(excluded.wikidata_id, wikidata_id),
+            wikidata_label = COALESCE(excluded.wikidata_label, wikidata_label),
+            wikidata_description = COALESCE(excluded.wikidata_description, wikidata_description),
+            updated_at = excluded.updated_at
+        `
+        )
+        .bind(
+          body.path,
+          body.wikidataId || null,
+          body.wikidataLabel || null,
+          body.wikidataDescription || null,
+          now,
+          now
+        )
+        .run()
+    }
 
     return c.json({ success: true })
   } catch (e) {

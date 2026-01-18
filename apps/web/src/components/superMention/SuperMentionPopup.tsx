@@ -26,6 +26,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
   const [loading, setLoading] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [selectedWikidata, setSelectedWikidata] = useState<SelectedWikidata | null>(null)
+  const [isCustomSelected, setIsCustomSelected] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -155,18 +156,28 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
     const path = normalizePath(item.path)
     setQuery(path)
 
-    if (item.type === 'wikidata') {
+    if (item.type === 'custom') {
+      // User explicitly chose "Create New" - don't associate with Wikidata
+      setSelectedWikidata(null)
+      setIsCustomSelected(true)
+    } else if (item.type === 'wikidata') {
       setSelectedWikidata({
         id: item.id,
         label: item.path,
         description: item.description,
       })
+      setIsCustomSelected(false)
     } else if (item.type === 'history' && item.wikidataId) {
       setSelectedWikidata({
         id: item.wikidataId,
         label: item.path,
         description: item.description,
       })
+      setIsCustomSelected(false)
+    } else {
+      // history without wikidataId
+      setSelectedWikidata(null)
+      setIsCustomSelected(false)
     }
 
     // Focus input for further editing
@@ -179,6 +190,14 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
 
     const path = normalizePath(query)
     const insertText = `@@${path}`
+
+    // If user explicitly selected "Create New", don't associate with Wikidata
+    if (isCustomSelected) {
+      saveSuperMentionPath(path, undefined, undefined, undefined, true).catch(() => {})
+      onSelect(insertText)
+      onClose()
+      return
+    }
 
     // Check if selectedWikidata is still valid for the current path
     // (path should start with the wikidata label for derived paths like "ハンチョウ/20巻")
@@ -223,7 +242,7 @@ export function SuperMentionPopup({ onSelect, onClose }: SuperMentionPopupProps)
 
     onSelect(insertText)
     onClose()
-  }, [query, selectedWikidata, items, onSelect, onClose])
+  }, [query, selectedWikidata, isCustomSelected, items, onSelect, onClose])
 
   const handleDelete = useCallback(async (item: SuggestItem) => {
     if (item.type !== 'history') return

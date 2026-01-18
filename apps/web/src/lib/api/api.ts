@@ -66,7 +66,8 @@ export async function saveSuperMentionPath(
   path: string,
   wikidataId?: string,
   wikidataLabel?: string,
-  wikidataDescription?: string
+  wikidataDescription?: string,
+  clearWikidata?: boolean
 ): Promise<void> {
   const res = await fetch(`${API_BASE}/api/super-mention/paths`, {
     method: 'POST',
@@ -76,6 +77,7 @@ export async function saveSuperMentionPath(
       wikidataId,
       wikidataLabel,
       wikidataDescription,
+      clearWikidata,
     }),
   })
   if (!res.ok) throw new Error('Failed to save path')
