@@ -43,6 +43,9 @@ CREATE TABLE notifications (
 
 CREATE INDEX idx_notifications_recipient ON notifications(recipient_pubkey);
 CREATE INDEX idx_notifications_created ON notifications(created_at DESC);
+CREATE INDEX idx_notifications_target ON notifications(target_event_id);
+CREATE INDEX idx_notifications_type_target ON notifications(type, target_event_id, actor_pubkey);
+CREATE INDEX idx_notifications_source ON notifications(source_event_id);
 ```
 
 ### フィールド説明
@@ -262,15 +265,16 @@ Lucide React を使用：
 GET /api/notifications?pubkey=<自分のpubkey>
 ```
 
-レスポンス：
+レスポンス（集約済み）：
 
 ```json
 {
   "notifications": [
     {
-      "id": 123,
+      "ids": [123, 124, 125],
       "type": "stella",
       "targetEventId": "abc123",
+      "sourceEventId": null,
       "actors": [
         { "pubkey": "alice_pubkey", "stellaCount": 5 },
         { "pubkey": "bob_pubkey", "stellaCount": 3 }
@@ -279,7 +283,7 @@ GET /api/notifications?pubkey=<自分のpubkey>
       "readAt": null
     },
     {
-      "id": 124,
+      "ids": [126],
       "type": "reply",
       "targetEventId": "def456",
       "sourceEventId": "ghi789",
@@ -294,7 +298,40 @@ GET /api/notifications?pubkey=<自分のpubkey>
 }
 ```
 
-### 既読更新
+### 未読チェック（ベルアイコン用）
+
+```
+GET /api/notifications/unread-count?pubkey=<自分のpubkey>
+```
+
+レスポンス：
+
+```json
+{
+  "hasUnread": true
+}
+```
+
+### 既読更新（複数）
+
+集約された通知をタップした際、含まれる全IDをまとめて既読にする。
+
+```
+POST /api/notifications/read
+Content-Type: application/json
+
+{ "ids": [123, 124, 125] }
+```
+
+レスポンス：
+
+```json
+{
+  "success": true
+}
+```
+
+### 既読更新（単体）
 
 ```
 POST /api/notifications/:id/read
