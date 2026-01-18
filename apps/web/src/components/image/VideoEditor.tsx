@@ -37,6 +37,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
 
   // Playback state
   const [playing, setPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
@@ -79,6 +80,19 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
   const handleCropComplete = useCallback((c: PixelCrop) => {
     setCompletedCrop(c)
   }, [])
+
+  // Track current playback position
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(video.currentTime)
+    }
+
+    video.addEventListener('timeupdate', handleTimeUpdate)
+    return () => video.removeEventListener('timeupdate', handleTimeUpdate)
+  }, [videoLoaded])
 
   // Preview playback - plays within selected range
   useEffect(() => {
@@ -313,6 +327,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
   const selectedDuration = endTime - startTime
   const startPercent = videoDuration > 0 ? (startTime / videoDuration) * 100 : 0
   const endPercent = videoDuration > 0 ? (endTime / videoDuration) * 100 : 100
+  const currentPercent = videoDuration > 0 ? (currentTime / videoDuration) * 100 : 0
 
   return (
     <Portal>
@@ -391,6 +406,8 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
                 >
                   <span className="video-editor-marker-label">E</span>
                 </div>
+                {/* Playhead - current position */}
+                <div className="video-editor-playhead" style={{ left: `${currentPercent}%` }} />
               </div>
             </div>
           )}

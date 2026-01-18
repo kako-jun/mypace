@@ -194,6 +194,19 @@ body.long-mode-active .video-editor-modal {
   transform: translateX(-50%) scale(1.1);
 }
 
+/* Playhead - current position indicator */
+.video-editor-playhead {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 32px;
+  background: #fff;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
 /* Progress bar */
 .video-editor-progress {
   position: relative;
