@@ -3,6 +3,7 @@ import type { Event } from 'nostr-tools'
 import type { Bindings } from '../types'
 import type { D1Database } from '@cloudflare/workers-types'
 import { registerUserSerial } from './serial'
+import { sendPushToUser, type NotificationType } from '../services/web-push'
 
 const publish = new Hono<{ Bindings: Bindings }>()
 
@@ -31,7 +32,34 @@ async function recordStella(
     .run()
 }
 
-// Record notification to D1
+// Send push notification (fire and forget)
+async function triggerPushNotification(
+  db: D1Database,
+  recipientPubkey: string,
+  type: NotificationType,
+  vapidPublicKey?: string,
+  vapidPrivateKey?: string,
+  vapidSubject?: string
+): Promise<void> {
+  // Skip if VAPID keys not configured
+  if (!vapidPublicKey || !vapidPrivateKey || !vapidSubject) {
+    return
+  }
+
+  try {
+    await sendPushToUser(
+      db,
+      recipientPubkey,
+      type,
+      { publicKey: vapidPublicKey, privateKey: vapidPrivateKey },
+      vapidSubject
+    )
+  } catch (e) {
+    console.error('Push notification error:', e)
+  }
+}
+
+// Record notification to D1 and trigger push notification
 async function recordNotification(
   db: D1Database,
   recipientPubkey: string,
@@ -39,12 +67,16 @@ async function recordNotification(
   type: 'stella' | 'reply' | 'repost',
   targetEventId: string,
   sourceEventId: string | null,
-  stellaCount: number | null
+  stellaCount: number | null,
+  vapidPublicKey?: string,
+  vapidPrivateKey?: string,
+  vapidSubject?: string
 ): Promise<void> {
   // Don't notify yourself
   if (recipientPubkey === actorPubkey) return
 
   const now = Math.floor(Date.now() / 1000)
+  let shouldPush = false
 
   if (type === 'stella') {
     // For stella, check if we should update or skip (only notify on increase)
@@ -66,9 +98,12 @@ async function recordNotification(
           )
           .bind(stellaCount, now, recipientPubkey, actorPubkey, targetEventId)
           .run()
+        shouldPush = true
       }
       // If decreased or same, do nothing
-      return
+      if (!shouldPush) return
+    } else {
+      shouldPush = true
     }
   }
 
@@ -79,16 +114,21 @@ async function recordNotification(
       .bind(sourceEventId)
       .first()
     if (existingReplyRepost) return
+    shouldPush = true
+  } else if (type !== 'stella') {
+    shouldPush = true
   }
 
-  // Insert new notification
-  await db
-    .prepare(
-      `INSERT INTO notifications (recipient_pubkey, actor_pubkey, type, target_event_id, source_event_id, stella_count, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
-    )
-    .bind(recipientPubkey, actorPubkey, type, targetEventId, sourceEventId, stellaCount, now)
-    .run()
+  // Insert new notification (only if shouldPush is true for non-stella, or first stella)
+  if (type !== 'stella' || shouldPush) {
+    await db
+      .prepare(
+        `INSERT INTO notifications (recipient_pubkey, actor_pubkey, type, target_event_id, source_event_id, stella_count, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      )
+      .bind(recipientPubkey, actorPubkey, type, targetEventId, sourceEventId, stellaCount, now)
+      .run()
+  }
 
   // Cleanup old notifications if over limit
   await db
@@ -104,6 +144,11 @@ async function recordNotification(
     )
     .bind(recipientPubkey, recipientPubkey, MAX_NOTIFICATIONS)
     .run()
+
+  // Trigger push notification (fire and forget)
+  if (shouldPush) {
+    triggerPushNotification(db, recipientPubkey, type, vapidPublicKey, vapidPrivateKey, vapidSubject)
+  }
 }
 
 // Delete stella records and notifications when reaction or post is deleted
@@ -193,7 +238,18 @@ publish.post('/', async (c) => {
             if (!isNaN(stellaCount) && stellaCount >= 1 && stellaCount <= 10) {
               await recordStella(db, eTag[1], pTag[1], event.pubkey, stellaCount, event.id)
               // Record notification
-              await recordNotification(db, pTag[1], event.pubkey, 'stella', eTag[1], null, stellaCount)
+              await recordNotification(
+                db,
+                pTag[1],
+                event.pubkey,
+                'stella',
+                eTag[1],
+                null,
+                stellaCount,
+                c.env.VAPID_PUBLIC_KEY,
+                c.env.VAPID_PRIVATE_KEY,
+                c.env.VAPID_SUBJECT
+              )
             }
           } catch (e) {
             console.error('Stella record error:', e)
@@ -214,7 +270,18 @@ publish.post('/', async (c) => {
             try {
               // Use the first e tag as target (root or reply)
               const targetEventId = eTags[0][1]
-              await recordNotification(db, pTag[1], event.pubkey, 'reply', targetEventId, event.id, null)
+              await recordNotification(
+                db,
+                pTag[1],
+                event.pubkey,
+                'reply',
+                targetEventId,
+                event.id,
+                null,
+                c.env.VAPID_PUBLIC_KEY,
+                c.env.VAPID_PRIVATE_KEY,
+                c.env.VAPID_SUBJECT
+              )
             } catch (e) {
               console.error('Reply notification error:', e)
             }
@@ -229,7 +296,18 @@ publish.post('/', async (c) => {
       const pTag = tags.find((t: string[]) => t[0] === 'p')
       if (eTag && eTag[1] && pTag && pTag[1]) {
         try {
-          await recordNotification(db, pTag[1], event.pubkey, 'repost', eTag[1], event.id, null)
+          await recordNotification(
+            db,
+            pTag[1],
+            event.pubkey,
+            'repost',
+            eTag[1],
+            event.id,
+            null,
+            c.env.VAPID_PUBLIC_KEY,
+            c.env.VAPID_PRIVATE_KEY,
+            c.env.VAPID_SUBJECT
+          )
         } catch (e) {
           console.error('Repost notification error:', e)
         }

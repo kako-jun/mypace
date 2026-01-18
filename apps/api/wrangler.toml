@@ -15,3 +15,8 @@ database_id = "3aa18b16-681c-467c-980e-9e2fa9b966d4"
 [vars]
 DISABLE_CACHE = "0"  # OGPキャッシュ有効
 RELAY_COUNT = "2"  # publish用リレー接続数
+VAPID_SUBJECT = "https://mypace.llll-ll.com"  # Web Push送信者識別子
+
+# VAPID_PUBLIC_KEY と VAPID_PRIVATE_KEY は wrangler secret で設定
+# wrangler secret put VAPID_PUBLIC_KEY
+# wrangler secret put VAPID_PRIVATE_KEY

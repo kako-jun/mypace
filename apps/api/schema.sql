@@ -123,3 +123,18 @@ CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at
 CREATE INDEX IF NOT EXISTS idx_notifications_target ON notifications(target_event_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_type_target ON notifications(type, target_event_id, actor_pubkey);
 CREATE INDEX IF NOT EXISTS idx_notifications_source ON notifications(source_event_id);
+
+-- Push subscriptions table (for Web Push notifications)
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  pubkey TEXT NOT NULL,               -- User's Nostr public key
+  endpoint TEXT NOT NULL UNIQUE,      -- Push Service endpoint URL
+  auth TEXT NOT NULL,                 -- Encryption auth key (base64)
+  p256dh TEXT NOT NULL,               -- Encryption public key (base64)
+  preference TEXT DEFAULT 'all',      -- 'all' | 'replies_only'
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_pubkey ON push_subscriptions(pubkey);
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_preference ON push_subscriptions(preference);

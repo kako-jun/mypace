@@ -15,7 +15,15 @@ import { getLocalProfile, getUIThemeColors, getStoredAppTheme, applyThemeColors,
 import { setThemeColors as saveThemeColors, setThemeMode, getThemeColors, getThemeMode } from '../../lib/storage'
 import { CUSTOM_EVENTS } from '../../lib/constants'
 import { TextButton } from '../ui'
-import { ProfileSection, ThemeSection, KeysSection, ShareSection, ExportSection, FilterSection } from './index'
+import {
+  ProfileSection,
+  ThemeSection,
+  KeysSection,
+  ShareSection,
+  ExportSection,
+  FilterSection,
+  PushSection,
+} from './index'
 import { VisitorCounter } from './VisitorCounter'
 import { VersionDisplay } from './VersionDisplay'
 import { CloseButton } from '../ui'
@@ -174,6 +182,8 @@ export function Settings() {
           />
 
           <FilterSection onClose={() => setOpen(false)} />
+
+          <PushSection />
 
           <ExportSection onImport={handleImportRefresh} />
         </div>

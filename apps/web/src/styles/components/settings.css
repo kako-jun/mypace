@@ -670,3 +670,54 @@
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+/* Push Notifications Section */
+.push-toggle-row {
+  margin-bottom: 0.75rem;
+}
+
+.push-preference-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-left: 0.5rem;
+}
+
+.push-preference-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.push-preference-option input[type="radio"] {
+  margin-top: 0.15rem;
+  cursor: pointer;
+}
+
+.push-preference-option span:first-of-type {
+  font-weight: 500;
+}
+
+.push-preference-desc {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 1.25rem;
+}
+
+.settings-note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.settings-error {
+  font-size: 0.75rem;
+  color: #f44336;
+  margin: 0.5rem 0;
+}
