@@ -171,20 +171,13 @@ body.long-mode-active .video-editor-modal {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 3px;
   z-index: 2;
-}
-
-.video-editor-range-marker-start {
-  background: #4caf50;
-}
-
-.video-editor-range-marker-end {
-  background: #f44336;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
 }
 
 .video-editor-marker-label {
-  color: #fff;
+  color: var(--text-primary);
   font-size: 0.65rem;
   font-weight: 700;
   user-select: none;
@@ -192,6 +185,7 @@ body.long-mode-active .video-editor-modal {
 
 .video-editor-range-marker:hover {
   transform: translateX(-50%) scale(1.1);
+  background: var(--surface-hover);
 }
 
 /* Playhead - current position indicator */
