@@ -73,12 +73,13 @@ export function NotificationPanel({ onClose, onUnreadChange }: NotificationPanel
     // Mark as read
     if (notification.readAt === null) {
       await markNotificationsRead(notification.ids)
-      // Update local state
+      // Update local state (compare arrays by joining to string)
+      const idsKey = notification.ids.join('-')
       setNotifications((prev) =>
-        prev.map((n) => (n.ids === notification.ids ? { ...n, readAt: Date.now() / 1000 } : n))
+        prev.map((n) => (n.ids.join('-') === idsKey ? { ...n, readAt: Date.now() / 1000 } : n))
       )
       // Check if any unread remain
-      const hasUnread = notifications.some((n) => n !== notification && n.readAt === null)
+      const hasUnread = notifications.some((n) => n.ids.join('-') !== idsKey && n.readAt === null)
       onUnreadChange?.(hasUnread)
     }
 
