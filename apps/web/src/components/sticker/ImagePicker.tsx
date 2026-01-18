@@ -12,7 +12,7 @@ import {
 } from '../../lib/api'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import { useImageUpload, useDragDrop } from '../../hooks'
-import { ImageEditor } from '../image'
+import { ImageEditor, VideoEditor } from '../image'
 import { isAnimatedImage } from '../../lib/utils'
 
 interface ImagePickerProps {
@@ -28,6 +28,7 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
   const [history, setHistory] = useState<StickerHistoryItem[]>([])
   const [loading, setLoading] = useState(false)
   const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [pendingVideoFile, setPendingVideoFile] = useState<File | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deletePopupPosition, setDeletePopupPosition] = useState<{ top: number; left: number } | null>(null)
   const [clipboardError, setClipboardError] = useState('')
@@ -114,7 +115,6 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
   }
 
   const handleFileSelect = async (file: File) => {
-    // Only show cropper for images, not videos
     if (file.type.startsWith('image/')) {
       // Skip cropper for animated images to preserve animation
       const isAnimated = await isAnimatedImage(file)
@@ -128,8 +128,11 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
       } else {
         setPendingFile(file)
       }
+    } else if (file.type.startsWith('video/')) {
+      // Show video editor to convert to animated WebP
+      setPendingVideoFile(file)
     } else {
-      // Video or other file types - upload directly
+      // Other file types - upload directly
       const result = await uploadFile(file)
       if (result.url) {
         setSelectedUrl(result.url)
@@ -160,6 +163,20 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
 
   const handleCropCancel = () => {
     setPendingFile(null)
+  }
+
+  const handleVideoComplete = async (webpFile: File) => {
+    setPendingVideoFile(null)
+    const result = await uploadFile(webpFile)
+    if (result.url) {
+      setSelectedUrl(result.url)
+    } else if (result.error && onError) {
+      onError(result.error)
+    }
+  }
+
+  const handleVideoCancel = () => {
+    setPendingVideoFile(null)
   }
 
   const handleClipboardPaste = async () => {
@@ -315,6 +332,14 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
         </Portal>
       )}
       {pendingFile && <ImageEditor file={pendingFile} onComplete={handleCropComplete} onCancel={handleCropCancel} />}
+      {pendingVideoFile && (
+        <VideoEditor
+          file={pendingVideoFile}
+          onComplete={handleVideoComplete}
+          onCancel={handleVideoCancel}
+          onError={onError}
+        />
+      )}
       {confirmDelete && deletePopupPosition && (
         <DeleteConfirmDialog
           position={deletePopupPosition}

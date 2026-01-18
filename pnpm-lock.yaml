@@ -129,6 +129,9 @@ importers:
       react-tweet:
         specifier: ^3.3.0
         version: 3.3.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      wasm-webp:
+        specifier: ^0.0.2
+        version: 0.0.2
       zustand:
         specifier: ^5.0.9
         version: 5.0.9(@types/react@19.2.7)(react@19.2.1)(use-sync-external-store@1.6.0(react@19.2.1))
@@ -3583,6 +3586,9 @@ packages:
 
   w3c-keyname@2.2.8:
     resolution: {integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==}
+
+  wasm-webp@0.0.2:
+    resolution: {integrity: sha512-aQ1cN31SBLSLxLYLL1TvAocQ6XeohgWZyQG4Nk7lRTzoj319KEoLDkaiRWbdtJw/yEhCDsDfXYJVDFpabiFHoQ==}
 
   webidl-conversions@4.0.2:
     resolution: {integrity: sha512-YQ+BmxuTgd6UXZW3+ICGfyqRyHXVlD5GtQr5+qjiNW7bF0cqrzX500HVXPBOvgXb5YnzDd+h0zqyv61KUD7+Sg==}
@@ -7358,6 +7364,8 @@ snapshots:
       yaml: 2.8.2
 
   w3c-keyname@2.2.8: {}
+
+  wasm-webp@0.0.2: {}
 
   webidl-conversions@4.0.2: {}
 

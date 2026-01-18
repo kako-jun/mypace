@@ -106,6 +106,7 @@ src/
 │   ├── embed/           # 外部埋め込みコンポーネント
 │   ├── timeline/        # タイムライン関連
 │   ├── filter/          # フィルター関連
+│   ├── image/           # 画像・動画編集（ImageEditor, VideoEditor）
 │   ├── location/        # 位置情報
 │   ├── user/            # ユーザー関連
 │   ├── stats/           # 統計ウィジェット
@@ -127,6 +128,7 @@ src/
 │   │   ├── tags.ts      # タグ解析
 │   │   └── constants.ts # Nostr定数
 │   ├── api.ts           # APIクライアント（補助API用）
+│   ├── animatedWebpEncoder.ts # 動画→アニメWebP変換（wasm-webp）
 │   ├── utils/           # ユーティリティ
 │   ├── storage/         # localStorage管理
 │   ├── constants/       # 定数

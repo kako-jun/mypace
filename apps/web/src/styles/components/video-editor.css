@@ -1,0 +1,317 @@
+/* ===========================================
+   Video Editor
+   =========================================== */
+
+.video-editor-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: 0;
+  box-sizing: border-box;
+}
+
+body.long-mode-active .video-editor-backdrop {
+  align-items: center;
+  padding-bottom: 1rem;
+}
+
+.video-editor-modal {
+  position: relative;
+  background: var(--surface-primary);
+  border: 2px solid #333;
+  border-bottom: none;
+  padding: 1rem;
+  max-width: 500px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+body.long-mode-active .video-editor-modal {
+  border-bottom: 2px solid #333;
+  max-height: calc(100vh - 2rem);
+}
+
+.video-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.video-editor-header .close-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.video-editor-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Content area */
+.video-editor-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--surface-secondary);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  min-height: 150px;
+}
+
+.video-editor-canvas-area {
+  position: relative;
+  display: inline-block;
+  cursor: crosshair;
+  user-select: none;
+}
+
+.video-editor-video {
+  max-width: 100%;
+  max-height: 35vh;
+  object-fit: contain;
+  display: block;
+}
+
+/* Crop overlay */
+.video-editor-crop-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.video-editor-crop-selection {
+  position: absolute;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+/* Time controls */
+.video-editor-time-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--surface-secondary);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.video-editor-time-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.video-editor-time-label {
+  font-weight: 500;
+  font-family: monospace;
+}
+
+.video-editor-duration {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.video-editor-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.video-editor-play-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  background: var(--surface-primary);
+  cursor: pointer;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.video-editor-play-btn:hover {
+  background: var(--surface-hover);
+}
+
+.video-editor-range-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.video-editor-range-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.video-editor-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--surface-tertiary, #444);
+  border-radius: 3px;
+  outline: none;
+}
+
+.video-editor-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--color-primary, #007bff);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.video-editor-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--color-primary, #007bff);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.video-editor-current-slider::-webkit-slider-thumb {
+  background: #fff;
+  border: 2px solid var(--color-primary, #007bff);
+}
+
+.video-editor-current-slider::-moz-range-thumb {
+  background: #fff;
+  border: 2px solid var(--color-primary, #007bff);
+}
+
+.video-editor-start-slider::-webkit-slider-thumb {
+  background: #4caf50;
+}
+
+.video-editor-start-slider::-moz-range-thumb {
+  background: #4caf50;
+}
+
+.video-editor-end-slider::-webkit-slider-thumb {
+  background: #f44336;
+}
+
+.video-editor-end-slider::-moz-range-thumb {
+  background: #f44336;
+}
+
+/* Crop info */
+.video-editor-crop-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-secondary);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.video-editor-crop-hint {
+  color: var(--text-muted);
+}
+
+.video-editor-clear-crop {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.video-editor-clear-crop:hover {
+  background: var(--surface-hover);
+}
+
+/* Progress bar */
+.video-editor-progress {
+  position: relative;
+  height: 24px;
+  background: var(--surface-secondary);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.video-editor-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--color-primary, #007bff);
+  transition: width 0.2s ease;
+}
+
+.video-editor-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  z-index: 1;
+}
+
+/* Footer */
+.video-editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border-subtle);
+  margin: 0 -1rem -1rem -1rem;
+}
+
+.video-editor-loading {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* Touch device adjustments */
+@media (pointer: coarse) {
+  .video-editor-slider::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .video-editor-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+}
