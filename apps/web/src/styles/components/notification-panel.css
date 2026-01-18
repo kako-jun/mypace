@@ -154,7 +154,7 @@
 
 /* Notification Item Content */
 .notification-item-content {
-  padding-left: 1.5rem;
+  margin-top: 0.125rem;
 }
 
 .notification-preview {
@@ -169,7 +169,7 @@
 
 /* Notification Item Footer */
 .notification-item-footer {
-  padding-left: 1.5rem;
+  margin-top: 0.125rem;
 }
 
 .notification-time {

@@ -129,7 +129,7 @@ export function NotificationPanel({ onClose, onUnreadChange }: NotificationPanel
     const names = notification.actors.slice(0, 3).map((a) => getDisplayName(a.pubkey))
     const remaining = notification.actors.length - 3
     if (remaining > 0) {
-      return `${names.join(', ')} 他${remaining}人`
+      return `${names.join(', ')} +${remaining}`
     }
     return names.join(', ')
   }
@@ -150,11 +150,11 @@ export function NotificationPanel({ onClose, onUnreadChange }: NotificationPanel
   const getActionText = (type: 'stella' | 'reply' | 'repost') => {
     switch (type) {
       case 'stella':
-        return 'がステラ'
+        return "stella'd"
       case 'reply':
-        return 'がリプライ'
+        return 'replied'
       case 'repost':
-        return 'がリポスト'
+        return 'reposted'
     }
   }
 
@@ -163,17 +163,17 @@ export function NotificationPanel({ onClose, onUnreadChange }: NotificationPanel
   return (
     <div className="notification-panel">
       <div className="notification-panel-header">
-        <span className="notification-panel-title">通知</span>
+        <span className="notification-panel-title">Notifications</span>
         {onClose && <CloseButton onClick={onClose} size={18} />}
       </div>
 
       <div className="notification-panel-content">
         {!pubkey ? (
-          <div className="notification-empty">ログインすると通知を確認できます</div>
+          <div className="notification-empty">Login to see notifications</div>
         ) : loading ? (
-          <div className="notification-loading">読み込み中...</div>
+          <div className="notification-loading">Loading...</div>
         ) : notifications.length === 0 ? (
-          <div className="notification-empty">通知はありません</div>
+          <div className="notification-empty">No notifications</div>
         ) : (
           <div className="notification-list">
             {notifications.map((notification) => (
