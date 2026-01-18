@@ -28,7 +28,6 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
   // Time range
   const [startTime, setStartTime] = useState(0)
   const [endTime, setEndTime] = useState(MAX_DURATION)
-  const [currentTime, setCurrentTime] = useState(0)
 
   // Crop state
   const [crop, setCrop] = useState<CropArea | null>(null)
@@ -38,6 +37,9 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
   // Processing state
   const [processing, setProcessing] = useState(false)
   const [progress, setProgress] = useState(0)
+
+  // Playback state
+  const [playing, setPlaying] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -60,21 +62,14 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     return () => URL.revokeObjectURL(url)
   }, [file, onError, onCancel])
 
-  // Sync video time with slider
-  useEffect(() => {
-    if (videoRef.current && videoLoaded) {
-      videoRef.current.currentTime = currentTime
-    }
-  }, [currentTime, videoLoaded])
-
   const handleVideoLoaded = () => {
     setVideoLoaded(true)
-    setCurrentTime(startTime)
+    if (videoRef.current) {
+      videoRef.current.currentTime = startTime
+    }
   }
 
   // Preview playback
-  const [playing, setPlaying] = useState(false)
-
   useEffect(() => {
     if (!playing || !videoRef.current) return
 
@@ -83,12 +78,10 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     video.play()
 
     const handleTimeUpdate = () => {
-      setCurrentTime(video.currentTime)
       if (video.currentTime >= endTime) {
         video.pause()
         video.currentTime = startTime
         setPlaying(false)
-        setCurrentTime(startTime)
       }
     }
 
@@ -108,7 +101,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     }
   }
 
-  // Crop handlers - shared logic
+  // Crop handlers
   const getPositionFromEvent = useCallback((clientX: number, clientY: number) => {
     if (!containerRef.current) return null
     const rect = containerRef.current.getBoundingClientRect()
@@ -198,35 +191,74 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     handleDragEnd()
   }, [handleDragEnd])
 
-  const clearCrop = () => setCrop(null)
+  // Range slider handler - unified track with start/end markers
+  const handleRangeClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const clickPos = (e.clientX - rect.left) / rect.width
+    const clickTime = clickPos * videoDuration
 
-  // Time slider handlers
-  const handleStartTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value)
-    setStartTime(value)
-    if (value > endTime - 0.5) {
-      setEndTime(Math.min(value + 0.5, videoDuration))
+    // Determine which marker to move (closer one)
+    const distToStart = Math.abs(clickTime - startTime)
+    const distToEnd = Math.abs(clickTime - endTime)
+
+    if (distToStart < distToEnd) {
+      const newStart = Math.max(0, Math.min(clickTime, endTime - 0.5))
+      setStartTime(newStart)
+      if (endTime - newStart > MAX_DURATION) {
+        setEndTime(newStart + MAX_DURATION)
+      }
+    } else {
+      const newEnd = Math.min(videoDuration, Math.max(clickTime, startTime + 0.5))
+      setEndTime(newEnd)
+      if (newEnd - startTime > MAX_DURATION) {
+        setStartTime(newEnd - MAX_DURATION)
+      }
     }
-    if (endTime - value > MAX_DURATION) {
-      setEndTime(value + MAX_DURATION)
+
+    // Seek video to clicked position
+    if (videoRef.current && !playing) {
+      videoRef.current.currentTime = clickTime
     }
-    setCurrentTime(value)
   }
 
-  const handleEndTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value)
-    setEndTime(value)
-    if (value < startTime + 0.5) {
-      setStartTime(Math.max(value - 0.5, 0))
-    }
-    if (value - startTime > MAX_DURATION) {
-      setStartTime(value - MAX_DURATION)
-    }
-  }
+  const handleMarkerDrag = (marker: 'start' | 'end') => (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const track = e.currentTarget.parentElement
+    if (!track) return
 
-  const handleCurrentTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value)
-    setCurrentTime(value)
+    const onMove = (moveEvent: MouseEvent) => {
+      const rect = track.getBoundingClientRect()
+      const pos = Math.max(0, Math.min(1, (moveEvent.clientX - rect.left) / rect.width))
+      const time = pos * videoDuration
+
+      if (marker === 'start') {
+        const newStart = Math.max(0, Math.min(time, endTime - 0.5))
+        setStartTime(newStart)
+        if (endTime - newStart > MAX_DURATION) {
+          setEndTime(newStart + MAX_DURATION)
+        }
+        if (videoRef.current && !playing) {
+          videoRef.current.currentTime = newStart
+        }
+      } else {
+        const newEnd = Math.min(videoDuration, Math.max(time, startTime + 0.5))
+        setEndTime(newEnd)
+        if (newEnd - startTime > MAX_DURATION) {
+          setStartTime(newEnd - MAX_DURATION)
+        }
+        if (videoRef.current && !playing) {
+          videoRef.current.currentTime = newEnd
+        }
+      }
+    }
+
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
   }
 
   // Convert to animated WebP
@@ -277,6 +309,8 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
   }
 
   const selectedDuration = endTime - startTime
+  const startPercent = videoDuration > 0 ? (startTime / videoDuration) * 100 : 0
+  const endPercent = videoDuration > 0 ? (endTime / videoDuration) * 100 : 100
 
   return (
     <Portal>
@@ -329,77 +363,48 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
             )}
           </div>
 
-          {/* Time range controls */}
+          {/* Time range controls - unified slider */}
           {videoLoaded && (
             <div className="video-editor-time-controls">
               <div className="video-editor-time-display">
-                <span className="video-editor-time-label">
-                  {formatTime(startTime)} → {formatTime(endTime)}
-                </span>
-                <span className="video-editor-duration">
-                  ({selectedDuration.toFixed(1)}s / {MAX_DURATION}s max)
-                </span>
-              </div>
-
-              {/* Current time slider */}
-              <div className="video-editor-slider-row">
                 <button type="button" className="video-editor-play-btn" onClick={togglePlay}>
                   {playing ? '⏸' : '▶'}
                 </button>
-                <input
-                  type="range"
-                  min={0}
-                  max={videoDuration}
-                  step={0.1}
-                  value={currentTime}
-                  onChange={handleCurrentTimeChange}
-                  className="video-editor-slider video-editor-current-slider"
-                />
+                <span className="video-editor-time-label">
+                  {formatTime(startTime)} - {formatTime(endTime)}
+                </span>
+                <span className="video-editor-duration">
+                  {selectedDuration.toFixed(1)}s{selectedDuration > MAX_DURATION && ' (max 10s)'}
+                </span>
               </div>
 
-              {/* Range sliders */}
-              <div className="video-editor-range-row">
-                <div className="video-editor-range-label">Start</div>
-                <input
-                  type="range"
-                  min={0}
-                  max={videoDuration}
-                  step={0.1}
-                  value={startTime}
-                  onChange={handleStartTimeChange}
-                  className="video-editor-slider video-editor-start-slider"
+              {/* Unified range slider */}
+              <div className="video-editor-range-track" onClick={handleRangeClick}>
+                {/* Selected range highlight */}
+                <div
+                  className="video-editor-range-selected"
+                  style={{
+                    left: `${startPercent}%`,
+                    width: `${endPercent - startPercent}%`,
+                  }}
                 />
+                {/* Start marker */}
+                <div
+                  className="video-editor-range-marker video-editor-range-marker-start"
+                  style={{ left: `${startPercent}%` }}
+                  onMouseDown={handleMarkerDrag('start')}
+                >
+                  <span className="video-editor-marker-label">S</span>
+                </div>
+                {/* End marker */}
+                <div
+                  className="video-editor-range-marker video-editor-range-marker-end"
+                  style={{ left: `${endPercent}%` }}
+                  onMouseDown={handleMarkerDrag('end')}
+                >
+                  <span className="video-editor-marker-label">E</span>
+                </div>
               </div>
-              <div className="video-editor-range-row">
-                <div className="video-editor-range-label">End</div>
-                <input
-                  type="range"
-                  min={0}
-                  max={videoDuration}
-                  step={0.1}
-                  value={endTime}
-                  onChange={handleEndTimeChange}
-                  className="video-editor-slider video-editor-end-slider"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Crop info */}
-          {videoLoaded && (
-            <div className="video-editor-crop-info">
-              {crop ? (
-                <>
-                  <span>
-                    Crop: {Math.round(crop.width)}% × {Math.round(crop.height)}%
-                  </span>
-                  <button type="button" className="video-editor-clear-crop" onClick={clearCrop}>
-                    Clear
-                  </button>
-                </>
-              ) : (
-                <span className="video-editor-crop-hint">Drag on video to crop (optional)</span>
-              )}
             </div>
           )}
 
@@ -416,7 +421,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
               Cancel
             </Button>
             <Button size="md" variant="primary" onClick={handleConfirm} disabled={!videoLoaded || processing}>
-              {processing ? 'Converting...' : 'Convert'}
+              {processing ? 'Converting...' : 'Add'}
             </Button>
           </div>
         </div>
