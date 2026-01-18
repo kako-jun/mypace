@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop'
+import 'react-image-crop/dist/ReactCrop.css'
 import { CloseButton, Portal } from '../ui'
 import Button from '../ui/Button'
 import { videoToAnimatedWebP, getVideoDuration } from '../../lib/animatedWebpEncoder'
@@ -9,13 +11,6 @@ interface VideoEditorProps {
   onComplete: (editedFile: File) => void
   onCancel: () => void
   onError?: (error: string) => void
-}
-
-interface CropArea {
-  x: number
-  y: number
-  width: number
-  height: number
 }
 
 const MAX_DURATION = 10 // seconds
@@ -29,10 +24,9 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
   const [startTime, setStartTime] = useState(0)
   const [endTime, setEndTime] = useState(MAX_DURATION)
 
-  // Crop state
-  const [crop, setCrop] = useState<CropArea | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null)
+  // Crop state (using react-image-crop)
+  const [crop, setCrop] = useState<Crop>()
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
 
   // Processing state
   const [processing, setProcessing] = useState(false)
@@ -42,7 +36,6 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
   const [playing, setPlaying] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
 
   // Load video
@@ -68,14 +61,21 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     if (videoRef.current) {
       videoRef.current.currentTime = startTime
     }
-    // Set initial crop to full frame to show crop is available
-    setCrop({
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 100,
+    // Set initial crop to full frame (like ImageEditor)
+    requestAnimationFrame(() => {
+      setCrop({
+        unit: '%',
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+      })
     })
   }
+
+  const handleCropComplete = useCallback((c: PixelCrop) => {
+    setCompletedCrop(c)
+  }, [])
 
   // Preview playback - plays within selected range
   useEffect(() => {
@@ -112,96 +112,6 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
       setPlaying(true)
     }
   }
-
-  // Crop handlers
-  const getPositionFromEvent = useCallback((clientX: number, clientY: number) => {
-    if (!containerRef.current) return null
-    const rect = containerRef.current.getBoundingClientRect()
-    return {
-      x: ((clientX - rect.left) / rect.width) * 100,
-      y: ((clientY - rect.top) / rect.height) * 100,
-    }
-  }, [])
-
-  const handleDragStart = useCallback(
-    (clientX: number, clientY: number) => {
-      const pos = getPositionFromEvent(clientX, clientY)
-      if (!pos) return
-      setDragStart(pos)
-      setIsDragging(true)
-      setCrop(null)
-    },
-    [getPositionFromEvent]
-  )
-
-  const handleDragMove = useCallback(
-    (clientX: number, clientY: number) => {
-      if (!isDragging || !dragStart) return
-      const pos = getPositionFromEvent(clientX, clientY)
-      if (!pos) return
-
-      setCrop({
-        x: Math.min(dragStart.x, pos.x),
-        y: Math.min(dragStart.y, pos.y),
-        width: Math.abs(pos.x - dragStart.x),
-        height: Math.abs(pos.y - dragStart.y),
-      })
-    },
-    [isDragging, dragStart, getPositionFromEvent]
-  )
-
-  const handleDragEnd = useCallback(() => {
-    setIsDragging(false)
-    setDragStart(null)
-    // Remove crop if too small
-    if (crop && (crop.width < 5 || crop.height < 5)) {
-      setCrop(null)
-    }
-  }, [crop])
-
-  // Mouse events for crop
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      handleDragStart(e.clientX, e.clientY)
-    },
-    [handleDragStart]
-  )
-
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      handleDragMove(e.clientX, e.clientY)
-    },
-    [handleDragMove]
-  )
-
-  const handleMouseUp = useCallback(() => {
-    handleDragEnd()
-  }, [handleDragEnd])
-
-  // Touch events for crop
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      if (e.touches.length === 1) {
-        const touch = e.touches[0]
-        handleDragStart(touch.clientX, touch.clientY)
-      }
-    },
-    [handleDragStart]
-  )
-
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (e.touches.length === 1) {
-        const touch = e.touches[0]
-        handleDragMove(touch.clientX, touch.clientY)
-      }
-    },
-    [handleDragMove]
-  )
-
-  const handleTouchEnd = useCallback(() => {
-    handleDragEnd()
-  }, [handleDragEnd])
 
   // Range slider - click on track to move nearest marker
   const handleRangeClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -244,6 +154,12 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     e.preventDefault()
     e.stopPropagation()
 
+    // Stop playback and preview at marker position
+    if (playing) {
+      videoRef.current?.pause()
+      setPlaying(false)
+    }
+
     const track = trackRef.current
     if (!track) return
 
@@ -258,7 +174,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
         if (endTime - newStart > MAX_DURATION) {
           setEndTime(newStart + MAX_DURATION)
         }
-        if (videoRef.current && !playing) {
+        if (videoRef.current) {
           videoRef.current.currentTime = newStart
         }
       } else {
@@ -267,7 +183,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
         if (newEnd - startTime > MAX_DURATION) {
           setStartTime(newEnd - MAX_DURATION)
         }
-        if (videoRef.current && !playing) {
+        if (videoRef.current) {
           videoRef.current.currentTime = newEnd
         }
       }
@@ -286,6 +202,12 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     e.preventDefault()
     e.stopPropagation()
 
+    // Stop playback and preview at marker position
+    if (playing) {
+      videoRef.current?.pause()
+      setPlaying(false)
+    }
+
     const track = trackRef.current
     if (!track) return
 
@@ -302,7 +224,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
         if (endTime - newStart > MAX_DURATION) {
           setEndTime(newStart + MAX_DURATION)
         }
-        if (videoRef.current && !playing) {
+        if (videoRef.current) {
           videoRef.current.currentTime = newStart
         }
       } else {
@@ -311,7 +233,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
         if (newEnd - startTime > MAX_DURATION) {
           setStartTime(newEnd - MAX_DURATION)
         }
-        if (videoRef.current && !playing) {
+        if (videoRef.current) {
           videoRef.current.currentTime = newEnd
         }
       }
@@ -336,13 +258,26 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     try {
       // Calculate actual crop in pixels
       let cropPixels: { x: number; y: number; width: number; height: number } | undefined
-      if (crop) {
+
+      if (completedCrop) {
         const video = videoRef.current
-        cropPixels = {
-          x: Math.round((crop.x / 100) * video.videoWidth),
-          y: Math.round((crop.y / 100) * video.videoHeight),
-          width: Math.round((crop.width / 100) * video.videoWidth),
-          height: Math.round((crop.height / 100) * video.videoHeight),
+        const scaleX = video.videoWidth / video.clientWidth
+        const scaleY = video.videoHeight / video.clientHeight
+
+        // Check if it's full image (no actual crop)
+        const isFullVideo =
+          completedCrop.x <= 1 &&
+          completedCrop.y <= 1 &&
+          Math.abs(completedCrop.width - video.clientWidth) <= 2 &&
+          Math.abs(completedCrop.height - video.clientHeight) <= 2
+
+        if (!isFullVideo) {
+          cropPixels = {
+            x: Math.round(completedCrop.x * scaleX),
+            y: Math.round(completedCrop.y * scaleY),
+            width: Math.round(completedCrop.width * scaleX),
+            height: Math.round(completedCrop.height * scaleY),
+          }
         }
       }
 
@@ -389,16 +324,11 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
 
           <div className="video-editor-content" style={{ display: videoLoaded ? 'flex' : 'none' }}>
             {videoUrl && (
-              <div
-                ref={containerRef}
-                className="video-editor-canvas-area"
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={handleCropComplete}
+                className="video-editor-crop-container"
               >
                 <video
                   ref={videoRef}
@@ -408,22 +338,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
                   muted
                   playsInline
                 />
-                {/* Crop overlay */}
-                {crop && (
-                  <>
-                    <div className="video-editor-crop-overlay" />
-                    <div
-                      className="video-editor-crop-selection"
-                      style={{
-                        left: `${crop.x}%`,
-                        top: `${crop.y}%`,
-                        width: `${crop.width}%`,
-                        height: `${crop.height}%`,
-                      }}
-                    />
-                  </>
-                )}
-              </div>
+              </ReactCrop>
             )}
           </div>
 
