@@ -3,17 +3,24 @@ import { Outlet, useNavigate } from 'react-router-dom'
 import { Icon } from '../ui/Icon'
 import { Settings } from '../settings'
 import { FilterPanel } from '../filter'
+import { NotificationPanel } from '../notification'
 import { loadFiltersFromStorage, getMutedPubkeys } from '../../lib/utils'
 import { CUSTOM_EVENTS } from '../../lib/constants'
 import { getStoredThemeColors, isDarkColor } from '../../lib/nostr/theme'
+import { getMyPubkey } from '../../lib/nostr/keys'
+import { checkUnreadNotifications } from '../../lib/api/api'
 
 export function Layout() {
   const navigate = useNavigate()
   const [showFilterPanel, setShowFilterPanel] = useState(false)
+  const [showNotificationPanel, setShowNotificationPanel] = useState(false)
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false)
   const [headerCornerClass, setHeaderCornerClass] = useState('')
   const [starAnimationPhase, setStarAnimationPhase] = useState<'initial' | 'normal'>('initial')
   const filterButtonRef = useRef<HTMLButtonElement>(null)
   const filterPanelRef = useRef<HTMLDivElement>(null)
+  const notificationButtonRef = useRef<HTMLButtonElement>(null)
+  const notificationPanelRef = useRef<HTMLDivElement>(null)
 
   // Check if any filters are active - highlight when ANY filter reduces content
   const checkActiveFilters = useCallback(() => {
@@ -81,9 +88,26 @@ export function Layout() {
     return () => window.removeEventListener(CUSTOM_EVENTS.OPEN_FILTER_PANEL, handleOpenFilterPanel)
   }, [])
 
-  // Close panel when clicking outside
+  // Check for unread notifications on mount and periodically
+  useEffect(() => {
+    const checkUnread = async () => {
+      const pubkey = getMyPubkey()
+      if (pubkey) {
+        const hasUnread = await checkUnreadNotifications(pubkey)
+        setHasUnreadNotifications(hasUnread)
+      }
+    }
+    checkUnread()
+
+    // Check every 60 seconds
+    const interval = setInterval(checkUnread, 60000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Close panels when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      // Filter panel
       if (
         showFilterPanel &&
         filterPanelRef.current &&
@@ -93,10 +117,20 @@ export function Layout() {
       ) {
         setShowFilterPanel(false)
       }
+      // Notification panel
+      if (
+        showNotificationPanel &&
+        notificationPanelRef.current &&
+        !notificationPanelRef.current.contains(e.target as Node) &&
+        notificationButtonRef.current &&
+        !notificationButtonRef.current.contains(e.target as Node)
+      ) {
+        setShowNotificationPanel(false)
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showFilterPanel])
+  }, [showFilterPanel, showNotificationPanel])
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -129,6 +163,24 @@ export function Layout() {
             {showFilterPanel && (
               <div ref={filterPanelRef} className="filter-panel-wrapper">
                 <FilterPanel isPopup={true} onClose={() => setShowFilterPanel(false)} />
+              </div>
+            )}
+          </div>
+          <div className="notification-button-container">
+            <button
+              ref={notificationButtonRef}
+              className={`icon-button notification-toggle ${showNotificationPanel ? 'active' : ''} ${hasUnreadNotifications ? 'has-unread' : ''}`}
+              onClick={() => setShowNotificationPanel(!showNotificationPanel)}
+              aria-label="Notifications"
+            >
+              <Icon name="Bell" size={18} />
+            </button>
+            {showNotificationPanel && (
+              <div ref={notificationPanelRef} className="notification-panel-wrapper">
+                <NotificationPanel
+                  onClose={() => setShowNotificationPanel(false)}
+                  onUnreadChange={setHasUnreadNotifications}
+                />
               </div>
             )}
           </div>

@@ -72,6 +72,12 @@ export function clearSecretKey(): void {
   clearStoredSecretKey()
 }
 
+export function getMyPubkey(): string | null {
+  const sk = getStoredSecretKey()
+  if (!sk) return null
+  return getPublicKey(sk)
+}
+
 function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
     .map((b) => b.toString(16).padStart(2, '0'))

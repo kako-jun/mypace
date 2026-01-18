@@ -402,12 +402,17 @@ export async function publishEvent(event: Event): Promise<void> {
 
     // D1記録が必要なイベントの場合、APIに通知（fire-and-forget）
     // - kind:1 + mypaceタグ → 通し番号登録
+    // - kind:1 + eタグ → リプライ通知記録
+    // - kind:6 → リポスト通知記録
     // - kind:7 + stellaタグ → ステラ記録
-    // - kind:5 → ステラ削除
+    // - kind:5 → 削除処理
     const needsRecord =
       event.kind === 5 ||
+      event.kind === 6 ||
       (event.kind === 7 && event.tags.some((t) => t[0] === 'stella')) ||
-      (event.kind === 1 && event.tags.some((t) => t[0] === 't' && t[1]?.toLowerCase() === MYPACE_TAG))
+      (event.kind === 1 &&
+        (event.tags.some((t) => t[0] === 't' && t[1]?.toLowerCase() === MYPACE_TAG) ||
+          event.tags.some((t) => t[0] === 'e')))
 
     if (needsRecord) {
       // 動的インポートでapi.tsを読み込み（循環参照回避）

@@ -338,3 +338,64 @@ export async function recordImpressions(
     return false
   }
 }
+
+// ==================== NOTIFICATIONS ====================
+
+export interface NotificationActor {
+  pubkey: string
+  stellaCount?: number
+}
+
+export interface AggregatedNotification {
+  ids: number[]
+  type: 'stella' | 'reply' | 'repost'
+  targetEventId: string
+  sourceEventId: string | null
+  actors: NotificationActor[]
+  createdAt: number
+  readAt: number | null
+}
+
+export interface NotificationsResponse {
+  notifications: AggregatedNotification[]
+  hasUnread: boolean
+}
+
+// Fetch notifications for a user
+export async function fetchNotifications(pubkey: string): Promise<NotificationsResponse> {
+  try {
+    const res = await fetch(`${API_BASE}/api/notifications?pubkey=${pubkey}`)
+    if (!res.ok) return { notifications: [], hasUnread: false }
+    return res.json()
+  } catch {
+    return { notifications: [], hasUnread: false }
+  }
+}
+
+// Check if user has unread notifications
+export async function checkUnreadNotifications(pubkey: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/notifications/unread-count?pubkey=${pubkey}`)
+    if (!res.ok) return false
+    const data = await res.json()
+    return data.hasUnread ?? false
+  } catch {
+    return false
+  }
+}
+
+// Mark notifications as read
+export async function markNotificationsRead(ids: number[]): Promise<boolean> {
+  if (ids.length === 0) return true
+
+  try {
+    const res = await fetch(`${API_BASE}/api/notifications/read`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}

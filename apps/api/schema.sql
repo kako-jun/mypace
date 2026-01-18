@@ -104,3 +104,21 @@ CREATE TABLE IF NOT EXISTS ogp_cache (
 );
 
 CREATE INDEX IF NOT EXISTS idx_ogp_cache_expires ON ogp_cache(expires_at);
+
+-- Notifications table
+CREATE TABLE IF NOT EXISTS notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  recipient_pubkey TEXT NOT NULL,     -- User who receives the notification
+  actor_pubkey TEXT NOT NULL,         -- User who performed the action
+  type TEXT NOT NULL,                 -- 'stella' | 'reply' | 'repost'
+  target_event_id TEXT NOT NULL,      -- Target post ID
+  source_event_id TEXT,               -- Reply/repost event ID (NULL for stella)
+  stella_count INTEGER,               -- Stella count (1-10), NULL for non-stella
+  created_at INTEGER NOT NULL,
+  read_at INTEGER                     -- When user tapped to view (NULL = unread)
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications(recipient_pubkey);
+CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_target ON notifications(target_event_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_type_target ON notifications(type, target_event_id, actor_pubkey);
