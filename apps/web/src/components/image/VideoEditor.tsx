@@ -43,6 +43,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
 
   // Load video
   useEffect(() => {
@@ -67,9 +68,16 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     if (videoRef.current) {
       videoRef.current.currentTime = startTime
     }
+    // Set initial crop to full frame to show crop is available
+    setCrop({
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+    })
   }
 
-  // Preview playback
+  // Preview playback - plays within selected range
   useEffect(() => {
     if (!playing || !videoRef.current) return
 
@@ -97,6 +105,10 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
       videoRef.current?.pause()
       setPlaying(false)
     } else {
+      // Always start from startTime when play is pressed
+      if (videoRef.current) {
+        videoRef.current.currentTime = startTime
+      }
       setPlaying(true)
     }
   }
@@ -147,7 +159,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     }
   }, [crop])
 
-  // Mouse events
+  // Mouse events for crop
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       handleDragStart(e.clientX, e.clientY)
@@ -166,7 +178,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     handleDragEnd()
   }, [handleDragEnd])
 
-  // Touch events
+  // Touch events for crop
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
       if (e.touches.length === 1) {
@@ -191,8 +203,13 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     handleDragEnd()
   }, [handleDragEnd])
 
-  // Range slider handler - unified track with start/end markers
+  // Range slider - click on track to move nearest marker
   const handleRangeClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only handle clicks directly on the track, not on markers
+    if ((e.target as HTMLElement).classList.contains('video-editor-range-marker')) {
+      return
+    }
+
     const rect = e.currentTarget.getBoundingClientRect()
     const clickPos = (e.clientX - rect.left) / rect.width
     const clickTime = clickPos * videoDuration
@@ -207,23 +224,27 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
       if (endTime - newStart > MAX_DURATION) {
         setEndTime(newStart + MAX_DURATION)
       }
+      if (videoRef.current && !playing) {
+        videoRef.current.currentTime = newStart
+      }
     } else {
       const newEnd = Math.min(videoDuration, Math.max(clickTime, startTime + 0.5))
       setEndTime(newEnd)
       if (newEnd - startTime > MAX_DURATION) {
         setStartTime(newEnd - MAX_DURATION)
       }
-    }
-
-    // Seek video to clicked position
-    if (videoRef.current && !playing) {
-      videoRef.current.currentTime = clickTime
+      if (videoRef.current && !playing) {
+        videoRef.current.currentTime = newEnd
+      }
     }
   }
 
-  const handleMarkerDrag = (marker: 'start' | 'end') => (e: React.MouseEvent) => {
+  // Marker drag handlers
+  const handleMarkerMouseDown = (marker: 'start' | 'end') => (e: React.MouseEvent) => {
+    e.preventDefault()
     e.stopPropagation()
-    const track = e.currentTarget.parentElement
+
+    const track = trackRef.current
     if (!track) return
 
     const onMove = (moveEvent: MouseEvent) => {
@@ -259,6 +280,50 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
 
     document.addEventListener('mousemove', onMove)
     document.addEventListener('mouseup', onUp)
+  }
+
+  const handleMarkerTouchStart = (marker: 'start' | 'end') => (e: React.TouchEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const track = trackRef.current
+    if (!track) return
+
+    const onMove = (moveEvent: TouchEvent) => {
+      if (moveEvent.touches.length !== 1) return
+      const touch = moveEvent.touches[0]
+      const rect = track.getBoundingClientRect()
+      const pos = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width))
+      const time = pos * videoDuration
+
+      if (marker === 'start') {
+        const newStart = Math.max(0, Math.min(time, endTime - 0.5))
+        setStartTime(newStart)
+        if (endTime - newStart > MAX_DURATION) {
+          setEndTime(newStart + MAX_DURATION)
+        }
+        if (videoRef.current && !playing) {
+          videoRef.current.currentTime = newStart
+        }
+      } else {
+        const newEnd = Math.min(videoDuration, Math.max(time, startTime + 0.5))
+        setEndTime(newEnd)
+        if (newEnd - startTime > MAX_DURATION) {
+          setStartTime(newEnd - MAX_DURATION)
+        }
+        if (videoRef.current && !playing) {
+          videoRef.current.currentTime = newEnd
+        }
+      }
+    }
+
+    const onEnd = () => {
+      document.removeEventListener('touchmove', onMove)
+      document.removeEventListener('touchend', onEnd)
+    }
+
+    document.addEventListener('touchmove', onMove, { passive: false })
+    document.addEventListener('touchend', onEnd)
   }
 
   // Convert to animated WebP
@@ -302,10 +367,9 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
   }
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    const ms = Math.floor((seconds % 1) * 10)
-    return `${mins}:${secs.toString().padStart(2, '0')}.${ms}`
+    const secs = Math.floor(seconds)
+    const tenths = Math.floor((seconds % 1) * 10)
+    return `${secs.toString().padStart(2, '0')}.${tenths}`
   }
 
   const selectedDuration = endTime - startTime
@@ -379,7 +443,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
               </div>
 
               {/* Unified range slider */}
-              <div className="video-editor-range-track" onClick={handleRangeClick}>
+              <div ref={trackRef} className="video-editor-range-track" onClick={handleRangeClick}>
                 {/* Selected range highlight */}
                 <div
                   className="video-editor-range-selected"
@@ -392,7 +456,8 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
                 <div
                   className="video-editor-range-marker video-editor-range-marker-start"
                   style={{ left: `${startPercent}%` }}
-                  onMouseDown={handleMarkerDrag('start')}
+                  onMouseDown={handleMarkerMouseDown('start')}
+                  onTouchStart={handleMarkerTouchStart('start')}
                 >
                   <span className="video-editor-marker-label">S</span>
                 </div>
@@ -400,7 +465,8 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
                 <div
                   className="video-editor-range-marker video-editor-range-marker-end"
                   style={{ left: `${endPercent}%` }}
-                  onMouseDown={handleMarkerDrag('end')}
+                  onMouseDown={handleMarkerMouseDown('end')}
+                  onTouchStart={handleMarkerTouchStart('end')}
                 >
                   <span className="video-editor-marker-label">E</span>
                 </div>
