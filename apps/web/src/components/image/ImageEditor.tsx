@@ -121,6 +121,10 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
     const image = imgRef.current
     if (!image) return
 
+    setProcessing(true)
+    // Wait for UI to update before heavy canvas work
+    await new Promise((resolve) => requestAnimationFrame(resolve))
+
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     if (!ctx) return
@@ -221,12 +225,7 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
         }
       }
     }
-    setProcessing(true)
-    try {
-      await handleConfirm()
-    } finally {
-      setProcessing(false)
-    }
+    await handleConfirm()
   }, [stickers.length, completedCrop, file, onComplete, handleConfirm])
 
   return (
