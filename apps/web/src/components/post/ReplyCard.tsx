@@ -41,6 +41,7 @@ export default function ReplyCard({
         isProfileLoading={isProfileLoading}
         emojis={emojis}
         eventKind={reply.kind}
+        avatarSize="small"
       />
       <div className="post-content">
         <PostContent
