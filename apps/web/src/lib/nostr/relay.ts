@@ -1,7 +1,7 @@
 // 直接Nostrリレーに接続してデータを取得
 import { SimplePool } from 'nostr-tools/pool'
 import type { Filter, Event as NostrEvent } from 'nostr-tools'
-import { RELAYS, MYPACE_TAG, KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC } from './constants'
+import { RELAYS, MYPACE_TAG, KIND_NOTE, KIND_REPOST, KIND_LONG_FORM, KIND_SINOV_NPC } from './constants'
 import {
   filterBySmartFilters,
   filterByNPC,
@@ -35,6 +35,41 @@ function toEvent(e: NostrEvent): Event {
     content: e.content,
     sig: e.sig,
   }
+}
+
+// リポストイベント（kind:6）から元イベントをパース
+export function parseRepostEvent(event: Event): Event | null {
+  if (event.kind !== KIND_REPOST) return null
+
+  // kind:6のcontentには元イベントのJSONが含まれている
+  try {
+    if (event.content) {
+      const parsed = JSON.parse(event.content)
+      // 必須フィールドの検証
+      if (
+        parsed.id &&
+        parsed.pubkey &&
+        typeof parsed.created_at === 'number' &&
+        typeof parsed.kind === 'number' &&
+        Array.isArray(parsed.tags) &&
+        typeof parsed.content === 'string' &&
+        parsed.sig
+      ) {
+        return {
+          id: parsed.id,
+          pubkey: parsed.pubkey,
+          created_at: parsed.created_at,
+          kind: parsed.kind,
+          tags: parsed.tags,
+          content: parsed.content,
+          sig: parsed.sig,
+        }
+      }
+    }
+  } catch {
+    // JSONパース失敗時はnullを返す
+  }
+  return null
 }
 
 export interface FetchTimelineOptions {
@@ -78,7 +113,9 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
     kinds,
   } = options
 
-  const defaultKinds = showAll ? [KIND_NOTE, KIND_LONG_FORM] : [KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC]
+  const defaultKinds = showAll
+    ? [KIND_NOTE, KIND_REPOST, KIND_LONG_FORM]
+    : [KIND_NOTE, KIND_REPOST, KIND_LONG_FORM, KIND_SINOV_NPC]
   const targetKinds = kinds ?? defaultKinds
 
   if (targetKinds.length === 0) {
@@ -184,7 +221,9 @@ export async function fetchUserEvents(
     kinds,
   } = options
 
-  const defaultKinds = showAll ? [KIND_NOTE, KIND_LONG_FORM] : [KIND_NOTE, KIND_LONG_FORM, KIND_SINOV_NPC]
+  const defaultKinds = showAll
+    ? [KIND_NOTE, KIND_REPOST, KIND_LONG_FORM]
+    : [KIND_NOTE, KIND_REPOST, KIND_LONG_FORM, KIND_SINOV_NPC]
   const targetKinds = kinds ?? defaultKinds
 
   if (targetKinds.length === 0) {

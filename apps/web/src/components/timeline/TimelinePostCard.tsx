@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Icon, parseEmojiTags } from '../ui'
 import '../../styles/components/post-card.css'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
+import { KIND_REPOST } from '../../lib/nostr/constants'
 import {
   PostHeader,
   PostActions,
@@ -11,6 +12,7 @@ import {
   PostStickers,
   PostLocation,
   PostBarcode,
+  OriginalPostCard,
 } from '../post'
 import { cachePostWithMetadata, navigateToPostModal, navigateToUser } from '../../lib/utils'
 import { parseStickers, hasTeaserTag } from '../../lib/nostr/tags'
@@ -20,6 +22,7 @@ import type { ShareOption } from '../post/ShareMenu'
 
 interface TimelinePostCardProps {
   event: Event
+  originalEvent?: Event // リポスト元イベント（kind:6の場合にセット）
   repostedBy?: { pubkey: string; timestamp: number }
   isMyPost: boolean
   myPubkey: string | null
@@ -50,6 +53,7 @@ interface TimelinePostCardProps {
 
 export default function TimelinePostCard({
   event,
+  originalEvent,
   repostedBy,
   isMyPost,
   myPubkey,
@@ -80,6 +84,9 @@ export default function TimelinePostCard({
   const [expandedThread, setExpandedThread] = useState(false)
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
 
+  // リポスト（kind:6）かどうか
+  const isRepost = event.kind === KIND_REPOST && originalEvent
+
   const themeProps = getThemeCardProps(getEventThemeColors(event))
   const stickers = parseStickers(event.tags)
 
@@ -101,7 +108,8 @@ export default function TimelinePostCard({
       target.closest('button') ||
       target.closest('a') ||
       target.closest('.thread-section') ||
-      target.closest('.post-actions')
+      target.closest('.post-actions') ||
+      target.closest('.original-post-card')
     )
       return
     // Cache event, profile, and metadata from timeline for instant display in detail view
@@ -129,6 +137,13 @@ export default function TimelinePostCard({
       onUnpin?.()
     } else {
       onPin?.(event)
+    }
+  }
+
+  // リポストの場合は元投稿へ遷移
+  const handleOriginalPostClick = () => {
+    if (originalEvent) {
+      navigateToPostModal(originalEvent.id)
     }
   }
 
@@ -193,67 +208,88 @@ export default function TimelinePostCard({
             isProfileLoading={profiles[event.pubkey] === undefined}
             emojis={profiles[event.pubkey]?.emojis}
             eventKind={event.kind}
-            views={views}
+            views={isRepost ? undefined : views}
           />
 
-          <div className="post-content">
-            <PostContent
-              content={event.content}
-              truncate
-              emojis={parseEmojiTags(event.tags)}
-              profiles={profiles}
-              wikidataMap={wikidataMap}
-              ogpMap={ogpMap}
-              onReadMore={() => navigateToPostModal(event.id)}
-              tags={event.tags}
-            />
-          </div>
-
-          {locations.map((loc) => (
-            <PostLocation key={loc.geohash} geohashStr={loc.geohash} name={loc.name} />
-          ))}
-
-          <div className="post-footer">
-            <div className="post-actions">
-              <PostActions
-                isMyPost={isMyPost}
-                reactions={reactions}
-                replies={replies}
-                reposts={reposts}
-                likingId={likingId}
-                repostingId={repostingId}
-                eventId={event.id}
-                copied={copiedId === event.id}
-                myPubkey={myPubkey}
-                getDisplayName={getDisplayName}
-                onLike={() => onLike(event)}
-                onUnlike={() => onUnlike(event)}
-                onReply={() => onReply(event)}
-                onRepost={() => onRepost(event)}
-                onShareOption={(option) => onShareOption(event.id, event.content, option)}
-                onNavigateToProfile={navigateToUser}
+          {isRepost && originalEvent ? (
+            // リポストの場合: 「Reposted」テキスト + オリジナル投稿カード
+            <>
+              <div className="repost-content">Reposted</div>
+              <OriginalPostCard
+                event={originalEvent}
+                displayName={getDisplayName(originalEvent.pubkey)}
+                avatarUrl={getAvatarUrl(originalEvent.pubkey)}
+                isProfileLoading={profiles[originalEvent.pubkey] === undefined}
+                emojis={profiles[originalEvent.pubkey]?.emojis}
+                profiles={profiles}
+                wikidataMap={wikidataMap}
+                ogpMap={ogpMap}
+                onClick={handleOriginalPostClick}
               />
-            </div>
+            </>
+          ) : (
+            // 通常の投稿の場合
+            <>
+              <div className="post-content">
+                <PostContent
+                  content={event.content}
+                  truncate
+                  emojis={parseEmojiTags(event.tags)}
+                  profiles={profiles}
+                  wikidataMap={wikidataMap}
+                  ogpMap={ogpMap}
+                  onReadMore={() => navigateToPostModal(event.id)}
+                  tags={event.tags}
+                />
+              </div>
 
-            {isMyPost && (
-              <EditDeleteButtons
-                isConfirming={isConfirming(event.id)}
-                onEdit={() => onEdit(event)}
-                onDelete={() => showConfirm(event.id)}
-                onDeleteConfirm={handleDeleteConfirmClick}
-                onDeleteCancel={hideConfirm}
-              />
-            )}
-          </div>
+              {locations.map((loc) => (
+                <PostLocation key={loc.geohash} geohashStr={loc.geohash} name={loc.name} />
+              ))}
+
+              <div className="post-footer">
+                <div className="post-actions">
+                  <PostActions
+                    isMyPost={isMyPost}
+                    reactions={reactions}
+                    replies={replies}
+                    reposts={reposts}
+                    likingId={likingId}
+                    repostingId={repostingId}
+                    eventId={event.id}
+                    copied={copiedId === event.id}
+                    myPubkey={myPubkey}
+                    getDisplayName={getDisplayName}
+                    onLike={() => onLike(event)}
+                    onUnlike={() => onUnlike(event)}
+                    onReply={() => onReply(event)}
+                    onRepost={() => onRepost(event)}
+                    onShareOption={(option) => onShareOption(event.id, event.content, option)}
+                    onNavigateToProfile={navigateToUser}
+                  />
+                </div>
+
+                {isMyPost && (
+                  <EditDeleteButtons
+                    isConfirming={isConfirming(event.id)}
+                    onEdit={() => onEdit(event)}
+                    onDelete={() => showConfirm(event.id)}
+                    onDeleteConfirm={handleDeleteConfirmClick}
+                    onDeleteCancel={hideConfirm}
+                  />
+                )}
+              </div>
+            </>
+          )}
 
           {/* Front layer stickers (above content) */}
-          <PostStickers stickers={stickers} truncated={isTruncated} layer="front" />
+          {!isRepost && <PostStickers stickers={stickers} truncated={isTruncated} layer="front" />}
         </div>
 
         {/* Barcode on right edge */}
-        <PostBarcode eventId={event.id} />
+        {!isRepost && <PostBarcode eventId={event.id} />}
 
-        {replyList.length > 0 && (
+        {!isRepost && replyList.length > 0 && (
           <ThreadReplies
             replies={replyList}
             expanded={expandedThread}

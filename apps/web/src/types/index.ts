@@ -86,6 +86,7 @@ export interface TimelineItem {
     pubkey: string
     timestamp: number
   }
+  originalEvent?: Event // リポスト元イベント（kind:6の場合にセット）
 }
 
 // Theme types

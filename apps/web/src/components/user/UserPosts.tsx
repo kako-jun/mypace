@@ -98,7 +98,11 @@ export function UserPosts({
   // Filter out pinned post from regular timeline
   const regularItems = pinnedEventId ? items.filter((item) => item.event.id !== pinnedEventId) : items
 
-  const renderPostCard = (event: Event, _isPinnedSection = false) => {
+  // Find the TimelineItem for pinned event (for originalEvent)
+  const pinnedItem = pinnedEventId ? items.find((item) => item.event.id === pinnedEventId) : undefined
+
+  const renderPostCard = (item: TimelineItem, _isPinnedSection = false) => {
+    const event = item.event
     const isMyPost = myPubkey === event.pubkey
 
     if (deletedId === event.id) {
@@ -113,6 +117,7 @@ export function UserPosts({
       <Fragment key={event.id}>
         <TimelinePostCard
           event={event}
+          originalEvent={item.originalEvent}
           isMyPost={isMyPost}
           myPubkey={myPubkey}
           profiles={{ ...profiles, [authorPubkey]: authorProfile ?? null }}
@@ -148,17 +153,17 @@ export function UserPosts({
       <TimelineSearch onFiltersChange={onFiltersChange} />
 
       {/* Pinned post section */}
-      {pinnedEvent && (
+      {pinnedEvent && pinnedItem && (
         <div className="pinned-post-section">
           <div className="pinned-post-label">
             <Icon name="Pin" size={14} /> Pinned
           </div>
-          {renderPostCard(pinnedEvent, true)}
+          {renderPostCard(pinnedItem, true)}
         </div>
       )}
 
       {/* Regular posts */}
-      {regularItems.map((item) => renderPostCard(item.event, false))}
+      {regularItems.map((item) => renderPostCard(item, false))}
       {items.length === 0 && <p className="empty">No posts yet</p>}
       {items.length > 0 && (
         <TimelineActionButton onClick={loadOlderEvents} disabled={loadingMore}>

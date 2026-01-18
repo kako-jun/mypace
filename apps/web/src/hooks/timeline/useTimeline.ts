@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { fetchTimeline, fetchUserEvents, publishEvent } from '../../lib/nostr/relay'
+import { fetchTimeline, fetchUserEvents, publishEvent, parseRepostEvent } from '../../lib/nostr/relay'
+import { KIND_REPOST } from '../../lib/nostr/constants'
 import {
   getCurrentPubkey,
   createDeleteEvent,
@@ -25,6 +26,29 @@ import { loadEnrichForEvents, recordImpressionsForEvents, loadOgpForEvents } fro
 import { useTimelinePolling } from './useTimelinePolling'
 
 export type { UseTimelineOptions, UseTimelineResult }
+
+// イベントをTimelineItemに変換（リポストの場合はoriginalEventをセット）
+function eventsToTimelineItems(events: Event[]): { items: TimelineItem[]; originalEvents: Event[] } {
+  const items: TimelineItem[] = []
+  const originalEvents: Event[] = []
+
+  for (const event of events) {
+    if (event.kind === KIND_REPOST) {
+      const originalEvent = parseRepostEvent(event)
+      if (originalEvent) {
+        items.push({ event, originalEvent })
+        originalEvents.push(originalEvent)
+      } else {
+        // オリジナルイベントがパースできない場合はスキップ
+        // （contentが空の場合など）
+      }
+    } else {
+      items.push({ event })
+    }
+  }
+
+  return { items, originalEvents }
+}
 
 export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult {
   const { authorPubkey, tags, q } = options
@@ -68,6 +92,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     // kinds: 各設定が独立して効果を持つ
     const kinds: number[] = []
     if (filters.showSNS) kinds.push(1) // KIND_NOTE
+    if (filters.showSNS) kinds.push(6) // KIND_REPOST
     if (filters.showBlog) kinds.push(30023) // KIND_LONG_FORM
     if (!filters.hideNPC) kinds.push(42000) // KIND_SINOV_NPC（mypace設定とは独立）
     return {
@@ -125,7 +150,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       }
       const notes = result.events
 
-      const initialItems: TimelineItem[] = notes.map((note) => ({ event: note }))
+      // リポスト（kind:6）をTimelineItemに変換し、originalEventsを抽出
+      const { items: initialItems, originalEvents } = eventsToTimelineItems(notes)
       initialItems.sort((a, b) => b.event.created_at - a.event.created_at)
       setTimelineItems(initialItems)
       setEvents(notes)
@@ -154,9 +180,10 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         setHasMore(false)
       }
 
-      // metadata + profiles + super-mention一括取得
+      // metadata + profiles + super-mention一括取得（リポスト元イベントも含める）
+      const allEventsForEnrich = [...notes, ...originalEvents]
       await loadEnrichForEvents(
-        notes,
+        allEventsForEnrich,
         pubkey,
         setReactions,
         setReplies,
@@ -166,8 +193,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         setWikidataMap
       )
 
-      // OGPデータ一括取得（非同期、fire-and-forget）
-      loadOgpForEvents(notes, setOgpMap)
+      // OGPデータ一括取得（非同期、fire-and-forget）- リポスト元も含める
+      loadOgpForEvents(allEventsForEnrich, setOgpMap)
 
       // Record impressions (fire-and-forget)
       recordImpressionsForEvents(notes, pubkey)
@@ -378,7 +405,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       const newOlderNotes = olderNotes.filter((e) => !existingIds.has(e.id))
 
       if (newOlderNotes.length > 0) {
-        const newItems: TimelineItem[] = newOlderNotes.map((event) => ({ event }))
+        // リポスト（kind:6）をTimelineItemに変換
+        const { items: newItems, originalEvents } = eventsToTimelineItems(newOlderNotes)
         setTimelineItems((prev) => {
           const merged = [...prev, ...newItems]
           merged.sort((a, b) => b.event.created_at - a.event.created_at)
@@ -398,10 +426,11 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
           return merged
         })
 
-        // metadata + profiles + super-mention一括取得
+        // metadata + profiles + super-mention一括取得（リポスト元イベントも含める）
         if (myPubkey) {
+          const allEventsForEnrich = [...newOlderNotes, ...originalEvents]
           await loadEnrichForEvents(
-            newOlderNotes,
+            allEventsForEnrich,
             myPubkey,
             setReactions,
             setReplies,
@@ -410,8 +439,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
             setProfiles,
             setWikidataMap
           )
-          // OGPデータ一括取得（非同期）
-          loadOgpForEvents(newOlderNotes, setOgpMap)
+          // OGPデータ一括取得（非同期）- リポスト元も含める
+          loadOgpForEvents(allEventsForEnrich, setOgpMap)
           // Record impressions for older events (fire-and-forget)
           recordImpressionsForEvents(newOlderNotes, myPubkey)
         }

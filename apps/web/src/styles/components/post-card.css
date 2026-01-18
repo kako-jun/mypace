@@ -281,6 +281,90 @@
 }
 
 /* ===========================================
+   Repost Content (kind:6)
+   =========================================== */
+
+/* "Reposted" text label */
+.repost-content {
+  position: relative;
+  z-index: 1;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  font-style: italic;
+}
+
+/* Original post card (embedded in repost) */
+.original-post-card {
+  position: relative;
+  padding: 0.75rem 1rem;
+  margin-top: 0.5rem;
+  background: var(--surface-primary);
+  border: 2px solid #000;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  overflow: visible;
+}
+
+/* Folded corner effect */
+.original-post-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, var(--surface-fold) 50%, transparent 50%);
+  border-left: 2px solid #000;
+  border-top: 2px solid #000;
+}
+
+/* Diagonal line on fold */
+.original-post-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, transparent calc(50% + 1px), #000 calc(50% + 1px), #000 calc(50% + 3px), transparent calc(50% + 3px));
+  pointer-events: none;
+}
+
+.original-post-card:hover {
+  opacity: 0.85;
+}
+
+.original-post-card .post-header {
+  margin-bottom: 0.25rem;
+}
+
+.original-post-card .author-name {
+  font-size: 0.8rem;
+}
+
+.original-post-card .timestamp {
+  font-size: 0.7rem;
+}
+
+.original-post-card .post-content {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Location in original post card */
+.original-post-card .post-location {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.original-post-card .post-location-map-container {
+  width: 150px;
+  height: 100px;
+}
+
+/* ===========================================
    Stickers
    =========================================== */
 

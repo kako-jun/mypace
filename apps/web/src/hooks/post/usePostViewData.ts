@@ -1,5 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchEventById, fetchEventsByIds, fetchProfiles, fetchEventMetadata } from '../../lib/nostr/relay'
+import {
+  fetchEventById,
+  fetchEventsByIds,
+  fetchProfiles,
+  fetchEventMetadata,
+  parseRepostEvent,
+} from '../../lib/nostr/relay'
+import { KIND_REPOST } from '../../lib/nostr/constants'
 import { fetchViewsAndSuperMentions, recordImpressions } from '../../lib/api/api'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import { getCachedPost, getCachedProfile, getCachedPostMetadata, getErrorMessage } from '../../lib/utils'
@@ -107,7 +114,11 @@ export function usePostViewData(eventId: string): PostViewData {
         // Batch fetch profiles for reply authors and reactors (from cached data)
         const replyPubkeys = cachedMetadata.replies.replies.map((r) => r.pubkey)
         const reactorPubkeys = cachedMetadata.reactions.reactors.map((r) => r.pubkey)
-        const allPubkeys = [...new Set([...replyPubkeys, ...reactorPubkeys])]
+        // リポストの場合、元投稿者のプロフィールも取得
+        const originalPubkey = eventData.kind === KIND_REPOST ? parseRepostEvent(eventData)?.pubkey : null
+        const allPubkeys = [
+          ...new Set([...replyPubkeys, ...reactorPubkeys, ...(originalPubkey ? [originalPubkey] : [])]),
+        ]
 
         if (allPubkeys.length > 0) {
           try {
@@ -162,7 +173,9 @@ export function usePostViewData(eventId: string): PostViewData {
       // Fetch profiles for reply authors and reactors
       const replyPubkeys = eventMetadata?.replies.replies.map((r) => r.pubkey) || []
       const reactorPubkeys = eventMetadata?.reactions.reactors.map((r) => r.pubkey) || []
-      const allPubkeys = [...new Set([...replyPubkeys, ...reactorPubkeys])]
+      // リポストの場合、元投稿者のプロフィールも取得
+      const originalPubkey = eventData.kind === KIND_REPOST ? parseRepostEvent(eventData)?.pubkey : null
+      const allPubkeys = [...new Set([...replyPubkeys, ...reactorPubkeys, ...(originalPubkey ? [originalPubkey] : [])])]
 
       if (allPubkeys.length > 0) {
         const replyReactorProfiles = await fetchProfiles(allPubkeys)

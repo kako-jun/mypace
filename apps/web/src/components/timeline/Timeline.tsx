@@ -181,6 +181,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
           <Fragment key={item.repostedBy ? `repost-${event.id}-${item.repostedBy.pubkey}` : event.id}>
             <TimelinePostCard
               event={event}
+              originalEvent={item.originalEvent}
               repostedBy={item.repostedBy}
               isMyPost={isMyPost}
               myPubkey={myPubkey}

@@ -1,11 +1,32 @@
 import { useEffect, useRef, useCallback } from 'react'
-import { fetchTimeline, fetchUserEvents } from '../../lib/nostr/relay'
+import { fetchTimeline, fetchUserEvents, parseRepostEvent } from '../../lib/nostr/relay'
+import { KIND_REPOST } from '../../lib/nostr/constants'
 import { LIMITS } from '../../lib/constants'
 import { getFilterSettings } from '../../lib/storage'
 import { getMutedPubkeys } from '../../lib/utils'
 import type { Event, ProfileCache, TimelineItem } from '../../types'
 import type { UseTimelineOptions } from './types'
 import { mergeProfiles } from './useTimelineData'
+
+// イベントをTimelineItemに変換（リポストの場合はoriginalEventをセット）
+function eventsToTimelineItems(events: Event[]): { items: TimelineItem[]; originalEvents: Event[] } {
+  const items: TimelineItem[] = []
+  const originalEvents: Event[] = []
+
+  for (const event of events) {
+    if (event.kind === KIND_REPOST) {
+      const originalEvent = parseRepostEvent(event)
+      if (originalEvent) {
+        items.push({ event, originalEvent })
+        originalEvents.push(originalEvent)
+      }
+    } else {
+      items.push({ event })
+    }
+  }
+
+  return { items, originalEvents }
+}
 
 export const POLLING_INTERVAL = 60 * 1000 // 1分
 
@@ -62,6 +83,7 @@ export function useTimelinePolling({
     // kinds: 各設定が独立して効果を持つ
     const kinds: number[] = []
     if (filters.showSNS) kinds.push(1) // KIND_NOTE
+    if (filters.showSNS) kinds.push(6) // KIND_REPOST
     if (filters.showBlog) kinds.push(30023) // KIND_LONG_FORM
     if (!filters.hideNPC) kinds.push(42000) // KIND_SINOV_NPC（mypace設定とは独立）
     return {
@@ -148,7 +170,8 @@ export function useTimelinePolling({
     const eventsToAdd = [...pendingNewEvents]
     setPendingNewEvents([])
 
-    const newItems: TimelineItem[] = eventsToAdd.map((event) => ({ event }))
+    // リポスト（kind:6）をTimelineItemに変換
+    const { items: newItems, originalEvents } = eventsToTimelineItems(eventsToAdd)
     setTimelineItems((prev) => {
       const existingIds = new Set(prev.map((item) => item.event.id))
       const uniqueNewItems = newItems.filter((item) => !existingIds.has(item.event.id))
@@ -169,15 +192,16 @@ export function useTimelinePolling({
     const maxTime = Math.max(...eventsToAdd.map((e) => e.created_at))
     setLatestEventTime((prev) => Math.max(prev, maxTime))
 
-    // プロフィールとenrichデータを取得
-    const pubkeys = [...new Set(eventsToAdd.map((e) => e.pubkey))]
+    // プロフィールとenrichデータを取得（リポスト元の著者も含める）
+    const pubkeys = [...new Set([...eventsToAdd.map((e) => e.pubkey), ...originalEvents.map((e) => e.pubkey)])]
     await mergeProfiles(pubkeys, profiles, setProfiles)
 
-    // metadata + super-mention一括取得（過去分と同じ処理）
+    // metadata + super-mention一括取得（リポスト元イベントも含める）
     if (myPubkey) {
+      const allEventsForEnrich = [...eventsToAdd, ...originalEvents]
       const { loadEnrichForEvents, recordImpressionsForEvents, loadOgpForEvents } = await import('./useTimelineData')
       await loadEnrichForEvents(
-        eventsToAdd,
+        allEventsForEnrich,
         myPubkey,
         setReactions,
         setReplies,
@@ -186,8 +210,8 @@ export function useTimelinePolling({
         setProfiles,
         setWikidataMap
       )
-      // OGPデータ一括取得（非同期）
-      loadOgpForEvents(eventsToAdd, setOgpMap)
+      // OGPデータ一括取得（非同期）- リポスト元も含める
+      loadOgpForEvents(allEventsForEnrich, setOgpMap)
       // Record impressions for new events (fire-and-forget)
       recordImpressionsForEvents(eventsToAdd, myPubkey)
     }

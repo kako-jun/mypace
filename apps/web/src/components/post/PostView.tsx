@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { nip19 } from 'nostr-tools'
-import { publishEvent } from '../../lib/nostr/relay'
+import { publishEvent, parseRepostEvent } from '../../lib/nostr/relay'
+import { KIND_REPOST } from '../../lib/nostr/constants'
 import '../../styles/components/post-view.css'
 import {
   createDeleteEvent,
@@ -47,6 +48,7 @@ import {
   PostStickers,
   PostLocation,
   PostBarcode,
+  OriginalPostCard,
 } from './index'
 import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage } from '../ui'
 import { useDeleteConfirm, usePostViewData } from '../../hooks'
@@ -105,6 +107,16 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     setReactions,
     setReposts,
   } = usePostViewData(eventId)
+
+  // リポスト（kind:6）の場合、オリジナルイベントをパース
+  const originalEvent = useMemo(() => {
+    if (event && event.kind === KIND_REPOST) {
+      return parseRepostEvent(event)
+    }
+    return null
+  }, [event])
+
+  const isRepost = event?.kind === KIND_REPOST && originalEvent !== null
 
   // Stella debounce
   const stellaDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -367,8 +379,8 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
       )}
 
       <article className={`post-card post-card-large ${themeProps.className}`} style={themeProps.style}>
-        {/* Back layer stickers (behind content) */}
-        <PostStickers stickers={stickers} layer="back" />
+        {/* Back layer stickers (behind content) - only for non-repost */}
+        {!isRepost && <PostStickers stickers={stickers} layer="back" />}
 
         <PostHeader
           pubkey={event.pubkey}
@@ -378,23 +390,44 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
           isProfileLoading={!profile}
           emojis={profile?.emojis}
           eventKind={event.kind}
-          views={views}
+          views={isRepost ? undefined : views}
         />
-        <div className="post-content post-content-full">
-          <PostContent
-            content={fullContent}
-            emojis={parseEmojiTags(event.tags)}
-            profiles={{ ...(profile ? { [event.pubkey]: profile } : {}), ...replyProfiles }}
-            enableOgpFallback={true}
-          />
-        </div>
 
-        {locations.map((loc) => (
-          <PostLocation key={loc.geohash} geohashStr={loc.geohash} name={loc.name} />
-        ))}
+        {isRepost && originalEvent ? (
+          // リポストの場合: 「Reposted」テキスト + オリジナル投稿カード
+          <>
+            <div className="repost-content">Reposted</div>
+            <OriginalPostCard
+              event={originalEvent}
+              displayName={getProfileDisplayName(originalEvent.pubkey, replyProfiles[originalEvent.pubkey])}
+              avatarUrl={getProfileAvatarUrl(replyProfiles[originalEvent.pubkey])}
+              isProfileLoading={replyProfiles[originalEvent.pubkey] === undefined}
+              emojis={replyProfiles[originalEvent.pubkey]?.emojis}
+              profiles={replyProfiles}
+              onClick={() => navigateToPost(originalEvent.id)}
+            />
+          </>
+        ) : (
+          // 通常の投稿の場合
+          <>
+            <div className="post-content post-content-full">
+              <PostContent
+                content={fullContent}
+                emojis={parseEmojiTags(event.tags)}
+                profiles={{ ...(profile ? { [event.pubkey]: profile } : {}), ...replyProfiles }}
+                enableOgpFallback={true}
+              />
+            </div>
+
+            {locations.map((loc) => (
+              <PostLocation key={loc.geohash} geohashStr={loc.geohash} name={loc.name} />
+            ))}
+          </>
+        )}
 
         {deletedId === event.id && <SuccessMessage>Deleted!</SuccessMessage>}
-        {deletedId !== event.id && (
+        {/* リポストの場合はアクションボタンを非表示 */}
+        {deletedId !== event.id && !isRepost && (
           <div className="post-footer">
             <PostActions
               isMyPost={isMyPost}
@@ -426,14 +459,15 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
           </div>
         )}
 
-        {/* Front layer stickers (above content) */}
-        <PostStickers stickers={stickers} layer="front" />
+        {/* Front layer stickers (above content) - only for non-repost */}
+        {!isRepost && <PostStickers stickers={stickers} layer="front" />}
 
-        {/* Barcode on right edge */}
-        <PostBarcode eventId={event.id} />
+        {/* Barcode on right edge - only for non-repost */}
+        {!isRepost && <PostBarcode eventId={event.id} />}
       </article>
 
-      {replies.count > 0 && (
+      {/* リポストの場合はリプライセクションを非表示 */}
+      {!isRepost && replies.count > 0 && (
         <div className="replies-section">
           <h3 className="replies-heading">{formatNumber(replies.count)} Replies</h3>
           <div className="replies-list">

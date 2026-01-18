@@ -21,6 +21,12 @@ MY PACEはNostrプロトコルの拡張性を活用し、独自機能を実装�
 | `stella` | [stella.md](./stella.md) | 1投稿に最大10ステラ |
 | `pinned` | [pinned-post.md](./pinned-post.md) | プロフィール先頭固定投稿 |
 
+### Nostr標準機能の実装
+
+| kind | ドキュメント | 概要 |
+|------|-------------|------|
+| kind:6 | [repost.md](./repost.md) | リポスト表示（NIP-18） |
+
 ### プロフィール拡張
 
 | フィールド | ドキュメント | 概要 |

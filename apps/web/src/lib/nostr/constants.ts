@@ -5,6 +5,7 @@ export const MYPACE_URL = 'https://mypace.llll-ll.com'
 
 // Nostr Event Kinds
 export const KIND_NOTE = 1
+export const KIND_REPOST = 6
 export const KIND_LONG_FORM = 30023
 export const KIND_SINOV_NPC = 42000 // Sinov NPC posts (hidden from other clients)
 

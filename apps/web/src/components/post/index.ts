@@ -1,6 +1,7 @@
 export { default as PostHeader } from './PostHeader'
 export { default as ThreadReplies } from './ThreadReplies'
 export { default as ReplyCard } from './ReplyCard'
+export { default as OriginalPostCard } from './OriginalPostCard'
 export { default as AttachedImages } from './AttachedImages'
 export { default as AttachedLocations } from './AttachedLocations'
 export { default as PostPreview } from './PostPreview'
