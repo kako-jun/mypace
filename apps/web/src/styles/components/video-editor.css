@@ -240,6 +240,27 @@ body.long-mode-active .video-editor-modal {
   color: var(--text-muted);
 }
 
+/* Override react-image-crop styles (same as ImageEditor) */
+.video-editor-crop-container .ReactCrop__crop-selection {
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+}
+
+.video-editor-crop-container .ReactCrop__drag-handle {
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border: 2px solid #333;
+}
+
+.video-editor-crop-container .ReactCrop__drag-handle.ord-nw,
+.video-editor-crop-container .ReactCrop__drag-handle.ord-ne,
+.video-editor-crop-container .ReactCrop__drag-handle.ord-sw,
+.video-editor-crop-container .ReactCrop__drag-handle.ord-se {
+  width: 16px;
+  height: 16px;
+}
+
 /* Touch device adjustments */
 @media (pointer: coarse) {
   .video-editor-range-marker {

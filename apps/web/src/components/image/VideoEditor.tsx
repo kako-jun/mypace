@@ -333,6 +333,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
                   onChange={(c) => setCrop(c)}
                   onComplete={handleCropComplete}
                   className="video-editor-crop-container"
+                  keepSelection
                 >
                   <video
                     ref={videoRef}
