@@ -32,6 +32,9 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
   const [stickerHistory, setStickerHistory] = useState<StickerHistoryItem[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
 
+  // Processing state
+  const [processing, setProcessing] = useState(false)
+
   // Create object URL for file
   useEffect(() => {
     setImageLoaded(false)
@@ -218,7 +221,12 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
         }
       }
     }
-    await handleConfirm()
+    setProcessing(true)
+    try {
+      await handleConfirm()
+    } finally {
+      setProcessing(false)
+    }
   }, [stickers.length, completedCrop, file, onComplete, handleConfirm])
 
   return (
@@ -293,12 +301,19 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
             </div>
           )}
 
+          {/* Progress bar */}
+          {processing && (
+            <div className="image-editor-progress">
+              <span className="image-editor-progress-text">Processing...</span>
+            </div>
+          )}
+
           <div className="image-editor-footer">
-            <Button size="md" variant="secondary" onClick={onCancel}>
+            <Button size="md" variant="secondary" onClick={onCancel} disabled={processing}>
               Cancel
             </Button>
-            <Button size="md" variant="primary" onClick={handleConfirmWrapper} disabled={!imageLoaded}>
-              Add
+            <Button size="md" variant="primary" onClick={handleConfirmWrapper} disabled={!imageLoaded || processing}>
+              {processing ? 'Processing...' : 'Add'}
             </Button>
           </div>
         </div>

@@ -133,6 +133,24 @@ body.long-mode-active .image-editor-modal {
   object-fit: contain;
 }
 
+/* Progress bar */
+.image-editor-progress {
+  position: relative;
+  height: 24px;
+  background: var(--surface-secondary);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-editor-progress-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
 /* Footer */
 .image-editor-footer {
   display: flex;
