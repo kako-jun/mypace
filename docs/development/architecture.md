@@ -90,6 +90,12 @@
    - `/api/pins` - ピン留め
    - `/api/uploads` - アップロード履歴
 
+7. **Web Push通知** (`/api/push`)
+   - 購読登録/解除
+   - 通知設定の変更
+   - VAPID公開鍵の提供
+   - ステラ/リプライ/リポスト発生時にプッシュ送信
+
 ---
 
 ## パッケージ
@@ -179,6 +185,8 @@ MY PACE独自データのみ保存（Nostrイベントのキャッシュは持�
 | `sticker_history` | ステッカー履歴 |
 | `user_pins` | ピン留め投稿 |
 | `upload_history` | アップロード履歴 |
+| `notifications` | アプリ内通知（ステラ/リプライ/リポスト） |
+| `push_subscriptions` | Web Push購読情報（エンドポイント、鍵） |
 
 ---
 
@@ -212,7 +220,9 @@ vite-plugin-pwaによるPWA対応:
 - **Service Worker**: Workbox によるプリキャッシュ・ランタイムキャッシュ
   - 静的アセット（JS、CSS、HTML、画像）をプリキャッシュ
   - Google Fontsを1年間キャッシュ
+  - **Web Push通知の受信・表示**
 - **インストール**: ホーム画面追加でネイティブアプリ風に起動
+- **プッシュ通知**: VAPID認証でサーバーからブラウザへ通知送信
 
 ---
 

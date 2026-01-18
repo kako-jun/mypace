@@ -47,15 +47,43 @@ cd apps/web
 pnpm dev
 ```
 
+## Web Push通知のセットアップ
+
+VAPID鍵を生成してシークレットに設定する必要があります。
+
+```bash
+cd apps/api
+
+# 1. VAPID鍵を生成
+pnpm generate-vapid
+
+# 2. 表示された鍵をシークレットとして設定
+npx wrangler secret put VAPID_PUBLIC_KEY
+# (公開鍵をペースト)
+
+npx wrangler secret put VAPID_PRIVATE_KEY
+# (秘密鍵をペースト)
+```
+
+`VAPID_SUBJECT` は wrangler.toml に設定済みです。
+
 ## Environment Variables
 
 ### API (apps/api/wrangler.toml)
 
 ```toml
 [vars]
-# Optional: SOCKS5 proxy for relay connections
-SOCKS5_PROXY = "socks5://your-proxy:1080"
+VAPID_SUBJECT = "https://mypace.llll-ll.com"  # Web Push送信者識別子
+
+# VAPID_PUBLIC_KEY と VAPID_PRIVATE_KEY は wrangler secret で設定
 ```
+
+### API Secrets
+
+| 名前 | 説明 |
+|------|------|
+| `VAPID_PUBLIC_KEY` | Web Push用VAPID公開鍵 |
+| `VAPID_PRIVATE_KEY` | Web Push用VAPID秘密鍵 |
 
 ### Frontend (apps/web)
 
