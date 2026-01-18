@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { CloseButton, Portal } from '../ui'
+import { CloseButton, Portal, Icon } from '../ui'
 import Button from '../ui/Button'
 import { videoToAnimatedWebP, getVideoDuration } from '../../lib/animatedWebpEncoder'
 import '../../styles/components/video-editor.css'
@@ -352,7 +352,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
             <div className="video-editor-time-controls">
               <div className="video-editor-time-display">
                 <button type="button" className="video-editor-play-btn" onClick={togglePlay}>
-                  {playing ? '⏸' : '▶'}
+                  <Icon name={playing ? 'Pause' : 'Play'} size={16} />
                 </button>
                 <span className="video-editor-time-label">
                   {formatTime(startTime)} - {formatTime(endTime)}
