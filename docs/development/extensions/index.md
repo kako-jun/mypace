@@ -54,6 +54,7 @@ MY PACEはNostrプロトコルの拡張性を活用し、独自機能を実装�
 
 | 機能 | ドキュメント | 概要 |
 |------|-------------|------|
+| Notifications | [notifications.md](./notifications.md) | ステラ・リプライ・リポストの通知 |
 | My Stats Widget | [my-stats-widget.md](./my-stats-widget.md) | 自分の統計を画面右下に常時表示 |
 
 ### フィルタ設計
