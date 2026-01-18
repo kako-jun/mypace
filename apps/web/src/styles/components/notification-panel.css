@@ -179,14 +179,8 @@
 
 /* Mobile responsiveness */
 @media (max-width: 480px) {
-  .notification-panel-wrapper {
-    left: 0.5rem;
-    right: 0.5rem;
-  }
-
   .notification-panel {
-    min-width: auto;
-    width: 100%;
+    min-width: 320px;
   }
 
   .notification-actors {
