@@ -122,3 +122,4 @@ CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications(recipien
 CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_target ON notifications(target_event_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_type_target ON notifications(type, target_event_id, actor_pubkey);
+CREATE INDEX IF NOT EXISTS idx_notifications_source ON notifications(source_event_id);

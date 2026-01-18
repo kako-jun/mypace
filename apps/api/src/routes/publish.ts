@@ -72,6 +72,15 @@ async function recordNotification(
     }
   }
 
+  // For reply/repost, check if notification already exists (prevent duplicates)
+  if (type !== 'stella' && sourceEventId) {
+    const existingReplyRepost = await db
+      .prepare(`SELECT id FROM notifications WHERE source_event_id = ?`)
+      .bind(sourceEventId)
+      .first()
+    if (existingReplyRepost) return
+  }
+
   // Insert new notification
   await db
     .prepare(
