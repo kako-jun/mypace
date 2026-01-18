@@ -15,6 +15,9 @@ interface VideoEditorProps {
 
 const MAX_DURATION = 10 // seconds
 
+// Snap time to 0.1 second increments
+const snapToTenth = (time: number) => Math.round(time * 10) / 10
+
 export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditorProps) {
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [videoDuration, setVideoDuration] = useState(0)
@@ -129,19 +132,19 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     const distToEnd = Math.abs(clickTime - endTime)
 
     if (distToStart < distToEnd) {
-      const newStart = Math.max(0, Math.min(clickTime, endTime - 0.5))
+      const newStart = snapToTenth(Math.max(0, Math.min(clickTime, endTime - 0.1)))
       setStartTime(newStart)
       if (endTime - newStart > MAX_DURATION) {
-        setEndTime(newStart + MAX_DURATION)
+        setEndTime(snapToTenth(newStart + MAX_DURATION))
       }
       if (videoRef.current && !playing) {
         videoRef.current.currentTime = newStart
       }
     } else {
-      const newEnd = Math.min(videoDuration, Math.max(clickTime, startTime + 0.5))
+      const newEnd = snapToTenth(Math.min(videoDuration, Math.max(clickTime, startTime + 0.1)))
       setEndTime(newEnd)
       if (newEnd - startTime > MAX_DURATION) {
-        setStartTime(newEnd - MAX_DURATION)
+        setStartTime(snapToTenth(newEnd - MAX_DURATION))
       }
       if (videoRef.current && !playing) {
         videoRef.current.currentTime = newEnd
@@ -169,19 +172,19 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
       const time = pos * videoDuration
 
       if (marker === 'start') {
-        const newStart = Math.max(0, Math.min(time, endTime - 0.5))
+        const newStart = snapToTenth(Math.max(0, Math.min(time, endTime - 0.1)))
         setStartTime(newStart)
         if (endTime - newStart > MAX_DURATION) {
-          setEndTime(newStart + MAX_DURATION)
+          setEndTime(snapToTenth(newStart + MAX_DURATION))
         }
         if (videoRef.current) {
           videoRef.current.currentTime = newStart
         }
       } else {
-        const newEnd = Math.min(videoDuration, Math.max(time, startTime + 0.5))
+        const newEnd = snapToTenth(Math.min(videoDuration, Math.max(time, startTime + 0.1)))
         setEndTime(newEnd)
         if (newEnd - startTime > MAX_DURATION) {
-          setStartTime(newEnd - MAX_DURATION)
+          setStartTime(snapToTenth(newEnd - MAX_DURATION))
         }
         if (videoRef.current) {
           videoRef.current.currentTime = newEnd
@@ -219,19 +222,19 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
       const time = pos * videoDuration
 
       if (marker === 'start') {
-        const newStart = Math.max(0, Math.min(time, endTime - 0.5))
+        const newStart = snapToTenth(Math.max(0, Math.min(time, endTime - 0.1)))
         setStartTime(newStart)
         if (endTime - newStart > MAX_DURATION) {
-          setEndTime(newStart + MAX_DURATION)
+          setEndTime(snapToTenth(newStart + MAX_DURATION))
         }
         if (videoRef.current) {
           videoRef.current.currentTime = newStart
         }
       } else {
-        const newEnd = Math.min(videoDuration, Math.max(time, startTime + 0.5))
+        const newEnd = snapToTenth(Math.min(videoDuration, Math.max(time, startTime + 0.1)))
         setEndTime(newEnd)
         if (newEnd - startTime > MAX_DURATION) {
-          setStartTime(newEnd - MAX_DURATION)
+          setStartTime(snapToTenth(newEnd - MAX_DURATION))
         }
         if (videoRef.current) {
           videoRef.current.currentTime = newEnd
@@ -324,21 +327,23 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
 
           <div className="video-editor-content" style={{ display: videoLoaded ? 'flex' : 'none' }}>
             {videoUrl && (
-              <ReactCrop
-                crop={crop}
-                onChange={(c) => setCrop(c)}
-                onComplete={handleCropComplete}
-                className="video-editor-crop-container"
-              >
-                <video
-                  ref={videoRef}
-                  src={videoUrl}
-                  className="video-editor-video"
-                  onLoadedMetadata={handleVideoLoaded}
-                  muted
-                  playsInline
-                />
-              </ReactCrop>
+              <div className="video-editor-canvas-area">
+                <ReactCrop
+                  crop={crop}
+                  onChange={(c) => setCrop(c)}
+                  onComplete={handleCropComplete}
+                  className="video-editor-crop-container"
+                >
+                  <video
+                    ref={videoRef}
+                    src={videoUrl}
+                    className="video-editor-video"
+                    onLoadedMetadata={handleVideoLoaded}
+                    muted
+                    playsInline
+                  />
+                </ReactCrop>
+              </div>
             )}
           </div>
 
