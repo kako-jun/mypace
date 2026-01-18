@@ -391,7 +391,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
                 {/* Start marker */}
                 <div
                   className="video-editor-range-marker video-editor-range-marker-start"
-                  style={{ left: `${startPercent}%` }}
+                  style={{ left: `clamp(8px, ${startPercent}%, calc(100% - 8px))` }}
                   onMouseDown={handleMarkerMouseDown('start')}
                   onTouchStart={handleMarkerTouchStart('start')}
                 >
@@ -400,7 +400,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
                 {/* End marker */}
                 <div
                   className="video-editor-range-marker video-editor-range-marker-end"
-                  style={{ left: `${endPercent}%` }}
+                  style={{ left: `clamp(8px, ${endPercent}%, calc(100% - 8px))` }}
                   onMouseDown={handleMarkerMouseDown('end')}
                   onTouchStart={handleMarkerTouchStart('end')}
                 >

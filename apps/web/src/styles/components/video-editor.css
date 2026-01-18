@@ -273,7 +273,7 @@ body.long-mode-active .video-editor-modal {
   .video-editor-range-marker {
     width: 24px;
     height: 32px;
-    top: -4px;
+    top: -2px;
   }
 
   .video-editor-marker-label {
@@ -282,5 +282,10 @@ body.long-mode-active .video-editor-modal {
 
   .video-editor-range-track {
     height: 28px;
+  }
+
+  .video-editor-playhead {
+    height: 36px;
+    top: -4px;
   }
 }
