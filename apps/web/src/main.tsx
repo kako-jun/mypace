@@ -5,6 +5,14 @@ import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import './index.css'
 
+// Clear update flag on fresh load (prevents infinite loop)
+const SW_UPDATE_KEY = 'sw-updating'
+const isUpdating = sessionStorage.getItem(SW_UPDATE_KEY)
+if (isUpdating) {
+  sessionStorage.removeItem(SW_UPDATE_KEY)
+  console.log('SW update completed')
+}
+
 // Register Service Worker with update handling
 const updateSW = registerSW({
   immediate: true,
@@ -17,6 +25,12 @@ const updateSW = registerSW({
     }
   },
   onNeedRefresh() {
+    // Skip if we just reloaded for an update
+    if (sessionStorage.getItem(SW_UPDATE_KEY)) {
+      console.log('SW update already in progress, skipping')
+      return
+    }
+
     // New version detected - show overlay and reload
     console.log('New version available, reloading...')
 
@@ -49,6 +63,9 @@ const updateSW = registerSW({
     overlay.appendChild(message)
     document.body.appendChild(overlay)
 
+    // Set flag to prevent loop
+    sessionStorage.setItem(SW_UPDATE_KEY, '1')
+
     // Reload after 1.5 seconds
     setTimeout(async () => {
       try {
@@ -56,6 +73,7 @@ const updateSW = registerSW({
         await updateSW(true)
       } catch (e) {
         console.error('SW update failed:', e)
+        sessionStorage.removeItem(SW_UPDATE_KEY)
       }
       // Reload after SW is activated
       window.location.reload()
