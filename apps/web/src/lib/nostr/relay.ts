@@ -141,9 +141,11 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
       kinds: targetKinds,
       limit: limit * 2, // フィルタで減る分を考慮
     }
-    // #tフィルタは常に適用（NIP-50対応リレーはsearch+#tの組み合わせを処理できる）
+    // #tフィルタをリレーに送信
     if (!showAll) {
       filter['#t'] = [MYPACE_TAG]
+    } else if (okTags.length > 0) {
+      filter['#t'] = okTags
     }
     if (since > 0) {
       filter.since = since
