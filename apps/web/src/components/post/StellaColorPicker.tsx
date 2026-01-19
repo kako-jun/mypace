@@ -79,6 +79,7 @@ export default function StellaColorPicker({
         {/* Inventory info - show how many of each color can be purchased */}
         {walletBalance !== null && (
           <div className="stella-picker-inventory">
+            <span className="stella-picker-inventory-label">Inventory:</span>
             {(['green', 'red', 'blue', 'purple'] as const).map((color) => {
               const colorInfo = STELLA_COLORS[color]
               const affordable = Math.floor(walletBalance / colorInfo.sats)

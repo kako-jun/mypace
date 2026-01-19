@@ -535,6 +535,11 @@
   margin-top: 0.25rem;
 }
 
+.stella-picker-inventory-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
 .stella-picker-inventory-item {
   display: inline-flex;
   align-items: center;
