@@ -23,6 +23,7 @@ import {
   ExportSection,
   FilterSection,
   PushSection,
+  WalletSection,
 } from './index'
 import { VisitorCounter } from './VisitorCounter'
 import { VersionDisplay } from './VersionDisplay'
@@ -184,6 +185,8 @@ export function Settings() {
           <FilterSection onClose={() => setOpen(false)} />
 
           <PushSection />
+
+          <WalletSection />
 
           <ExportSection onImport={handleImportRefresh} />
         </div>

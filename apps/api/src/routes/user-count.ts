@@ -71,12 +71,19 @@ userCount.get('/:pubkey/stats', async (c) => {
 
   try {
     // 並列で全てのスタッツを取得
-    const [primalStats, stellaResult, viewsResult] = await Promise.all([
+    const [primalStats, stellaByColor, viewsResult] = await Promise.all([
       fetchUserStatsFromPrimal(pubkey),
       db
-        .prepare('SELECT COALESCE(SUM(stella_count), 0) as total FROM user_stella WHERE author_pubkey = ?')
+        .prepare(
+          `SELECT
+            COALESCE(stella_color, 'yellow') as color,
+            COALESCE(SUM(stella_count), 0) as total
+          FROM user_stella
+          WHERE author_pubkey = ?
+          GROUP BY COALESCE(stella_color, 'yellow')`
+        )
         .bind(pubkey)
-        .first<{ total: number }>(),
+        .all<{ color: string; total: number }>(),
       db
         .prepare(
           `SELECT
@@ -89,9 +96,28 @@ userCount.get('/:pubkey/stats', async (c) => {
         .first<{ details: number; impressions: number }>(),
     ])
 
+    // Build stellaByColor object with default 0 for all colors
+    const stellaColors: Record<string, number> = {
+      yellow: 0,
+      green: 0,
+      red: 0,
+      blue: 0,
+      purple: 0,
+    }
+    let totalStella = 0
+    if (stellaByColor.results) {
+      for (const row of stellaByColor.results) {
+        if (row.color in stellaColors) {
+          stellaColors[row.color] = row.total
+        }
+        totalStella += row.total
+      }
+    }
+
     return c.json({
       postsCount: primalStats ? (primalStats.note_count || 0) + (primalStats.long_form_note_count || 0) : null,
-      stellaCount: stellaResult?.total ?? 0,
+      stellaCount: totalStella,
+      stellaByColor: stellaColors,
       viewsCount: {
         details: viewsResult?.details ?? 0,
         impressions: viewsResult?.impressions ?? 0,
@@ -102,6 +128,7 @@ userCount.get('/:pubkey/stats', async (c) => {
     return c.json({
       postsCount: null,
       stellaCount: 0,
+      stellaByColor: { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 },
       viewsCount: { details: 0, impressions: 0 },
       error: String(e),
     })

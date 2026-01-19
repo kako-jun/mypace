@@ -27,6 +27,7 @@ interface StellaRecord {
   authorPubkey: string
   reactorPubkey: string
   stellaCount: number
+  stellaColor: string
   reactionId: string
   createdAt: number
 }
@@ -106,6 +107,7 @@ function extractStellaRecords(reactions: Event[], postAuthors: Map<string, strin
     // New: ["stella", "color", "count"]
     const isColorFormat = stellaTag.length >= 3 && isNaN(parseInt(stellaTag[1], 10))
     const stellaCount = isColorFormat ? parseInt(stellaTag[2], 10) : parseInt(stellaTag[1], 10)
+    const stellaColor = isColorFormat ? stellaTag[1] : 'yellow'
     if (isNaN(stellaCount) || stellaCount < 1 || stellaCount > 10) continue
 
     // Get target event ID
@@ -126,6 +128,7 @@ function extractStellaRecords(reactions: Event[], postAuthors: Map<string, strin
         authorPubkey,
         reactorPubkey: reaction.pubkey,
         stellaCount,
+        stellaColor,
         reactionId: reaction.id,
         createdAt: reaction.created_at,
       })
@@ -146,10 +149,10 @@ function generateSQL(records: StellaRecord[], clear: boolean): string {
     const now = Math.floor(Date.now() / 1000)
     const escape = (s: string) => s.replace(/'/g, "''")
     lines.push(
-      `INSERT INTO user_stella (event_id, author_pubkey, reactor_pubkey, stella_count, reaction_id, updated_at) ` +
-        `VALUES ('${escape(record.eventId)}', '${escape(record.authorPubkey)}', '${escape(record.reactorPubkey)}', ${record.stellaCount}, '${escape(record.reactionId)}', ${now}) ` +
+      `INSERT INTO user_stella (event_id, author_pubkey, reactor_pubkey, stella_count, stella_color, reaction_id, updated_at) ` +
+        `VALUES ('${escape(record.eventId)}', '${escape(record.authorPubkey)}', '${escape(record.reactorPubkey)}', ${record.stellaCount}, '${escape(record.stellaColor)}', '${escape(record.reactionId)}', ${now}) ` +
         `ON CONFLICT (event_id, reactor_pubkey) DO UPDATE SET ` +
-        `stella_count = excluded.stella_count, reaction_id = excluded.reaction_id, updated_at = excluded.updated_at;`
+        `stella_count = excluded.stella_count, stella_color = excluded.stella_color, reaction_id = excluded.reaction_id, updated_at = excluded.updated_at;`
     )
   }
 

@@ -19,6 +19,7 @@ import { parseStickers, hasTeaserTag } from '../../lib/nostr/tags'
 import { useDeleteConfirm } from '../../hooks'
 import type { Event, ReactionData, ReplyData, RepostData, ViewCountData, ProfileCache, OgpData } from '../../types'
 import type { ShareOption } from '../post/ShareMenu'
+import type { StellaColor } from '../../lib/nostr/events'
 
 interface TimelinePostCardProps {
   event: Event
@@ -38,9 +39,10 @@ interface TimelinePostCardProps {
   copiedId: string | null
   isPinned?: boolean
   showPinButton?: boolean
+  walletBalance: number | null
   onEdit: (event: Event) => void
   onDeleteConfirm: (event: Event) => void
-  onLike: (event: Event) => void
+  onLike: (event: Event, color: StellaColor) => void
   onUnlike: (event: Event) => void
   onReply: (event: Event) => void
   onRepost: (event: Event) => void
@@ -69,6 +71,7 @@ export default function TimelinePostCard({
   copiedId,
   isPinned = false,
   showPinButton = false,
+  walletBalance,
   onEdit,
   onDeleteConfirm,
   onLike,
@@ -266,8 +269,9 @@ export default function TimelinePostCard({
                     eventId={event.id}
                     copied={copiedId === event.id}
                     myPubkey={myPubkey}
+                    walletBalance={walletBalance}
                     getDisplayName={getDisplayName}
-                    onLike={() => onLike(event)}
+                    onLike={(color) => onLike(event, color)}
                     onUnlike={() => onUnlike(event)}
                     onReply={() => onReply(event)}
                     onRepost={() => onRepost(event)}

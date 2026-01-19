@@ -17,18 +17,20 @@ async function recordStella(
   authorPubkey: string,
   reactorPubkey: string,
   stellaCount: number,
+  stellaColor: string,
   reactionId: string
 ): Promise<void> {
   await db
     .prepare(
-      `INSERT INTO user_stella (event_id, author_pubkey, reactor_pubkey, stella_count, reaction_id, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?)
+      `INSERT INTO user_stella (event_id, author_pubkey, reactor_pubkey, stella_count, stella_color, reaction_id, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (event_id, reactor_pubkey) DO UPDATE SET
          stella_count = excluded.stella_count,
+         stella_color = excluded.stella_color,
          reaction_id = excluded.reaction_id,
          updated_at = excluded.updated_at`
     )
-    .bind(eventId, authorPubkey, reactorPubkey, stellaCount, reactionId, Math.floor(Date.now() / 1000))
+    .bind(eventId, authorPubkey, reactorPubkey, stellaCount, stellaColor, reactionId, Math.floor(Date.now() / 1000))
     .run()
 }
 
@@ -239,8 +241,9 @@ publish.post('/', async (c) => {
             // New: ["stella", "color", "count"]
             const isColorFormat = stellaTag.length >= 3 && isNaN(parseInt(stellaTag[1], 10))
             const stellaCount = isColorFormat ? parseInt(stellaTag[2], 10) : parseInt(stellaTag[1], 10)
+            const stellaColor = isColorFormat ? stellaTag[1] : 'yellow'
             if (!isNaN(stellaCount) && stellaCount >= 1 && stellaCount <= 10) {
-              await recordStella(db, eTag[1], pTag[1], event.pubkey, stellaCount, event.id)
+              await recordStella(db, eTag[1], pTag[1], event.pubkey, stellaCount, stellaColor, event.id)
               // Record notification
               await recordNotification(
                 db,

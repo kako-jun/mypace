@@ -10,6 +10,7 @@ import {
   getThemeCardProps,
   MAX_STELLA_PER_USER,
   createReactionEvent,
+  type StellaColor,
 } from '../../lib/nostr/events'
 import {
   getDisplayName,
@@ -29,6 +30,7 @@ import {
   shareOrCopy,
   formatNumber,
 } from '../../lib/utils'
+import { sendToLightningAddress, getStellaCost } from '../../lib/lightning'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import { hasTeaserTag, getTeaserContent, removeReadMoreLink, parseStickers } from '../../lib/nostr/tags'
 import {
@@ -51,7 +53,7 @@ import {
   OriginalPostCard,
 } from './index'
 import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage } from '../ui'
-import { useDeleteConfirm, usePostViewData } from '../../hooks'
+import { useDeleteConfirm, usePostViewData, useWallet } from '../../hooks'
 import type { Profile, ReactionData, LoadableProfile } from '../../types'
 import type { ShareOption } from './ShareMenu'
 
@@ -90,6 +92,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   const [copied, setCopied] = useState(false)
 
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
+  const { balance: walletBalance } = useWallet()
 
   const {
     event,
@@ -120,7 +123,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
   // Stella debounce
   const stellaDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pendingStella = useRef(0)
+  const pendingStella = useRef<{ count: number; color: StellaColor }>({ count: 0, color: 'yellow' })
   const [likingId, setLikingId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -155,18 +158,43 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
   const flushStella = async () => {
     if (!event) return
-    const stellaToSend = pendingStella.current
-    if (stellaToSend <= 0) return
-    pendingStella.current = 0
+    const pending = pendingStella.current
+    if (pending.count <= 0) return
+
+    const stellaToSend = pending.count
+    const stellaColor = pending.color
+    pendingStella.current = { count: 0, color: 'yellow' }
 
     const previousReactions = { ...reactions }
     const oldReactionId = reactions.myReactionId
     const currentMyStella = reactions.myStella
 
-    setLikingId(event.id)
+    // カラーステラの場合は支払い処理
+    const cost = getStellaCost(stellaColor, stellaToSend)
+    if (cost > 0) {
+      const authorLud16 = profile?.lud16
+      if (!authorLud16) {
+        console.warn('Author has no lightning address, cannot send colored stella')
+        setReactions(previousReactions)
+        return
+      }
+
+      setLikingId(event.id)
+      const payResult = await sendToLightningAddress(authorLud16, cost)
+      if (!payResult.success) {
+        console.error('Payment failed:', payResult.error)
+        setLikingId(null)
+        setReactions(previousReactions)
+        return
+      }
+      // 支払い成功、続けてステラを送信
+    } else {
+      setLikingId(event.id)
+    }
+
     try {
       const newTotalStella = Math.min(currentMyStella + stellaToSend, MAX_STELLA_PER_USER)
-      const newReaction = await createReactionEvent(event, '+', newTotalStella)
+      const newReaction = await createReactionEvent(event, '+', newTotalStella, stellaColor)
       await publishEvent(newReaction)
 
       if (oldReactionId) {
@@ -181,14 +209,20 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
           myIndex >= 0
             ? prev.reactors.map((r, i) =>
                 i === myIndex
-                  ? { ...r, stella: newTotalStella, reactionId: newReaction.id, createdAt: newReaction.created_at }
+                  ? {
+                      ...r,
+                      stella: newTotalStella,
+                      stellaColor,
+                      reactionId: newReaction.id,
+                      createdAt: newReaction.created_at,
+                    }
                   : r
               )
             : [
                 {
                   pubkey: myPubkey!,
                   stella: newTotalStella,
-                  stellaColor: 'yellow' as const,
+                  stellaColor,
                   reactionId: newReaction.id,
                   createdAt: newReaction.created_at,
                 },
@@ -199,7 +233,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
           count: prev.count - currentMyStella + newTotalStella,
           myReaction: true,
           myStella: newTotalStella,
-          myStellaColor: prev.myStellaColor,
+          myStellaColor: stellaColor,
           myReactionId: newReaction.id,
           reactors: updatedReactors,
         }
@@ -212,18 +246,18 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     }
   }
 
-  const handleLike = () => {
+  const handleLike = (color: StellaColor = 'yellow') => {
     if (!event || !myPubkey || event.pubkey === myPubkey) return
     const currentMyStella = reactions.myStella
-    const pending = pendingStella.current
+    const pending = pendingStella.current.count
     if (currentMyStella + pending >= MAX_STELLA_PER_USER) return
 
-    pendingStella.current = pending + 1
+    pendingStella.current = { count: pending + 1, color }
     setReactions((prev: ReactionData) => ({
       count: prev.count + 1,
       myReaction: true,
       myStella: currentMyStella + pending + 1,
-      myStellaColor: prev.myStellaColor,
+      myStellaColor: color,
       myReactionId: prev.myReactionId,
       reactors: prev.reactors,
     }))
@@ -234,11 +268,17 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
   const handleUnlike = async () => {
     if (!event || !myPubkey || !reactions.myReactionId) return
+
+    // カラーステラは取り消し不可（支払い済みのため）
+    if (reactions.myStellaColor && reactions.myStellaColor !== 'yellow') {
+      return
+    }
+
     if (stellaDebounceTimer.current) {
       clearTimeout(stellaDebounceTimer.current)
       stellaDebounceTimer.current = null
     }
-    pendingStella.current = 0
+    pendingStella.current = { count: 0, color: 'yellow' }
 
     setLikingId(event.id)
     try {
@@ -443,6 +483,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
               eventId={event.id}
               copied={copied}
               myPubkey={myPubkey}
+              walletBalance={walletBalance}
               getDisplayName={(pk) => getProfileDisplayName(pk, replyProfiles[pk])}
               onLike={handleLike}
               onUnlike={handleUnlike}

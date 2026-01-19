@@ -299,10 +299,20 @@ export async function fetchOgpByUrls(urls: string[]): Promise<Record<string, Ogp
   }
 }
 
+// Stella color types
+export interface StellaByColor {
+  yellow: number
+  green: number
+  red: number
+  blue: number
+  purple: number
+}
+
 // Fetch all user stats in one call
 export interface UserStats {
   postsCount: number | null
   stellaCount: number
+  stellaByColor: StellaByColor
   viewsCount: {
     details: number
     impressions: number

@@ -1,37 +1,62 @@
 import { useState, useRef, useCallback } from 'react'
 import { publishEvent } from '../../lib/nostr/relay'
-import { createDeleteEvent, createReactionEvent, MAX_STELLA_PER_USER } from '../../lib/nostr/events'
+import { createDeleteEvent, createReactionEvent, MAX_STELLA_PER_USER, type StellaColor } from '../../lib/nostr/events'
+import { sendToLightningAddress, getStellaCost } from '../../lib/lightning'
 import type { Event, ReactionData } from '../../types'
 
 interface UseReactionsOptions {
   event: Event | null
   myPubkey: string | null
   initialReactions: ReactionData
+  authorLud16?: string | null
 }
 
-export function useReactions({ event, myPubkey, initialReactions }: UseReactionsOptions) {
+export function useReactions({ event, myPubkey, initialReactions, authorLud16 }: UseReactionsOptions) {
   const [reactions, setReactions] = useState<ReactionData>(initialReactions)
   const [likingId, setLikingId] = useState<string | null>(null)
 
   const stellaDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pendingStella = useRef(0)
+  const pendingStella = useRef<{ count: number; color: StellaColor }>({ count: 0, color: 'yellow' })
 
   const flushStella = useCallback(async () => {
     if (!event) return
-    const stellaToSend = pendingStella.current
-    if (stellaToSend <= 0) return
+    const pending = pendingStella.current
+    if (pending.count <= 0) return
 
-    pendingStella.current = 0
+    const stellaToSend = pending.count
+    const stellaColor = pending.color
+    pendingStella.current = { count: 0, color: 'yellow' }
 
     const previousReactions = { ...reactions }
     const oldReactionId = reactions.myReactionId
     const currentMyStella = reactions.myStella
 
-    setLikingId(event.id)
+    // カラーステラの場合は支払い処理
+    const cost = getStellaCost(stellaColor, stellaToSend)
+    if (cost > 0) {
+      if (!authorLud16) {
+        console.warn('Author has no lightning address, cannot send colored stella')
+        setReactions(previousReactions)
+        return
+      }
+
+      setLikingId(event.id)
+      const payResult = await sendToLightningAddress(authorLud16, cost)
+      if (!payResult.success) {
+        console.error('Payment failed:', payResult.error)
+        setLikingId(null)
+        setReactions(previousReactions)
+        return
+      }
+      // 支払い成功、続けてステラを送信
+    } else {
+      setLikingId(event.id)
+    }
+
     try {
       const newTotalStella = Math.min(currentMyStella + stellaToSend, MAX_STELLA_PER_USER)
 
-      const newReaction = await createReactionEvent(event, '+', newTotalStella)
+      const newReaction = await createReactionEvent(event, '+', newTotalStella, stellaColor)
       await publishEvent(newReaction)
 
       if (oldReactionId) {
@@ -48,14 +73,20 @@ export function useReactions({ event, myPubkey, initialReactions }: UseReactions
           myIndex >= 0
             ? prev.reactors.map((r, i) =>
                 i === myIndex
-                  ? { ...r, stella: newTotalStella, reactionId: newReaction.id, createdAt: newReaction.created_at }
+                  ? {
+                      ...r,
+                      stella: newTotalStella,
+                      stellaColor,
+                      reactionId: newReaction.id,
+                      createdAt: newReaction.created_at,
+                    }
                   : r
               )
             : [
                 {
                   pubkey: myPubkey!,
                   stella: newTotalStella,
-                  stellaColor: 'yellow' as const,
+                  stellaColor,
                   reactionId: newReaction.id,
                   createdAt: newReaction.created_at,
                 },
@@ -66,7 +97,7 @@ export function useReactions({ event, myPubkey, initialReactions }: UseReactions
           count: prev.count - currentMyStella + newTotalStella,
           myReaction: true,
           myStella: newTotalStella,
-          myStellaColor: prev.myStellaColor,
+          myStellaColor: stellaColor,
           myReactionId: newReaction.id,
           reactors: updatedReactors,
         }
@@ -77,43 +108,51 @@ export function useReactions({ event, myPubkey, initialReactions }: UseReactions
     } finally {
       setLikingId(null)
     }
-  }, [event, myPubkey, reactions])
+  }, [event, myPubkey, reactions, authorLud16])
 
-  const handleLike = useCallback(() => {
-    if (!event || !myPubkey || event.pubkey === myPubkey) return
+  const handleLike = useCallback(
+    (color: StellaColor = 'yellow') => {
+      if (!event || !myPubkey || event.pubkey === myPubkey) return
 
-    const currentMyStella = reactions.myStella
-    const pending = pendingStella.current
+      const currentMyStella = reactions.myStella
+      const pending = pendingStella.current.count
 
-    if (currentMyStella + pending >= MAX_STELLA_PER_USER) return
+      if (currentMyStella + pending >= MAX_STELLA_PER_USER) return
 
-    pendingStella.current = pending + 1
+      pendingStella.current = { count: pending + 1, color }
 
-    setReactions((prev) => ({
-      count: prev.count + 1,
-      myReaction: true,
-      myStella: currentMyStella + pending + 1,
-      myStellaColor: prev.myStellaColor,
-      myReactionId: prev.myReactionId,
-      reactors: prev.reactors,
-    }))
+      setReactions((prev) => ({
+        count: prev.count + 1,
+        myReaction: true,
+        myStella: currentMyStella + pending + 1,
+        myStellaColor: color,
+        myReactionId: prev.myReactionId,
+        reactors: prev.reactors,
+      }))
 
-    if (stellaDebounceTimer.current) {
-      clearTimeout(stellaDebounceTimer.current)
-    }
-    stellaDebounceTimer.current = setTimeout(() => {
-      flushStella()
-    }, 300)
-  }, [event, myPubkey, reactions.myStella, flushStella])
+      if (stellaDebounceTimer.current) {
+        clearTimeout(stellaDebounceTimer.current)
+      }
+      stellaDebounceTimer.current = setTimeout(() => {
+        flushStella()
+      }, 300)
+    },
+    [event, myPubkey, reactions.myStella, flushStella]
+  )
 
   const handleUnlike = useCallback(async () => {
     if (!event || !myPubkey || !reactions.myReactionId) return
+
+    // カラーステラは取り消し不可（支払い済みのため）
+    if (reactions.myStellaColor && reactions.myStellaColor !== 'yellow') {
+      return
+    }
 
     if (stellaDebounceTimer.current) {
       clearTimeout(stellaDebounceTimer.current)
       stellaDebounceTimer.current = null
     }
-    pendingStella.current = 0
+    pendingStella.current = { count: 0, color: 'yellow' }
 
     setLikingId(event.id)
     try {
@@ -130,7 +169,7 @@ export function useReactions({ event, myPubkey, initialReactions }: UseReactions
     } finally {
       setLikingId(null)
     }
-  }, [event, myPubkey, reactions.myReactionId])
+  }, [event, myPubkey, reactions.myReactionId, reactions.myStellaColor])
 
   return {
     reactions,

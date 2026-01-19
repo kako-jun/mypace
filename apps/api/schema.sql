@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS user_stella (
   author_pubkey TEXT NOT NULL,      -- Author of the post (for aggregation)
   reactor_pubkey TEXT NOT NULL,     -- User who gave stella
   stella_count INTEGER NOT NULL,    -- Stella count (1-10)
+  stella_color TEXT DEFAULT 'yellow', -- Stella color (yellow, green, red, blue, purple)
   reaction_id TEXT,                 -- Reaction event ID (for deletion)
   updated_at INTEGER NOT NULL,
   PRIMARY KEY (event_id, reactor_pubkey)

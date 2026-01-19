@@ -425,3 +425,115 @@
   gap: 0.5rem;
   justify-content: flex-end;
 }
+
+/* ===========================================
+   Stella Color Picker
+   =========================================== */
+
+/* Overlay to close picker on click outside */
+.stella-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+}
+
+/* Stella color picker - appears above button */
+.stella-picker {
+  position: fixed;
+  transform: translate(0, -100%);
+  margin-top: -12px;
+  background: var(--surface-primary);
+  border: 2px solid var(--border-card);
+  padding: 0.75rem;
+  z-index: 1002;
+  min-width: 220px;
+}
+
+.stella-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--border-card);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.stella-picker-title {
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.stella-picker-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stella-picker-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.stella-picker-option:hover:not(:disabled) {
+  background: var(--surface-secondary);
+}
+
+.stella-picker-option-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.stella-picker-star {
+  display: flex;
+  align-items: center;
+}
+
+.stella-picker-star svg {
+  stroke: #333;
+}
+
+.stella-picker-label {
+  flex: 1;
+}
+
+.stella-picker-price {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.stella-picker-divider {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.25rem;
+}
+
+.stella-picker-balance {
+  font-weight: 600;
+}
+
+.stella-picker-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.25rem;
+}

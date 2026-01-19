@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getStoredSecretKey, getPublicKeyFromSecret } from '../lib/nostr/keys'
 import { fetchUserProfile } from '../lib/nostr/relay'
-import { fetchUserStats } from '../lib/api'
+import { fetchUserStats, type StellaByColor } from '../lib/api'
 
 interface MyStats {
   postsCount: number | null
   stellaCount: number | null
+  stellaByColor: StellaByColor | null
   viewsCount: { details: number; impressions: number } | null
 }
 
@@ -57,6 +58,7 @@ export function useMyStats(): UseMyStatsResult {
         setStats({
           postsCount: userStats.postsCount,
           stellaCount: userStats.stellaCount,
+          stellaByColor: userStats.stellaByColor,
           viewsCount: userStats.viewsCount,
         })
       }

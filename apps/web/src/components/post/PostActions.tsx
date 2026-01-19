@@ -5,7 +5,8 @@ import '../../styles/components/post-actions.css'
 import ReactorsPopup from './ReactorsPopup'
 import RepostConfirmPopup from './RepostConfirmPopup'
 import ShareMenu, { type ShareOption } from './ShareMenu'
-import { MAX_STELLA_PER_USER } from '../../lib/nostr/events'
+import StellaColorPicker from './StellaColorPicker'
+import { MAX_STELLA_PER_USER, type StellaColor } from '../../lib/nostr/events'
 import type { ReactionData, ReplyData, RepostData } from '../../types'
 
 interface PostActionsProps {
@@ -18,8 +19,9 @@ interface PostActionsProps {
   eventId: string
   copied: boolean
   myPubkey: string | null
+  walletBalance: number | null
   getDisplayName: (pubkey: string) => string
-  onLike: () => void
+  onLike: (color: StellaColor) => void
   onUnlike: () => void
   onReply: () => void
   onRepost: () => void
@@ -39,6 +41,7 @@ export default function PostActions({
   eventId,
   copied,
   myPubkey,
+  walletBalance,
   getDisplayName,
   onLike,
   onUnlike,
@@ -66,6 +69,10 @@ export default function PostActions({
   const [showRepostConfirm, setShowRepostConfirm] = useState(false)
   const repostButtonRef = useRef<HTMLDivElement>(null)
   const [repostConfirmPosition, setRepostConfirmPosition] = useState<{ top: number; left: number } | null>(null)
+
+  // Stella color picker state
+  const [showColorPicker, setShowColorPicker] = useState(false)
+  const [colorPickerPosition, setColorPickerPosition] = useState<{ top: number; left: number } | null>(null)
 
   const myStella = reactions?.myStella || 0
   const canAddMoreStella = myStella < MAX_STELLA_PER_USER
@@ -116,13 +123,13 @@ export default function PostActions({
     }
 
     // If popup is shown, don't handle as click
-    if (showReactorsPopup) return
+    if (showReactorsPopup || showColorPicker) return
 
-    // Normal click - add a stella (only for non-own posts)
+    // Normal click - show color picker (only for non-own posts)
     if (!isMyPost && canAddMoreStella) {
-      onLike()
+      setShowColorPicker(true)
     }
-  }, [isMyPost, canAddMoreStella, onLike, showReactorsPopup])
+  }, [isMyPost, canAddMoreStella, showReactorsPopup, showColorPicker])
 
   const handleUnlikeConfirm = useCallback(() => {
     setShowReactorsPopup(false)
@@ -182,6 +189,23 @@ export default function PostActions({
     }
   }, [showRepostConfirm])
 
+  // Color picker position calculation (above-right of the stella button)
+  useEffect(() => {
+    if (showColorPicker && buttonWrapperRef.current) {
+      const rect = buttonWrapperRef.current.getBoundingClientRect()
+      setColorPickerPosition({
+        top: rect.top,
+        left: rect.right,
+      })
+      // Close picker on scroll
+      const handleScroll = () => setShowColorPicker(false)
+      window.addEventListener('scroll', handleScroll, { passive: true })
+      return () => window.removeEventListener('scroll', handleScroll)
+    } else {
+      setColorPickerPosition(null)
+    }
+  }, [showColorPicker])
+
   const handleShareClick = useCallback(() => {
     setShowShareMenu(true)
   }, [])
@@ -215,6 +239,23 @@ export default function PostActions({
   const handleRepostCancel = useCallback(() => {
     setShowRepostConfirm(false)
   }, [])
+
+  // Color picker handlers
+  const handleColorPickerClose = useCallback((e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation()
+      e.preventDefault()
+    }
+    setShowColorPicker(false)
+  }, [])
+
+  const handleColorSelect = useCallback(
+    (color: StellaColor) => {
+      setShowColorPicker(false)
+      onLike(color)
+    },
+    [onLike]
+  )
 
   // Render count with loading/normal states
   const renderCount = (
@@ -252,6 +293,17 @@ export default function PostActions({
       />
     ) : null
 
+  // Color picker component rendered via portal
+  const colorPicker =
+    showColorPicker && colorPickerPosition ? (
+      <StellaColorPicker
+        position={colorPickerPosition}
+        walletBalance={walletBalance}
+        onSelect={handleColorSelect}
+        onClose={handleColorPickerClose}
+      />
+    ) : null
+
   // Reactors are already sorted by newest first from API
 
   return (
@@ -279,6 +331,7 @@ export default function PostActions({
             {renderCount(reactions, true, handleCountClick)}
           </button>
           {reactorsPopup}
+          {colorPicker}
         </div>
       )}
       {isMyPost && (

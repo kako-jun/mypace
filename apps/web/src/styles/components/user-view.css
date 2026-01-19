@@ -242,6 +242,18 @@
   gap: 4px;
 }
 
+/* Colored stella row */
+.user-stella-row {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.user-stella-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* Post Header User Button */
 .post-header-user {
   display: flex;

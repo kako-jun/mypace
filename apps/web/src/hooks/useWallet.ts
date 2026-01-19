@@ -5,6 +5,7 @@ interface WebLNProvider {
   enable: () => Promise<void>
   getBalance?: () => Promise<{ balance: number; currency?: string }>
   getInfo?: () => Promise<{ alias?: string; pubkey?: string }>
+  sendPayment?: (paymentRequest: string) => Promise<{ preimage: string }>
 }
 
 declare global {

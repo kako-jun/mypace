@@ -14,6 +14,7 @@ import type {
   OgpData,
 } from '../../types'
 import type { ShareOption } from '../post/ShareMenu'
+import type { StellaColor } from '../../lib/nostr/events'
 
 interface UserPostsProps {
   items: TimelineItem[]
@@ -35,7 +36,8 @@ interface UserPostsProps {
   pinnedEvent: Event | null
   hasMore: boolean
   loadingMore: boolean
-  onLike: (event: Event) => void
+  walletBalance: number | null
+  onLike: (event: Event, color: StellaColor) => void
   onUnlike: (event: Event) => Promise<void>
   onRepost: (event: Event) => Promise<void>
   onDeleteConfirm: (event: Event) => void
@@ -67,6 +69,7 @@ export function UserPosts({
   pinnedEvent,
   hasMore,
   loadingMore,
+  walletBalance,
   onLike,
   onUnlike,
   onRepost,
@@ -132,9 +135,10 @@ export function UserPosts({
           copiedId={copiedId}
           isPinned={pinnedEventId === event.id}
           showPinButton={isMyPost}
+          walletBalance={walletBalance}
           onEdit={() => handleEdit(event)}
           onDeleteConfirm={() => onDeleteConfirm(event)}
-          onLike={() => onLike(event)}
+          onLike={(_ev, color) => onLike(event, color)}
           onUnlike={() => onUnlike(event)}
           onReply={() => handleReplyClick(event)}
           onRepost={() => onRepost(event)}

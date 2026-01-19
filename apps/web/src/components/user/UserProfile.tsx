@@ -2,9 +2,18 @@ import { Icon, Avatar, TextButton, CopyButton, ExternalLink } from '../ui'
 import { getWebsites, getWebsiteIcon, formatNumber } from '../../lib/utils'
 import { nip19 } from 'nostr-tools'
 import type { LoadableProfile, ThemeColors } from '../../types'
-import type { UserSerialData } from '../../lib/api'
+import type { UserSerialData, StellaByColor } from '../../lib/api'
 import { getThemeCardProps } from '../../lib/nostr/events'
 import { SerialBadge } from './SerialBadge'
+
+// Stella colors for display
+const STELLA_COLORS: Array<{ key: keyof StellaByColor; fill: string }> = [
+  { key: 'yellow', fill: '#f1c40f' },
+  { key: 'green', fill: '#2ecc71' },
+  { key: 'red', fill: '#e74c3c' },
+  { key: 'blue', fill: '#3498db' },
+  { key: 'purple', fill: '#9b59b6' },
+]
 
 interface UserProfileProps {
   profile: LoadableProfile
@@ -17,6 +26,7 @@ interface UserProfileProps {
   npubCopied: boolean
   postsCount: number | null
   stellaCount: number | null
+  stellaByColor: StellaByColor | null
   viewsCount: { details: number; impressions: number } | null
   serialData: UserSerialData | null
   onCopyNpub: () => void
@@ -34,6 +44,7 @@ export function UserProfile({
   npubCopied,
   postsCount,
   stellaCount,
+  stellaByColor,
   viewsCount,
   serialData,
   onCopyNpub,
@@ -119,10 +130,21 @@ export function UserProfile({
                 : '...'}
             </span>
           </div>
-          <div className="user-stats-row">
-            <span>
-              <Icon name="Star" size={14} fill="#f1c40f" /> {formatNumber(stellaCount)}
-            </span>
+          <div className="user-stats-row user-stella-row">
+            {stellaByColor && STELLA_COLORS.some((c) => c.key !== 'yellow' && stellaByColor[c.key] > 0) ? (
+              STELLA_COLORS.map(
+                ({ key, fill }) =>
+                  stellaByColor[key] > 0 && (
+                    <span key={key} className="user-stella-item">
+                      <Icon name="Star" size={14} fill={fill} /> {formatNumber(stellaByColor[key])}
+                    </span>
+                  )
+              )
+            ) : (
+              <span>
+                <Icon name="Star" size={14} fill="#f1c40f" /> {formatNumber(stellaCount)}
+              </span>
+            )}
           </div>
         </div>
       </div>

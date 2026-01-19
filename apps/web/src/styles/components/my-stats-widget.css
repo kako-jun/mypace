@@ -36,6 +36,29 @@
   height: clamp(12px, 2.5vw, 14px);
 }
 
+/* Colored stella row */
+.stella-colors-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(4px, 1vw, 6px);
+  justify-content: flex-end;
+}
+
+.stella-color-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.stella-color-item svg {
+  width: clamp(10px, 2vw, 12px);
+  height: clamp(10px, 2vw, 12px);
+}
+
+.stella-color-count {
+  font-size: clamp(0.85rem, 2.2vw, 1rem);
+}
+
 /* Inventory button */
 .my-stats-inventory-btn {
   position: absolute;
