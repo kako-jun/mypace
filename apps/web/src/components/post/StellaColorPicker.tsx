@@ -1,6 +1,8 @@
 import { createPortal } from 'react-dom'
+import { Link } from 'react-router-dom'
 import { CloseButton, Icon } from '../ui'
 import { STELLA_COLORS, type StellaColor, type StellaCountsByColor } from '../../lib/nostr/events'
+import { formatNumber } from '../../lib/utils'
 
 interface StellaColorPickerProps {
   position: { top: number; left: number }
@@ -74,14 +76,28 @@ export default function StellaColorPicker({
           })}
         </div>
 
-        {/* Balance info */}
+        {/* Inventory info - show how many of each color can be purchased */}
         {walletBalance !== null && (
-          <div className="stella-picker-info">
-            <span className="stella-picker-balance">{walletBalance.toLocaleString()} sats</span>
+          <div className="stella-picker-inventory">
+            {(['green', 'red', 'blue', 'purple'] as const).map((color) => {
+              const colorInfo = STELLA_COLORS[color]
+              const affordable = Math.floor(walletBalance / colorInfo.sats)
+              if (affordable <= 0) return null
+              return (
+                <span key={color} className="stella-picker-inventory-item">
+                  <Icon name="Star" size={14} fill={colorInfo.hex} />
+                  <span>×{formatNumber(affordable)}</span>
+                </span>
+              )
+            })}
           </div>
         )}
 
-        {walletBalance === null && <div className="stella-picker-hint">Connect wallet for colored stella</div>}
+        {walletBalance === null && (
+          <Link to="/settings" className="stella-picker-hint stella-picker-link" onClick={() => onClose()}>
+            Connect wallet for colored stella
+          </Link>
+        )}
       </div>
     </>,
     document.body
