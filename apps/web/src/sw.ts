@@ -10,6 +10,18 @@ declare const self: ServiceWorkerGlobalScope & {
 cleanupOutdatedCaches()
 precacheAndRoute(self.__WB_MANIFEST)
 
+// Handle skip waiting message from client
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
+
+// Claim clients immediately when SW activates
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim())
+})
+
 interface PushPayload {
   title?: string
   body?: string
