@@ -69,16 +69,28 @@ const updateSW = registerSW({
     // Record update timestamp
     sessionStorage.setItem(SW_UPDATE_KEY, Date.now().toString())
 
+    // Wait for new SW to take control, then reload
+    const reloadOnControllerChange = () => {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload()
+      })
+    }
+
     // Reload after 1.5 seconds
     setTimeout(async () => {
       try {
-        // Trigger skipWaiting and wait for activation
+        // Set up listener before triggering update
+        reloadOnControllerChange()
+        // Trigger skipWaiting - this will cause controllerchange event
         await updateSW(true)
+        // Fallback: if controllerchange doesn't fire within 2s, reload anyway
+        setTimeout(() => {
+          window.location.reload()
+        }, 2000)
       } catch (e) {
         console.error('SW update failed:', e)
+        window.location.reload()
       }
-      // Reload after SW is activated
-      window.location.reload()
     }, 1500)
   },
 })
