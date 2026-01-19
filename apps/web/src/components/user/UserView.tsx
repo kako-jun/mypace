@@ -114,7 +114,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     hasMore,
     loadingMore,
     loadOlderEvents,
-    handleLike,
+    handleAddStella,
     handleUnlike,
     handleRepost,
     handleDelete,
@@ -361,7 +361,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
         hasMore={hasMore}
         loadingMore={loadingMore}
         walletBalance={walletBalance}
-        onLike={handleLike}
+        onAddStella={handleAddStella}
         onUnlike={handleUnlike}
         onRepost={handleRepost}
         onDeleteConfirm={handleDeleteConfirm}

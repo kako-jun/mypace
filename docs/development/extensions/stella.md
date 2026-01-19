@@ -8,15 +8,19 @@ NIP-25（リアクション）を拡張し、ステラ数をタグで管理す�
 - 通常のNostrリアクション（Kind 7）は1投稿1リアクション
 - 「いいね」より強い気持ちを表現したい場合がある
 - ステラ数で反応の強さを段階的に表現
+- 複数の色で異なる気持ちを表現
 
 ## タグ形式
 
+1つのリアクションイベントに、色ごとのステラタグを複数含める:
+
 ```json
-["stella", "<色>", "<ステラ数>"]
+["stella", "<色>", "<その色のステラ数>"]
 ```
 
 - 色: `yellow` | `green` | `red` | `blue` | `purple`
-- ステラ数: 1〜10の整数
+- ステラ数: 1〜10の整数（色ごと）
+- 1ユーザーあたり合計10個まで
 
 ### 後方互換性
 
@@ -24,7 +28,7 @@ NIP-25（リアクション）を拡張し、ステラ数をタグで管理す�
 
 ## イベント形式
 
-Kind 7（NIP-25リアクション）に`stella`タグを追加:
+Kind 7（NIP-25リアクション）に複数の`stella`タグを追加:
 
 ```json
 {
@@ -33,29 +37,35 @@ Kind 7（NIP-25リアクション）に`stella`タグを追加:
   "tags": [
     ["e", "<対象イベントID>"],
     ["p", "<対象イベント作者のpubkey>"],
-    ["stella", "blue", "5"]
+    ["stella", "yellow", "3"],
+    ["stella", "green", "2"],
+    ["stella", "blue", "1"]
   ]
 }
 ```
+
+上記の例では、イエロー3個 + グリーン2個 + ブルー1個 = 合計6個のステラを付けている。
 
 ## 動作仕様
 
 ### ステラ追加
 
-1. ユーザーがステラボタンをクリック
-2. デバウンス処理（500ms）で連打を集約
-3. 新しいリアクションイベントを作成（累積ステラ数を含む）
-4. 古いリアクションイベントを削除（Kind 5）
+1. ユーザーがステラボタンをクリック → カラーピッカーが表示
+2. 色をクリックするとその色のステラが1つ追加
+3. 連打可能（ポップアップは閉じない）
+4. デバウンス処理（500ms）で連打を集約
+5. 新しいリアクションイベントを作成（全色の累積ステラ数を含む）
+6. 古いリアクションイベントを削除（Kind 5）
 
 ### ステラ上限
 
-- 1ユーザー1投稿あたり最大**10ステラ**
+- 1ユーザー1投稿あたり合計最大**10ステラ**（全色合計）
 - 上限到達後はボタンが非活性化
 
 ### ステラ削除
 
-- **イエローステラ**: 削除可能。長押しまたはカウントクリックで削除
-- **カラーステラ（green/red/blue/purple）**: 削除不可（支払い済みのため）
+- **イエローステラのみ**: 削除可能
+- **カラーステラが含まれる場合**: 削除不可（支払い済みのため）
 
 削除するとそのユーザーの全ステラが消える（0に戻る）。
 
@@ -71,15 +81,23 @@ Kind 7（NIP-25リアクション）に`stella`タグを追加:
 | blue | 100 |
 | purple | 1000 |
 
+### 複数色の組み合わせ
+
+1つのリアクションで複数の色を組み合わせ可能:
+
+- イエロー5個 + グリーン3個 + レッド2個 = 合計10個、コスト33 sats
+- ブルー1個のみ = 合計1個、コスト100 sats
+
 ### Lightning支払い
 
 カラーステラを送信する際、WebLN経由でLightning支払いを行う。
 
-1. 投稿者のLightningアドレス（lud16）を取得
-2. LNURL-pay エンドポイントから支払い情報を取得
-3. インボイスを取得
-4. WebLNで支払いを実行
-5. 支払い成功後、リアクションイベントを発行
+1. 送信するステラの合計コストを計算（差分のみ）
+2. 投稿者のLightningアドレス（lud16）を取得
+3. LNURL-pay エンドポイントから支払い情報を取得
+4. インボイスを取得
+5. WebLNで支払いを実行
+6. 支払い成功後、リアクションイベントを発行
 
 ### 確認ダイアログ
 
@@ -88,8 +106,8 @@ Kind 7（NIP-25リアクション）に`stella`タグを追加:
 
 ### キャンセルポリシー
 
-- **イエロー**: 取り消し可能
-- **カラー（有料）**: 取り消し不可（支払い済み）
+- **イエローのみ**: 取り消し可能
+- **カラー含む（有料）**: 取り消し不可（支払い済み）
 
 ## API仕様
 
@@ -103,16 +121,26 @@ GET /api/reactions/:eventId?pubkey=<自分のpubkey>
 
 ```json
 {
-  "count": 25,             // 全ユーザーの合計ステラ数
-  "myReaction": true,      // 自分がステラを付けたか
-  "myStella": 5,           // 自分のステラ数
-  "myStellaColor": "blue", // 自分のステラの色
-  "myReactionId": "...",   // 自分のリアクションイベントID
-  "reactors": [            // リアクター一覧（新しい順）
+  "totalCount": 25,
+  "myReaction": true,
+  "myStella": {
+    "yellow": 3,
+    "green": 2,
+    "red": 0,
+    "blue": 1,
+    "purple": 0
+  },
+  "myReactionId": "...",
+  "reactors": [
     {
       "pubkey": "...",
-      "stella": 5,
-      "stellaColor": "blue",
+      "stella": {
+        "yellow": 5,
+        "green": 0,
+        "red": 0,
+        "blue": 0,
+        "purple": 0
+      },
       "reactionId": "...",
       "createdAt": 1234567890
     }
@@ -124,41 +152,71 @@ GET /api/reactions/:eventId?pubkey=<自分のpubkey>
 
 1. 対象イベントへのKind 7を全取得
 2. pubkeyでグループ化し、最新のリアクションのみ採用
-3. 各ユーザーの`stella`タグからステラ数を取得
-4. タグがない場合はデフォルト1として扱う（後方互換性）
+3. 各ユーザーの全`stella`タグを解析し、色ごとのカウントを取得
+4. タグがない場合はデフォルト yellow: 1 として扱う（後方互換性）
 
 ## UI表示
 
-### ステラ数表示
+### ステラ表示（投稿カード）
+
+複数の色が横に並ぶ:
 
 ```
-★ 25
+🌟3 💚2 💙1
 ```
 
-合計ステラ数を表示。クリックでリアクター一覧ポップアップ。
+各色の星の下にその色のカウントを表示。
+
+### カラーピッカー
+
+5色の星ボタンが横に並ぶ:
+
+```
+┌────────────────────────────────┐
+│ ステラを付ける            [x] │
+├────────────────────────────────┤
+│  🌟  💚  ❤️  💙  💜           │
+│  3   2        1              │
+├────────────────────────────────┤
+│ 合計: 6/10         1234 sats  │
+└────────────────────────────────┘
+```
+
+- クリックでその色が+1
+- 連打可能（ポップアップは閉じない）
+- 上限（10）に達すると全ボタン非活性化
+- 残高不足の色は非活性化
 
 ### リアクター一覧
 
 ```
-┌─────────────────────────┐
-│ ユーザーA    ★★★★★ (5) │
-│ ユーザーB    ★★★ (3)   │
-│ ユーザーC    ★ (1)     │
-└─────────────────────────┘
+┌─────────────────────────────────┐
+│ ユーザーA   🌟3 💚2 💙1 (6)    │
+│ ユーザーB   🌟5              │
+│ ユーザーC   💜1              │
+└─────────────────────────────────┘
 ```
 
-### 自分のステラ
-
-自分が付けたステラ数に応じてボタンの状態が変化:
-- 0: 空のスター
-- 1-9: 塗りつぶしスター（追加可能）
-- 10: 塗りつぶしスター（上限到達）
+各リアクターの色別カウントを表示。
 
 ## 実装詳細
 
 ### クライアント側
 
 ```typescript
+// 型定義
+export interface StellaCountsByColor {
+  yellow: number
+  green: number
+  red: number
+  blue: number
+  purple: number
+}
+
+export const EMPTY_STELLA_COUNTS: StellaCountsByColor = {
+  yellow: 0, green: 0, red: 0, blue: 0, purple: 0
+}
+
 // 定数
 export const MAX_STELLA_PER_USER = 10
 export const STELLA_TAG = 'stella'
@@ -168,47 +226,86 @@ export type StellaColor = 'yellow' | 'green' | 'red' | 'blue' | 'purple'
 export async function createReactionEvent(
   targetEvent: Event,
   content: string = '+',
-  stellaCount: number = 1,
-  stellaColor: StellaColor = 'yellow'
+  stellaCounts: StellaCountsByColor = { ...EMPTY_STELLA_COUNTS, yellow: 1 }
 ): Promise<Event> {
+  const tags: string[][] = [
+    ['e', targetEvent.id],
+    ['p', targetEvent.pubkey],
+  ]
+
+  // 各色のステラタグを追加
+  for (const color of ['yellow', 'green', 'red', 'blue', 'purple']) {
+    if (stellaCounts[color] > 0) {
+      tags.push([STELLA_TAG, color, String(Math.min(stellaCounts[color], MAX_STELLA_PER_USER))])
+    }
+  }
+
   const template: EventTemplate = {
     kind: 7,
     created_at: unixNow(),
-    tags: [
-      ['e', targetEvent.id],
-      ['p', targetEvent.pubkey],
-      [STELLA_TAG, stellaColor, String(Math.min(stellaCount, MAX_STELLA_PER_USER))],
-    ],
+    tags,
     content,
   }
   // 署名...
+}
+
+// ステラタグ解析
+export function parseStellaTags(tags: string[][]): StellaCountsByColor {
+  const counts: StellaCountsByColor = { ...EMPTY_STELLA_COUNTS }
+  const stellaTags = tags.filter((t) => t[0] === 'stella')
+
+  for (const tag of stellaTags) {
+    if (tag.length >= 3 && isValidStellaColor(tag[1])) {
+      // 新形式: ["stella", "blue", "5"]
+      counts[tag[1] as StellaColor] = Math.min(parseInt(tag[2], 10), MAX_STELLA_PER_USER)
+    } else if (tag.length >= 2) {
+      // 旧形式: ["stella", "5"]
+      counts.yellow = Math.min(parseInt(tag[1], 10), MAX_STELLA_PER_USER)
+    }
+  }
+  return counts
+}
+
+// 合計ステラ数
+export function getTotalStellaCount(counts: StellaCountsByColor): number {
+  return counts.yellow + counts.green + counts.red + counts.blue + counts.purple
 }
 ```
 
 ### サーバー側
 
 ```typescript
-interface StellaInfo {
-  count: number
-  color: string
+interface StellaCountsByColor {
+  yellow: number
+  green: number
+  red: number
+  blue: number
+  purple: number
 }
 
-function getStellaInfo(event: Event): StellaInfo {
-  const stellaTag = event.tags.find((t) => t[0] === 'stella')
-  if (!stellaTag) {
-    return { count: 1, color: 'yellow' }
+function parseStellaTags(tags: string[][]): StellaCountsByColor {
+  const counts = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
+  const stellaTags = tags.filter((t) => t[0] === 'stella')
+
+  for (const tag of stellaTags) {
+    if (tag.length >= 3) {
+      const color = tag[1]
+      const count = parseInt(tag[2], 10)
+      if (color in counts && !isNaN(count)) {
+        counts[color] = count
+      }
+    } else if (tag.length >= 2) {
+      counts.yellow = parseInt(tag[1], 10) || 1
+    }
   }
 
-  // 新形式: ["stella", "blue", "5"]
-  if (stellaTag.length >= 3) {
-    const color = stellaTag[1] || 'yellow'
-    const count = parseInt(stellaTag[2], 10)
-    return { count: isNaN(count) ? 1 : count, color }
+  // タグがない場合のデフォルト
+  const total = Object.values(counts).reduce((a, b) => a + b, 0)
+  if (total === 0) {
+    counts.yellow = 1
   }
 
-  // 旧形式: ["stella", "5"]
-  const count = parseInt(stellaTag[1], 10)
-  return { count: isNaN(count) ? 1 : count, color: 'yellow' }
+  return counts
 }
 ```
 
@@ -223,6 +320,7 @@ function getStellaInfo(event: Event): StellaInfo {
 - ステラ追加のたびに新しいリアクションイベントを作成し、古いものを削除
 - 削除が失敗しても新しいリアクションが有効（最新のみ採用）
 - デバウンス処理により、連打時のネットワーク負荷を軽減
+- 複数色は1つのリアクションイベントにまとめて送信
 
 ## ユーザー累計ステラ数
 

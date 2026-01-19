@@ -8,6 +8,7 @@ import type {
   TimelineItem,
   OgpData,
 } from '../../types'
+import type { StellaColor } from '../../lib/nostr/events'
 
 export interface UseTimelineOptions {
   authorPubkey?: string // 特定ユーザーの投稿のみ取得（ユーザーページ用）
@@ -36,7 +37,7 @@ export interface UseTimelineResult {
   reload: () => void
   loadNewEvents: () => void
   loadOlderEvents: () => Promise<void>
-  handleLike: (event: Event) => void
+  handleAddStella: (event: Event, color: StellaColor) => void
   handleUnlike: (event: Event) => Promise<void>
   handleRepost: (event: Event) => Promise<void>
   handleDelete: (event: Event) => Promise<void>

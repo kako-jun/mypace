@@ -37,7 +37,7 @@ interface UserPostsProps {
   hasMore: boolean
   loadingMore: boolean
   walletBalance: number | null
-  onLike: (event: Event, color: StellaColor) => void
+  onAddStella: (event: Event, color: StellaColor) => void
   onUnlike: (event: Event) => Promise<void>
   onRepost: (event: Event) => Promise<void>
   onDeleteConfirm: (event: Event) => void
@@ -70,7 +70,7 @@ export function UserPosts({
   hasMore,
   loadingMore,
   walletBalance,
-  onLike,
+  onAddStella,
   onUnlike,
   onRepost,
   onDeleteConfirm,
@@ -138,7 +138,7 @@ export function UserPosts({
           walletBalance={walletBalance}
           onEdit={() => handleEdit(event)}
           onDeleteConfirm={() => onDeleteConfirm(event)}
-          onLike={(_ev, color) => onLike(event, color)}
+          onAddStella={(_ev, color) => onAddStella(event, color)}
           onUnlike={() => onUnlike(event)}
           onReply={() => handleReplyClick(event)}
           onRepost={() => onRepost(event)}

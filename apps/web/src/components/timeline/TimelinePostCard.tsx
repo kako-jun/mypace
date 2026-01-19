@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Icon, parseEmojiTags } from '../ui'
 import '../../styles/components/post-card.css'
-import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
+import { getEventThemeColors, getThemeCardProps, EMPTY_STELLA_COUNTS } from '../../lib/nostr/events'
 import { KIND_REPOST } from '../../lib/nostr/constants'
 import {
   PostHeader,
@@ -42,7 +42,7 @@ interface TimelinePostCardProps {
   walletBalance: number | null
   onEdit: (event: Event) => void
   onDeleteConfirm: (event: Event) => void
-  onLike: (event: Event, color: StellaColor) => void
+  onAddStella: (event: Event, color: StellaColor) => void
   onUnlike: (event: Event) => void
   onReply: (event: Event) => void
   onRepost: (event: Event) => void
@@ -74,7 +74,7 @@ export default function TimelinePostCard({
   walletBalance,
   onEdit,
   onDeleteConfirm,
-  onLike,
+  onAddStella,
   onUnlike,
   onReply,
   onRepost,
@@ -119,10 +119,9 @@ export default function TimelinePostCard({
     const profile = profiles[event.pubkey] || null
     const metadata = {
       reactions: reactions || {
-        count: 0,
+        totalCount: 0,
         myReaction: false,
-        myStella: 0,
-        myStellaColor: 'yellow' as const,
+        myStella: { ...EMPTY_STELLA_COUNTS },
         myReactionId: null,
         reactors: [],
       },
@@ -271,7 +270,7 @@ export default function TimelinePostCard({
                     myPubkey={myPubkey}
                     walletBalance={walletBalance}
                     getDisplayName={getDisplayName}
-                    onLike={(color) => onLike(event, color)}
+                    onAddStella={(color) => onAddStella(event, color)}
                     onUnlike={() => onUnlike(event)}
                     onReply={() => onReply(event)}
                     onRepost={() => onRepost(event)}

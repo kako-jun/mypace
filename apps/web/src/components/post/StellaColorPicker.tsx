@@ -65,7 +65,7 @@ export default function StellaColorPicker({
                 disabled={disabled}
                 title={`${colorInfo.label} (${colorInfo.sats === 0 ? '無料' : `${colorInfo.sats} sats`})`}
               >
-                <Icon name="Star" size={24} fill={colorInfo.hex} style={{ color: colorInfo.hex }} />
+                <Icon name="Star" size={24} fill={colorInfo.hex} />
                 {count > 0 && <span className="stella-picker-star-count">{count}</span>}
               </button>
             )

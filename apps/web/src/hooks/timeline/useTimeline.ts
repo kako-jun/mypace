@@ -7,12 +7,15 @@ import {
   createReactionEvent,
   createRepostEvent,
   MAX_STELLA_PER_USER,
+  EMPTY_STELLA_COUNTS,
+  getTotalStellaCount,
   type StellaColor,
+  type StellaCountsByColor,
 } from '../../lib/nostr/events'
 import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage, getMutedPubkeys } from '../../lib/utils'
 import { getFilterSettings } from '../../lib/storage'
 import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
-import { sendToLightningAddress, getStellaCost } from '../../lib/lightning'
+import { sendToLightningAddress } from '../../lib/lightning'
 import type {
   Event,
   ProfileCache,
@@ -78,7 +81,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
 
   // Debounce refs for stella clicks
   const stellaDebounceTimers = useRef<{ [eventId: string]: ReturnType<typeof setTimeout> }>({})
-  const pendingStella = useRef<{ [eventId: string]: { count: number; color: StellaColor } }>({})
+  // Pending stella per color
+  const pendingStella = useRef<{ [eventId: string]: StellaCountsByColor }>({})
   const reactionsRef = useRef(reactions)
   reactionsRef.current = reactions
 
@@ -206,15 +210,26 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     }
   }, [authorPubkey, tagsKey, qKey, getFilterOptions])
 
-  // Stella送信
+  // 空のReactionData
+  const emptyReaction: ReactionData = {
+    totalCount: 0,
+    myReaction: false,
+    myStella: { ...EMPTY_STELLA_COUNTS },
+    myReactionId: null,
+    reactors: [],
+  }
+
+  // Stella送信（色ごとに処理）
   const flushStella = async (targetEvent: Event) => {
     const eventId = targetEvent.id
     const pending = pendingStella.current[eventId]
-    if (!pending || pending.count <= 0) return
+    if (!pending) return
 
-    const stellaToSend = pending.count
-    const stellaColor = pending.color
+    const pendingTotal = getTotalStellaCount(pending)
+    if (pendingTotal <= 0) return
 
+    // 送信するステラ数（pending分）をコピーして保存
+    const stellaToSend = { ...pending }
     delete pendingStella.current[eventId]
     delete stellaDebounceTimers.current[eventId]
 
@@ -222,56 +237,49 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     const previousReaction = latestReaction
     const oldReactionId = latestReaction?.myReactionId
 
-    // カラーステラの場合は支払い処理
-    const cost = getStellaCost(stellaColor, stellaToSend)
-    if (cost > 0) {
+    // カラーステラの支払い処理（色ごとに計算）
+    const colorCost =
+      stellaToSend.green * 1 + stellaToSend.red * 10 + stellaToSend.blue * 100 + stellaToSend.purple * 1000
+    if (colorCost > 0) {
       const authorProfile = profiles[targetEvent.pubkey]
       const lud16 = authorProfile?.lud16
 
       if (!lud16) {
         console.warn('Author has no lightning address, cannot send colored stella')
-        // UIの更新を元に戻す
         setReactions((prev) => ({
           ...prev,
-          [eventId]: previousReaction || {
-            count: 0,
-            myReaction: false,
-            myStella: 0,
-            myStellaColor: 'yellow' as const,
-            myReactionId: null,
-            reactors: [],
-          },
+          [eventId]: previousReaction || emptyReaction,
         }))
         return
       }
 
       setLikingId(eventId)
-      const payResult = await sendToLightningAddress(lud16, cost)
+      const payResult = await sendToLightningAddress(lud16, colorCost)
       if (!payResult.success) {
         console.error('Payment failed:', payResult.error)
         setLikingId(null)
-        // UIの更新を元に戻す
         setReactions((prev) => ({
           ...prev,
-          [eventId]: previousReaction || {
-            count: 0,
-            myReaction: false,
-            myStella: 0,
-            myStellaColor: 'yellow' as const,
-            myReactionId: null,
-            reactors: [],
-          },
+          [eventId]: previousReaction || emptyReaction,
         }))
         return
       }
-      // 支払い成功、続けてステラを送信
     } else {
       setLikingId(eventId)
     }
 
     try {
-      const newTotalStella = Math.min(latestReaction?.myStella || stellaToSend, MAX_STELLA_PER_USER)
-      const newReaction = await createReactionEvent(targetEvent, '+', newTotalStella, stellaColor)
+      // 新しい合計ステラ数（既存 + pending）
+      const currentMyStella = latestReaction?.myStella || { ...EMPTY_STELLA_COUNTS }
+      const newMyStella: StellaCountsByColor = {
+        yellow: Math.min(currentMyStella.yellow + stellaToSend.yellow, MAX_STELLA_PER_USER),
+        green: Math.min(currentMyStella.green + stellaToSend.green, MAX_STELLA_PER_USER),
+        red: Math.min(currentMyStella.red + stellaToSend.red, MAX_STELLA_PER_USER),
+        blue: Math.min(currentMyStella.blue + stellaToSend.blue, MAX_STELLA_PER_USER),
+        purple: Math.min(currentMyStella.purple + stellaToSend.purple, MAX_STELLA_PER_USER),
+      }
+
+      const newReaction = await createReactionEvent(targetEvent, '+', newMyStella)
       await publishEvent(newReaction)
 
       if (oldReactionId) {
@@ -289,8 +297,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
                 i === myIndex
                   ? {
                       ...r,
-                      stella: newTotalStella,
-                      stellaColor,
+                      stella: newMyStella,
                       reactionId: newReaction.id,
                       createdAt: newReaction.created_at,
                     }
@@ -299,21 +306,21 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
             : [
                 {
                   pubkey: myPubkey!,
-                  stella: newTotalStella,
-                  stellaColor,
+                  stella: newMyStella,
                   reactionId: newReaction.id,
                   createdAt: newReaction.created_at,
                 },
                 ...prevReactors,
               ]
 
+        const newTotalCount = updatedReactors.reduce((sum, r) => sum + getTotalStellaCount(r.stella), 0)
+
         return {
           ...prev,
           [eventId]: {
-            count: prev[eventId]?.count || newTotalStella,
+            totalCount: newTotalCount,
             myReaction: true,
-            myStella: newTotalStella,
-            myStellaColor: stellaColor,
+            myStella: newMyStella,
             myReactionId: newReaction.id,
             reactors: updatedReactors,
           },
@@ -323,45 +330,49 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       console.error('Failed to publish reaction:', error)
       setReactions((prev) => ({
         ...prev,
-        [eventId]: previousReaction || {
-          count: 0,
-          myReaction: false,
-          myStella: 0,
-          myStellaColor: 'yellow' as const,
-          myReactionId: null,
-          reactors: [],
-        },
+        [eventId]: previousReaction || emptyReaction,
       }))
     } finally {
       setLikingId(null)
     }
   }
 
-  const handleLike = (event: Event, color: StellaColor = 'yellow') => {
+  // ステラを追加（色を指定）
+  const handleAddStella = (event: Event, color: StellaColor) => {
     if (!myPubkey) return
     const eventId = event.id
     const currentReaction = reactions[eventId]
-    const currentMyStella = currentReaction?.myStella || 0
-    const pendingCount = pendingStella.current[eventId]?.count || 0
-    if (currentMyStella + pendingCount >= MAX_STELLA_PER_USER) return
+    const currentMyStella = currentReaction?.myStella || { ...EMPTY_STELLA_COUNTS }
+    const currentTotal = getTotalStellaCount(currentMyStella)
+    const pendingCounts = pendingStella.current[eventId] || { ...EMPTY_STELLA_COUNTS }
+    const pendingTotal = getTotalStellaCount(pendingCounts)
 
-    // 既にステラがある場合は同じ色のみ追加可能
-    if (currentMyStella > 0 && currentReaction?.myStellaColor && currentReaction.myStellaColor !== color) {
-      return
+    if (currentTotal + pendingTotal >= MAX_STELLA_PER_USER) return
+
+    // pending に追加
+    pendingStella.current[eventId] = {
+      ...pendingCounts,
+      [color]: pendingCounts[color] + 1,
     }
 
-    pendingStella.current[eventId] = { count: pendingCount + 1, color }
-    setReactions((prev) => ({
-      ...prev,
-      [eventId]: {
-        count: (prev[eventId]?.count || 0) + 1,
-        myReaction: true,
-        myStella: (prev[eventId]?.myStella || 0) + 1,
-        myStellaColor: color,
-        myReactionId: prev[eventId]?.myReactionId || null,
-        reactors: prev[eventId]?.reactors || [],
-      },
-    }))
+    // 楽観的更新
+    setReactions((prev) => {
+      const prevData = prev[eventId] || emptyReaction
+      const newMyStella = {
+        ...prevData.myStella,
+        [color]: prevData.myStella[color] + 1,
+      }
+      return {
+        ...prev,
+        [eventId]: {
+          totalCount: prevData.totalCount + 1,
+          myReaction: true,
+          myStella: newMyStella,
+          myReactionId: prevData.myReactionId,
+          reactors: prevData.reactors,
+        },
+      }
+    })
 
     if (stellaDebounceTimers.current[eventId]) {
       clearTimeout(stellaDebounceTimers.current[eventId])
@@ -369,15 +380,17 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     stellaDebounceTimers.current[eventId] = setTimeout(() => flushStella(event), 500)
   }
 
+  // ステラを取り消し（イエローのみ可能）
   const handleUnlike = async (event: Event) => {
     if (!myPubkey) return
     const eventId = event.id
     const currentReaction = reactions[eventId]
     if (!currentReaction?.myReactionId) return
 
-    // カラーステラは取り消し不可（支払い済みのため）
-    if (currentReaction.myStellaColor && currentReaction.myStellaColor !== 'yellow') {
-      return
+    // カラーステラがある場合は取り消し不可
+    const myStella = currentReaction.myStella
+    if (myStella.green > 0 || myStella.red > 0 || myStella.blue > 0 || myStella.purple > 0) {
+      return // カラーステラは取り消し不可
     }
 
     if (stellaDebounceTimers.current[eventId]) {
@@ -386,17 +399,16 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     }
     delete pendingStella.current[eventId]
 
-    const stellaToRemove = currentReaction.myStella || 0
+    const stellaToRemove = getTotalStellaCount(myStella)
     setLikingId(eventId)
     try {
       await publishEvent(await createDeleteEvent([currentReaction.myReactionId]))
       setReactions((prev) => ({
         ...prev,
         [eventId]: {
-          count: Math.max(0, (prev[eventId]?.count || 0) - stellaToRemove),
+          totalCount: Math.max(0, (prev[eventId]?.totalCount || 0) - stellaToRemove),
           myReaction: false,
-          myStella: 0,
-          myStellaColor: 'yellow',
+          myStella: { ...EMPTY_STELLA_COUNTS },
           myReactionId: null,
           reactors: (prev[eventId]?.reactors || []).filter((r) => r.pubkey !== myPubkey),
         },
@@ -566,7 +578,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     reload: loadTimeline,
     loadNewEvents,
     loadOlderEvents,
-    handleLike,
+    handleAddStella,
     handleUnlike,
     handleRepost,
     handleDelete,

@@ -1,5 +1,6 @@
 import { fetchOgpByUrls, recordImpressions } from '../../lib/api/api'
 import { fetchEventsEnrich, fetchProfiles } from '../../lib/nostr/relay'
+import { EMPTY_STELLA_COUNTS } from '../../lib/nostr/events'
 import { hasMypaceTag } from '../../lib/nostr/tags'
 import { extractFromContents } from '../../lib/utils/content'
 import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData, OgpData } from '../../types'
@@ -46,10 +47,9 @@ export async function loadEnrichForEvents(
       } else {
         // デフォルト値で初期化
         reactionMap[eventId] = {
-          count: 0,
+          totalCount: 0,
           myReaction: false,
-          myStella: 0,
-          myStellaColor: 'yellow' as const,
+          myStella: { ...EMPTY_STELLA_COUNTS },
           myReactionId: null,
           reactors: [],
         }
@@ -113,10 +113,9 @@ export async function loadEnrichForEvents(
 
     for (const eventId of eventIds) {
       reactionMap[eventId] = {
-        count: 0,
+        totalCount: 0,
         myReaction: false,
-        myStella: 0,
-        myStellaColor: 'yellow' as const,
+        myStella: { ...EMPTY_STELLA_COUNTS },
         myReactionId: null,
         reactors: [],
       }

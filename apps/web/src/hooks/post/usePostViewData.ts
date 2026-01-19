@@ -8,7 +8,7 @@ import {
 } from '../../lib/nostr/relay'
 import { KIND_REPOST } from '../../lib/nostr/constants'
 import { fetchViewsAndSuperMentions, recordImpressions } from '../../lib/api/api'
-import { getCurrentPubkey } from '../../lib/nostr/events'
+import { getCurrentPubkey, EMPTY_STELLA_COUNTS } from '../../lib/nostr/events'
 import { getCachedPost, getCachedProfile, getCachedPostMetadata, getErrorMessage } from '../../lib/utils'
 import { hasMypaceTag } from '../../lib/nostr/tags'
 import type { Event, LoadableProfile, ReactionData, Profile, ViewCountData } from '../../types'
@@ -31,10 +31,9 @@ interface PostViewData {
 }
 
 const initialReactions: ReactionData = {
-  count: 0,
+  totalCount: 0,
   myReaction: false,
-  myStella: 0,
-  myStellaColor: 'yellow',
+  myStella: { ...EMPTY_STELLA_COUNTS },
   myReactionId: null,
   reactors: [],
 }

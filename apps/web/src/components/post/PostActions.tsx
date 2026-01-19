@@ -6,7 +6,7 @@ import ReactorsPopup from './ReactorsPopup'
 import RepostConfirmPopup from './RepostConfirmPopup'
 import ShareMenu, { type ShareOption } from './ShareMenu'
 import StellaColorPicker from './StellaColorPicker'
-import { MAX_STELLA_PER_USER, type StellaColor } from '../../lib/nostr/events'
+import { STELLA_COLORS, EMPTY_STELLA_COUNTS, type StellaColor, type StellaCountsByColor } from '../../lib/nostr/events'
 import type { ReactionData, ReplyData, RepostData } from '../../types'
 
 interface PostActionsProps {
@@ -21,7 +21,7 @@ interface PostActionsProps {
   myPubkey: string | null
   walletBalance: number | null
   getDisplayName: (pubkey: string) => string
-  onLike: (color: StellaColor) => void
+  onAddStella: (color: StellaColor) => void
   onUnlike: () => void
   onReply: () => void
   onRepost: () => void
@@ -30,6 +30,7 @@ interface PostActionsProps {
 }
 
 const LONG_PRESS_DURATION = 500 // ms
+const COLOR_ORDER: StellaColor[] = ['yellow', 'green', 'red', 'blue', 'purple']
 
 export default function PostActions({
   isMyPost,
@@ -43,7 +44,7 @@ export default function PostActions({
   myPubkey,
   walletBalance,
   getDisplayName,
-  onLike,
+  onAddStella,
   onUnlike,
   onReply,
   onRepost,
@@ -74,10 +75,27 @@ export default function PostActions({
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [colorPickerPosition, setColorPickerPosition] = useState<{ top: number; left: number } | null>(null)
 
-  const myStella = reactions?.myStella || 0
-  const canAddMoreStella = myStella < MAX_STELLA_PER_USER
+  const myStella = reactions?.myStella || EMPTY_STELLA_COUNTS
+  const totalMyStella = myStella.yellow + myStella.green + myStella.red + myStella.blue + myStella.purple
+  const canAddMoreStella = totalMyStella < 10
   const isLiking = likingId === eventId
   const reactors = reactions?.reactors || []
+
+  // Calculate total counts per color (from all reactors)
+  const totalCountsByColor = useMemo(() => {
+    const totals: StellaCountsByColor = { ...EMPTY_STELLA_COUNTS }
+    for (const reactor of reactors) {
+      for (const color of COLOR_ORDER) {
+        totals[color] += reactor.stella[color]
+      }
+    }
+    return totals
+  }, [reactors])
+
+  // Which colors have counts > 0
+  const activeColors = useMemo(() => {
+    return COLOR_ORDER.filter((c) => totalCountsByColor[c] > 0)
+  }, [totalCountsByColor])
 
   // Update popup position when shown (above-right of the stella button)
   useEffect(() => {
@@ -135,17 +153,6 @@ export default function PostActions({
     setShowReactorsPopup(false)
     onUnlike()
   }, [onUnlike])
-
-  // Click on count to show popup (PC-friendly alternative to long press)
-  const handleCountClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation()
-      if (reactors.length > 0) {
-        setShowReactorsPopup(true)
-      }
-    },
-    [reactors.length]
-  )
 
   const handleClosePopup = useCallback((e?: React.MouseEvent) => {
     if (e) {
@@ -249,12 +256,12 @@ export default function PostActions({
     setShowColorPicker(false)
   }, [])
 
-  const handleColorSelect = useCallback(
+  const handleAddStella = useCallback(
     (color: StellaColor) => {
-      setShowColorPicker(false)
-      onLike(color)
+      onAddStella(color)
+      // Don't close picker - allow rapid clicking
     },
-    [onLike]
+    [onAddStella]
   )
 
   // Render count with loading/normal states
@@ -299,12 +306,37 @@ export default function PostActions({
       <StellaColorPicker
         position={colorPickerPosition}
         walletBalance={walletBalance}
-        onSelect={handleColorSelect}
+        currentCounts={myStella}
+        onAddStella={handleAddStella}
         onClose={handleColorPickerClose}
       />
     ) : null
 
-  // Reactors are already sorted by newest first from API
+  // Render multiple colored stars with their counts
+  const renderStellaStars = () => {
+    const hasAnyStella = activeColors.length > 0
+
+    if (!hasAnyStella) {
+      // No stella yet - show single empty star
+      return (
+        <span className="action-stella" style={{ animationDelay: `${stellaDelay}s` }}>
+          <Icon name="Star" size={20} />
+        </span>
+      )
+    }
+
+    // Show colored stars with counts
+    return (
+      <span className="action-stella-colors">
+        {activeColors.map((color) => (
+          <span key={color} className="action-stella-color-item">
+            <Icon name="Star" size={16} fill={STELLA_COLORS[color].hex} />
+            <span className="action-stella-color-count">{totalCountsByColor[color]}</span>
+          </span>
+        ))}
+      </span>
+    )
+  }
 
   return (
     <>
@@ -319,16 +351,9 @@ export default function PostActions({
             onTouchStart={handleMouseDown}
             onTouchEnd={handleMouseUp}
             disabled={isLiking || !reactions || (!canAddMoreStella && !reactions.myReaction)}
-            aria-label={reactions?.myReaction ? `${myStella} stella given` : 'Give a stella'}
+            aria-label={reactions?.myReaction ? `${totalMyStella} stella given` : 'Give a stella'}
           >
-            <span className="action-stella" style={{ animationDelay: `${stellaDelay}s` }}>
-              {reactions?.myReaction ? (
-                <Icon name="Star" size={20} fill="currentColor" />
-              ) : (
-                <Icon name="Star" size={20} />
-              )}
-            </span>
-            {renderCount(reactions, true, handleCountClick)}
+            {renderStellaStars()}
           </button>
           {reactorsPopup}
           {colorPicker}
@@ -347,10 +372,7 @@ export default function PostActions({
             disabled={reactors.length === 0}
             aria-label="View who gave stella"
           >
-            <span className="action-stella" style={{ animationDelay: `${stellaDelay}s` }}>
-              <Icon name="Star" size={20} />
-            </span>
-            {renderCount(reactions)}
+            {renderStellaStars()}
           </button>
           {reactorsPopup}
         </div>

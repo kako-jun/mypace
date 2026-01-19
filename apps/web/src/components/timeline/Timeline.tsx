@@ -68,7 +68,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
     reload,
     loadNewEvents,
     loadOlderEvents,
-    handleLike,
+    handleAddStella,
     handleUnlike,
     handleRepost,
     handleDelete,
@@ -199,7 +199,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
               walletBalance={walletBalance}
               onEdit={handleEdit}
               onDeleteConfirm={handleDeleteConfirm}
-              onLike={handleLike}
+              onAddStella={handleAddStella}
               onUnlike={handleUnlike}
               onReply={handleReplyClick}
               onRepost={handleRepost}

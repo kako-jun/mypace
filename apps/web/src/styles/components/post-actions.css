@@ -537,3 +537,125 @@
   border-top: 1px solid var(--border-color);
   margin-top: 0.25rem;
 }
+
+/* New stella picker with 5 stars in a row */
+.stella-picker-stars {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0;
+}
+
+.stella-picker-star-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.5rem 0.5rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+  position: relative;
+}
+
+.stella-picker-star-btn:hover:not(:disabled) {
+  transform: scale(1.15);
+}
+
+.stella-picker-star-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.stella-picker-star-btn.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.stella-picker-star-btn.has-count {
+  background: var(--surface-secondary);
+  border-radius: 4px;
+}
+
+.stella-picker-star-btn svg {
+  stroke: #333;
+  stroke-width: 1.5;
+}
+
+.stella-picker-star-count {
+  font-size: 0.625rem;
+  font-weight: bold;
+  color: var(--text-secondary);
+  min-width: 1rem;
+  text-align: center;
+}
+
+.stella-picker-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.25rem;
+}
+
+.stella-picker-total {
+  color: var(--text-secondary);
+}
+
+/* Multi-color stella display in post card */
+.action-stella-colors {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.action-stella-color-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.action-stella-color-item svg {
+  stroke: #333;
+  stroke-width: 1.5;
+}
+
+.action-stella-color-count {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Reactor popup multi-color styles */
+.reactor-stella-colors {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-left: auto;
+}
+
+.reactor-stella-color {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.reactor-stella-color svg {
+  stroke: #333;
+  stroke-width: 1.5;
+}
+
+.reactor-stella-count {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.reactor-stella-total {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+}
