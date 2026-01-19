@@ -59,40 +59,16 @@
   font-size: clamp(0.85rem, 2.2vw, 1rem);
 }
 
-/* Inventory button */
+/* Inventory button - uses TextButton base style */
 .my-stats-inventory-btn {
   position: absolute;
   bottom: 4px;
   right: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border: none;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.2);
-  cursor: pointer;
   pointer-events: auto;
-  color: var(--text-primary);
-  opacity: 0.6;
-  transition: opacity 0.15s ease, background 0.15s ease;
-}
-
-.my-stats-inventory-btn:hover {
-  opacity: 1;
-  background: rgba(0, 0, 0, 0.3);
+  font-size: 0.75rem;
 }
 
 /* Dark theme */
 [data-theme='dark'] .my-stats-widget {
   background: rgba(0, 0, 0, 0.5);
-}
-
-[data-theme='dark'] .my-stats-inventory-btn {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-[data-theme='dark'] .my-stats-inventory-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
 }
