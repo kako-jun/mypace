@@ -139,6 +139,11 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
     if (until > 0) {
       filter.until = until
     }
+    // NIP-50: 検索クエリがある場合はリレー側で全文検索
+    if (queries.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(filter as any).search = queries.join(' ')
+    }
 
     const rawEvents = await p.querySync(RELAYS, filter)
     rawEvents.sort((a, b) => b.created_at - a.created_at)
@@ -252,6 +257,11 @@ export async function fetchUserEvents(
     }
     if (until > 0) {
       filter.until = until
+    }
+    // NIP-50: 検索クエリがある場合はリレー側で全文検索
+    if (q.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(filter as any).search = q.join(' ')
     }
 
     const rawEvents = await p.querySync(RELAYS, filter)
