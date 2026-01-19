@@ -65,6 +65,7 @@
   pointer-events: auto;
   font-size: 0.75rem;
   margin-top: 2px;
+  padding-right: 0;
 }
 
 /* Dark theme */
