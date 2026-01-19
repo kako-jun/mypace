@@ -231,37 +231,43 @@ publish.post('/', async (c) => {
 
     // Kind 7 (リアクション) + stellaタグならD1に記録 + 通知
     if (event.kind === 7) {
-      const stellaTag = tags.find((t: string[]) => t[0] === 'stella')
-      if (stellaTag && stellaTag[1]) {
+      const stellaTags = tags.filter((t: string[]) => t[0] === 'stella' && t[1])
+      if (stellaTags.length > 0) {
         const eTag = tags.find((t: string[]) => t[0] === 'e')
         const pTag = tags.find((t: string[]) => t[0] === 'p')
         if (eTag && eTag[1] && pTag && pTag[1]) {
-          try {
-            // Support both formats:
-            // Old: ["stella", "count"]
-            // New: ["stella", "color", "count"]
-            const isColorFormat = stellaTag.length >= 3 && isNaN(parseInt(stellaTag[1], 10))
-            const stellaCount = isColorFormat ? parseInt(stellaTag[2], 10) : parseInt(stellaTag[1], 10)
-            const stellaColor = isColorFormat ? stellaTag[1] : 'yellow'
-            if (!isNaN(stellaCount) && stellaCount >= 1 && stellaCount <= 10) {
-              await recordStella(db, eTag[1], pTag[1], event.pubkey, stellaCount, stellaColor, event.id)
-              // Record notification
-              await recordNotification(
-                db,
-                pTag[1],
-                event.pubkey,
-                'stella',
-                eTag[1],
-                null,
-                stellaCount,
-                stellaColor,
-                c.env.VAPID_PUBLIC_KEY,
-                c.env.VAPID_PRIVATE_KEY,
-                c.env.VAPID_SUBJECT
-              )
+          let notificationSent = false
+          for (const stellaTag of stellaTags) {
+            try {
+              // Support both formats:
+              // Old: ["stella", "count"]
+              // New: ["stella", "color", "count"]
+              const isColorFormat = stellaTag.length >= 3 && isNaN(parseInt(stellaTag[1], 10))
+              const stellaCount = isColorFormat ? parseInt(stellaTag[2], 10) : parseInt(stellaTag[1], 10)
+              const stellaColor = isColorFormat ? stellaTag[1] : 'yellow'
+              if (!isNaN(stellaCount) && stellaCount >= 1 && stellaCount <= 10) {
+                await recordStella(db, eTag[1], pTag[1], event.pubkey, stellaCount, stellaColor, event.id)
+                // Record notification only once per reaction event
+                if (!notificationSent) {
+                  await recordNotification(
+                    db,
+                    pTag[1],
+                    event.pubkey,
+                    'stella',
+                    eTag[1],
+                    null,
+                    stellaCount,
+                    stellaColor,
+                    c.env.VAPID_PUBLIC_KEY,
+                    c.env.VAPID_PRIVATE_KEY,
+                    c.env.VAPID_SUBJECT
+                  )
+                  notificationSent = true
+                }
+              }
+            } catch (e) {
+              console.error('Stella record error:', e)
             }
-          } catch (e) {
-            console.error('Stella record error:', e)
           }
         }
       }
