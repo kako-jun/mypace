@@ -18,7 +18,6 @@ import {
   filterByMuteList,
   filterByNgWords,
   filterByNgTags,
-  filterByOkTags,
   filterByLanguage,
 } from './filters'
 import type { Event, Profile, ReactionData, ReplyData, RepostData } from '../../types'
@@ -141,9 +140,9 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
       kinds: targetKinds,
       limit: limit * 2, // フィルタで減る分を考慮
     }
-    // #tフィルタをリレーに送信
+    // #tフィルタをリレーに送信（okTagsも含める）
     if (!showAll) {
-      filter['#t'] = [MYPACE_TAG]
+      filter['#t'] = okTags.length > 0 ? [MYPACE_TAG, ...okTags] : [MYPACE_TAG]
     } else if (okTags.length > 0) {
       filter['#t'] = okTags
     }
@@ -164,12 +163,12 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
     let events = rawEvents.map(toEvent)
 
     // クライアント側フィルタ（リレーが対応していないもののみ）
+    // ※ okTagsとqueriesはリレー側で処理するためここには含めない
     events = filterByMuteList(events, mutedPubkeys)
     events = filterBySmartFilters(events, hideAds, hideNSFW)
     events = filterByNPC(events, hideNPC)
     events = filterByNgWords(events, ngWords)
     events = filterByNgTags(events, ngTags)
-    events = filterByOkTags(events, okTags)
 
     if (langFilter) {
       events = filterByLanguage(events, langFilter)
@@ -284,12 +283,12 @@ export async function fetchUserEvents(
     let events = rawEvents.map(toEvent)
 
     // クライアント側フィルタ（リレーが対応していないもののみ）
+    // ※ tagsとqはリレー側で処理するためここには含めない
     events = filterByMuteList(events, mutedPubkeys)
     events = filterBySmartFilters(events, hideAds, hideNSFW)
     events = filterByNPC(events, hideNPC)
     events = filterByNgWords(events, ngWords)
     events = filterByNgTags(events, ngTags)
-    events = filterByOkTags(events, tags)
 
     if (langFilter) {
       events = filterByLanguage(events, langFilter)
