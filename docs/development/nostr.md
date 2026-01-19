@@ -191,23 +191,32 @@ export const GENERAL_RELAYS = ['wss://relay.damus.io', 'wss://nos.lol']
 | relay.damus.io | ✅ | ✅ | ❌エラー | ✅ | メタデータ用 |
 | nos.lol | ✅ | ✅ | ❌エラー | ✅ | メタデータ用 |
 
+### 検索の方針
+
+**タグ検索（okTags）とキーワード検索（queries）は常にリレー側で処理する。クライアント側フィルタには頼らない。**
+
+理由:
+- クライアント側フィルタを使うと、limitで取得した最新データの中からしかフィルタできない
+- 過去のデータを検索できなくなる
+- リレーが対応していない場合は機能制限として受け入れる
+
 ### 制約事項
 
 **ユーザーページでの検索（authors + #t + search）**:
-- 現時点で対応リレーなし
+- search.nos.todayはauthorsフィルタを無視する（0件ではなく全投稿が返る）
+- そのため、ユーザーページでタグ検索しても、そのユーザー以外の投稿も表示される
 - relay.nostr.bandが唯一全機能対応だが、502エラーで利用不可
-- relay.nostr.band復旧後は自動的に機能する（SEARCH_RELAYSに含まれているため）
-
-**ローカルフィルタの問題**:
-- 緩い条件でリレーから取得 → limitで最新データのみ → ローカルフィルタ
-- この方式では過去のデータが取得できない
-- そのため、リレー側で全条件を処理できない場合は機能制限となる
+- relay.nostr.band復旧後は正常に機能する予定
 
 ### 調査履歴
 
-**2026年1月**:
+**2026年1月20日**:
+- okTagsとqueriesをリレー側のみで処理する方針に変更
+- クライアント側のfilterByOkTagsを削除
+- search.nos.todayはauthorsを「0件」ではなく「無視」することを確認
+
+**2026年1月（初期調査）**:
 - relay.nostr.bandが502エラーを返し始める（原因・復旧時期不明）
-- search.nos.todayがauthorsフィルタで0件を返すことを確認
 - search.nos.todayが#eフィルタで0件を返すことを確認（メタデータ取得不可）
 - 用途別にリレーを分離する構成に変更
 
@@ -218,10 +227,10 @@ export const GENERAL_RELAYS = ['wss://relay.damus.io', 'wss://nos.lol']
 | フィルタ | 説明 | 条件 |
 |----------|------|------|
 | kinds | イベントタイプ | 常に |
-| #t | タグフィルタ (OR) | showAll=false時に`['mypace']` |
+| #t | タグフィルタ (OR) | showAll=false: `['mypace', ...okTags]`、showAll=true: `okTags` |
 | authors | 投稿者 | fetchUserEventsのみ |
 | since, until | 時間範囲 | 指定時 |
-| search | 全文検索 (NIP-50) | 検索キーワードあり時 |
+| search | 全文検索 (NIP-50) | 検索キーワード（queries）あり時 |
 
 ### クライアント側フィルタ
 
@@ -232,8 +241,9 @@ export const GENERAL_RELAYS = ['wss://relay.damus.io', 'wss://nos.lol']
 | filterByNPC | NPC投稿(kind:42000)除外 |
 | filterByNgWords | NGワード除外 |
 | filterByNgTags | NGタグ除外（タグ配列+本文中の#tag） |
-| filterByOkTags | OKタグフィルタ (AND) - 全タグを含む投稿のみ |
 | filterByLanguage | 言語フィルタ |
+
+**注意**: okTags（タグ検索）とqueries（キーワード検索）はリレー側で処理。クライアント側フィルタには含めない。
 
 ## Security
 
