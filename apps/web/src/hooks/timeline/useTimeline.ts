@@ -83,6 +83,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const stellaDebounceTimers = useRef<{ [eventId: string]: ReturnType<typeof setTimeout> }>({})
   // Pending stella per color
   const pendingStella = useRef<{ [eventId: string]: StellaCountsByColor }>({})
+  // Flag to prevent double-fire within same event cycle
+  const stellaProcessing = useRef<{ [eventId: string]: boolean }>({})
   const reactionsRef = useRef(reactions)
   reactionsRef.current = reactions
 
@@ -337,6 +339,14 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const handleAddStella = (event: Event, color: StellaColor) => {
     if (!myPubkey) return
     const eventId = event.id
+
+    // Prevent double-fire within same event cycle
+    if (stellaProcessing.current[eventId]) return
+    stellaProcessing.current[eventId] = true
+    setTimeout(() => {
+      stellaProcessing.current[eventId] = false
+    }, 50)
+
     const currentReaction = reactions[eventId]
     const currentMyStella = currentReaction?.myStella || { ...EMPTY_STELLA_COUNTS }
     const currentTotal = getTotalStellaCount(currentMyStella)
