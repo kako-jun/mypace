@@ -12,10 +12,15 @@ NIP-25（リアクション）を拡張し、ステラ数をタグで管理す�
 ## タグ形式
 
 ```json
-["stella", "<ステラ数>"]
+["stella", "<色>", "<ステラ数>"]
 ```
 
-ステラ数は1〜10の整数。
+- 色: `yellow` | `green` | `red` | `blue` | `purple`
+- ステラ数: 1〜10の整数
+
+### 後方互換性
+
+古い形式 `["stella", "<ステラ数>"]` もサポート。この場合、色は`yellow`として扱う。
 
 ## イベント形式
 
@@ -28,7 +33,7 @@ Kind 7（NIP-25リアクション）に`stella`タグを追加:
   "tags": [
     ["e", "<対象イベントID>"],
     ["p", "<対象イベント作者のpubkey>"],
-    ["stella", "5"]
+    ["stella", "blue", "5"]
   ]
 }
 ```
@@ -47,10 +52,44 @@ Kind 7（NIP-25リアクション）に`stella`タグを追加:
 - 1ユーザー1投稿あたり最大**10ステラ**
 - 上限到達後はボタンが非活性化
 
-### ステラ削除（全削除）
+### ステラ削除
 
-- 長押しまたはカウントクリックで削除確認
-- 削除するとそのユーザーの全ステラが消える（0に戻る）
+- **イエローステラ**: 削除可能。長押しまたはカウントクリックで削除
+- **カラーステラ（green/red/blue/purple）**: 削除不可（支払い済みのため）
+
+削除するとそのユーザーの全ステラが消える（0に戻る）。
+
+## カラーステラ
+
+### 色と料金
+
+| 色 | コスト（sats） |
+|----|----------------|
+| yellow | 0（無料） |
+| green | 1 |
+| red | 10 |
+| blue | 100 |
+| purple | 1000 |
+
+### Lightning支払い
+
+カラーステラを送信する際、WebLN経由でLightning支払いを行う。
+
+1. 投稿者のLightningアドレス（lud16）を取得
+2. LNURL-pay エンドポイントから支払い情報を取得
+3. インボイスを取得
+4. WebLNで支払いを実行
+5. 支払い成功後、リアクションイベントを発行
+
+### 確認ダイアログ
+
+- **なし**: 連打の楽しさを優先
+- 少額のため確認なしで即時支払い
+
+### キャンセルポリシー
+
+- **イエロー**: 取り消し可能
+- **カラー（有料）**: 取り消し不可（支払い済み）
 
 ## API仕様
 
@@ -64,14 +103,16 @@ GET /api/reactions/:eventId?pubkey=<自分のpubkey>
 
 ```json
 {
-  "count": 25,           // 全ユーザーの合計ステラ数
-  "myReaction": true,    // 自分がステラを付けたか
-  "myStella": 5,         // 自分のステラ数
-  "myReactionId": "...", // 自分のリアクションイベントID
-  "reactors": [          // リアクター一覧（新しい順）
+  "count": 25,             // 全ユーザーの合計ステラ数
+  "myReaction": true,      // 自分がステラを付けたか
+  "myStella": 5,           // 自分のステラ数
+  "myStellaColor": "blue", // 自分のステラの色
+  "myReactionId": "...",   // 自分のリアクションイベントID
+  "reactors": [            // リアクター一覧（新しい順）
     {
       "pubkey": "...",
       "stella": 5,
+      "stellaColor": "blue",
       "reactionId": "...",
       "createdAt": 1234567890
     }
@@ -121,12 +162,14 @@ GET /api/reactions/:eventId?pubkey=<自分のpubkey>
 // 定数
 export const MAX_STELLA_PER_USER = 10
 export const STELLA_TAG = 'stella'
+export type StellaColor = 'yellow' | 'green' | 'red' | 'blue' | 'purple'
 
 // リアクション作成
 export async function createReactionEvent(
   targetEvent: Event,
   content: string = '+',
-  stellaCount: number = 1
+  stellaCount: number = 1,
+  stellaColor: StellaColor = 'yellow'
 ): Promise<Event> {
   const template: EventTemplate = {
     kind: 7,
@@ -134,7 +177,7 @@ export async function createReactionEvent(
     tags: [
       ['e', targetEvent.id],
       ['p', targetEvent.pubkey],
-      [STELLA_TAG, String(Math.min(stellaCount, MAX_STELLA_PER_USER))],
+      [STELLA_TAG, stellaColor, String(Math.min(stellaCount, MAX_STELLA_PER_USER))],
     ],
     content,
   }
@@ -145,13 +188,27 @@ export async function createReactionEvent(
 ### サーバー側
 
 ```typescript
-function getStellaCount(event: Event): number {
+interface StellaInfo {
+  count: number
+  color: string
+}
+
+function getStellaInfo(event: Event): StellaInfo {
   const stellaTag = event.tags.find((t) => t[0] === 'stella')
-  if (stellaTag && stellaTag[1]) {
-    const count = parseInt(stellaTag[1], 10)
-    return isNaN(count) ? 1 : count
+  if (!stellaTag) {
+    return { count: 1, color: 'yellow' }
   }
-  return 1 // デフォルト（後方互換性）
+
+  // 新形式: ["stella", "blue", "5"]
+  if (stellaTag.length >= 3) {
+    const color = stellaTag[1] || 'yellow'
+    const count = parseInt(stellaTag[2], 10)
+    return { count: isNaN(count) ? 1 : count, color }
+  }
+
+  // 旧形式: ["stella", "5"]
+  const count = parseInt(stellaTag[1], 10)
+  return { count: isNaN(count) ? 1 : count, color: 'yellow' }
 }
 ```
 
@@ -185,6 +242,7 @@ CREATE TABLE IF NOT EXISTS user_stella (
   author_pubkey TEXT NOT NULL,      -- 投稿者（集計対象）
   reactor_pubkey TEXT NOT NULL,     -- ステラを付けた人
   stella_count INTEGER NOT NULL,    -- ステラ数 (1-10)
+  stella_color TEXT DEFAULT 'yellow', -- ステラの色
   reaction_id TEXT,                 -- リアクションイベントID（削除用）
   updated_at INTEGER NOT NULL,
   PRIMARY KEY (event_id, reactor_pubkey)
@@ -212,15 +270,26 @@ CREATE INDEX IF NOT EXISTS idx_user_stella_reaction ON user_stella(reaction_id);
 
 ### API仕様
 
+ユーザーステラ統計は `/api/user/:pubkey/count` で取得:
+
 ```
-GET /api/user/:pubkey/stella
+GET /api/user/:pubkey/count
 ```
 
 レスポンス:
 
 ```json
 {
-  "total": 1234
+  "postsCount": 100,
+  "stellaCount": 1234,
+  "stellaByColor": {
+    "yellow": 1000,
+    "green": 150,
+    "red": 60,
+    "blue": 20,
+    "purple": 4
+  },
+  "viewsCount": { ... }
 }
 ```
 
