@@ -329,6 +329,18 @@ export default function PostActions({
 
   // Render stella display with colored stars and counts
   const renderStellaDisplay = () => {
+    // Loading state - show dot like replies/reposts
+    if (reactions === undefined) {
+      return (
+        <>
+          <span className="action-stella" style={{ animationDelay: `${stellaDelay}s` }}>
+            <Icon name="Star" size={20} />
+          </span>
+          <span className="action-count action-count-loading">・</span>
+        </>
+      )
+    }
+
     const hasAnyStella = reactors.length > 0
 
     if (!hasAnyStella) {

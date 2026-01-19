@@ -25,6 +25,8 @@ export function useReactions({ event, myPubkey, initialReactions, authorLud16 }:
 
   const stellaDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingStella = useRef<StellaCountsByColor>({ ...EMPTY_STELLA_COUNTS })
+  const lastAddStellaTime = useRef<number>(0)
+  const ADD_STELLA_DEBOUNCE_MS = 100 // Prevent double-add within 100ms
 
   const flushStella = useCallback(async () => {
     if (!event) return
@@ -125,6 +127,13 @@ export function useReactions({ event, myPubkey, initialReactions, authorLud16 }:
   const handleAddStella = useCallback(
     (color: StellaColor) => {
       if (!event || !myPubkey || event.pubkey === myPubkey) return
+
+      // Debounce to prevent double-add (e.g., from duplicate events)
+      const now = Date.now()
+      if (now - lastAddStellaTime.current < ADD_STELLA_DEBOUNCE_MS) {
+        return
+      }
+      lastAddStellaTime.current = now
 
       const currentMyTotal = getTotalStellaCount(reactions.myStella)
       const pendingTotal = getTotalStellaCount(pendingStella.current)
