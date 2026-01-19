@@ -612,11 +612,9 @@
   font-weight: bold;
   color: var(--text-secondary);
   min-width: 1rem;
+  min-height: 0.625rem;
+  line-height: 0.625rem;
   text-align: center;
-}
-
-.stella-picker-star-count.empty {
-  visibility: hidden;
 }
 
 /* Stella picker column layout for star + breakdown */
