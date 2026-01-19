@@ -619,6 +619,8 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  text-align: left;
+  width: 100%;
 }
 
 .embed-link-domain {
