@@ -62,7 +62,7 @@ export function InventoryPage() {
 
       <div className={`inventory-header themed-card ${textClass}`}>
         <h2>Inventory</h2>
-        <p>Your Lightning wallet balance displayed as Color Stella</p>
+        <p>Your Lightning wallet balance displayed as Color Stella.</p>
       </div>
 
       <div className="inventory-balance-section">
@@ -103,7 +103,7 @@ export function InventoryPage() {
               </div>
             ) : (
               <div className="inventory-balance-unavailable">
-                <p>This wallet does not support balance retrieval</p>
+                <p>This wallet does not support balance retrieval.</p>
               </div>
             )}
             <button className="inventory-disconnect-button" onClick={disconnect}>
@@ -121,8 +121,8 @@ export function InventoryPage() {
               </>
             ) : (
               <div className="inventory-no-webln">
-                <p>Lightning wallet extension not found</p>
-                <p className="inventory-install-hint">Please install a WebLN-compatible extension (e.g. Alby)</p>
+                <p>Lightning wallet extension not found.</p>
+                <p className="inventory-install-hint">Please install a WebLN-compatible extension (e.g. Alby).</p>
               </div>
             )}
           </div>
@@ -131,7 +131,7 @@ export function InventoryPage() {
 
       <div className="inventory-wallet-section">
         <h3>Lightning Wallet</h3>
-        <p className="inventory-wallet-hint">Use a Lightning wallet to add sats</p>
+        <p className="inventory-wallet-hint">Use a Lightning wallet to add sats.</p>
         <div className="inventory-wallet-buttons">
           <button
             type="button"
