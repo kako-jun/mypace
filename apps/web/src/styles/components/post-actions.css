@@ -606,27 +606,35 @@
 }
 
 /* Multi-color stella display in post card */
-.action-stella-colors {
+.stella-display-container {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  padding: 0.25rem 0.5rem;
 }
 
-.action-stella-color-item {
+[data-theme="dark"] .stella-display-container {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.stella-display-item {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.125rem;
+  gap: 0;
 }
 
-.action-stella-color-item svg {
+.stella-display-item svg {
   stroke: #333;
   stroke-width: 1.5;
 }
 
-.action-stella-color-count {
-  font-size: 0.625rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+/* Stella count - same style as action-count but smaller */
+.stella-count {
+  font-size: 0.875rem;
+  line-height: 1;
 }
 
 /* Reactor popup multi-color styles */
@@ -652,10 +660,4 @@
   font-size: 0.625rem;
   font-weight: 600;
   color: var(--text-secondary);
-}
-
-.reactor-stella-total {
-  font-size: 0.625rem;
-  color: var(--text-muted);
-  margin-left: 0.25rem;
 }

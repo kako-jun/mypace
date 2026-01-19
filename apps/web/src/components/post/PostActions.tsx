@@ -57,7 +57,7 @@ export default function PostActions({
   // Long press handling - show reactors list
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isLongPress = useRef(false)
-  const [showReactorsPopup, setShowReactorsPopup] = useState(false)
+  const [showReactorsPopup, setShowReactorsPopup] = useState<StellaColor | null>(null)
   const buttonWrapperRef = useRef<HTMLDivElement>(null)
   const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null)
 
@@ -92,10 +92,13 @@ export default function PostActions({
     return totals
   }, [reactors])
 
-  // Which colors have counts > 0
-  const activeColors = useMemo(() => {
-    return COLOR_ORDER.filter((c) => totalCountsByColor[c] > 0)
-  }, [totalCountsByColor])
+  // Get reactors for a specific color
+  const getReactorsByColor = useCallback(
+    (color: StellaColor) => {
+      return reactors.filter((r) => r.stella[color] > 0)
+    },
+    [reactors]
+  )
 
   // Update popup position when shown (above-right of the stella button)
   useEffect(() => {
@@ -106,7 +109,7 @@ export default function PostActions({
         left: rect.right,
       })
       // Close popup on scroll (position: fixed doesn't follow scroll)
-      const handleScroll = () => setShowReactorsPopup(false)
+      const handleScroll = () => setShowReactorsPopup(null)
       window.addEventListener('scroll', handleScroll, { passive: true })
       return () => window.removeEventListener('scroll', handleScroll)
     } else {
@@ -122,9 +125,13 @@ export default function PostActions({
     isLongPress.current = false
     longPressTimer.current = setTimeout(() => {
       isLongPress.current = true
-      setShowReactorsPopup(true)
+      // Long press shows yellow reactors (or first available color)
+      const firstColorWithReactors = COLOR_ORDER.find((c) => totalCountsByColor[c] > 0)
+      if (firstColorWithReactors) {
+        setShowReactorsPopup(firstColorWithReactors)
+      }
     }, LONG_PRESS_DURATION)
-  }, [reactors.length])
+  }, [reactors.length, totalCountsByColor])
 
   const handleMouseUp = useCallback(() => {
     if (longPressTimer.current) {
@@ -149,8 +156,20 @@ export default function PostActions({
     }
   }, [isMyPost, canAddMoreStella, showReactorsPopup, showColorPicker])
 
+  // Handle click on a color count to show reactors for that color
+  const handleColorCountClick = useCallback(
+    (e: React.MouseEvent, color: StellaColor) => {
+      e.stopPropagation()
+      e.preventDefault()
+      if (totalCountsByColor[color] > 0) {
+        setShowReactorsPopup(color)
+      }
+    },
+    [totalCountsByColor]
+  )
+
   const handleUnlikeConfirm = useCallback(() => {
-    setShowReactorsPopup(false)
+    setShowReactorsPopup(null)
     onUnlike()
   }, [onUnlike])
 
@@ -159,7 +178,7 @@ export default function PostActions({
       e.stopPropagation()
       e.preventDefault()
     }
-    setShowReactorsPopup(false)
+    setShowReactorsPopup(null)
   }, [])
 
   // Share menu position calculation (above the button)
@@ -286,17 +305,18 @@ export default function PostActions({
     )
   }
 
-  // Reactors popup component rendered via portal (only when position is calculated)
+  // Reactors popup component - filtered by color
   const reactorsPopup =
     showReactorsPopup && popupPosition ? (
       <ReactorsPopup
-        reactors={reactors}
+        reactors={getReactorsByColor(showReactorsPopup)}
         position={popupPosition}
         myPubkey={myPubkey}
         getDisplayName={getDisplayName}
         onNavigateToProfile={onNavigateToProfile}
-        onRemove={handleUnlikeConfirm}
+        onRemove={showReactorsPopup === 'yellow' ? handleUnlikeConfirm : undefined}
         onClose={handleClosePopup}
+        filterColor={showReactorsPopup}
       />
     ) : null
 
@@ -312,12 +332,12 @@ export default function PostActions({
       />
     ) : null
 
-  // Render multiple colored stars with their counts
-  const renderStellaStars = () => {
-    const hasAnyStella = activeColors.length > 0
+  // Render stella display with colored stars and counts
+  const renderStellaDisplay = () => {
+    const hasAnyStella = reactors.length > 0
 
     if (!hasAnyStella) {
-      // No stella yet - show single empty star
+      // No stella yet - show single empty star (no count)
       return (
         <span className="action-stella" style={{ animationDelay: `${stellaDelay}s` }}>
           <Icon name="Star" size={20} />
@@ -325,13 +345,21 @@ export default function PostActions({
       )
     }
 
-    // Show colored stars with counts
+    // Colors that have counts > 0
+    const activeColors = COLOR_ORDER.filter((c) => totalCountsByColor[c] > 0)
+
+    // Show colored stars with counts in a container
     return (
-      <span className="action-stella-colors">
+      <span className="stella-display-container">
         {activeColors.map((color) => (
-          <span key={color} className="action-stella-color-item">
-            <Icon name="Star" size={16} fill={STELLA_COLORS[color].hex} />
-            <span className="action-stella-color-count">{totalCountsByColor[color]}</span>
+          <span key={color} className="stella-display-item">
+            <Icon name="Star" size={18} fill={STELLA_COLORS[color].hex} />
+            <span
+              className="action-count action-count-clickable stella-count"
+              onClick={(e) => handleColorCountClick(e, color)}
+            >
+              {formatNumber(totalCountsByColor[color])}
+            </span>
           </span>
         ))}
       </span>
@@ -353,7 +381,7 @@ export default function PostActions({
             disabled={isLiking || !reactions || (!canAddMoreStella && !reactions.myReaction)}
             aria-label={reactions?.myReaction ? `${totalMyStella} stella given` : 'Give a stella'}
           >
-            {renderStellaStars()}
+            {renderStellaDisplay()}
           </button>
           {reactorsPopup}
           {colorPicker}
@@ -363,16 +391,16 @@ export default function PostActions({
         <div className="like-button-wrapper" ref={buttonWrapperRef}>
           <button
             className="icon-button like-button"
-            onClick={() => setShowReactorsPopup(true)}
+            onClick={handleClick}
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onTouchStart={handleMouseDown}
             onTouchEnd={handleMouseUp}
-            disabled={reactors.length === 0}
+            disabled={false}
             aria-label="View who gave stella"
           >
-            {renderStellaStars()}
+            {renderStellaDisplay()}
           </button>
           {reactorsPopup}
         </div>

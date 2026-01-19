@@ -198,11 +198,31 @@ export function NotificationPanel({ onClose, onUnreadChange }: NotificationPanel
 
   const pubkey = getMyPubkey()
 
+  // Check if there are any unread notifications
+  const hasUnread = notifications.some((n) => n.readAt === null)
+
+  // Mark all notifications as read
+  const handleMarkAllRead = async () => {
+    const unreadIds = notifications.filter((n) => n.readAt === null).flatMap((n) => n.ids)
+    if (unreadIds.length === 0) return
+
+    await markNotificationsRead(unreadIds)
+    setNotifications((prev) => prev.map((n) => ({ ...n, readAt: n.readAt ?? Date.now() / 1000 })))
+    onUnreadChange?.(false)
+  }
+
   return (
     <div className="notification-panel">
       <div className="notification-panel-header">
         <span className="notification-panel-title">Notifications</span>
-        {onClose && <CloseButton onClick={onClose} size={18} />}
+        <div className="notification-panel-actions">
+          {hasUnread && (
+            <button className="notification-mark-all-read" onClick={handleMarkAllRead} title="Mark all as read">
+              <Icon name="CheckCheck" size={18} />
+            </button>
+          )}
+          {onClose && <CloseButton onClick={onClose} size={18} />}
+        </div>
       </div>
 
       <div className="notification-panel-content">

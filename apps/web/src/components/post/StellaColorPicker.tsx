@@ -45,7 +45,7 @@ export default function StellaColorPicker({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="stella-picker-header">
-          <span className="stella-picker-title">ステラを付ける</span>
+          <span className="stella-picker-title">Add Stella</span>
           <CloseButton onClick={() => onClose()} size={16} />
         </div>
 
@@ -63,7 +63,7 @@ export default function StellaColorPicker({
                 className={`stella-picker-star-btn ${disabled ? 'disabled' : ''} ${count > 0 ? 'has-count' : ''}`}
                 onClick={handleClick(color)}
                 disabled={disabled}
-                title={`${colorInfo.label} (${colorInfo.sats === 0 ? '無料' : `${colorInfo.sats} sats`})`}
+                title={`${colorInfo.label} (${colorInfo.sats === 0 ? 'Free' : `${colorInfo.sats} sats`})`}
               >
                 <Icon name="Star" size={24} fill={colorInfo.hex} />
                 {count > 0 && <span className="stella-picker-star-count">{count}</span>}
@@ -74,13 +74,13 @@ export default function StellaColorPicker({
 
         {/* Info row */}
         <div className="stella-picker-info">
-          <span className="stella-picker-total">合計: {totalStella}/10</span>
+          <span className="stella-picker-total">Total: {totalStella}/10</span>
           {walletBalance !== null && (
             <span className="stella-picker-balance">{walletBalance.toLocaleString()} sats</span>
           )}
         </div>
 
-        {walletBalance === null && <div className="stella-picker-hint">※ カラーステラにはウォレット接続が必要</div>}
+        {walletBalance === null && <div className="stella-picker-hint">Connect wallet for colored stella</div>}
       </div>
     </>,
     document.body
