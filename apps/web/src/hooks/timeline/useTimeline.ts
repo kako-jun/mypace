@@ -345,6 +345,11 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     const pendingCount = pendingStella.current[eventId]?.count || 0
     if (currentMyStella + pendingCount >= MAX_STELLA_PER_USER) return
 
+    // 既にステラがある場合は同じ色のみ追加可能
+    if (currentMyStella > 0 && currentReaction?.myStellaColor && currentReaction.myStellaColor !== color) {
+      return
+    }
+
     pendingStella.current[eventId] = { count: pendingCount + 1, color }
     setReactions((prev) => ({
       ...prev,

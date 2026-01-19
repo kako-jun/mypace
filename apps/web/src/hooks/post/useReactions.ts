@@ -119,6 +119,11 @@ export function useReactions({ event, myPubkey, initialReactions, authorLud16 }:
 
       if (currentMyStella + pending >= MAX_STELLA_PER_USER) return
 
+      // 既にステラがある場合は同じ色のみ追加可能
+      if (currentMyStella > 0 && reactions.myStellaColor && reactions.myStellaColor !== color) {
+        return
+      }
+
       pendingStella.current = { count: pending + 1, color }
 
       setReactions((prev) => ({
@@ -135,9 +140,9 @@ export function useReactions({ event, myPubkey, initialReactions, authorLud16 }:
       }
       stellaDebounceTimer.current = setTimeout(() => {
         flushStella()
-      }, 300)
+      }, 500)
     },
-    [event, myPubkey, reactions.myStella, flushStella]
+    [event, myPubkey, reactions.myStella, reactions.myStellaColor, flushStella]
   )
 
   const handleUnlike = useCallback(async () => {
