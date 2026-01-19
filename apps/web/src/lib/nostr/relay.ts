@@ -126,11 +126,16 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
   const p = getPool()
 
   try {
+    // NIP-50: 検索クエリがある場合はリレー側で全文検索
+    const searchQuery = queries.filter((q) => q.trim()).join(' ')
+
     const filter: Filter = {
       kinds: targetKinds,
       limit: limit * 2, // フィルタで減る分を考慮
     }
-    if (!showAll) {
+    // 検索時は#tフィルタをリレーに送らない（NIP-50との組み合わせで0件になることがあるため）
+    // 代わりにクライアント側でmypaceタグをフィルタリング
+    if (!showAll && !searchQuery) {
       filter['#t'] = [MYPACE_TAG]
     }
     if (since > 0) {
@@ -139,8 +144,6 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
     if (until > 0) {
       filter.until = until
     }
-    // NIP-50: 検索クエリがある場合はリレー側で全文検索
-    const searchQuery = queries.filter((q) => q.trim()).join(' ')
     if (searchQuery) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(filter as any).search = searchQuery
@@ -150,6 +153,11 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
     rawEvents.sort((a, b) => b.created_at - a.created_at)
 
     let events = rawEvents.map(toEvent)
+
+    // 検索時はmypaceタグをクライアント側でフィルタ
+    if (!showAll && searchQuery) {
+      events = events.filter((e) => e.tags.some((t) => t[0] === 't' && t[1]?.toLowerCase() === MYPACE_TAG))
+    }
 
     // フィルタ適用（除外率の高い順に実行）
     events = filterByMuteList(events, mutedPubkeys)
@@ -240,17 +248,23 @@ export async function fetchUserEvents(
   const p = getPool()
 
   try {
+    // NIP-50: 検索クエリがある場合はリレー側で全文検索
+    const searchQuery = q.filter((query) => query.trim()).join(' ')
+
     const filter: Filter = {
       kinds: targetKinds,
       authors: [pubkey],
       limit: limit * 2,
     }
 
-    // タグフィルタ
-    if (!showAll || tags.length > 0) {
-      const tagFilter = showAll ? tags : [MYPACE_TAG, ...tags]
-      if (tagFilter.length > 0) {
-        filter['#t'] = tagFilter
+    // 検索時は#tフィルタをリレーに送らない（NIP-50との組み合わせで0件になることがあるため）
+    // 代わりにクライアント側でmypaceタグとOKタグをフィルタリング
+    if (!searchQuery) {
+      if (!showAll || tags.length > 0) {
+        const tagFilter = showAll ? tags : [MYPACE_TAG, ...tags]
+        if (tagFilter.length > 0) {
+          filter['#t'] = tagFilter
+        }
       }
     }
     if (since > 0) {
@@ -259,8 +273,6 @@ export async function fetchUserEvents(
     if (until > 0) {
       filter.until = until
     }
-    // NIP-50: 検索クエリがある場合はリレー側で全文検索
-    const searchQuery = q.filter((query) => query.trim()).join(' ')
     if (searchQuery) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(filter as any).search = searchQuery
@@ -270,6 +282,11 @@ export async function fetchUserEvents(
     rawEvents.sort((a, b) => b.created_at - a.created_at)
 
     let events = rawEvents.map(toEvent)
+
+    // 検索時はmypaceタグをクライアント側でフィルタ
+    if (!showAll && searchQuery) {
+      events = events.filter((e) => e.tags.some((t) => t[0] === 't' && t[1]?.toLowerCase() === MYPACE_TAG))
+    }
 
     // フィルタ適用
     events = filterByMuteList(events, mutedPubkeys)
