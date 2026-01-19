@@ -150,11 +150,9 @@ export default function PostActions({
     // If popup is shown, don't handle as click
     if (showReactorsPopup || showColorPicker) return
 
-    // Normal click - show color picker (disabled for own posts)
-    if (canAddMoreStella || isMyPost) {
-      setShowColorPicker(true)
-    }
-  }, [isMyPost, canAddMoreStella, showReactorsPopup, showColorPicker])
+    // Normal click - always show color picker (for adding, removing, or viewing reactors)
+    setShowColorPicker(true)
+  }, [showReactorsPopup, showColorPicker])
 
   const handleUnlikeConfirm = useCallback(() => {
     setShowReactorsPopup(null)
