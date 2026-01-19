@@ -543,6 +543,11 @@
 }
 
 /* Link Preview (OGP) */
+.embed-link,
+.embed-link * {
+  text-shadow: none !important;
+}
+
 .embed-link {
   display: flex;
   flex-direction: row;
@@ -559,14 +564,13 @@
   background: var(--surface-tertiary);
 }
 
-/* Reset text-shadow for embed-link inside themed cards */
+/* Reset color for embed-link inside themed cards */
 .themed-card .embed-link,
 .themed-card .embed-link *,
 .dark-text .embed-link,
 .dark-text .embed-link *,
 .light-text .embed-link,
 .light-text .embed-link * {
-  text-shadow: none !important;
   color: var(--text-primary);
 }
 
