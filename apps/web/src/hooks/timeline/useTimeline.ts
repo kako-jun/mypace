@@ -268,15 +268,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     }
 
     try {
-      // 新しい合計ステラ数（既存 + pending）
-      const currentMyStella = latestReaction?.myStella || { ...EMPTY_STELLA_COUNTS }
-      const newMyStella: StellaCountsByColor = {
-        yellow: Math.min(currentMyStella.yellow + stellaToSend.yellow, MAX_STELLA_PER_USER),
-        green: Math.min(currentMyStella.green + stellaToSend.green, MAX_STELLA_PER_USER),
-        red: Math.min(currentMyStella.red + stellaToSend.red, MAX_STELLA_PER_USER),
-        blue: Math.min(currentMyStella.blue + stellaToSend.blue, MAX_STELLA_PER_USER),
-        purple: Math.min(currentMyStella.purple + stellaToSend.purple, MAX_STELLA_PER_USER),
-      }
+      // 楽観的更新済みの現在値をそのまま使用（既にpending分が加算されている）
+      const newMyStella: StellaCountsByColor = latestReaction?.myStella || { ...EMPTY_STELLA_COUNTS }
 
       const newReaction = await createReactionEvent(targetEvent, '+', newMyStella)
       await publishEvent(newReaction)

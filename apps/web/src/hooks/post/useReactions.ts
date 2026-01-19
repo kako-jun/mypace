@@ -9,7 +9,7 @@ import {
   type StellaColor,
   type StellaCountsByColor,
 } from '../../lib/nostr/events'
-import { sendToLightningAddress, getStellaCostDiff } from '../../lib/lightning'
+import { sendToLightningAddress } from '../../lib/lightning'
 import type { Event, ReactionData } from '../../types'
 
 interface UseReactionsOptions {
@@ -25,8 +25,6 @@ export function useReactions({ event, myPubkey, initialReactions, authorLud16 }:
 
   const stellaDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingStella = useRef<StellaCountsByColor>({ ...EMPTY_STELLA_COUNTS })
-  const lastAddStellaTime = useRef<number>(0)
-  const ADD_STELLA_DEBOUNCE_MS = 100 // Prevent double-add within 100ms
 
   const flushStella = useCallback(async () => {
     if (!event) return
@@ -40,19 +38,12 @@ export function useReactions({ event, myPubkey, initialReactions, authorLud16 }:
 
     const previousReactions = { ...reactions }
     const oldReactionId = reactions.myReactionId
-    const currentMyStella = reactions.myStella
 
-    // Calculate new total stella counts
-    const newMyStella: StellaCountsByColor = {
-      yellow: Math.min(currentMyStella.yellow + stellaToSend.yellow, MAX_STELLA_PER_USER),
-      green: Math.min(currentMyStella.green + stellaToSend.green, MAX_STELLA_PER_USER),
-      red: Math.min(currentMyStella.red + stellaToSend.red, MAX_STELLA_PER_USER),
-      blue: Math.min(currentMyStella.blue + stellaToSend.blue, MAX_STELLA_PER_USER),
-      purple: Math.min(currentMyStella.purple + stellaToSend.purple, MAX_STELLA_PER_USER),
-    }
+    // 楽観的更新済みの現在値をそのまま使用（既にpending分が加算されている）
+    const newMyStella: StellaCountsByColor = reactions.myStella
 
-    // カラーステラの場合は支払い処理
-    const cost = getStellaCostDiff(currentMyStella, newMyStella)
+    // カラーステラの場合は支払い処理（stellaToSendから直接計算）
+    const cost = stellaToSend.green * 1 + stellaToSend.red * 10 + stellaToSend.blue * 100 + stellaToSend.purple * 1000
     if (cost > 0) {
       if (!authorLud16) {
         console.warn('Author has no lightning address, cannot send colored stella')
@@ -127,13 +118,6 @@ export function useReactions({ event, myPubkey, initialReactions, authorLud16 }:
   const handleAddStella = useCallback(
     (color: StellaColor) => {
       if (!event || !myPubkey || event.pubkey === myPubkey) return
-
-      // Debounce to prevent double-add (e.g., from duplicate events)
-      const now = Date.now()
-      if (now - lastAddStellaTime.current < ADD_STELLA_DEBOUNCE_MS) {
-        return
-      }
-      lastAddStellaTime.current = now
 
       const currentMyTotal = getTotalStellaCount(reactions.myStella)
       const pendingTotal = getTotalStellaCount(pendingStella.current)
