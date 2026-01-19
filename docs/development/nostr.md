@@ -162,16 +162,11 @@ tags: [
 
 ```typescript
 // タイムライン/検索用リレー（#t + NIP-50 search対応）
-export const SEARCH_RELAYS = [
-  'wss://search.nos.today',
-  'wss://relay.nostr.band', // 復旧待ち（authors + #t + search 全対応）
-]
+// relay.nostr.bandは全機能対応だが502エラーのため除外（復旧後に追加検討）
+export const SEARCH_RELAYS = ['wss://search.nos.today']
 
 // メタデータ/プロフィール用リレー（#e, authors対応）
-export const GENERAL_RELAYS = [
-  'wss://relay.damus.io',
-  'wss://nos.lol',
-]
+export const GENERAL_RELAYS = ['wss://relay.damus.io', 'wss://nos.lol']
 ```
 
 ### 用途別リレー使い分け
