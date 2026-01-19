@@ -132,7 +132,9 @@ export default function StellaColorPicker({
                   title={`${colorInfo.label} (${colorInfo.sats === 0 ? 'Free' : `${colorInfo.sats} sats`})`}
                 >
                   <Icon name="Star" size={24} fill={colorInfo.hex} />
-                  {myCount > 0 && <span className="stella-picker-star-count">{myCount}</span>}
+                  <span className={`stella-picker-star-count ${myCount === 0 ? 'empty' : ''}`}>
+                    {myCount > 0 ? myCount : '\u00A0'}
+                  </span>
                 </button>
                 {/* Breakdown indicator - clickable icon to show reactors */}
                 <button

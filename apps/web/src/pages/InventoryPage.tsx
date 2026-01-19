@@ -122,7 +122,7 @@ export function InventoryPage() {
             ) : (
               <div className="inventory-no-webln">
                 <p>Lightning wallet extension not found.</p>
-                <p className="inventory-install-hint">Please install a WebLN-compatible extension (e.g. Alby).</p>
+                <p className="inventory-install-hint">Please install a WebLN-compatible extension.</p>
               </div>
             )}
           </div>
@@ -133,13 +133,6 @@ export function InventoryPage() {
         <h3>Lightning Wallet</h3>
         <p className="inventory-wallet-hint">Use a Lightning wallet to add sats.</p>
         <div className="inventory-wallet-buttons">
-          <button
-            type="button"
-            className="btn btn-secondary btn-md"
-            onClick={() => window.open('https://getalby.com/', '_blank', 'noopener,noreferrer')}
-          >
-            Alby
-          </button>
           <button
             type="button"
             className="btn btn-secondary btn-md"

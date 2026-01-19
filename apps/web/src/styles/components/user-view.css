@@ -310,18 +310,12 @@
   object-fit: cover;
 }
 
-/* ===== Edit Button Row ===== */
-.user-edit-row {
-  display: flex;
-  justify-content: flex-end;
-  padding: 4px 0;
-  max-width: 600px;
-  margin-left: auto;
-}
-
-/* When banner exists, reduce gap between banner and edit row */
-.user-banner + .user-edit-row {
-  margin-top: -2px;
+/* ===== Edit Button (inside profile card) ===== */
+.user-profile-card > .edit-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
 }
 
 /* ===== NIP-05 ===== */

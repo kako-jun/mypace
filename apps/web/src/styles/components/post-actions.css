@@ -615,6 +615,10 @@
   text-align: center;
 }
 
+.stella-picker-star-count.empty {
+  visibility: hidden;
+}
+
 /* Stella picker column layout for star + breakdown */
 .stella-picker-star-col {
   display: flex;

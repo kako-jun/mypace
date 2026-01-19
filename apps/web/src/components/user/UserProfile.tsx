@@ -69,16 +69,13 @@ export function UserProfile({
         </div>
       )}
 
-      {/* Edit button - positioned below banner, right-aligned */}
-      {isOwnProfile && (
-        <div className="user-edit-row">
+      <div className={`user-profile-card ${themeProps.className}`} style={themeProps.style}>
+        {/* Edit button - positioned at top-right of profile card */}
+        {isOwnProfile && (
           <TextButton variant="primary" className="edit-button" onClick={onEditClick}>
             EDIT
           </TextButton>
-        </div>
-      )}
-
-      <div className={`user-profile-card ${themeProps.className}`} style={themeProps.style}>
+        )}
         <div className="user-profile-header">
           <Avatar src={avatarUrl} className="user-avatar" />
           <div className="user-info">
