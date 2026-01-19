@@ -183,7 +183,7 @@ GET /api/reactions/:eventId?pubkey=<自分のpubkey>
 │  🌟  💚  ❤️  💙  💜           │
 │  3   2        1              │
 ├────────────────────────────────┤
-│                   1234 sats   │
+│ Inventory: 💚×10 ❤️×5 💙×1   │
 └────────────────────────────────┘
 ```
 
@@ -193,6 +193,8 @@ GET /api/reactions/:eventId?pubkey=<自分のpubkey>
 - 残高不足の色は非活性化
 - 自分の投稿では全ボタン無効（閲覧のみ）
 - 合計数は表示しない（色ごとに価値が異なるため）
+- 残高はsatsではなく購入可能なカラーステラ数で表示
+- ウォレット未接続時は「Connect wallet for colored stella」リンク（/inventoryへ遷移）
 
 ### リアクター一覧（色別）
 
