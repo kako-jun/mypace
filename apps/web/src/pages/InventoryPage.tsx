@@ -130,7 +130,7 @@ export function InventoryPage() {
             ) : (
               <div className="inventory-no-webln">
                 <p>Lightning wallet extension not found</p>
-                <p className="inventory-install-hint">Please install the Alby extension</p>
+                <p className="inventory-install-hint">Please install a WebLN-compatible extension (e.g. Alby)</p>
               </div>
             )}
           </div>
@@ -141,10 +141,10 @@ export function InventoryPage() {
         <h3>Lightning Wallet</h3>
         <p className="inventory-wallet-hint">Use a Lightning wallet to add sats</p>
         <div className="inventory-wallet-buttons">
-          <Button variant="secondary" size="sm" onClick={handleOpenAlby}>
+          <Button variant="secondary" size="md" onClick={handleOpenAlby}>
             Alby
           </Button>
-          <Button variant="secondary" size="sm" onClick={handleOpenWalletOfSatoshi}>
+          <Button variant="secondary" size="md" onClick={handleOpenWalletOfSatoshi}>
             Wallet of Satoshi
           </Button>
         </div>
@@ -166,7 +166,10 @@ export function InventoryPage() {
             {STELLA_COLORS.map((stella) => (
               <tr key={stella.name}>
                 <td>
-                  <Icon name="Star" size={16} fill={stella.color} /> {stella.label}
+                  <span className="inventory-color-cell">
+                    <Icon name="Star" size={16} fill={stella.color} />
+                    <span>{stella.label}</span>
+                  </span>
                 </td>
                 <td>{stella.sats.toLocaleString()} sats</td>
               </tr>

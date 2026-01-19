@@ -189,6 +189,7 @@
 
 .inventory-install-hint {
   font-size: 0.85rem;
+  margin-bottom: 0;
 }
 
 .inventory-balance-unavailable {
@@ -269,6 +270,12 @@
 
 .inventory-price-table td {
   font-size: 0.9rem;
+}
+
+.inventory-color-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .inventory-info-note {
