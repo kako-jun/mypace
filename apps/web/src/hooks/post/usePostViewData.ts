@@ -31,7 +31,6 @@ interface PostViewData {
 }
 
 const initialReactions: ReactionData = {
-  totalCount: 0,
   myReaction: false,
   myStella: { ...EMPTY_STELLA_COUNTS },
   myReactionId: null,

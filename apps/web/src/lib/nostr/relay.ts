@@ -449,7 +449,6 @@ export async function fetchEventMetadata(
   for (const id of eventIds) {
     result[id] = {
       reactions: {
-        totalCount: 0,
         myReaction: false,
         myStella: { ...EMPTY_STELLA_COUNTS },
         myReactionId: null,
@@ -517,7 +516,7 @@ export async function fetchEventMetadata(
     // リアクション結果を構築
     for (const [eventId, reactorMap] of reactionsByEvent) {
       const reactors = Array.from(reactorMap.values()).sort((a, b) => b.createdAt - a.createdAt)
-      const totalCount = reactors.reduce((sum, r) => sum + getTotalStellaCount(r.stella), 0)
+      // totalCount is computed on demand from reactors, not stored
       let myStella: StellaCountsByColor = { ...EMPTY_STELLA_COUNTS }
       let myReactionId: string | null = null
       if (viewerPubkey) {
@@ -528,7 +527,7 @@ export async function fetchEventMetadata(
         }
       }
       const myReactionExists = getTotalStellaCount(myStella) > 0
-      result[eventId].reactions = { totalCount, myReaction: myReactionExists, myStella, myReactionId, reactors }
+      result[eventId].reactions = { myReaction: myReactionExists, myStella, myReactionId, reactors }
     }
 
     // リプライをソートしてカウント設定

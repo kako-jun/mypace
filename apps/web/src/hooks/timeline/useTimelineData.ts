@@ -47,7 +47,6 @@ export async function loadEnrichForEvents(
       } else {
         // デフォルト値で初期化
         reactionMap[eventId] = {
-          totalCount: 0,
           myReaction: false,
           myStella: { ...EMPTY_STELLA_COUNTS },
           myReactionId: null,
@@ -113,7 +112,6 @@ export async function loadEnrichForEvents(
 
     for (const eventId of eventIds) {
       reactionMap[eventId] = {
-        totalCount: 0,
         myReaction: false,
         myStella: { ...EMPTY_STELLA_COUNTS },
         myReactionId: null,

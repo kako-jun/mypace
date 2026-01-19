@@ -212,7 +212,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
 
   // 空のReactionData
   const emptyReaction: ReactionData = {
-    totalCount: 0,
     myReaction: false,
     myStella: { ...EMPTY_STELLA_COUNTS },
     myReactionId: null,
@@ -313,12 +312,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
                 ...prevReactors,
               ]
 
-        const newTotalCount = updatedReactors.reduce((sum, r) => sum + getTotalStellaCount(r.stella), 0)
-
         return {
           ...prev,
           [eventId]: {
-            totalCount: newTotalCount,
             myReaction: true,
             myStella: newMyStella,
             myReactionId: newReaction.id,
@@ -365,7 +361,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       return {
         ...prev,
         [eventId]: {
-          totalCount: prevData.totalCount + 1,
           myReaction: true,
           myStella: newMyStella,
           myReactionId: prevData.myReactionId,
@@ -387,11 +382,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     const currentReaction = reactions[eventId]
     if (!currentReaction?.myReactionId) return
 
-    // カラーステラがある場合は取り消し不可
     const myStella = currentReaction.myStella
-    if (myStella.green > 0 || myStella.red > 0 || myStella.blue > 0 || myStella.purple > 0) {
-      return // カラーステラは取り消し不可
-    }
+    // イエローがなければ取り消す対象がない
+    if (myStella.yellow <= 0) return
 
     if (stellaDebounceTimers.current[eventId]) {
       clearTimeout(stellaDebounceTimers.current[eventId])
@@ -399,20 +392,58 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     }
     delete pendingStella.current[eventId]
 
-    const stellaToRemove = getTotalStellaCount(myStella)
+    // イエローを0にして、カラーステラは残す
+    const newMyStella: StellaCountsByColor = {
+      yellow: 0,
+      green: myStella.green,
+      red: myStella.red,
+      blue: myStella.blue,
+      purple: myStella.purple,
+    }
+    const remainingTotal = getTotalStellaCount(newMyStella)
+
     setLikingId(eventId)
     try {
-      await publishEvent(await createDeleteEvent([currentReaction.myReactionId]))
-      setReactions((prev) => ({
-        ...prev,
-        [eventId]: {
-          totalCount: Math.max(0, (prev[eventId]?.totalCount || 0) - stellaToRemove),
-          myReaction: false,
-          myStella: { ...EMPTY_STELLA_COUNTS },
-          myReactionId: null,
-          reactors: (prev[eventId]?.reactors || []).filter((r) => r.pubkey !== myPubkey),
-        },
-      }))
+      if (remainingTotal > 0) {
+        // カラーステラが残る場合は新しいリアクションを発行
+        const newReaction = await createReactionEvent(event, '+', newMyStella)
+        await publishEvent(newReaction)
+        // 古いリアクションを削除
+        try {
+          await publishEvent(await createDeleteEvent([currentReaction.myReactionId]))
+        } catch {
+          // 削除失敗は無視
+        }
+        setReactions((prev) => {
+          const prevReactors = prev[eventId]?.reactors || []
+          const updatedReactors = prevReactors.map((r) =>
+            r.pubkey === myPubkey
+              ? { ...r, stella: newMyStella, reactionId: newReaction.id, createdAt: newReaction.created_at }
+              : r
+          )
+          return {
+            ...prev,
+            [eventId]: {
+              myReaction: true,
+              myStella: newMyStella,
+              myReactionId: newReaction.id,
+              reactors: updatedReactors,
+            },
+          }
+        })
+      } else {
+        // 全てのステラを削除
+        await publishEvent(await createDeleteEvent([currentReaction.myReactionId]))
+        setReactions((prev) => ({
+          ...prev,
+          [eventId]: {
+            myReaction: false,
+            myStella: { ...EMPTY_STELLA_COUNTS },
+            myReactionId: null,
+            reactors: (prev[eventId]?.reactors || []).filter((r) => r.pubkey !== myPubkey),
+          },
+        }))
+      }
     } catch (error) {
       console.error('Failed to delete reaction:', error)
     } finally {

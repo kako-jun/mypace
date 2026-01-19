@@ -119,7 +119,6 @@ export default function TimelinePostCard({
     const profile = profiles[event.pubkey] || null
     const metadata = {
       reactions: reactions || {
-        totalCount: 0,
         myReaction: false,
         myStella: { ...EMPTY_STELLA_COUNTS },
         myReactionId: null,

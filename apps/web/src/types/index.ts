@@ -63,7 +63,6 @@ export interface Reactor {
 }
 
 export interface ReactionData {
-  totalCount: number // Total stella across all colors
   myReaction: boolean
   myStella: StellaCountsByColor // My stella per color
   myReactionId: string | null // ID of my reaction event (for deletion)

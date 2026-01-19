@@ -215,9 +215,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
         } catch {}
       }
 
-      const currentMyTotal = getTotalStellaCount(currentMyStella)
-      const newMyTotal = getTotalStellaCount(newMyStella)
-
       setReactions((prev: ReactionData) => {
         const myIndex = prev.reactors.findIndex((r) => r.pubkey === myPubkey)
         const updatedReactors =
@@ -243,7 +240,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
               ]
 
         return {
-          totalCount: prev.totalCount - currentMyTotal + newMyTotal,
           myReaction: true,
           myStella: newMyStella,
           myReactionId: newReaction.id,
@@ -274,7 +270,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
     // Optimistic UI update
     setReactions((prev: ReactionData) => ({
-      totalCount: prev.totalCount + 1,
       myReaction: true,
       myStella: {
         ...prev.myStella,
@@ -291,15 +286,9 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   const handleUnlike = async () => {
     if (!event || !myPubkey || !reactions.myReactionId) return
 
-    // カラーステラは取り消し不可（支払い済みのため）
-    const hasColoredStella =
-      reactions.myStella.green > 0 ||
-      reactions.myStella.red > 0 ||
-      reactions.myStella.blue > 0 ||
-      reactions.myStella.purple > 0
-    if (hasColoredStella) {
-      return
-    }
+    const myStella = reactions.myStella
+    // イエローがなければ取り消す対象がない
+    if (myStella.yellow <= 0) return
 
     if (stellaDebounceTimer.current) {
       clearTimeout(stellaDebounceTimer.current)
@@ -307,18 +296,48 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     }
     pendingStella.current = { ...EMPTY_STELLA_COUNTS }
 
-    const currentMyTotal = getTotalStellaCount(reactions.myStella)
+    // イエローを0にして、カラーステラは残す
+    const newMyStella: StellaCountsByColor = {
+      yellow: 0,
+      green: myStella.green,
+      red: myStella.red,
+      blue: myStella.blue,
+      purple: myStella.purple,
+    }
+    const remainingTotal = getTotalStellaCount(newMyStella)
 
     setLikingId(event.id)
     try {
-      await publishEvent(await createDeleteEvent([reactions.myReactionId]))
-      setReactions((prev: ReactionData) => ({
-        totalCount: Math.max(0, prev.totalCount - currentMyTotal),
-        myReaction: false,
-        myStella: { ...EMPTY_STELLA_COUNTS },
-        myReactionId: null,
-        reactors: prev.reactors.filter((r) => r.pubkey !== myPubkey),
-      }))
+      if (remainingTotal > 0) {
+        // カラーステラが残る場合は新しいリアクションを発行
+        const newReaction = await createReactionEvent(event, '+', newMyStella)
+        await publishEvent(newReaction)
+        // 古いリアクションを削除
+        try {
+          await publishEvent(await createDeleteEvent([reactions.myReactionId]))
+        } catch {
+          // 削除失敗は無視
+        }
+        setReactions((prev: ReactionData) => ({
+          myReaction: true,
+          myStella: newMyStella,
+          myReactionId: newReaction.id,
+          reactors: prev.reactors.map((r) =>
+            r.pubkey === myPubkey
+              ? { ...r, stella: newMyStella, reactionId: newReaction.id, createdAt: newReaction.created_at }
+              : r
+          ),
+        }))
+      } else {
+        // 全てのステラを削除
+        await publishEvent(await createDeleteEvent([reactions.myReactionId]))
+        setReactions((prev: ReactionData) => ({
+          myReaction: false,
+          myStella: { ...EMPTY_STELLA_COUNTS },
+          myReactionId: null,
+          reactors: prev.reactors.filter((r) => r.pubkey !== myPubkey),
+        }))
+      }
     } finally {
       setLikingId(null)
     }
