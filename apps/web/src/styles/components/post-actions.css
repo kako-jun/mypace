@@ -67,15 +67,6 @@
   line-height: 1;
 }
 
-/* Clickable count - for PC users to click instead of long press */
-.action-count-clickable {
-  cursor: pointer;
-  transition: transform 0.15s ease;
-}
-
-.action-count-clickable:hover {
-  transform: scale(1.5);
-}
 
 /* Like button wrapper - for positioning confirm dialog */
 .like-button-wrapper {
@@ -622,6 +613,45 @@
   color: var(--text-secondary);
   min-width: 1rem;
   text-align: center;
+}
+
+/* Stella picker column layout for star + breakdown */
+.stella-picker-star-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Breakdown indicator button */
+.stella-picker-breakdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0.125rem;
+  cursor: default;
+  border-radius: 2px;
+  opacity: 0.3;
+}
+
+.stella-picker-breakdown svg {
+  stroke: var(--text-muted);
+}
+
+.stella-picker-breakdown.has-reactors {
+  cursor: pointer;
+  opacity: 1;
+  transition: background 0.15s ease;
+}
+
+.stella-picker-breakdown.has-reactors svg {
+  stroke: var(--text-secondary);
+}
+
+.stella-picker-breakdown.has-reactors:hover {
+  background: var(--surface-secondary);
 }
 
 .stella-picker-info {

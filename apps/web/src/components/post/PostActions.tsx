@@ -156,18 +156,6 @@ export default function PostActions({
     }
   }, [isMyPost, canAddMoreStella, showReactorsPopup, showColorPicker])
 
-  // Handle click on a color count to show reactors for that color
-  const handleColorCountClick = useCallback(
-    (e: React.MouseEvent, color: StellaColor) => {
-      e.stopPropagation()
-      e.preventDefault()
-      if (totalCountsByColor[color] > 0) {
-        setShowReactorsPopup(color)
-      }
-    },
-    [totalCountsByColor]
-  )
-
   const handleUnlikeConfirm = useCallback(() => {
     setShowReactorsPopup(null)
     onUnlike()
@@ -327,7 +315,13 @@ export default function PostActions({
         position={colorPickerPosition}
         walletBalance={walletBalance}
         currentCounts={myStella}
+        totalCounts={totalCountsByColor}
+        reactors={reactors}
+        myPubkey={myPubkey}
+        getDisplayName={getDisplayName}
+        onNavigateToProfile={onNavigateToProfile}
         onAddStella={handleAddStella}
+        onRemoveStella={reactions?.myReaction ? onUnlike : undefined}
         onClose={handleColorPickerClose}
         disabled={isMyPost}
       />
@@ -368,9 +362,7 @@ export default function PostActions({
             <span className="stella-star-clickable" onClick={handleStarClick}>
               <Icon name="Star" size={20} fill={STELLA_COLORS[color].hex} />
             </span>
-            <span className="action-count action-count-clickable" onClick={(e) => handleColorCountClick(e, color)}>
-              {formatNumber(totalCountsByColor[color])}
-            </span>
+            <span className="action-count">{formatNumber(totalCountsByColor[color])}</span>
           </span>
         ))}
       </span>
