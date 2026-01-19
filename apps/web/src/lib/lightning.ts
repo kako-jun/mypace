@@ -18,7 +18,7 @@ interface LnurlInvoiceResponse {
 
 /**
  * Parse lightning address (lud16) to LNURL endpoint
- * e.g., user@getalby.com -> https://getalby.com/.well-known/lnurlp/user
+ * e.g., user@walletofsatoshi.com -> https://walletofsatoshi.com/.well-known/lnurlp/user
  */
 function parseLightningAddress(lud16: string): string | null {
   const parts = lud16.split('@')
@@ -85,7 +85,7 @@ async function payInvoice(invoice: string): Promise<{ success: boolean; preimage
 
 /**
  * Send payment to a lightning address
- * @param lud16 Lightning address (e.g., user@getalby.com)
+ * @param lud16 Lightning address (e.g., user@walletofsatoshi.com)
  * @param amountSats Amount in satoshis
  */
 export async function sendToLightningAddress(

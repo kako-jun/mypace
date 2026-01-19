@@ -37,7 +37,7 @@ export function useWallet() {
   // Connect to wallet
   const connect = useCallback(async () => {
     if (!window.webln) {
-      setState((prev) => ({ ...prev, error: 'WebLNが見つかりません。Alby拡張機能をインストールしてください。' }))
+      setState((prev) => ({ ...prev, error: 'WebLN not found. Please install a WebLN-compatible extension.' }))
       return false
     }
 

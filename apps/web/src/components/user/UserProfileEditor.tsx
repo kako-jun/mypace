@@ -241,7 +241,7 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
         </div>
         <div className="edit-field">
           <label>Lightning Address</label>
-          <Input value={editLud16} onChange={setEditLud16} placeholder="you@getalby.com" />
+          <Input value={editLud16} onChange={setEditLud16} placeholder="you@walletofsatoshi.com" />
         </div>
 
         <ErrorMessage>{editError}</ErrorMessage>
