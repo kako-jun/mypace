@@ -237,6 +237,8 @@
   font-size: 0.8rem;
   color: var(--text-muted);
   margin: 0;
+  padding-left: 1em;
+  text-indent: -1em;
 }
 
 /* Info Section */
