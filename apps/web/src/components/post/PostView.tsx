@@ -107,6 +107,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     replies,
     reposts,
     views,
+    wikidataMap,
     replyProfiles,
     parentEvent,
     parentProfile,
@@ -506,6 +507,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
                 content={fullContent}
                 emojis={parseEmojiTags(event.tags)}
                 profiles={{ ...(profile ? { [event.pubkey]: profile } : {}), ...replyProfiles }}
+                wikidataMap={wikidataMap}
                 enableOgpFallback={true}
               />
             </div>

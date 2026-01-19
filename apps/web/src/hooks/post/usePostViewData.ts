@@ -10,6 +10,7 @@ import { KIND_REPOST } from '../../lib/nostr/constants'
 import { fetchViewsAndSuperMentions, recordImpressions } from '../../lib/api/api'
 import { getCurrentPubkey, EMPTY_STELLA_COUNTS } from '../../lib/nostr/events'
 import { getCachedPost, getCachedProfile, getCachedPostMetadata, getErrorMessage } from '../../lib/utils'
+import { extractSuperMentionPaths } from '../../lib/utils/content'
 import { hasMypaceTag } from '../../lib/nostr/tags'
 import type { Event, LoadableProfile, ReactionData, Profile, ViewCountData } from '../../types'
 
@@ -23,6 +24,7 @@ interface PostViewData {
   replies: { count: number; replies: Event[] }
   reposts: { count: number; myRepost: boolean }
   views: ViewCountData | undefined
+  wikidataMap: Record<string, string>
   replyProfiles: { [pubkey: string]: LoadableProfile }
   parentEvent: Event | null
   parentProfile: LoadableProfile
@@ -47,6 +49,7 @@ export function usePostViewData(eventId: string): PostViewData {
   const [replies, setReplies] = useState<{ count: number; replies: Event[] }>({ count: 0, replies: [] })
   const [reposts, setReposts] = useState({ count: 0, myRepost: false })
   const [views, setViews] = useState<ViewCountData | undefined>(undefined)
+  const [wikidataMap, setWikidataMap] = useState<Record<string, string>>({})
   const [replyProfiles, setReplyProfiles] = useState<{ [pubkey: string]: LoadableProfile }>({})
   const [parentEvent, setParentEvent] = useState<Event | null>(null)
   const [parentProfile, setParentProfile] = useState<LoadableProfile>(undefined)
@@ -149,11 +152,14 @@ export function usePostViewData(eventId: string): PostViewData {
         return
       }
 
-      // Fetch all metadata + views in parallel (only when not cached)
+      // Extract super mention paths from content
+      const superMentionPaths = extractSuperMentionPaths(eventData.content)
+
+      // Fetch all metadata + views + super mentions in parallel (only when not cached)
       // Profile is already fetched above, so we only fetch metadata and views here
-      const [metadata, { views: viewsData }] = await Promise.all([
+      const [metadata, { views: viewsData, superMentions }] = await Promise.all([
         fetchEventMetadata([eventId], pubkey || undefined),
-        fetchViewsAndSuperMentions([eventId], []),
+        fetchViewsAndSuperMentions([eventId], superMentionPaths),
       ])
       const eventMetadata = metadata[eventId]
 
@@ -163,6 +169,7 @@ export function usePostViewData(eventId: string): PostViewData {
         setReposts(eventMetadata.reposts)
       }
       setViews(viewsData[eventId] || { impression: 0, detail: 0 })
+      setWikidataMap(superMentions)
 
       // Record detail view for mypace posts
       if (hasMypaceTag(eventData) && pubkey) {
@@ -222,6 +229,7 @@ export function usePostViewData(eventId: string): PostViewData {
     replies,
     reposts,
     views,
+    wikidataMap,
     replyProfiles,
     parentEvent,
     parentProfile,
