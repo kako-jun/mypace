@@ -154,7 +154,7 @@ export function UserPosts({
 
   return (
     <div className="timeline">
-      <TimelineSearch onFiltersChange={onFiltersChange} />
+      <TimelineSearch onFiltersChange={onFiltersChange} disableTags />
 
       {/* Pinned post section */}
       {pinnedEvent && pinnedItem && (

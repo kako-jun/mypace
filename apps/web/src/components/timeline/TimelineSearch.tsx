@@ -5,9 +5,10 @@ import '../../styles/components/timeline-search.css'
 
 interface TimelineSearchProps {
   onFiltersChange: (filters: { q: string[]; tags: string[] }) => void
+  disableTags?: boolean
 }
 
-export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
+export function TimelineSearch({ onFiltersChange, disableTags = false }: TimelineSearchProps) {
   const [searchParams, setSearchParams] = useSearchParams()
 
   // Read from URL (stored as comma-separated)
@@ -39,7 +40,12 @@ export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
   useEffect(() => {
     // Parse + separated from URL (Google-style, special chars auto-encoded)
     const qArray = urlQueryParam ? urlQueryParam.split('+').map(decodeURIComponent).filter(Boolean) : []
-    const tagsArray = urlTagsParam ? urlTagsParam.split('+').map(decodeURIComponent).filter(Boolean) : []
+    // disableTagsの場合はURLのtagsパラメータを無視
+    const tagsArray = disableTags
+      ? []
+      : urlTagsParam
+        ? urlTagsParam.split('+').map(decodeURIComponent).filter(Boolean)
+        : []
     const queryDisplay = qArray.join(' ')
     const tagsDisplay = tagsArray.join(' ')
     setQueryInput(queryDisplay)
@@ -47,7 +53,7 @@ export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
     setActiveQuery(queryDisplay)
     setActiveTags(tagsDisplay)
     onFiltersChange({ q: qArray, tags: tagsArray })
-  }, [urlQueryParam, urlTagsParam, onFiltersChange])
+  }, [urlQueryParam, urlTagsParam, onFiltersChange, disableTags])
 
   // Update URL helper - store as + separated (Google-style)
   const updateUrl = useCallback(
@@ -129,26 +135,28 @@ export function TimelineSearch({ onFiltersChange }: TimelineSearchProps) {
               </button>
             )}
           </div>
-          <div className="timeline-search-row">
-            <Icon name="Hash" size={16} className="timeline-search-icon" />
-            <input
-              type="text"
-              value={tagsInput}
-              onChange={(e) => setTagsInput(e.target.value)}
-              placeholder="Tags..."
-              className="timeline-search-input"
-            />
-            {tagsInput && (
-              <button
-                type="button"
-                onClick={() => setTagsInput('')}
-                className="timeline-search-clear"
-                aria-label="Clear input"
-              >
-                <Icon name="X" size={14} />
-              </button>
-            )}
-          </div>
+          {!disableTags && (
+            <div className="timeline-search-row">
+              <Icon name="Hash" size={16} className="timeline-search-icon" />
+              <input
+                type="text"
+                value={tagsInput}
+                onChange={(e) => setTagsInput(e.target.value)}
+                placeholder="Tags..."
+                className="timeline-search-input"
+              />
+              {tagsInput && (
+                <button
+                  type="button"
+                  onClick={() => setTagsInput('')}
+                  className="timeline-search-clear"
+                  aria-label="Clear input"
+                >
+                  <Icon name="X" size={14} />
+                </button>
+              )}
+            </div>
+          )}
           <div className="timeline-search-actions">
             <button type="button" onClick={handleClearAll} className="timeline-search-btn timeline-search-btn-clear">
               Clear

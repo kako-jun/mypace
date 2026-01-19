@@ -185,11 +185,19 @@ export const GENERAL_RELAYS = ['wss://relay.damus.io', 'wss://nos.lol']
 
 | リレー | #t | authors | search | #e | 備考 |
 |--------|-----|---------|--------|-----|------|
-| search.nos.today | ✅ | ❌(0件) | ✅ | ❌(0件) | タイムライン/検索用 |
+| search.nos.today | ⚠️ | ⚠️ | ✅ | ❌(0件) | タイムライン/検索用。**authors があると #t を無視**（詳細は下記） |
 | relay.nostr.band | ✅ | ✅ | ✅ | ✅ | 全機能対応だが502エラー（復旧待ち） |
 | nostr.wine | ❌無視 | ✅ | ✅ | - | #tを送っても一般投稿を返す |
-| relay.damus.io | ✅ | ✅ | ❌エラー | ✅ | メタデータ用 |
-| nos.lol | ✅ | ✅ | ❌エラー | ✅ | メタデータ用 |
+| relay.damus.io | ✅ | ✅ | ❌エラー | ✅ | メタデータ用（NIP-50非対応） |
+| nos.lol | ✅ | ✅ | ❌エラー | ✅ | メタデータ用（NIP-50非対応） |
+
+**search.nos.today の詳細な挙動**:
+- `#t` 単体: ✅ 動作する
+- `authors` 単体: ✅ 動作する
+- `#t + search`: ✅ 動作する
+- `authors + search`: ✅ 動作する
+- `authors + #t`: ⚠️ **#t が無視される**（authors のみ適用）
+- `authors + #t + search`: ⚠️ **#t が無視される**（authors + search のみ適用）
 
 ### 検索の方針
 
@@ -200,15 +208,32 @@ export const GENERAL_RELAYS = ['wss://relay.damus.io', 'wss://nos.lol']
 - 過去のデータを検索できなくなる
 - リレーが対応していない場合は機能制限として受け入れる
 
-### 制約事項
+### 検索の重要な制約
 
-**ユーザーページでの検索（authors + #t + search）**:
-- search.nos.todayはauthorsフィルタを無視する（0件ではなく全投稿が返る）
-- そのため、ユーザーページでタグ検索しても、そのユーザー以外の投稿も表示される
-- relay.nostr.bandが唯一全機能対応だが、502エラーで利用不可
-- relay.nostr.band復旧後は正常に機能する予定
+**検索では絶対に SEARCH_RELAYS（NIP-50対応リレー）を使用すること**:
+- 古い記事を検索するには NIP-50 の全文検索が必須
+- GENERAL_RELAYS（damus, nos.lol）は NIP-50 非対応で検索できない
+- 検索リレー以外を使うと、limit で取得した最新データの中からしかフィルタできない
+
+**search.nos.today の挙動（重要）**:
+- `authors` フィルタがある場合、`#t`（タグフィルタ）を**完全に無視**する
+- キーワード検索（search パラメータ）の有無に関係なく、authors があれば #t は無視される
+- つまり `authors + #t` や `authors + #t + search` の組み合わせでは、タグ絞り込みが効かない
+
+**ユーザーページでの対応**:
+- 上記の制約により、ユーザーページ（authors フィルタ必須）ではタグ検索を**無効化**している
+- UI 上でタグ入力欄を非表示にし、URL の tags パラメータも無視する
+- キーワード検索のみ有効（authors + search は正常に動作する）
+- relay.nostr.band が復旧すれば全機能対応だが、現在 502 エラーで利用不可
 
 ### 調査履歴
+
+**2026年1月20日（追加調査）**:
+- search.nos.today の正確な挙動を確認：
+  - `authors` フィルタがある場合、`#t` フィルタを完全に無視する
+  - キーワード検索（search）の有無に関係なく、authors があれば #t は無視
+  - `authors + search` は動作する、`#t + search` も動作する、しかし `authors + #t` は #t が無視される
+- ユーザーページでタグ検索を無効化（TimelineSearch に disableTags プロパティ追加）
 
 **2026年1月20日**:
 - okTagsとqueriesをリレー側のみで処理する方針に変更
