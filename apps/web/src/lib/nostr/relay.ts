@@ -148,18 +148,8 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
       ;(filter as any).search = searchQuery
     }
 
-    // DEBUG: ログ出力
-    if (searchQuery) {
-      console.log('[NIP-50 Search] filter:', JSON.stringify(filter))
-    }
-
     const rawEvents = await p.querySync(RELAYS, filter)
     rawEvents.sort((a, b) => b.created_at - a.created_at)
-
-    // DEBUG: ログ出力
-    if (searchQuery) {
-      console.log('[NIP-50 Search] rawEvents from relay:', rawEvents.length)
-    }
 
     let events = rawEvents.map(toEvent)
 
