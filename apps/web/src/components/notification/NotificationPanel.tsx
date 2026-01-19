@@ -145,15 +145,19 @@ export function NotificationPanel({ onClose, onUnreadChange }: NotificationPanel
     const uniqueActors = new Set(notification.actors.map((a) => a.pubkey))
     const actorCount = uniqueActors.size
 
-    // Aggregate stella counts by color
+    // Aggregate stella counts by color from all actors
     const byColor: Record<string, number> = {}
     for (const actor of notification.actors) {
-      const color = actor.stellaColor || 'yellow'
-      const count = actor.stellaCount || 1
-      byColor[color] = (byColor[color] || 0) + count
+      if (actor.stellaByColor) {
+        for (const [color, count] of Object.entries(actor.stellaByColor)) {
+          if (count) {
+            byColor[color] = (byColor[color] || 0) + count
+          }
+        }
+      }
     }
 
-    // Sort colors: yellow first, then by count
+    // Sort colors: yellow first, then others in order
     const colorOrder = ['yellow', 'green', 'red', 'blue', 'purple']
     const sortedColors = Object.keys(byColor).sort((a, b) => {
       return colorOrder.indexOf(a) - colorOrder.indexOf(b)

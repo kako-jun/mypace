@@ -24,9 +24,8 @@ async function recordStella(
     .prepare(
       `INSERT INTO user_stella (event_id, author_pubkey, reactor_pubkey, stella_count, stella_color, reaction_id, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT (event_id, reactor_pubkey) DO UPDATE SET
+       ON CONFLICT (event_id, reactor_pubkey, stella_color) DO UPDATE SET
          stella_count = excluded.stella_count,
-         stella_color = excluded.stella_color,
          reaction_id = excluded.reaction_id,
          updated_at = excluded.updated_at`
     )

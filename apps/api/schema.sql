@@ -79,19 +79,21 @@ CREATE INDEX IF NOT EXISTS idx_event_views_viewer ON event_views(viewer_pubkey);
 CREATE INDEX IF NOT EXISTS idx_event_views_type ON event_views(view_type);
 
 -- User stella table (for cumulative stella count per user)
+-- Stores one row per (event, reactor, color) allowing multiple colors per reaction
 CREATE TABLE IF NOT EXISTS user_stella (
   event_id TEXT NOT NULL,           -- Post that received stella
   author_pubkey TEXT NOT NULL,      -- Author of the post (for aggregation)
   reactor_pubkey TEXT NOT NULL,     -- User who gave stella
   stella_count INTEGER NOT NULL,    -- Stella count (1-10)
-  stella_color TEXT DEFAULT 'yellow', -- Stella color (yellow, green, red, blue, purple)
+  stella_color TEXT NOT NULL DEFAULT 'yellow', -- Stella color (yellow, green, red, blue, purple)
   reaction_id TEXT,                 -- Reaction event ID (for deletion)
   updated_at INTEGER NOT NULL,
-  PRIMARY KEY (event_id, reactor_pubkey)
+  PRIMARY KEY (event_id, reactor_pubkey, stella_color)
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_stella_author ON user_stella(author_pubkey);
 CREATE INDEX IF NOT EXISTS idx_user_stella_reaction ON user_stella(reaction_id);
+CREATE INDEX IF NOT EXISTS idx_user_stella_event_reactor ON user_stella(event_id, reactor_pubkey);
 
 -- OGP cache table
 CREATE TABLE IF NOT EXISTS ogp_cache (

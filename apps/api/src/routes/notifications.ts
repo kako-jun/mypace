@@ -19,6 +19,14 @@ interface NotificationRow {
   read_at: number | null
 }
 
+interface StellaByColor {
+  yellow?: number
+  green?: number
+  red?: number
+  blue?: number
+  purple?: number
+}
+
 interface AggregatedNotification {
   ids: number[]
   type: 'stella' | 'reply' | 'repost'
@@ -26,8 +34,7 @@ interface AggregatedNotification {
   sourceEventId: string | null
   actors: Array<{
     pubkey: string
-    stellaCount?: number
-    stellaColor?: string
+    stellaByColor?: StellaByColor
   }>
   createdAt: number
   readAt: number | null
@@ -56,8 +63,47 @@ notifications.get('/', async (c) => {
     return c.json({ notifications: [], hasUnread: false })
   }
 
-  // Aggregate notifications
-  const aggregated = aggregateNotifications(rows.results)
+  // Collect stella notification keys for fetching from user_stella
+  const stellaKeys: { eventId: string; reactorPubkey: string }[] = []
+  for (const row of rows.results) {
+    if (row.type === 'stella') {
+      stellaKeys.push({ eventId: row.target_event_id, reactorPubkey: row.actor_pubkey })
+    }
+  }
+
+  // Fetch stella details from user_stella table
+  const stellaDetails = new Map<string, StellaByColor>()
+  if (stellaKeys.length > 0) {
+    // Build query for all stella notifications
+    const uniqueKeys = [...new Set(stellaKeys.map((k) => `${k.eventId}:${k.reactorPubkey}`))]
+    const conditions = uniqueKeys.map(() => '(event_id = ? AND reactor_pubkey = ?)').join(' OR ')
+    const bindings: string[] = []
+    for (const key of uniqueKeys) {
+      const [eventId, reactorPubkey] = key.split(':')
+      bindings.push(eventId, reactorPubkey)
+    }
+
+    const stellaRows = await c.env.DB.prepare(
+      `SELECT event_id, reactor_pubkey, stella_color, stella_count FROM user_stella WHERE ${conditions}`
+    )
+      .bind(...bindings)
+      .all<{ event_id: string; reactor_pubkey: string; stella_color: string; stella_count: number }>()
+
+    if (stellaRows.results) {
+      for (const row of stellaRows.results) {
+        const key = `${row.event_id}:${row.reactor_pubkey}`
+        if (!stellaDetails.has(key)) {
+          stellaDetails.set(key, {})
+        }
+        const detail = stellaDetails.get(key)!
+        const color = row.stella_color as keyof StellaByColor
+        detail[color] = row.stella_count
+      }
+    }
+  }
+
+  // Aggregate notifications with stella details
+  const aggregated = aggregateNotifications(rows.results, stellaDetails)
 
   // Check if there are any unread
   const hasUnread = rows.results.some((r) => r.read_at === null)
@@ -121,7 +167,10 @@ notifications.get('/unread-count', async (c) => {
 })
 
 // Aggregate notifications by type and target event
-function aggregateNotifications(rows: NotificationRow[]): AggregatedNotification[] {
+function aggregateNotifications(
+  rows: NotificationRow[],
+  stellaDetails: Map<string, StellaByColor>
+): AggregatedNotification[] {
   const result: AggregatedNotification[] = []
   const stellaGroups = new Map<string, NotificationRow[]>()
   const repostGroups = new Map<string, NotificationRow[]>()
@@ -159,15 +208,28 @@ function aggregateNotifications(rows: NotificationRow[]): AggregatedNotification
     // If any is unread, the whole group is unread
     const readAt = group.every((r) => r.read_at !== null) ? Math.max(...group.map((r) => r.read_at!)) : null
 
+    // Get unique actors with their stella details
+    const actorMap = new Map<string, StellaByColor>()
+    for (const r of group) {
+      const detailKey = `${targetEventId}:${r.actor_pubkey}`
+      const detail = stellaDetails.get(detailKey)
+      if (detail && Object.keys(detail).length > 0) {
+        actorMap.set(r.actor_pubkey, detail)
+      } else {
+        // Fallback to notification data if user_stella not found
+        const color = (r.stella_color || 'yellow') as keyof StellaByColor
+        actorMap.set(r.actor_pubkey, { [color]: r.stella_count || 1 })
+      }
+    }
+
     result.push({
       ids: group.map((r) => r.id),
       type: 'stella',
       targetEventId,
       sourceEventId: null,
-      actors: group.map((r) => ({
-        pubkey: r.actor_pubkey,
-        stellaCount: r.stella_count ?? undefined,
-        stellaColor: r.stella_color ?? 'yellow',
+      actors: Array.from(actorMap.entries()).map(([pubkey, stellaByColor]) => ({
+        pubkey,
+        stellaByColor,
       })),
       createdAt: latestCreatedAt,
       readAt,
