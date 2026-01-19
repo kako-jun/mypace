@@ -157,10 +157,17 @@ export const EMPTY_STELLA_COUNTS: StellaCountsByColor = {
 }
 
 // Parse all stella tags from an event: ["stella", "color", "count"] for each color
+// If no stella tags found, defaults to yellow: 1 for backward compatibility with NIP-25
 export function parseStellaTags(tags: string[][]): StellaCountsByColor {
   const counts: StellaCountsByColor = { ...EMPTY_STELLA_COUNTS }
 
   const stellaTags = tags.filter((t) => t[0] === 'stella')
+
+  // No stella tags - default to 1 yellow (backward compatibility with standard NIP-25 reactions)
+  if (stellaTags.length === 0) {
+    counts.yellow = 1
+    return counts
+  }
 
   for (const tag of stellaTags) {
     // New format: ["stella", "color", "count"]
