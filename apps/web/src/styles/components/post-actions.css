@@ -610,13 +610,6 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 12px;
-  padding: 0.25rem 0.5rem;
-}
-
-[data-theme="dark"] .stella-display-container {
-  background: rgba(0, 0, 0, 0.5);
 }
 
 .stella-display-item {

@@ -150,8 +150,8 @@ export default function PostActions({
     // If popup is shown, don't handle as click
     if (showReactorsPopup || showColorPicker) return
 
-    // Normal click - show color picker (only for non-own posts)
-    if (!isMyPost && canAddMoreStella) {
+    // Normal click - show color picker (disabled for own posts)
+    if (canAddMoreStella || isMyPost) {
       setShowColorPicker(true)
     }
   }, [isMyPost, canAddMoreStella, showReactorsPopup, showColorPicker])
@@ -329,6 +329,7 @@ export default function PostActions({
         currentCounts={myStella}
         onAddStella={handleAddStella}
         onClose={handleColorPickerClose}
+        disabled={isMyPost}
       />
     ) : null
 
@@ -403,6 +404,7 @@ export default function PostActions({
             {renderStellaDisplay()}
           </button>
           {reactorsPopup}
+          {colorPicker}
         </div>
       )}
 

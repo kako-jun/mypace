@@ -8,6 +8,7 @@ interface StellaColorPickerProps {
   currentCounts: StellaCountsByColor // Current stella counts for this post
   onAddStella: (color: StellaColor) => void
   onClose: (e?: React.MouseEvent) => void
+  disabled?: boolean // Disable all buttons (for own posts)
 }
 
 // Colors in display order
@@ -19,6 +20,7 @@ export default function StellaColorPicker({
   currentCounts,
   onAddStella,
   onClose,
+  disabled = false,
 }: StellaColorPickerProps) {
   const handleClick = (color: StellaColor) => (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -55,14 +57,14 @@ export default function StellaColorPicker({
             const colorInfo = STELLA_COLORS[color]
             const count = currentCounts[color]
             const affordable = canAfford(color)
-            const disabled = maxReached || !affordable
+            const isDisabled = disabled || maxReached || !affordable
 
             return (
               <button
                 key={color}
-                className={`stella-picker-star-btn ${disabled ? 'disabled' : ''} ${count > 0 ? 'has-count' : ''}`}
+                className={`stella-picker-star-btn ${isDisabled ? 'disabled' : ''} ${count > 0 ? 'has-count' : ''}`}
                 onClick={handleClick(color)}
-                disabled={disabled}
+                disabled={isDisabled}
                 title={`${colorInfo.label} (${colorInfo.sats === 0 ? 'Free' : `${colorInfo.sats} sats`})`}
               >
                 <Icon name="Star" size={24} fill={colorInfo.hex} />
@@ -72,13 +74,12 @@ export default function StellaColorPicker({
           })}
         </div>
 
-        {/* Info row */}
-        <div className="stella-picker-info">
-          <span className="stella-picker-total">Total: {totalStella}/10</span>
-          {walletBalance !== null && (
+        {/* Balance info */}
+        {walletBalance !== null && (
+          <div className="stella-picker-info">
             <span className="stella-picker-balance">{walletBalance.toLocaleString()} sats</span>
-          )}
-        </div>
+          </div>
+        )}
 
         {walletBalance === null && <div className="stella-picker-hint">Connect wallet for colored stella</div>}
       </div>
