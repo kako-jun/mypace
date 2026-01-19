@@ -51,25 +51,26 @@
   flex: 1;
 }
 
-.inventory-balance-value.inventory-not-connected {
+.inventory-balance-value.inventory-not-connected,
+.inventory-balance-value.inventory-balance-unknown {
   color: var(--text-muted);
   font-weight: 400;
 }
 
-.inventory-add-button {
+.inventory-refresh-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: 2px solid #000;
-  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
   background: var(--surface-secondary);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
-.inventory-add-button:hover {
+.inventory-refresh-button:hover {
   background: var(--surface-hover);
 }
 
@@ -115,6 +116,87 @@
   padding: 1rem;
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+/* Wallet Connection */
+.inventory-wallet-name {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.inventory-connect-section {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.inventory-connect-button {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #000;
+  border-radius: 4px;
+  background: var(--surface-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.inventory-connect-button:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.inventory-connect-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.inventory-disconnect-button {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: transparent;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.inventory-disconnect-button:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.inventory-error {
+  margin-top: 0.75rem;
+  color: #e74c3c;
+  font-size: 0.85rem;
+}
+
+.inventory-no-webln {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.inventory-no-webln p {
+  margin: 0 0 0.5rem;
+}
+
+.inventory-install-hint {
+  font-size: 0.85rem;
+}
+
+.inventory-balance-unavailable {
+  text-align: center;
+  padding: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.inventory-balance-unavailable p {
+  margin: 0;
 }
 
 /* Wallet Section */
