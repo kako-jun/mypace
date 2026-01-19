@@ -172,6 +172,8 @@
   justify-content: center;
   background: var(--bg-secondary);
   min-height: 150px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
   transition: background 0.2s;
 }
 
