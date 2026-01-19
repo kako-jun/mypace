@@ -144,7 +144,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 150px;
+  flex: 1;
+  min-width: 0;
 }
 
 .notification-action {
@@ -181,9 +182,5 @@
 @media (max-width: 480px) {
   .notification-panel {
     min-width: 320px;
-  }
-
-  .notification-actors {
-    max-width: 120px;
   }
 }

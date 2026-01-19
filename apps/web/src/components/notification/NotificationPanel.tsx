@@ -33,30 +33,26 @@ export function NotificationPanel({ onClose, onUnreadChange }: NotificationPanel
       setNotifications(data.notifications)
       onUnreadChange?.(data.hasUnread)
 
-      // Fetch profiles for all actors
+      // Collect pubkeys and event IDs
       const actorPubkeys = new Set<string>()
+      const eventIds = new Set<string>()
       for (const n of data.notifications) {
         for (const actor of n.actors) {
           actorPubkeys.add(actor.pubkey)
         }
-      }
-      if (actorPubkeys.size > 0) {
-        const profilesData = await fetchProfiles(Array.from(actorPubkeys))
-        setProfiles(profilesData)
-      }
-
-      // Fetch target events for content preview
-      const eventIds = new Set<string>()
-      for (const n of data.notifications) {
         eventIds.add(n.targetEventId)
         if (n.sourceEventId) {
           eventIds.add(n.sourceEventId)
         }
       }
-      if (eventIds.size > 0) {
-        const eventsData = await fetchEventsByIds(Array.from(eventIds))
-        setEvents(eventsData)
-      }
+
+      // Fetch profiles and events in parallel
+      const [profilesData, eventsData] = await Promise.all([
+        actorPubkeys.size > 0 ? fetchProfiles(Array.from(actorPubkeys)) : Promise.resolve({}),
+        eventIds.size > 0 ? fetchEventsByIds(Array.from(eventIds)) : Promise.resolve({}),
+      ])
+      setProfiles(profilesData)
+      setEvents(eventsData)
     } catch (e) {
       console.error('Failed to load notifications:', e)
     } finally {
