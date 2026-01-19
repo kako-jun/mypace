@@ -660,6 +660,11 @@
   font-size: 0.75rem;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+  font-family: inherit;
+}
+
+.visitor-counter nostalgic-counter {
+  font-family: inherit;
 }
 
 /* Version Display */
