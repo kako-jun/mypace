@@ -2,6 +2,15 @@
    Edit/Delete Buttons and Forms
    =========================================== */
 
+/* Wrapper for Edit/Delete buttons */
+.edit-delete-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+  margin-left: auto;
+}
+
 /* Edit/Delete buttons - use .text-outlined-button for base style */
 .edit-button,
 .delete-button {

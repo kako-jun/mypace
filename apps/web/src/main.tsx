@@ -5,12 +5,15 @@ import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import './index.css'
 
-// Clear update flag on fresh load (prevents infinite loop)
-const SW_UPDATE_KEY = 'sw-updating'
-const isUpdating = sessionStorage.getItem(SW_UPDATE_KEY)
-if (isUpdating) {
-  sessionStorage.removeItem(SW_UPDATE_KEY)
-  console.log('SW update completed')
+// Prevent SW update loop using timestamp
+const SW_UPDATE_KEY = 'sw-update-time'
+const COOLDOWN_MS = 10000 // 10 seconds cooldown after update
+
+function shouldSkipUpdate(): boolean {
+  const lastUpdate = sessionStorage.getItem(SW_UPDATE_KEY)
+  if (!lastUpdate) return false
+  const elapsed = Date.now() - parseInt(lastUpdate, 10)
+  return elapsed < COOLDOWN_MS
 }
 
 // Register Service Worker with update handling
@@ -25,9 +28,9 @@ const updateSW = registerSW({
     }
   },
   onNeedRefresh() {
-    // Skip if we just reloaded for an update
-    if (sessionStorage.getItem(SW_UPDATE_KEY)) {
-      console.log('SW update already in progress, skipping')
+    // Skip if we recently updated (within cooldown period)
+    if (shouldSkipUpdate()) {
+      console.log('SW update skipped (cooldown)')
       return
     }
 
@@ -63,8 +66,8 @@ const updateSW = registerSW({
     overlay.appendChild(message)
     document.body.appendChild(overlay)
 
-    // Set flag to prevent loop
-    sessionStorage.setItem(SW_UPDATE_KEY, '1')
+    // Record update timestamp
+    sessionStorage.setItem(SW_UPDATE_KEY, Date.now().toString())
 
     // Reload after 1.5 seconds
     setTimeout(async () => {
@@ -73,7 +76,6 @@ const updateSW = registerSW({
         await updateSW(true)
       } catch (e) {
         console.error('SW update failed:', e)
-        sessionStorage.removeItem(SW_UPDATE_KEY)
       }
       // Reload after SW is activated
       window.location.reload()

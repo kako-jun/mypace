@@ -39,7 +39,7 @@ export default function EditDeleteButtons({
   }, [isConfirming, onDeleteCancel])
 
   return (
-    <>
+    <div className="edit-delete-wrapper">
       <TextButton variant="primary" className="edit-button" onClick={onEdit} aria-label="Edit this post">
         EDIT
       </TextButton>
@@ -55,6 +55,6 @@ export default function EditDeleteButtons({
       {isConfirming && popupPosition && (
         <DeleteConfirmDialog position={popupPosition} onConfirm={onDeleteConfirm} onCancel={onDeleteCancel} />
       )}
-    </>
+    </div>
   )
 }

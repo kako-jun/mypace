@@ -242,9 +242,7 @@
   padding: 0.25rem 0.5rem;
 }
 
-.post-footer .edit-button {
-  margin-left: auto;
-}
+/* margin-left: auto is now on .edit-delete-wrapper */
 
 /* Repost label */
 .repost-label {
