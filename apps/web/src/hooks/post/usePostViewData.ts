@@ -113,6 +113,14 @@ export function usePostViewData(eventId: string): PostViewData {
           recordImpressions([{ eventId, authorPubkey: eventData.pubkey }], 'detail', pubkey).catch(() => {})
         }
 
+        // Fetch super mentions (not cached in timeline metadata)
+        const superMentionPaths = extractSuperMentionPaths(eventData.content)
+        if (superMentionPaths.length > 0) {
+          fetchViewsAndSuperMentions([], superMentionPaths)
+            .then(({ superMentions }) => setWikidataMap(superMentions))
+            .catch(() => {})
+        }
+
         // Batch fetch profiles for reply authors and reactors (from cached data)
         const replyPubkeys = cachedMetadata.replies.replies.map((r) => r.pubkey)
         const reactorPubkeys = cachedMetadata.reactions.reactors.map((r) => r.pubkey)
