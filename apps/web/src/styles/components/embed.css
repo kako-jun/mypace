@@ -632,6 +632,7 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  align-self: flex-end;
 }
 
 .embed-link.embed-loading {
@@ -690,6 +691,10 @@
 
   .embed-link-description {
     text-align: left;
+  }
+
+  .embed-link-domain {
+    align-self: center;
   }
 
   .embed-iframe {
