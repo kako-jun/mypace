@@ -133,7 +133,9 @@ body.custom-theme .logo-pace {
 }
 
 .themed-card.dark-text .embed-link,
-.themed-card.dark-text .embed-link * {
+.themed-card.dark-text .embed-link *,
+.themed-card.dark-text .post-location,
+.themed-card.dark-text .post-location * {
   text-shadow: none !important;
 }
 
