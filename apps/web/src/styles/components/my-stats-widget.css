@@ -38,16 +38,18 @@
 
 /* Colored stella row */
 .stella-colors-row {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
-  gap: clamp(4px, 1vw, 6px);
+  gap: clamp(6px, 1.5vw, 10px);
   justify-content: flex-end;
+  row-gap: 2px;
 }
 
 .stella-color-item {
   display: inline-flex;
   align-items: center;
   gap: 2px;
+  white-space: nowrap;
 }
 
 .stella-color-item svg {

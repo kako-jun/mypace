@@ -246,12 +246,14 @@
 .user-stella-row {
   flex-wrap: wrap;
   gap: 12px;
+  row-gap: 4px;
 }
 
 .user-stella-item {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
 }
 
 /* Post Header User Button */
