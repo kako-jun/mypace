@@ -140,9 +140,10 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
       filter.until = until
     }
     // NIP-50: 検索クエリがある場合はリレー側で全文検索
-    if (queries.length > 0) {
+    const searchQuery = queries.filter((q) => q.trim()).join(' ')
+    if (searchQuery) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(filter as any).search = queries.join(' ')
+      ;(filter as any).search = searchQuery
     }
 
     const rawEvents = await p.querySync(RELAYS, filter)
@@ -259,9 +260,10 @@ export async function fetchUserEvents(
       filter.until = until
     }
     // NIP-50: 検索クエリがある場合はリレー側で全文検索
-    if (q.length > 0) {
+    const searchQuery = q.filter((query) => query.trim()).join(' ')
+    if (searchQuery) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(filter as any).search = q.join(' ')
+      ;(filter as any).search = searchQuery
     }
 
     const rawEvents = await p.querySync(RELAYS, filter)
