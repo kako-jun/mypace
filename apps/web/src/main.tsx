@@ -50,13 +50,15 @@ const updateSW = registerSW({
     document.body.appendChild(overlay)
 
     // Reload after 1.5 seconds
-    setTimeout(() => {
-      // Trigger skipWaiting to activate new SW immediately
-      updateSW(true)
-      // Wait a bit for SW switch, then reload
-      setTimeout(() => {
-        window.location.reload()
-      }, 100)
+    setTimeout(async () => {
+      try {
+        // Trigger skipWaiting and wait for activation
+        await updateSW(true)
+      } catch (e) {
+        console.error('SW update failed:', e)
+      }
+      // Reload after SW is activated
+      window.location.reload()
     }, 1500)
   },
 })
