@@ -1,21 +1,29 @@
 import { createPortal } from 'react-dom'
 import { CloseButton, Icon } from '../ui'
-import { STELLA_COLORS, type StellaColor } from '../../lib/nostr/events'
+import { STELLA_COLORS, type StellaColor, type StellaCountsByColor } from '../../lib/nostr/events'
 
 interface StellaColorPickerProps {
   position: { top: number; left: number }
   walletBalance: number | null // sats balance from wallet, null if not connected
-  onSelect: (color: StellaColor) => void
+  currentCounts: StellaCountsByColor // Current stella counts for this post
+  onAddStella: (color: StellaColor) => void
   onClose: (e?: React.MouseEvent) => void
 }
 
-// Colors in display order (yellow first, then by sats ascending)
+// Colors in display order
 const COLOR_ORDER: StellaColor[] = ['yellow', 'green', 'red', 'blue', 'purple']
 
-export default function StellaColorPicker({ position, walletBalance, onSelect, onClose }: StellaColorPickerProps) {
-  const handleSelect = (color: StellaColor) => (e: React.MouseEvent) => {
+export default function StellaColorPicker({
+  position,
+  walletBalance,
+  currentCounts,
+  onAddStella,
+  onClose,
+}: StellaColorPickerProps) {
+  const handleClick = (color: StellaColor) => (e: React.MouseEvent) => {
     e.stopPropagation()
-    onSelect(color)
+    onAddStella(color)
+    // Don't close - allow rapid clicking
   }
 
   const canAfford = (color: StellaColor): boolean => {
@@ -23,6 +31,10 @@ export default function StellaColorPicker({ position, walletBalance, onSelect, o
     if (walletBalance === null) return false // Wallet not connected
     return walletBalance >= STELLA_COLORS[color].sats
   }
+
+  // Calculate total stella given
+  const totalStella = Object.values(currentCounts).reduce((a, b) => a + b, 0)
+  const maxReached = totalStella >= 10
 
   return createPortal(
     <>
@@ -36,48 +48,39 @@ export default function StellaColorPicker({ position, walletBalance, onSelect, o
           <span className="stella-picker-title">ステラを付ける</span>
           <CloseButton onClick={() => onClose()} size={16} />
         </div>
-        <div className="stella-picker-options">
-          {/* Yellow - always available */}
-          <button className="stella-picker-option" onClick={handleSelect('yellow')}>
-            <span className="stella-picker-star" style={{ color: STELLA_COLORS.yellow.hex }}>
-              <Icon name="Star" size={16} fill="currentColor" />
-            </span>
-            <span className="stella-picker-label">{STELLA_COLORS.yellow.label}</span>
-            <span className="stella-picker-price">無料</span>
-          </button>
 
-          {/* Divider */}
-          <div className="stella-picker-divider">
-            <span>カラーステラ</span>
-            {walletBalance !== null && (
-              <span className="stella-picker-balance">{walletBalance.toLocaleString()} sats</span>
-            )}
-          </div>
-
-          {/* Colored stellas */}
-          {COLOR_ORDER.slice(1).map((color) => {
+        {/* 5 colored stars in a row */}
+        <div className="stella-picker-stars">
+          {COLOR_ORDER.map((color) => {
             const colorInfo = STELLA_COLORS[color]
+            const count = currentCounts[color]
             const affordable = canAfford(color)
+            const disabled = maxReached || !affordable
+
             return (
               <button
                 key={color}
-                className={`stella-picker-option ${!affordable ? 'stella-picker-option-disabled' : ''}`}
-                onClick={handleSelect(color)}
-                disabled={!affordable}
+                className={`stella-picker-star-btn ${disabled ? 'disabled' : ''} ${count > 0 ? 'has-count' : ''}`}
+                onClick={handleClick(color)}
+                disabled={disabled}
+                title={`${colorInfo.label} (${colorInfo.sats === 0 ? '無料' : `${colorInfo.sats} sats`})`}
               >
-                <span className="stella-picker-star" style={{ color: colorInfo.hex }}>
-                  <Icon name="Star" size={16} fill="currentColor" />
-                </span>
-                <span className="stella-picker-label">{colorInfo.label}</span>
-                <span className="stella-picker-price">{colorInfo.sats} sats</span>
+                <Icon name="Star" size={24} fill={colorInfo.hex} style={{ color: colorInfo.hex }} />
+                {count > 0 && <span className="stella-picker-star-count">{count}</span>}
               </button>
             )
           })}
         </div>
 
-        {walletBalance === null && (
-          <div className="stella-picker-hint">※ カラーステラを使うにはウォレット接続が必要です</div>
-        )}
+        {/* Info row */}
+        <div className="stella-picker-info">
+          <span className="stella-picker-total">合計: {totalStella}/10</span>
+          {walletBalance !== null && (
+            <span className="stella-picker-balance">{walletBalance.toLocaleString()} sats</span>
+          )}
+        </div>
+
+        {walletBalance === null && <div className="stella-picker-hint">※ カラーステラにはウォレット接続が必要</div>}
       </div>
     </>,
     document.body

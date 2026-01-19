@@ -138,50 +138,82 @@ export const STELLA_COLORS: Record<StellaColor, { label: string; sats: number; h
   purple: { label: 'パープル', sats: 1000, hex: '#9b59b6' },
 } as const
 
-// Parse stella tag: ["stella", "count"] or ["stella", "color", "count"]
-export function parseStellaTag(tags: string[][]): { count: number; color: StellaColor } {
-  const stellaTag = tags.find((t) => t[0] === 'stella')
-  if (!stellaTag) {
-    return { count: 1, color: 'yellow' }
-  }
+// Stella counts per color type
+export interface StellaCountsByColor {
+  yellow: number
+  green: number
+  red: number
+  blue: number
+  purple: number
+}
 
-  // New format: ["stella", "color", "count"]
-  if (stellaTag.length >= 3 && isValidStellaColor(stellaTag[1])) {
-    const count = parseInt(stellaTag[2], 10)
-    return {
-      color: stellaTag[1] as StellaColor,
-      count: isNaN(count) ? 1 : count,
+// Empty stella counts
+export const EMPTY_STELLA_COUNTS: StellaCountsByColor = {
+  yellow: 0,
+  green: 0,
+  red: 0,
+  blue: 0,
+  purple: 0,
+}
+
+// Parse all stella tags from an event: ["stella", "color", "count"] for each color
+export function parseStellaTags(tags: string[][]): StellaCountsByColor {
+  const counts: StellaCountsByColor = { ...EMPTY_STELLA_COUNTS }
+
+  const stellaTags = tags.filter((t) => t[0] === 'stella')
+
+  for (const tag of stellaTags) {
+    // New format: ["stella", "color", "count"]
+    if (tag.length >= 3 && isValidStellaColor(tag[1])) {
+      const count = parseInt(tag[2], 10)
+      if (!isNaN(count) && count > 0) {
+        counts[tag[1] as StellaColor] = Math.min(count, MAX_STELLA_PER_USER)
+      }
+    }
+    // Old format: ["stella", "count"] - defaults to yellow
+    else if (tag.length >= 2) {
+      const count = parseInt(tag[1], 10)
+      if (!isNaN(count) && count > 0) {
+        counts.yellow = Math.min(count, MAX_STELLA_PER_USER)
+      }
     }
   }
 
-  // Old format: ["stella", "count"] - defaults to yellow
-  const count = parseInt(stellaTag[1], 10)
-  return {
-    color: 'yellow',
-    count: isNaN(count) ? 1 : count,
-  }
+  return counts
+}
+
+// Get total stella count from StellaCountsByColor
+export function getTotalStellaCount(counts: StellaCountsByColor): number {
+  return counts.yellow + counts.green + counts.red + counts.blue + counts.purple
 }
 
 function isValidStellaColor(value: string): value is StellaColor {
   return ['yellow', 'green', 'red', 'blue', 'purple'].includes(value)
 }
 
+// Create reaction event with multiple stella colors
 export async function createReactionEvent(
   targetEvent: Event,
   content: string = '+',
-  stellaCount: number = 1,
-  stellaColor: StellaColor = 'yellow'
+  stellaCounts: StellaCountsByColor = { ...EMPTY_STELLA_COUNTS, yellow: 1 }
 ): Promise<Event> {
-  // Build stella tag based on color
-  const stellaTagValue =
-    stellaColor === 'yellow'
-      ? [STELLA_TAG, String(Math.min(stellaCount, MAX_STELLA_PER_USER))]
-      : [STELLA_TAG, stellaColor, String(Math.min(stellaCount, MAX_STELLA_PER_USER))]
+  const tags: string[][] = [
+    ['e', targetEvent.id],
+    ['p', targetEvent.pubkey],
+  ]
+
+  // Add stella tag for each color with count > 0
+  for (const color of ['yellow', 'green', 'red', 'blue', 'purple'] as StellaColor[]) {
+    const count = stellaCounts[color]
+    if (count > 0) {
+      tags.push([STELLA_TAG, color, String(Math.min(count, MAX_STELLA_PER_USER))])
+    }
+  }
 
   const template: EventTemplate = {
     kind: 7,
     created_at: unixNow(),
-    tags: [['e', targetEvent.id], ['p', targetEvent.pubkey], stellaTagValue],
+    tags,
     content,
   }
 

@@ -120,15 +120,49 @@ export async function sendToLightningAddress(
 }
 
 /**
- * Calculate stella cost in satoshis
+ * Price per stella by color (in satoshis)
+ */
+const STELLA_PRICE: Record<string, number> = {
+  yellow: 0,
+  green: 1,
+  red: 10,
+  blue: 100,
+  purple: 1000,
+}
+
+/**
+ * Calculate stella cost in satoshis for a single color
  */
 export function getStellaCost(color: string, count: number): number {
-  const pricePerStella: Record<string, number> = {
-    yellow: 0,
-    green: 1,
-    red: 10,
-    blue: 100,
-    purple: 1000,
-  }
-  return (pricePerStella[color] || 0) * count
+  return (STELLA_PRICE[color] || 0) * count
+}
+
+/**
+ * Calculate total cost for stella counts by color
+ */
+export function getTotalStellaCost(counts: {
+  yellow: number
+  green: number
+  red: number
+  blue: number
+  purple: number
+}): number {
+  return (
+    counts.green * STELLA_PRICE.green +
+    counts.red * STELLA_PRICE.red +
+    counts.blue * STELLA_PRICE.blue +
+    counts.purple * STELLA_PRICE.purple
+  )
+}
+
+/**
+ * Calculate cost difference when adding stella (newCounts - oldCounts)
+ */
+export function getStellaCostDiff(
+  oldCounts: { yellow: number; green: number; red: number; blue: number; purple: number },
+  newCounts: { yellow: number; green: number; red: number; blue: number; purple: number }
+): number {
+  const oldCost = getTotalStellaCost(oldCounts)
+  const newCost = getTotalStellaCost(newCounts)
+  return Math.max(0, newCost - oldCost)
 }

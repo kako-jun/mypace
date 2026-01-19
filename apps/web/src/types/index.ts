@@ -45,20 +45,27 @@ export type LoadableProfile = Profile | null | undefined
 // Map of profiles that may be in various loading states
 export type ProfileMap = Record<string, LoadableProfile>
 
+// Stella counts per color
+export interface StellaCountsByColor {
+  yellow: number
+  green: number
+  red: number
+  blue: number
+  purple: number
+}
+
 // Reaction types
 export interface Reactor {
   pubkey: string
-  stella: number
-  stellaColor: 'yellow' | 'green' | 'red' | 'blue' | 'purple'
+  stella: StellaCountsByColor // Stella counts per color
   reactionId: string
   createdAt: number
 }
 
 export interface ReactionData {
-  count: number
+  totalCount: number // Total stella across all colors
   myReaction: boolean
-  myStella: number // Number of stella I've given (1-10)
-  myStellaColor: 'yellow' | 'green' | 'red' | 'blue' | 'purple' // Color of my stella
+  myStella: StellaCountsByColor // My stella per color
   myReactionId: string | null // ID of my reaction event (for deletion)
   reactors: Reactor[] // List of who gave stella
 }
