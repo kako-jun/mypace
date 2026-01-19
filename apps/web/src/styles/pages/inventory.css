@@ -69,7 +69,7 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--surface-secondary);
   cursor: pointer;
@@ -155,7 +155,7 @@
   width: 100%;
   margin-top: 1rem;
   padding: 0.5rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 4px;
   background: transparent;
   font-size: 0.85rem;

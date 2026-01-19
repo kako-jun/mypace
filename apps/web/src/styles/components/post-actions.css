@@ -513,7 +513,7 @@
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   color: var(--text-muted);
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border);
   margin-top: 0.25rem;
 }
 
@@ -522,7 +522,7 @@
   justify-content: center;
   gap: 0.75rem;
   padding: 0.5rem 0.75rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border);
   margin-top: 0.25rem;
 }
 
@@ -549,7 +549,7 @@
   font-size: 0.75rem;
   color: var(--text-muted);
   padding: 0.5rem 0.75rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border);
   margin-top: 0.25rem;
   text-align: center;
 }
@@ -663,7 +663,7 @@
   padding: 0.375rem 0.5rem;
   font-size: 0.75rem;
   color: var(--text-muted);
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border);
   margin-top: 0.25rem;
 }
 

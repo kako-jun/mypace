@@ -13,7 +13,7 @@
   border-radius: 8px;
   overflow: hidden;
   background: var(--surface-primary);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
 }
 
 /* YouTube Embed */
@@ -172,7 +172,7 @@
   justify-content: center;
   background: var(--bg-secondary);
   min-height: 150px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 12px;
   transition: background 0.2s;
 }
@@ -223,7 +223,7 @@
 .embed-twitter.embed-placeholder {
   min-height: 120px;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
 }
 
 .embed-twitter.embed-error,
@@ -344,7 +344,7 @@
 .embed-instagram.embed-placeholder {
   min-height: 150px;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
 }
 
 .embed-instagram.embed-simple-link {
@@ -475,7 +475,7 @@
 .embed-tiktok.embed-placeholder {
   min-height: 150px;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
 }
 
 .embed-tiktok.embed-error {
