@@ -51,9 +51,15 @@
   flex: 1;
 }
 
-.inventory-balance-value.inventory-not-connected,
+.inventory-balance-value.inventory-not-connected {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
 .inventory-balance-value.inventory-balance-unknown {
   color: var(--text-muted);
+  font-size: 0.9rem;
   font-weight: 400;
 }
 
