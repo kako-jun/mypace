@@ -192,8 +192,6 @@ export function Settings() {
         <div style={{ display: activeTab === 'account' ? 'block' : 'none' }}>
           <ProfileSection displayName={displayName} pictureUrl={pictureUrl} onClose={() => setOpen(false)} />
 
-          <WalletSection onClose={() => setOpen(false)} />
-
           <KeysSection
             nsec={nsec}
             npub={npub}
@@ -202,6 +200,7 @@ export function Settings() {
               setOpen(false)
               navigate('/upload-history')
             }}
+            walletSlot={<WalletSection onClose={() => setOpen(false)} />}
           />
         </div>
 
