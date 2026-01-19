@@ -21,7 +21,9 @@
   padding: clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px);
   border-radius: 8px;
 
-  pointer-events: none;
+  /* Absorb clicks (don't pass through to elements behind) */
+  pointer-events: auto;
+  cursor: default;
 }
 
 .my-stats-widget > span {
@@ -62,9 +64,9 @@
 
 /* Inventory button - uses TextButton base style */
 .my-stats-inventory-btn {
-  pointer-events: auto;
   font-size: 0.75rem;
   padding-right: 0;
+  cursor: pointer;
 }
 
 /* Dark theme */
