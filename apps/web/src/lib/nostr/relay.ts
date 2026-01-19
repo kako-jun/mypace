@@ -332,6 +332,7 @@ export async function fetchProfiles(pubkeys: string[]): Promise<Record<string, P
           nip05: content.nip05,
           banner: content.banner,
           website: content.website,
+          websites: content.websites,
           lud16: content.lud16,
         }
       } catch {

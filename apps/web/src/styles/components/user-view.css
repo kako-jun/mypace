@@ -33,6 +33,8 @@
 
 .user-info {
   flex: 1;
+  min-width: 0; /* Allow flex child to shrink below content size */
+  overflow: hidden;
 }
 
 .user-name {
@@ -308,6 +310,20 @@
   object-fit: cover;
 }
 
+/* ===== Edit Button Row ===== */
+.user-edit-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 0;
+  max-width: 600px;
+  margin-left: auto;
+}
+
+/* When banner exists, reduce gap between banner and edit row */
+.user-banner + .user-edit-row {
+  margin-top: -2px;
+}
+
 /* ===== NIP-05 ===== */
 .user-nip05 {
   display: flex;
@@ -317,6 +333,9 @@
   color: var(--text-muted);
   transition: color 0.15s ease;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .user-nip05.verified {

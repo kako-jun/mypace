@@ -69,6 +69,15 @@ export function UserProfile({
         </div>
       )}
 
+      {/* Edit button - positioned below banner, right-aligned */}
+      {isOwnProfile && (
+        <div className="user-edit-row">
+          <TextButton variant="primary" className="edit-button" onClick={onEditClick}>
+            EDIT
+          </TextButton>
+        </div>
+      )}
+
       <div className={`user-profile-card ${themeProps.className}`} style={themeProps.style}>
         <div className="user-profile-header">
           <Avatar src={avatarUrl} className="user-avatar" />
@@ -92,11 +101,6 @@ export function UserProfile({
               </span>
             )}
           </div>
-          {isOwnProfile && (
-            <TextButton variant="primary" className="edit-button" onClick={onEditClick}>
-              EDIT
-            </TextButton>
-          )}
         </div>
 
         {profile?.about && <p className="user-about">{profile.about}</p>}
