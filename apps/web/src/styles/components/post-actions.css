@@ -93,7 +93,7 @@
   border: 2px solid var(--border-card);
   padding: 1rem;
   z-index: 1002;
-  min-width: 240px;
+  min-width: 220px;
   max-height: 300px;
   overflow-y: auto;
 }

@@ -131,11 +131,11 @@ export const STELLA_TAG = 'stella'
 export type StellaColor = 'yellow' | 'green' | 'red' | 'blue' | 'purple'
 
 export const STELLA_COLORS: Record<StellaColor, { label: string; sats: number; hex: string }> = {
-  yellow: { label: 'イエロー', sats: 0, hex: '#f1c40f' },
-  green: { label: 'グリーン', sats: 1, hex: '#2ecc71' },
-  red: { label: 'レッド', sats: 10, hex: '#e74c3c' },
-  blue: { label: 'ブルー', sats: 100, hex: '#3498db' },
-  purple: { label: 'パープル', sats: 1000, hex: '#9b59b6' },
+  yellow: { label: 'Yellow', sats: 0, hex: '#f1c40f' },
+  green: { label: 'Green', sats: 1, hex: '#2ecc71' },
+  red: { label: 'Red', sats: 10, hex: '#e74c3c' },
+  blue: { label: 'Blue', sats: 100, hex: '#3498db' },
+  purple: { label: 'Purple', sats: 1000, hex: '#9b59b6' },
 } as const
 
 // Stella counts per color type
