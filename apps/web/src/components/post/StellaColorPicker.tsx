@@ -46,24 +46,21 @@ export default function StellaColorPicker({
   // State for showing reactors popup
   const [showReactorsColor, setShowReactorsColor] = useState<StellaColor | null>(null)
 
-  // Flag to prevent double clicks within same event cycle
-  const isProcessing = useRef<boolean>(false)
+  // Debounce mechanism to prevent double clicks (100ms, max 10 stellas = 1 sec)
+  const lastClickTime = useRef<number>(0)
+  const CLICK_DEBOUNCE_MS = 100
 
   const handleClick = useCallback(
     (color: StellaColor) => (e: React.MouseEvent) => {
       e.stopPropagation()
       e.preventDefault()
 
-      // Prevent double-fire within same event cycle
-      if (isProcessing.current) {
+      // Debounce rapid clicks
+      const now = Date.now()
+      if (now - lastClickTime.current < CLICK_DEBOUNCE_MS) {
         return
       }
-      isProcessing.current = true
-
-      // Reset flag after a short delay (allows rapid intentional clicks)
-      setTimeout(() => {
-        isProcessing.current = false
-      }, 50)
+      lastClickTime.current = now
 
       onAddStella(color)
       // Don't close - allow rapid clicking
