@@ -624,10 +624,10 @@
   stroke-width: 1.5;
 }
 
-/* Stella count - same style as action-count but smaller */
-.stella-count {
-  font-size: 0.875rem;
-  line-height: 1;
+/* Clickable star icon */
+.stella-star-clickable {
+  display: inline-flex;
+  cursor: pointer;
 }
 
 /* Reactor popup multi-color styles */

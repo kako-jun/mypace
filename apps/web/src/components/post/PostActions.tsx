@@ -338,27 +338,37 @@ export default function PostActions({
     const hasAnyStella = reactors.length > 0
 
     if (!hasAnyStella) {
-      // No stella yet - show single empty star (no count)
+      // No stella yet - show single star with 0 count
       return (
-        <span className="action-stella" style={{ animationDelay: `${stellaDelay}s` }}>
-          <Icon name="Star" size={20} />
-        </span>
+        <>
+          <span className="action-stella" style={{ animationDelay: `${stellaDelay}s` }}>
+            <Icon name="Star" size={20} />
+          </span>
+          <span className="action-count">0</span>
+        </>
       )
     }
 
     // Colors that have counts > 0
     const activeColors = COLOR_ORDER.filter((c) => totalCountsByColor[c] > 0)
 
+    // Handle star icon click - show color picker
+    const handleStarClick = (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (canAddMoreStella || isMyPost) {
+        setShowColorPicker(true)
+      }
+    }
+
     // Show colored stars with counts in a container
     return (
       <span className="stella-display-container">
         {activeColors.map((color) => (
           <span key={color} className="stella-display-item">
-            <Icon name="Star" size={18} fill={STELLA_COLORS[color].hex} />
-            <span
-              className="action-count action-count-clickable stella-count"
-              onClick={(e) => handleColorCountClick(e, color)}
-            >
+            <span className="stella-star-clickable" onClick={handleStarClick}>
+              <Icon name="Star" size={20} fill={STELLA_COLORS[color].hex} />
+            </span>
+            <span className="action-count action-count-clickable" onClick={(e) => handleColorCountClick(e, color)}>
               {formatNumber(totalCountsByColor[color])}
             </span>
           </span>
