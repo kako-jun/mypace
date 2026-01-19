@@ -543,11 +543,6 @@
 }
 
 /* Link Preview (OGP) */
-.embed-link,
-.embed-link * {
-  text-shadow: none !important;
-}
-
 .embed-link {
   display: flex;
   flex-direction: row;
@@ -566,11 +561,7 @@
 
 /* Reset color for embed-link inside themed cards */
 .themed-card .embed-link,
-.themed-card .embed-link *,
-.dark-text .embed-link,
-.dark-text .embed-link *,
-.light-text .embed-link,
-.light-text .embed-link * {
+.themed-card .embed-link * {
   color: var(--text-primary);
 }
 

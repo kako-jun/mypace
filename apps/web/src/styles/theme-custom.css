@@ -132,6 +132,11 @@ body.custom-theme .logo-pace {
     1px 1px 2px rgba(255, 255, 255, 0.8);
 }
 
+.themed-card.dark-text .embed-link,
+.themed-card.dark-text .embed-link * {
+  text-shadow: none !important;
+}
+
 /* Light text for dark themed cards - black outline shadow */
 .themed-card.light-text {
   color: #ffffff;
@@ -210,13 +215,8 @@ body.custom-theme .logo-pace {
 .dark-text .content-link,
 .dark-text .content-hashtag,
 .dark-text .inline-code,
-.dark-text .markdown-content a:not(.embed-link) {
+.dark-text .markdown-content a {
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-}
-
-.dark-text .embed-link,
-.dark-text .embed-link * {
-  text-shadow: none !important;
 }
 
 
