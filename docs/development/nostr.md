@@ -186,7 +186,18 @@ const filter: Filter = {
 }
 ```
 
-**対応リレー**: `search.nos.today`, `relay.nostr.band`, `nostr.wine` など。すべてのリレーがNIP-50をサポートしているわけではないが、対応リレーから結果が返れば表示される。
+**リレー選択**:
+- 検索時: `SEARCH_RELAYS`（NIP-50 + タグフィルタ対応）のみに送信
+- 通常時: `RELAYS`（全リレー）に送信
+
+| リレー | 用途 | NIP-50 | #tフィルタ |
+|--------|------|--------|-----------|
+| search.nos.today | 検索専用 | ✅ | ✅ |
+| relay.damus.io | 通常 | ❌ | ✅ |
+| nos.lol | 通常 | ❌ | ✅ |
+| relay.nostr.band | 通常 | ✅ | ✅ |
+| nostr.wine | 通常 | ✅ | ❌無視 |
+| relay.snort.social | 通常 | ❌ | ✅ |
 
 **検索の組み合わせ**:
 - ホームタイムライン: キーワード検索 + タグフィルタ + 個人フィルタ

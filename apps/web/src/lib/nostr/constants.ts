@@ -16,8 +16,10 @@ export const RELAYS = [
   'wss://relay.nostr.band',
   'wss://nostr.wine',
   'wss://relay.snort.social',
-  'wss://search.nos.today', // NIP-50検索専用リレー
 ]
+
+// NIP-50検索対応リレー（#tフィルタも正しく処理できるもののみ）
+export const SEARCH_RELAYS = ['wss://search.nos.today']
 
 // Smart filter: Ad-related tags
 export const AD_TAGS = [
