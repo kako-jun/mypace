@@ -133,17 +133,20 @@ export function InventoryPage() {
         <h3>Lightning Wallet</h3>
         <p className="inventory-wallet-hint">Use a Lightning wallet to add sats</p>
         <div className="inventory-wallet-buttons">
-          <a href="https://getalby.com/" target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-md">
-            Alby
-          </a>
-          <a
-            href="https://www.walletofsatoshi.com/"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
             className="btn btn-secondary btn-md"
+            onClick={() => window.open('https://getalby.com/', '_blank', 'noopener,noreferrer')}
+          >
+            Alby
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-md"
+            onClick={() => window.open('https://www.walletofsatoshi.com/', '_blank', 'noopener,noreferrer')}
           >
             Wallet of Satoshi
-          </a>
+          </button>
         </div>
         <p className="inventory-wallet-note">
           * MY PACE does not process payments. It only displays your wallet balance.
