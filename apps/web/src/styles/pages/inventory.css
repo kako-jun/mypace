@@ -184,8 +184,8 @@
   margin: 0 0 0.5rem;
 }
 
-.inventory-install-hint {
-  font-size: 0.85rem;
+.inventory-no-webln .inventory-install-hint {
+  font-size: 0.8rem;
   margin-bottom: 0;
 }
 
@@ -213,7 +213,7 @@
 }
 
 .inventory-wallet-hint {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   margin: 0 0 1rem;
 }
