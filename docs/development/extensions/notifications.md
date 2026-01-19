@@ -262,6 +262,16 @@ Lucide React を使用：
 1. `read_at` を現在時刻で更新（API呼び出し）
 2. 該当の投稿ページに遷移
 
+### すべて既読ボタン
+
+ポップアップのヘッダー右側（×ボタンの左）に配置：
+
+| 要素 | 説明 |
+|------|------|
+| アイコン | `CheckCheck`（Lucide） |
+| 表示条件 | 未読通知がある場合のみ |
+| 動作 | 全通知のIDを収集し `POST /api/notifications/read` で一括既読 |
+
 ## API仕様
 
 ### 通知一覧取得
@@ -281,8 +291,8 @@ GET /api/notifications?pubkey=<自分のpubkey>
       "targetEventId": "abc123",
       "sourceEventId": null,
       "actors": [
-        { "pubkey": "alice_pubkey", "stellaCount": 5, "stellaColor": "yellow" },
-        { "pubkey": "bob_pubkey", "stellaCount": 3, "stellaColor": "blue" }
+        { "pubkey": "alice_pubkey", "stellaByColor": { "yellow": 5, "blue": 2 } },
+        { "pubkey": "bob_pubkey", "stellaByColor": { "blue": 3 } }
       ],
       "createdAt": 1234567890,
       "readAt": null
@@ -302,6 +312,23 @@ GET /api/notifications?pubkey=<自分のpubkey>
   "hasUnread": true
 }
 ```
+
+#### actors配列のstellaByColor
+
+ステラ通知の場合、各actorは `stellaByColor` オブジェクトを持つ：
+
+```typescript
+interface StellaByColor {
+  yellow?: number
+  green?: number
+  red?: number
+  blue?: number
+  purple?: number
+}
+```
+
+`user_stella` テーブルをJOINして色ごとのステラ数を取得。
+1回のリアクションで複数色のステラを付けた場合も正確に反映される。
 
 ### 未読チェック（ベルアイコン用）
 
