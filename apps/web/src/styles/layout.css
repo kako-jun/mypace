@@ -351,13 +351,13 @@ body.long-mode-active .main-content {
 
 .success {
   font-size: 0.8rem;
-  color: #6a6;
+  color: var(--text-secondary);
   margin-top: 0.5rem;
 }
 
 .info {
   font-size: 0.8rem;
-  color: #6a6;
+  color: var(--text-secondary);
 }
 
 .hint {
