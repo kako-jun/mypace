@@ -95,7 +95,7 @@ export default function StellaColorPicker({
         )}
 
         {walletBalance === null && (
-          <Link to="/settings" className="stella-picker-hint stella-picker-link" onClick={() => onClose()}>
+          <Link to="/inventory" className="stella-picker-hint stella-picker-link" onClick={() => onClose()}>
             Connect wallet for colored stella
           </Link>
         )}

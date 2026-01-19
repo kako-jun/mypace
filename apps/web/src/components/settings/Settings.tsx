@@ -186,13 +186,13 @@ export function Settings() {
 
           <PushSection />
 
-          <WalletSection />
-
           <ExportSection onImport={handleImportRefresh} />
         </div>
 
         <div style={{ display: activeTab === 'account' ? 'block' : 'none' }}>
           <ProfileSection displayName={displayName} pictureUrl={pictureUrl} onClose={() => setOpen(false)} />
+
+          <WalletSection onClose={() => setOpen(false)} />
 
           <KeysSection
             nsec={nsec}
