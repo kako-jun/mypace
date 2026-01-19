@@ -165,7 +165,9 @@ export function NotificationPanel({ onClose, onUnreadChange }: NotificationPanel
 
     return (
       <>
-        <span className="notification-actor-count">from {actorCount}</span>
+        <span className="notification-actor-count">
+          from {actorCount} {actorCount === 1 ? 'user' : 'users'}
+        </span>
         {sortedColors.map((color) => (
           <span key={color} className="notification-stella-badge">
             <Icon name="Star" size={14} fill={stellaColorMap[color] || '#f1c40f'} />
