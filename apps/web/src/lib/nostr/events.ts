@@ -127,19 +127,61 @@ export const MAX_STELLA_PER_USER = 10
 // Custom tag for stella count
 export const STELLA_TAG = 'stella'
 
+// Stella colors with their sats value (for colored stella)
+export type StellaColor = 'yellow' | 'green' | 'red' | 'blue' | 'purple'
+
+export const STELLA_COLORS: Record<StellaColor, { label: string; sats: number; hex: string }> = {
+  yellow: { label: 'イエロー', sats: 0, hex: '#f1c40f' },
+  green: { label: 'グリーン', sats: 1, hex: '#2ecc71' },
+  red: { label: 'レッド', sats: 10, hex: '#e74c3c' },
+  blue: { label: 'ブルー', sats: 100, hex: '#3498db' },
+  purple: { label: 'パープル', sats: 1000, hex: '#9b59b6' },
+} as const
+
+// Parse stella tag: ["stella", "count"] or ["stella", "color", "count"]
+export function parseStellaTag(tags: string[][]): { count: number; color: StellaColor } {
+  const stellaTag = tags.find((t) => t[0] === 'stella')
+  if (!stellaTag) {
+    return { count: 1, color: 'yellow' }
+  }
+
+  // New format: ["stella", "color", "count"]
+  if (stellaTag.length >= 3 && isValidStellaColor(stellaTag[1])) {
+    const count = parseInt(stellaTag[2], 10)
+    return {
+      color: stellaTag[1] as StellaColor,
+      count: isNaN(count) ? 1 : count,
+    }
+  }
+
+  // Old format: ["stella", "count"] - defaults to yellow
+  const count = parseInt(stellaTag[1], 10)
+  return {
+    color: 'yellow',
+    count: isNaN(count) ? 1 : count,
+  }
+}
+
+function isValidStellaColor(value: string): value is StellaColor {
+  return ['yellow', 'green', 'red', 'blue', 'purple'].includes(value)
+}
+
 export async function createReactionEvent(
   targetEvent: Event,
   content: string = '+',
-  stellaCount: number = 1
+  stellaCount: number = 1,
+  stellaColor: StellaColor = 'yellow'
 ): Promise<Event> {
+  // Build stella tag based on color
+  const stellaTagValue =
+    stellaColor === 'yellow'
+      ? [STELLA_TAG, String(Math.min(stellaCount, MAX_STELLA_PER_USER))]
+      : [STELLA_TAG, stellaColor, String(Math.min(stellaCount, MAX_STELLA_PER_USER))]
+
   const template: EventTemplate = {
     kind: 7,
     created_at: unixNow(),
-    tags: [
-      ['e', targetEvent.id],
-      ['p', targetEvent.pubkey],
-      [STELLA_TAG, String(Math.min(stellaCount, MAX_STELLA_PER_USER))],
-    ],
+    tags: [['e', targetEvent.id], ['p', targetEvent.pubkey], stellaTagValue],
     content,
   }
 

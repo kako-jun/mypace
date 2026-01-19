@@ -34,6 +34,7 @@ const initialReactions: ReactionData = {
   count: 0,
   myReaction: false,
   myStella: 0,
+  myStellaColor: 'yellow',
   myReactionId: null,
   reactors: [],
 }

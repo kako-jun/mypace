@@ -115,7 +115,14 @@ export default function TimelinePostCard({
     // Cache event, profile, and metadata from timeline for instant display in detail view
     const profile = profiles[event.pubkey] || null
     const metadata = {
-      reactions: reactions || { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] },
+      reactions: reactions || {
+        count: 0,
+        myReaction: false,
+        myStella: 0,
+        myStellaColor: 'yellow' as const,
+        myReactionId: null,
+        reactors: [],
+      },
       replies: replies || { count: 0, replies: [] },
       reposts: reposts || { count: 0, myRepost: false },
       views: views || { detail: 0, impression: 0 },

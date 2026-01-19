@@ -6,6 +6,7 @@ import { PostPage } from './pages/PostPage'
 import { UserPage } from './pages/UserPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { UploadHistoryPage } from './pages/UploadHistoryPage'
+import { InventoryPage } from './pages/InventoryPage'
 import { EmbedPage } from './pages/EmbedPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PostModal } from './components/post'
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/user/:pubkey" element={<UserPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/upload-history" element={<UploadHistoryPage />} />
+          <Route path="/inventory" element={<InventoryPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

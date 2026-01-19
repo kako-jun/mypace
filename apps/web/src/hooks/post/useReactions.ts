@@ -55,6 +55,7 @@ export function useReactions({ event, myPubkey, initialReactions }: UseReactions
                 {
                   pubkey: myPubkey!,
                   stella: newTotalStella,
+                  stellaColor: 'yellow' as const,
                   reactionId: newReaction.id,
                   createdAt: newReaction.created_at,
                 },
@@ -65,6 +66,7 @@ export function useReactions({ event, myPubkey, initialReactions }: UseReactions
           count: prev.count - currentMyStella + newTotalStella,
           myReaction: true,
           myStella: newTotalStella,
+          myStellaColor: prev.myStellaColor,
           myReactionId: newReaction.id,
           reactors: updatedReactors,
         }
@@ -91,6 +93,7 @@ export function useReactions({ event, myPubkey, initialReactions }: UseReactions
       count: prev.count + 1,
       myReaction: true,
       myStella: currentMyStella + pending + 1,
+      myStellaColor: prev.myStellaColor,
       myReactionId: prev.myReactionId,
       reactors: prev.reactors,
     }))
@@ -120,6 +123,7 @@ export function useReactions({ event, myPubkey, initialReactions }: UseReactions
         count: Math.max(0, prev.count - prev.myStella),
         myReaction: false,
         myStella: 0,
+        myStellaColor: 'yellow',
         myReactionId: null,
         reactors: prev.reactors.filter((r) => r.pubkey !== myPubkey),
       }))

@@ -101,7 +101,11 @@ function extractStellaRecords(reactions: Event[], postAuthors: Map<string, strin
     const stellaTag = tags.find((t) => t[0] === 'stella')
     if (!stellaTag || !stellaTag[1]) continue
 
-    const stellaCount = parseInt(stellaTag[1], 10)
+    // Support both formats:
+    // Old: ["stella", "count"]
+    // New: ["stella", "color", "count"]
+    const isColorFormat = stellaTag.length >= 3 && isNaN(parseInt(stellaTag[1], 10))
+    const stellaCount = isColorFormat ? parseInt(stellaTag[2], 10) : parseInt(stellaTag[1], 10)
     if (isNaN(stellaCount) || stellaCount < 1 || stellaCount > 10) continue
 
     // Get target event ID

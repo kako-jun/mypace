@@ -19,6 +19,7 @@
   /* Semi-transparent background */
   background: rgba(255, 255, 255, 0.5);
   padding: clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px);
+  padding-bottom: clamp(24px, 4vw, 28px); /* Extra space for inventory button */
   border-radius: 8px;
 
   pointer-events: none;
@@ -35,7 +36,40 @@
   height: clamp(12px, 2.5vw, 14px);
 }
 
+/* Inventory button */
+.my-stats-inventory-btn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  pointer-events: auto;
+  color: var(--text-primary);
+  opacity: 0.6;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.my-stats-inventory-btn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.3);
+}
+
 /* Dark theme */
 [data-theme='dark'] .my-stats-widget {
   background: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme='dark'] .my-stats-inventory-btn {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme='dark'] .my-stats-inventory-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
 }

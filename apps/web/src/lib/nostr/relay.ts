@@ -2,6 +2,7 @@
 import { SimplePool } from 'nostr-tools/pool'
 import type { Filter, Event as NostrEvent } from 'nostr-tools'
 import { RELAYS, MYPACE_TAG, KIND_NOTE, KIND_REPOST, KIND_LONG_FORM, KIND_SINOV_NPC } from './constants'
+import { parseStellaTag, type StellaColor } from './events'
 import {
   filterBySmartFilters,
   filterByNPC,
@@ -433,15 +434,7 @@ export interface EventMetadata {
   reposts: RepostData
 }
 
-// stellaタグからカウント取得
-function getStellaCount(tags: string[][]): number {
-  const stellaTag = tags.find((t) => t[0] === 'stella')
-  if (stellaTag?.[1]) {
-    const count = parseInt(stellaTag[1], 10)
-    return isNaN(count) ? 1 : count
-  }
-  return 1
-}
+// stellaタグからカウントと色を取得 (parseStellaTag を使用)
 
 export async function fetchEventMetadata(
   eventIds: string[],
@@ -455,7 +448,14 @@ export async function fetchEventMetadata(
   // 初期化
   for (const id of eventIds) {
     result[id] = {
-      reactions: { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] },
+      reactions: {
+        count: 0,
+        myReaction: false,
+        myStella: 0,
+        myStellaColor: 'yellow',
+        myReactionId: null,
+        reactors: [],
+      },
       replies: { count: 0, replies: [] },
       reposts: { count: 0, myRepost: false },
     }
@@ -473,7 +473,7 @@ export async function fetchEventMetadata(
     // リアクションをイベントごとにグループ化し、ユーザーごとに最新のみ保持
     const reactionsByEvent = new Map<
       string,
-      Map<string, { pubkey: string; stella: number; reactionId: string; createdAt: number }>
+      Map<string, { pubkey: string; stella: number; stellaColor: StellaColor; reactionId: string; createdAt: number }>
     >()
 
     for (const e of events) {
@@ -489,9 +489,11 @@ export async function fetchEventMetadata(
         const reactorMap = reactionsByEvent.get(targetId)!
         const existing = reactorMap.get(e.pubkey)
         if (!existing || e.created_at > existing.createdAt) {
+          const { count, color } = parseStellaTag(e.tags)
           reactorMap.set(e.pubkey, {
             pubkey: e.pubkey,
-            stella: getStellaCount(e.tags),
+            stella: count,
+            stellaColor: color,
             reactionId: e.id,
             createdAt: e.created_at,
           })
@@ -519,15 +521,17 @@ export async function fetchEventMetadata(
       const reactors = Array.from(reactorMap.values()).sort((a, b) => b.createdAt - a.createdAt)
       const count = reactors.reduce((sum, r) => sum + r.stella, 0)
       let myStella = 0
+      let myStellaColor: StellaColor = 'yellow'
       let myReactionId: string | null = null
       if (viewerPubkey) {
         const myReaction = reactorMap.get(viewerPubkey)
         if (myReaction) {
           myStella = myReaction.stella
+          myStellaColor = myReaction.stellaColor
           myReactionId = myReaction.reactionId
         }
       }
-      result[eventId].reactions = { count, myReaction: myStella > 0, myStella, myReactionId, reactors }
+      result[eventId].reactions = { count, myReaction: myStella > 0, myStella, myStellaColor, myReactionId, reactors }
     }
 
     // リプライをソートしてカウント設定

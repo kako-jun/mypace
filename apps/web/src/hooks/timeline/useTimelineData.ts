@@ -45,7 +45,14 @@ export async function loadEnrichForEvents(
         repostMap[eventId] = data.reposts
       } else {
         // デフォルト値で初期化
-        reactionMap[eventId] = { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] }
+        reactionMap[eventId] = {
+          count: 0,
+          myReaction: false,
+          myStella: 0,
+          myStellaColor: 'yellow' as const,
+          myReactionId: null,
+          reactors: [],
+        }
         replyMap[eventId] = { count: 0, replies: [] }
         repostMap[eventId] = { count: 0, myRepost: false }
       }
@@ -105,7 +112,14 @@ export async function loadEnrichForEvents(
     const viewMap: { [eventId: string]: ViewCountData } = {}
 
     for (const eventId of eventIds) {
-      reactionMap[eventId] = { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] }
+      reactionMap[eventId] = {
+        count: 0,
+        myReaction: false,
+        myStella: 0,
+        myStellaColor: 'yellow' as const,
+        myReactionId: null,
+        reactors: [],
+      }
       replyMap[eventId] = { count: 0, replies: [] }
       repostMap[eventId] = { count: 0, myRepost: false }
       viewMap[eventId] = { impression: 0, detail: 0 }

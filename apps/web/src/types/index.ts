@@ -49,6 +49,7 @@ export type ProfileMap = Record<string, LoadableProfile>
 export interface Reactor {
   pubkey: string
   stella: number
+  stellaColor: 'yellow' | 'green' | 'red' | 'blue' | 'purple'
   reactionId: string
   createdAt: number
 }
@@ -57,6 +58,7 @@ export interface ReactionData {
   count: number
   myReaction: boolean
   myStella: number // Number of stella I've given (1-10)
+  myStellaColor: 'yellow' | 'green' | 'red' | 'blue' | 'purple' // Color of my stella
   myReactionId: string | null // ID of my reaction event (for deletion)
   reactors: Reactor[] // List of who gave stella
 }

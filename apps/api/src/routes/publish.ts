@@ -234,7 +234,11 @@ publish.post('/', async (c) => {
         const pTag = tags.find((t: string[]) => t[0] === 'p')
         if (eTag && eTag[1] && pTag && pTag[1]) {
           try {
-            const stellaCount = parseInt(stellaTag[1], 10)
+            // Support both formats:
+            // Old: ["stella", "count"]
+            // New: ["stella", "color", "count"]
+            const isColorFormat = stellaTag.length >= 3 && isNaN(parseInt(stellaTag[1], 10))
+            const stellaCount = isColorFormat ? parseInt(stellaTag[2], 10) : parseInt(stellaTag[1], 10)
             if (!isNaN(stellaCount) && stellaCount >= 1 && stellaCount <= 10) {
               await recordStella(db, eTag[1], pTag[1], event.pubkey, stellaCount, event.id)
               // Record notification

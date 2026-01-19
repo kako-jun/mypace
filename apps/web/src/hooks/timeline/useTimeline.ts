@@ -243,6 +243,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
                 {
                   pubkey: myPubkey!,
                   stella: newTotalStella,
+                  stellaColor: 'yellow' as const,
                   reactionId: newReaction.id,
                   createdAt: newReaction.created_at,
                 },
@@ -255,6 +256,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
             count: prev[eventId]?.count || newTotalStella,
             myReaction: true,
             myStella: newTotalStella,
+            myStellaColor: prev[eventId]?.myStellaColor || 'yellow',
             myReactionId: newReaction.id,
             reactors: updatedReactors,
           },
@@ -264,7 +266,14 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       console.error('Failed to publish reaction:', error)
       setReactions((prev) => ({
         ...prev,
-        [eventId]: previousReaction || { count: 0, myReaction: false, myStella: 0, myReactionId: null, reactors: [] },
+        [eventId]: previousReaction || {
+          count: 0,
+          myReaction: false,
+          myStella: 0,
+          myStellaColor: 'yellow' as const,
+          myReactionId: null,
+          reactors: [],
+        },
       }))
     } finally {
       setLikingId(null)
@@ -286,6 +295,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         count: (prev[eventId]?.count || 0) + 1,
         myReaction: true,
         myStella: (prev[eventId]?.myStella || 0) + 1,
+        myStellaColor: prev[eventId]?.myStellaColor || 'yellow',
         myReactionId: prev[eventId]?.myReactionId || null,
         reactors: prev[eventId]?.reactors || [],
       },
@@ -319,6 +329,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
           count: Math.max(0, (prev[eventId]?.count || 0) - stellaToRemove),
           myReaction: false,
           myStella: 0,
+          myStellaColor: 'yellow',
           myReactionId: null,
           reactors: (prev[eventId]?.reactors || []).filter((r) => r.pubkey !== myPubkey),
         },

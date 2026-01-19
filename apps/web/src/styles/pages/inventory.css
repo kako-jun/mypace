@@ -1,0 +1,215 @@
+/* Inventory Page */
+
+.inventory-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.inventory-header {
+  margin-bottom: 1.5rem;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.inventory-header h2 {
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+}
+
+.inventory-header p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Balance Section */
+.inventory-balance-section {
+  background: var(--surface-primary);
+  border: 2px solid #000;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.inventory-balance-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.inventory-balance-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.inventory-balance-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.inventory-balance-value.inventory-not-connected {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.inventory-add-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 2px solid #000;
+  border-radius: 50%;
+  background: var(--surface-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.inventory-add-button:hover {
+  background: var(--surface-hover);
+}
+
+/* Stella List */
+.inventory-stella-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.inventory-stella-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--surface-secondary);
+  border-radius: 4px;
+}
+
+.inventory-stella-icon {
+  font-size: 1.25rem;
+}
+
+.inventory-stella-label {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.inventory-stella-count {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.inventory-stella-empty {
+  text-align: center;
+  padding: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.inventory-not-connected-message {
+  text-align: center;
+  padding: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Wallet Section */
+.inventory-wallet-section {
+  background: var(--surface-primary);
+  border: 2px solid #000;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.inventory-wallet-section h3 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.inventory-wallet-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 1rem;
+}
+
+.inventory-wallet-buttons {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.inventory-wallet-button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 2px solid #000;
+  border-radius: 4px;
+  background: var(--surface-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.inventory-wallet-button:hover {
+  background: var(--surface-hover);
+}
+
+.inventory-wallet-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+  text-align: center;
+}
+
+/* Info Section */
+.inventory-info-section {
+  background: var(--surface-primary);
+  border: 2px solid #000;
+  padding: 1rem;
+}
+
+.inventory-info-section h3 {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+}
+
+.inventory-price-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.75rem;
+}
+
+.inventory-price-table th,
+.inventory-price-table td {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.inventory-price-table th {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.inventory-price-table td {
+  font-size: 0.9rem;
+}
+
+.inventory-info-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .inventory-wallet-buttons {
+    flex-direction: column;
+  }
+}

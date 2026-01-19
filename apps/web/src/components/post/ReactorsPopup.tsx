@@ -1,10 +1,12 @@
 import { createPortal } from 'react-dom'
 import { Icon, CloseButton } from '../ui'
 import { formatNumber } from '../../lib/utils'
+import { STELLA_COLORS, type StellaColor } from '../../lib/nostr/events'
 
 interface Reactor {
   pubkey: string
   stella: number
+  stellaColor: StellaColor
 }
 
 interface ReactorsPopupProps {
@@ -45,7 +47,7 @@ export default function ReactorsPopup({
                 {getDisplayName(reactor.pubkey)}
               </span>
               <span className="reactor-stella">
-                <Icon name="Star" size={14} fill="#f1c40f" />
+                <Icon name="Star" size={14} fill={STELLA_COLORS[reactor.stellaColor].hex} />
                 {formatNumber(reactor.stella)}
               </span>
               {reactor.pubkey === myPubkey && (
