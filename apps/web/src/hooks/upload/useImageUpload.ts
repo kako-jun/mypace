@@ -12,8 +12,7 @@ interface UseImageUploadResult {
   uploadFile: (file: File) => Promise<UploadFileResult>
 }
 
-function getUploadType(mimeType: string): 'image' | 'video' | 'audio' {
-  if (mimeType.startsWith('video/')) return 'video'
+function getUploadType(mimeType: string): 'image' | 'audio' {
   if (mimeType.startsWith('audio/')) return 'audio'
   return 'image'
 }

@@ -43,7 +43,7 @@ uploads.post('/', async (c) => {
       pubkey: string
       url: string
       filename: string
-      type: 'image' | 'video' | 'audio'
+      type: 'image' | 'audio'
     }>()
 
     if (!body.pubkey || body.pubkey.length !== 64) {
@@ -58,7 +58,7 @@ uploads.post('/', async (c) => {
       return c.json({ error: 'Filename is required' }, 400)
     }
 
-    if (!['image', 'video', 'audio'].includes(body.type)) {
+    if (!['image', 'audio'].includes(body.type)) {
       return c.json({ error: 'Invalid type' }, 400)
     }
 

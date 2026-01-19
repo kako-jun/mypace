@@ -111,8 +111,6 @@ export function UploadHistoryPage() {
     switch (type) {
       case 'image':
         return <Icon name="Image" size={24} />
-      case 'video':
-        return <Icon name="Film" size={24} />
       case 'audio':
         return <Icon name="Music" size={24} />
       default:

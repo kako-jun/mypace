@@ -201,7 +201,7 @@ export async function fetchUserSerial(pubkey: string): Promise<UserSerialData> {
 export interface UploadHistoryItem {
   url: string
   filename: string
-  type: 'image' | 'video' | 'audio'
+  type: 'image' | 'audio'
   uploadedAt: number
 }
 
@@ -220,7 +220,7 @@ export async function saveUploadToHistory(
   pubkey: string,
   url: string,
   filename: string,
-  type: 'image' | 'video' | 'audio'
+  type: 'image' | 'audio'
 ): Promise<boolean> {
   try {
     const res = await fetch(`${API_BASE}/api/uploads`, {
