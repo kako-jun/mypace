@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   target_event_id TEXT NOT NULL,      -- Target post ID
   source_event_id TEXT,               -- Reply/repost event ID (NULL for stella)
   stella_count INTEGER,               -- Stella count (1-10), NULL for non-stella
+  stella_color TEXT DEFAULT 'yellow', -- Stella color (yellow, green, red, blue, purple)
   created_at INTEGER NOT NULL,
   read_at INTEGER                     -- When user tapped to view (NULL = unread)
 );

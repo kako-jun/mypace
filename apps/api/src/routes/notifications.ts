@@ -14,6 +14,7 @@ interface NotificationRow {
   target_event_id: string
   source_event_id: string | null
   stella_count: number | null
+  stella_color: string | null
   created_at: number
   read_at: number | null
 }
@@ -26,6 +27,7 @@ interface AggregatedNotification {
   actors: Array<{
     pubkey: string
     stellaCount?: number
+    stellaColor?: string
   }>
   createdAt: number
   readAt: number | null
@@ -41,7 +43,7 @@ notifications.get('/', async (c) => {
 
   // Get latest notifications for this user
   const rows = await c.env.DB.prepare(
-    `SELECT id, recipient_pubkey, actor_pubkey, type, target_event_id, source_event_id, stella_count, created_at, read_at
+    `SELECT id, recipient_pubkey, actor_pubkey, type, target_event_id, source_event_id, stella_count, stella_color, created_at, read_at
      FROM notifications
      WHERE recipient_pubkey = ?
      ORDER BY created_at DESC
@@ -165,6 +167,7 @@ function aggregateNotifications(rows: NotificationRow[]): AggregatedNotification
       actors: group.map((r) => ({
         pubkey: r.actor_pubkey,
         stellaCount: r.stella_count ?? undefined,
+        stellaColor: r.stella_color ?? 'yellow',
       })),
       createdAt: latestCreatedAt,
       readAt,

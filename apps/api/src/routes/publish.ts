@@ -70,6 +70,7 @@ async function recordNotification(
   targetEventId: string,
   sourceEventId: string | null,
   stellaCount: number | null,
+  stellaColor: string | null,
   vapidPublicKey?: string,
   vapidPrivateKey?: string,
   vapidSubject?: string
@@ -84,7 +85,7 @@ async function recordNotification(
     // For stella, check if we should update or skip (only notify on increase)
     const existing = await db
       .prepare(
-        `SELECT stella_count FROM notifications 
+        `SELECT stella_count FROM notifications
          WHERE recipient_pubkey = ? AND actor_pubkey = ? AND type = 'stella' AND target_event_id = ?`
       )
       .bind(recipientPubkey, actorPubkey, targetEventId)
@@ -95,10 +96,10 @@ async function recordNotification(
       if (stellaCount && existing.stella_count && stellaCount > existing.stella_count) {
         await db
           .prepare(
-            `UPDATE notifications SET stella_count = ?, created_at = ?, read_at = NULL
+            `UPDATE notifications SET stella_count = ?, stella_color = ?, created_at = ?, read_at = NULL
              WHERE recipient_pubkey = ? AND actor_pubkey = ? AND type = 'stella' AND target_event_id = ?`
           )
-          .bind(stellaCount, now, recipientPubkey, actorPubkey, targetEventId)
+          .bind(stellaCount, stellaColor, now, recipientPubkey, actorPubkey, targetEventId)
           .run()
         shouldPush = true
       }
@@ -125,10 +126,10 @@ async function recordNotification(
   if (type !== 'stella' || shouldPush) {
     await db
       .prepare(
-        `INSERT INTO notifications (recipient_pubkey, actor_pubkey, type, target_event_id, source_event_id, stella_count, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO notifications (recipient_pubkey, actor_pubkey, type, target_event_id, source_event_id, stella_count, stella_color, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
       )
-      .bind(recipientPubkey, actorPubkey, type, targetEventId, sourceEventId, stellaCount, now)
+      .bind(recipientPubkey, actorPubkey, type, targetEventId, sourceEventId, stellaCount, stellaColor, now)
       .run()
   }
 
@@ -253,6 +254,7 @@ publish.post('/', async (c) => {
                 eTag[1],
                 null,
                 stellaCount,
+                stellaColor,
                 c.env.VAPID_PUBLIC_KEY,
                 c.env.VAPID_PRIVATE_KEY,
                 c.env.VAPID_SUBJECT
@@ -285,6 +287,7 @@ publish.post('/', async (c) => {
                 targetEventId,
                 event.id,
                 null,
+                null,
                 c.env.VAPID_PUBLIC_KEY,
                 c.env.VAPID_PRIVATE_KEY,
                 c.env.VAPID_SUBJECT
@@ -310,6 +313,7 @@ publish.post('/', async (c) => {
             'repost',
             eTag[1],
             event.id,
+            null,
             null,
             c.env.VAPID_PUBLIC_KEY,
             c.env.VAPID_PRIVATE_KEY,

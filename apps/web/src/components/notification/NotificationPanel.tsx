@@ -120,7 +120,7 @@ export function NotificationPanel({ onClose, onUnreadChange }: NotificationPanel
     return text.slice(0, maxLength) + '...'
   }
 
-  // Render actor names
+  // Render actor names (for reply/repost)
   const renderActors = (notification: AggregatedNotification): string => {
     const names = notification.actors.slice(0, 3).map((a) => getDisplayName(a.pubkey))
     const remaining = notification.actors.length - 3
@@ -130,11 +130,51 @@ export function NotificationPanel({ onClose, onUnreadChange }: NotificationPanel
     return names.join(', ')
   }
 
-  // Get icon for notification type
-  const getIcon = (type: 'stella' | 'reply' | 'repost') => {
+  // Stella color to fill color mapping
+  const stellaColorMap: Record<string, string> = {
+    yellow: '#f1c40f',
+    green: '#2ecc71',
+    red: '#e74c3c',
+    blue: '#3498db',
+    purple: '#9b59b6',
+  }
+
+  // Render stella info: "2人から +⭐3 +💙2"
+  const renderStellaInfo = (notification: AggregatedNotification) => {
+    // Count unique actors
+    const uniqueActors = new Set(notification.actors.map((a) => a.pubkey))
+    const actorCount = uniqueActors.size
+
+    // Aggregate stella counts by color
+    const byColor: Record<string, number> = {}
+    for (const actor of notification.actors) {
+      const color = actor.stellaColor || 'yellow'
+      const count = actor.stellaCount || 1
+      byColor[color] = (byColor[color] || 0) + count
+    }
+
+    // Sort colors: yellow first, then by count
+    const colorOrder = ['yellow', 'green', 'red', 'blue', 'purple']
+    const sortedColors = Object.keys(byColor).sort((a, b) => {
+      return colorOrder.indexOf(a) - colorOrder.indexOf(b)
+    })
+
+    return (
+      <>
+        <span className="notification-actor-count">{actorCount}人から</span>
+        {sortedColors.map((color) => (
+          <span key={color} className="notification-stella-badge">
+            <Icon name="Star" size={14} fill={stellaColorMap[color] || '#f1c40f'} />
+            <span className="notification-stella-count">+{byColor[color]}</span>
+          </span>
+        ))}
+      </>
+    )
+  }
+
+  // Get icon for notification type (reply/repost only)
+  const getIcon = (type: 'reply' | 'repost') => {
     switch (type) {
-      case 'stella':
-        return <Icon name="Star" size={16} fill="#f1c40f" className="notification-icon notification-icon-stella" />
       case 'reply':
         return <Icon name="MessageCircle" size={16} className="notification-icon notification-icon-reply" />
       case 'repost':
@@ -142,11 +182,9 @@ export function NotificationPanel({ onClose, onUnreadChange }: NotificationPanel
     }
   }
 
-  // Get action text for notification type
-  const getActionText = (type: 'stella' | 'reply' | 'repost') => {
+  // Get action text for notification type (reply/repost only)
+  const getActionText = (type: 'reply' | 'repost') => {
     switch (type) {
-      case 'stella':
-        return "stella'd"
       case 'reply':
         return 'replied'
       case 'repost':
@@ -179,9 +217,15 @@ export function NotificationPanel({ onClose, onUnreadChange }: NotificationPanel
                 onClick={() => handleNotificationClick(notification)}
               >
                 <div className="notification-item-header">
-                  {getIcon(notification.type)}
-                  <span className="notification-actors">{renderActors(notification)}</span>
-                  <span className="notification-action">{getActionText(notification.type)}</span>
+                  {notification.type === 'stella' ? (
+                    renderStellaInfo(notification)
+                  ) : (
+                    <>
+                      {getIcon(notification.type)}
+                      <span className="notification-actors">{renderActors(notification)}</span>
+                      <span className="notification-action">{getActionText(notification.type)}</span>
+                    </>
+                  )}
                 </div>
                 <div className="notification-item-content">
                   <span className="notification-preview">{getContentPreview(notification)}</span>

@@ -354,6 +354,7 @@ export async function recordImpressions(
 export interface NotificationActor {
   pubkey: string
   stellaCount?: number
+  stellaColor?: string
 }
 
 export interface AggregatedNotification {

@@ -37,6 +37,7 @@ CREATE TABLE notifications (
   target_event_id TEXT NOT NULL,   -- 対象の投稿ID
   source_event_id TEXT,            -- リプライ/リポストのイベントID
   stella_count INTEGER,            -- ステラの場合のみ (1-10)
+  stella_color TEXT DEFAULT 'yellow', -- ステラの色 (yellow, green, red, blue, purple)
   created_at INTEGER NOT NULL,
   read_at INTEGER                  -- タップした日時（NULLなら未読）
 );
@@ -58,6 +59,7 @@ CREATE INDEX idx_notifications_source ON notifications(source_event_id);
 | target_event_id | 対象の投稿ID（ステラ/リプライ/リポスト先） |
 | source_event_id | リプライやリポストのイベントID（ステラはNULL） |
 | stella_count | ステラ数（1-10）、ステラ以外はNULL |
+| stella_color | ステラの色（yellow, green, red, blue, purple）、ステラ以外はNULL |
 | created_at | 通知が発生した日時 |
 | read_at | ユーザーがタップして投稿に遷移した日時（NULLなら未読） |
 
@@ -180,22 +182,25 @@ WHERE recipient_pubkey = ? AND read_at IS NULL
 
 ```
 DB (5レコード):
-├─ alice → 投稿X にステラ
-├─ bob → 投稿X にステラ
-├─ carol → 投稿X にステラ
+├─ alice → 投稿X に黄ステラ×3
+├─ bob → 投稿X に青ステラ×2
+├─ carol → 投稿X に黄ステラ×1
 ├─ dave → 投稿X にリプライ
 └─ eve → 投稿X にリポスト
 
 表示 (3行):
-├─ alice, bob, carol が投稿X にステラ
-├─ dave が投稿X にリプライ
-└─ eve が投稿X にリポスト
+├─ 2人から +⭐4 +💙2    ← ステラは人数と色別合計を表示
+├─ dave がリプライ
+└─ eve がリポスト
 ```
 
+- **ステラ通知**: 「N人から」+ 色別ステラ数（+⭐5 +💙2）で表示
+  - 誰がつけたかは詳細画面で確認
+  - カラーステラ対応：黄・緑・赤・青・紫
 - **リプライは集約しない**
   - 各リプライの内容が異なるため、個別表示が必要
   - 集約すると「1つタップ → 全部既読」になり、他のリプライを見逃す可能性がある
-- 「他N人」の N はDB内の件数のみ（正確でなくてもよい）
+- **リポスト**: ユーザー名で表示（従来通り）
 
 ### 未読/既読の表示
 
@@ -236,7 +241,7 @@ Lucide React を使用：
 ┌─────────────────────────────────────┐
 │ 通知                                 │
 ├─────────────────────────────────────┤
-│ ★ alice, bob 他3人がステラ          │
+│ 2人から +⭐4 +💙2                    │
 │    「今日の散歩で見つけた...」        │
 │                            3分前    │
 ├─────────────────────────────────────┤
@@ -276,8 +281,8 @@ GET /api/notifications?pubkey=<自分のpubkey>
       "targetEventId": "abc123",
       "sourceEventId": null,
       "actors": [
-        { "pubkey": "alice_pubkey", "stellaCount": 5 },
-        { "pubkey": "bob_pubkey", "stellaCount": 3 }
+        { "pubkey": "alice_pubkey", "stellaCount": 5, "stellaColor": "yellow" },
+        { "pubkey": "bob_pubkey", "stellaCount": 3, "stellaColor": "blue" }
       ],
       "createdAt": 1234567890,
       "readAt": null
