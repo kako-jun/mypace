@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { BackButton, Button, Icon } from '../components/ui'
+import { BackButton, Icon } from '../components/ui'
 import { getStoredThemeColors, isDarkColor } from '../lib/nostr/events'
 import { useWallet } from '../hooks/useWallet'
 import '../styles/pages/inventory.css'
@@ -47,14 +47,6 @@ export function InventoryPage() {
   const { connected, balance, walletName, loading, error, hasWebLN, connect, disconnect, refreshBalance } = useWallet()
 
   const stellas = balance !== null ? satsToStellas(balance) : []
-
-  const handleOpenAlby = () => {
-    window.open('https://getalby.com/', '_blank', 'noopener,noreferrer')
-  }
-
-  const handleOpenWalletOfSatoshi = () => {
-    window.open('https://www.walletofsatoshi.com/', '_blank', 'noopener,noreferrer')
-  }
 
   const handleConnect = async () => {
     await connect()
@@ -141,12 +133,17 @@ export function InventoryPage() {
         <h3>Lightning Wallet</h3>
         <p className="inventory-wallet-hint">Use a Lightning wallet to add sats</p>
         <div className="inventory-wallet-buttons">
-          <Button variant="secondary" size="md" onClick={handleOpenAlby}>
+          <a href="https://getalby.com/" target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-md">
             Alby
-          </Button>
-          <Button variant="secondary" size="md" onClick={handleOpenWalletOfSatoshi}>
+          </a>
+          <a
+            href="https://www.walletofsatoshi.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary btn-md"
+          >
             Wallet of Satoshi
-          </Button>
+          </a>
         </div>
         <p className="inventory-wallet-note">
           * MY PACE does not process payments. It only displays your wallet balance.

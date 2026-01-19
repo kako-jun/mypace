@@ -73,18 +73,13 @@ function getTileGrid(hash: string): TileGrid | null {
 export function PostLocation({ geohashStr, name }: PostLocationProps) {
   const tileGrid = getTileGrid(geohashStr)
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    try {
-      const { latitude, longitude } = geohash.decode(geohashStr)
-      window.open(
-        `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}&zoom=17`,
-        '_blank',
-        'noopener,noreferrer'
-      )
-    } catch {
-      // Invalid geohash, do nothing
-    }
+  // Calculate map URL
+  let mapUrl = '#'
+  try {
+    const { latitude, longitude } = geohash.decode(geohashStr)
+    mapUrl = `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}&zoom=17`
+  } catch {
+    // Invalid geohash
   }
 
   // Container size
@@ -93,7 +88,14 @@ export function PostLocation({ geohashStr, name }: PostLocationProps) {
   const tileSize = 256
 
   return (
-    <button type="button" className="post-location" onClick={handleClick} title="View on map">
+    <a
+      href={mapUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="post-location"
+      title="View on map"
+      onClick={(e) => e.stopPropagation()}
+    >
       {tileGrid && (
         <div className="post-location-map-container">
           <div
@@ -124,6 +126,6 @@ export function PostLocation({ geohashStr, name }: PostLocationProps) {
         <Icon name="MapPin" size={14} />
         <span>{name || geohashStr}</span>
       </div>
-    </button>
+    </a>
   )
 }
