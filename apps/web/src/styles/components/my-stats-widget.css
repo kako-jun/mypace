@@ -19,7 +19,7 @@
   /* Semi-transparent background */
   background: rgba(255, 255, 255, 0.5);
   padding: clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px);
-  padding-bottom: clamp(24px, 4vw, 28px); /* Extra space for inventory button */
+  padding-bottom: clamp(28px, 5vw, 34px); /* Extra space for inventory button */
   border-radius: 8px;
 
   pointer-events: none;
@@ -62,8 +62,8 @@
 /* Inventory button - uses TextButton base style */
 .my-stats-inventory-btn {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
+  bottom: 6px;
+  right: 6px;
   pointer-events: auto;
   font-size: 0.75rem;
 }
