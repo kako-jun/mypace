@@ -158,54 +158,46 @@ tags: [
 
 ## Relays
 
-Default relays in `app/lib/nostr/relay.ts`:
 ```typescript
-const RELAYS = [
-  'wss://nos.lol',
-  'wss://relay.damus.io',
-  'wss://relay.nostr.band',
-]
+const RELAYS = ['wss://search.nos.today']
 ```
+
+NIP-50（全文検索）と #t フィルタの両方に対応しているリレーのみ使用。
+
+### リレー対応状況
+
+| リレー | NIP-50 | #tフィルタ | 備考 |
+|--------|--------|-----------|------|
+| search.nos.today | ✅ | ✅ | 使用中 |
+| relay.nostr.band | ✅ | ✅ | 502エラー頻発 |
+| nostr.wine | ✅ | ❌無視 | #tを送っても一般投稿を返す |
+| relay.damus.io | ❌ | ✅ | searchパラメータでエラー |
+| nos.lol | ❌ | ✅ | searchパラメータでエラー |
+| relay.snort.social | ❌ | ✅ | searchパラメータでエラー |
 
 ## Filtering
 
-タイムライン取得時に `#t: ['mypace']` フィルターを適用:
-- `fetchTimeline()` - ブラウザからリレーに直接接続して取得
+### リレー側フィルタ（Nostrプロトコル）
 
-## NIP-50: Search
+| フィルタ | 説明 | 条件 |
+|----------|------|------|
+| kinds | イベントタイプ | 常に |
+| #t | タグフィルタ (OR) | showAll=false時に`['mypace']` |
+| authors | 投稿者 | fetchUserEventsのみ |
+| since, until | 時間範囲 | 指定時 |
+| search | 全文検索 (NIP-50) | 検索キーワードあり時 |
 
-全文検索に対応。タイムライン上部の検索ボックスにキーワードを入力すると、NIP-50対応リレーに`search`パラメータを送信し、過去の投稿から検索結果を取得する。
+### クライアント側フィルタ
 
-```typescript
-// 検索クエリがある場合のフィルター
-const filter: Filter = {
-  kinds: [1, 6, 30023],
-  '#t': ['mypace'],
-  search: 'キーワード',  // NIP-50
-  limit: 200
-}
-```
-
-**リレー選択**:
-- 検索時: `SEARCH_RELAYS`（NIP-50 + タグフィルタ対応）のみに送信
-- 通常時: `RELAYS`（全リレー）に送信
-
-| リレー | 用途 | NIP-50 | #tフィルタ |
-|--------|------|--------|-----------|
-| search.nos.today | 検索専用 | ✅ | ✅ |
-| relay.damus.io | 通常 | ❌ | ✅ |
-| nos.lol | 通常 | ❌ | ✅ |
-| relay.nostr.band | 通常 | ✅ | ✅ |
-| nostr.wine | 通常 | ✅ | ❌無視 |
-| relay.snort.social | 通常 | ❌ | ✅ |
-
-**検索の組み合わせ**:
-- ホームタイムライン: キーワード検索 + タグフィルタ + 個人フィルタ
-- ユーザーページ: キーワード検索 + タグフィルタ + 個人フィルタ + 著者フィルタ（`authors: [pubkey]`）
-
-**タグとの違い**:
-- タグ（OKタグ）はAND検索のため、クライアント側でフィルタリング
-- キーワードはNIP-50でリレー側で検索（過去全体から取得可能）
+| フィルタ | 説明 |
+|----------|------|
+| filterByMuteList | ミュートユーザー除外 |
+| filterBySmartFilters | 広告タグ/キーワード、NSFWタグ/キーワード除外 |
+| filterByNPC | NPC投稿(kind:42000)除外 |
+| filterByNgWords | NGワード除外 |
+| filterByNgTags | NGタグ除外（タグ配列+本文中の#tag） |
+| filterByOkTags | OKタグフィルタ (AND) - 全タグを含む投稿のみ |
+| filterByLanguage | 言語フィルタ |
 
 ## Security
 

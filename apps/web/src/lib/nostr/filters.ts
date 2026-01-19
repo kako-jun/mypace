@@ -65,17 +65,6 @@ export function filterByNgTags<T extends { content: string; tags: string[][] }>(
   })
 }
 
-// OKワードフィルタ（検索）: 本文にすべての検索ワードを含む投稿のみ表示（AND検索）
-export function filterByQuery<T extends { content: string }>(events: T[], queries: string[]): T[] {
-  if (queries.length === 0) return events
-  const queriesLower = queries.map((q) => q.toLowerCase())
-  return events.filter((e) => {
-    const contentLower = e.content.toLowerCase()
-    // 全てのクエリが含まれているか確認（AND条件）
-    return queriesLower.every((query) => contentLower.includes(query))
-  })
-}
-
 // OKタグフィルタ: 指定タグを含む投稿のみ表示（AND: 全て含む必要あり）
 export function filterByOkTags<T extends { content: string; tags: string[][] }>(events: T[], okTags: string[]): T[] {
   if (okTags.length === 0) return events

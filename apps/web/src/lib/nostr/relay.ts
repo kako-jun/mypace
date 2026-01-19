@@ -1,7 +1,7 @@
 // 直接Nostrリレーに接続してデータを取得
 import { SimplePool } from 'nostr-tools/pool'
 import type { Filter, Event as NostrEvent } from 'nostr-tools'
-import { RELAYS, SEARCH_RELAYS, MYPACE_TAG, KIND_NOTE, KIND_REPOST, KIND_LONG_FORM, KIND_SINOV_NPC } from './constants'
+import { RELAYS, MYPACE_TAG, KIND_NOTE, KIND_REPOST, KIND_LONG_FORM, KIND_SINOV_NPC } from './constants'
 import { parseStellaTags, getTotalStellaCount, EMPTY_STELLA_COUNTS, type StellaCountsByColor } from './events'
 import {
   filterBySmartFilters,
@@ -9,7 +9,6 @@ import {
   filterByMuteList,
   filterByNgWords,
   filterByNgTags,
-  filterByQuery,
   filterByOkTags,
   filterByLanguage,
 } from './filters'
@@ -143,25 +142,22 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
     if (until > 0) {
       filter.until = until
     }
-    // 検索時はSEARCH_RELAYS（NIP-50+タグフィルタ対応）のみ、通常時はRELAYS
-    const targetRelays = searchQuery ? SEARCH_RELAYS : RELAYS
     if (searchQuery) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(filter as any).search = searchQuery
     }
 
-    const rawEvents = await p.querySync(targetRelays, filter)
+    const rawEvents = await p.querySync(RELAYS, filter)
     rawEvents.sort((a, b) => b.created_at - a.created_at)
 
     let events = rawEvents.map(toEvent)
 
-    // フィルタ適用（除外率の高い順に実行）
+    // クライアント側フィルタ（リレーが対応していないもののみ）
     events = filterByMuteList(events, mutedPubkeys)
     events = filterBySmartFilters(events, hideAds, hideNSFW)
     events = filterByNPC(events, hideNPC)
     events = filterByNgWords(events, ngWords)
     events = filterByNgTags(events, ngTags)
-    events = filterByQuery(events, queries)
     events = filterByOkTags(events, okTags)
 
     if (langFilter) {
@@ -266,25 +262,22 @@ export async function fetchUserEvents(
     if (until > 0) {
       filter.until = until
     }
-    // 検索時はSEARCH_RELAYS（NIP-50+タグフィルタ対応）のみ、通常時はRELAYS
-    const targetRelays = searchQuery ? SEARCH_RELAYS : RELAYS
     if (searchQuery) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(filter as any).search = searchQuery
     }
 
-    const rawEvents = await p.querySync(targetRelays, filter)
+    const rawEvents = await p.querySync(RELAYS, filter)
     rawEvents.sort((a, b) => b.created_at - a.created_at)
 
     let events = rawEvents.map(toEvent)
 
-    // フィルタ適用
+    // クライアント側フィルタ（リレーが対応していないもののみ）
     events = filterByMuteList(events, mutedPubkeys)
     events = filterBySmartFilters(events, hideAds, hideNSFW)
     events = filterByNPC(events, hideNPC)
     events = filterByNgWords(events, ngWords)
     events = filterByNgTags(events, ngTags)
-    events = filterByQuery(events, q)
     events = filterByOkTags(events, tags)
 
     if (langFilter) {
