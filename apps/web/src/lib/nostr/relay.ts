@@ -133,9 +133,8 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
       kinds: targetKinds,
       limit: limit * 2, // フィルタで減る分を考慮
     }
-    // 検索時は#tフィルタをリレーに送らない（NIP-50との組み合わせで0件になることがあるため）
-    // 代わりにクライアント側でmypaceタグをフィルタリング
-    if (!showAll && !searchQuery) {
+    // #tフィルタは常に適用（NIP-50対応リレーはsearch+#tの組み合わせを処理できる）
+    if (!showAll) {
       filter['#t'] = [MYPACE_TAG]
     }
     if (since > 0) {
@@ -163,13 +162,6 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
     }
 
     let events = rawEvents.map(toEvent)
-
-    // 検索時はmypaceタグをクライアント側でフィルタ
-    if (!showAll && searchQuery) {
-      const beforeFilter = events.length
-      events = events.filter((e) => e.tags.some((t) => t[0] === 't' && t[1]?.toLowerCase() === MYPACE_TAG))
-      console.log('[NIP-50 Search] after mypace filter:', beforeFilter, '->', events.length)
-    }
 
     // フィルタ適用（除外率の高い順に実行）
     events = filterByMuteList(events, mutedPubkeys)
@@ -269,14 +261,11 @@ export async function fetchUserEvents(
       limit: limit * 2,
     }
 
-    // 検索時は#tフィルタをリレーに送らない（NIP-50との組み合わせで0件になることがあるため）
-    // 代わりにクライアント側でmypaceタグとOKタグをフィルタリング
-    if (!searchQuery) {
-      if (!showAll || tags.length > 0) {
-        const tagFilter = showAll ? tags : [MYPACE_TAG, ...tags]
-        if (tagFilter.length > 0) {
-          filter['#t'] = tagFilter
-        }
+    // #tフィルタは常に適用（NIP-50対応リレーはsearch+#tの組み合わせを処理できる）
+    if (!showAll || tags.length > 0) {
+      const tagFilter = showAll ? tags : [MYPACE_TAG, ...tags]
+      if (tagFilter.length > 0) {
+        filter['#t'] = tagFilter
       }
     }
     if (since > 0) {
@@ -294,11 +283,6 @@ export async function fetchUserEvents(
     rawEvents.sort((a, b) => b.created_at - a.created_at)
 
     let events = rawEvents.map(toEvent)
-
-    // 検索時はmypaceタグをクライアント側でフィルタ
-    if (!showAll && searchQuery) {
-      events = events.filter((e) => e.tags.some((t) => t[0] === 't' && t[1]?.toLowerCase() === MYPACE_TAG))
-    }
 
     // フィルタ適用
     events = filterByMuteList(events, mutedPubkeys)
