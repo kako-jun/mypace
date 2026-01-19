@@ -158,22 +158,63 @@ tags: [
 
 ## Relays
 
+### 用途別リレー構成
+
 ```typescript
-const RELAYS = ['wss://search.nos.today']
+// タイムライン/検索用リレー（#t + NIP-50 search対応）
+export const SEARCH_RELAYS = [
+  'wss://search.nos.today',
+  'wss://relay.nostr.band', // 復旧待ち（authors + #t + search 全対応）
+]
+
+// メタデータ/プロフィール用リレー（#e, authors対応）
+export const GENERAL_RELAYS = [
+  'wss://relay.damus.io',
+  'wss://nos.lol',
+]
 ```
 
-NIP-50（全文検索）と #t フィルタの両方に対応しているリレーのみ使用。
+### 用途別リレー使い分け
 
-### リレー対応状況
+| 関数 | リレー | 理由 |
+|------|--------|------|
+| fetchTimeline | SEARCH_RELAYS | #t + NIP-50検索が必要 |
+| fetchUserEvents | SEARCH_RELAYS | #t + NIP-50検索が必要 |
+| fetchProfiles | GENERAL_RELAYS | authorsフィルタ対応 |
+| fetchEventById | GENERAL_RELAYS | idsフィルタ対応 |
+| fetchEventsByIds | GENERAL_RELAYS | idsフィルタ対応 |
+| fetchEventMetadata | GENERAL_RELAYS | #eフィルタ対応（リアクション/リプライ/リポスト取得） |
+| publishEvent | RELAYS（両方） | 全リレーに投稿を配信 |
 
-| リレー | NIP-50 | #tフィルタ | 備考 |
-|--------|--------|-----------|------|
-| search.nos.today | ✅ | ✅ | 使用中 |
-| relay.nostr.band | ✅ | ✅ | 502エラー頻発 |
-| nostr.wine | ✅ | ❌無視 | #tを送っても一般投稿を返す |
-| relay.damus.io | ❌ | ✅ | searchパラメータでエラー |
-| nos.lol | ❌ | ✅ | searchパラメータでエラー |
-| relay.snort.social | ❌ | ✅ | searchパラメータでエラー |
+### リレー対応状況（2026年1月調査）
+
+| リレー | #t | authors | search | #e | 備考 |
+|--------|-----|---------|--------|-----|------|
+| search.nos.today | ✅ | ❌(0件) | ✅ | ❌(0件) | タイムライン/検索用 |
+| relay.nostr.band | ✅ | ✅ | ✅ | ✅ | 全機能対応だが502エラー（復旧待ち） |
+| nostr.wine | ❌無視 | ✅ | ✅ | - | #tを送っても一般投稿を返す |
+| relay.damus.io | ✅ | ✅ | ❌エラー | ✅ | メタデータ用 |
+| nos.lol | ✅ | ✅ | ❌エラー | ✅ | メタデータ用 |
+
+### 制約事項
+
+**ユーザーページでの検索（authors + #t + search）**:
+- 現時点で対応リレーなし
+- relay.nostr.bandが唯一全機能対応だが、502エラーで利用不可
+- relay.nostr.band復旧後は自動的に機能する（SEARCH_RELAYSに含まれているため）
+
+**ローカルフィルタの問題**:
+- 緩い条件でリレーから取得 → limitで最新データのみ → ローカルフィルタ
+- この方式では過去のデータが取得できない
+- そのため、リレー側で全条件を処理できない場合は機能制限となる
+
+### 調査履歴
+
+**2026年1月**:
+- relay.nostr.bandが502エラーを返し始める（原因・復旧時期不明）
+- search.nos.todayがauthorsフィルタで0件を返すことを確認
+- search.nos.todayが#eフィルタで0件を返すことを確認（メタデータ取得不可）
+- 用途別にリレーを分離する構成に変更
 
 ## Filtering
 

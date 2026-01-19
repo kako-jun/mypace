@@ -9,8 +9,17 @@ export const KIND_REPOST = 6
 export const KIND_LONG_FORM = 30023
 export const KIND_SINOV_NPC = 42000 // Sinov NPC posts (hidden from other clients)
 
-// リレーリスト（NIP-50 + #tフィルタ両対応のもののみ）
-export const RELAYS = ['wss://search.nos.today']
+// タイムライン/検索用リレー（#t + NIP-50 search対応）
+export const SEARCH_RELAYS = [
+  'wss://search.nos.today',
+  'wss://relay.nostr.band', // 復旧待ち（authors + #t + search 全対応）
+]
+
+// メタデータ/プロフィール用リレー（#e, authors対応）
+export const GENERAL_RELAYS = ['wss://relay.damus.io', 'wss://nos.lol']
+
+// 後方互換用（両方を含む）
+export const RELAYS = [...SEARCH_RELAYS, ...GENERAL_RELAYS]
 
 // Smart filter: Ad-related tags
 export const AD_TAGS = [

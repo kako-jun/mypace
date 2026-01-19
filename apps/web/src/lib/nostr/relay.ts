@@ -1,7 +1,16 @@
 // 直接Nostrリレーに接続してデータを取得
 import { SimplePool } from 'nostr-tools/pool'
 import type { Filter, Event as NostrEvent } from 'nostr-tools'
-import { RELAYS, MYPACE_TAG, KIND_NOTE, KIND_REPOST, KIND_LONG_FORM, KIND_SINOV_NPC } from './constants'
+import {
+  RELAYS,
+  SEARCH_RELAYS,
+  GENERAL_RELAYS,
+  MYPACE_TAG,
+  KIND_NOTE,
+  KIND_REPOST,
+  KIND_LONG_FORM,
+  KIND_SINOV_NPC,
+} from './constants'
 import { parseStellaTags, getTotalStellaCount, EMPTY_STELLA_COUNTS, type StellaCountsByColor } from './events'
 import {
   filterBySmartFilters,
@@ -147,7 +156,7 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
       ;(filter as any).search = searchQuery
     }
 
-    const rawEvents = await p.querySync(RELAYS, filter)
+    const rawEvents = await p.querySync(SEARCH_RELAYS, filter)
     rawEvents.sort((a, b) => b.created_at - a.created_at)
 
     let events = rawEvents.map(toEvent)
@@ -267,7 +276,7 @@ export async function fetchUserEvents(
       ;(filter as any).search = searchQuery
     }
 
-    const rawEvents = await p.querySync(RELAYS, filter)
+    const rawEvents = await p.querySync(SEARCH_RELAYS, filter)
     rawEvents.sort((a, b) => b.created_at - a.created_at)
 
     let events = rawEvents.map(toEvent)
@@ -322,7 +331,7 @@ export async function fetchProfiles(pubkeys: string[]): Promise<Record<string, P
       authors: pubkeys,
     }
 
-    const events = await p.querySync(RELAYS, filter)
+    const events = await p.querySync(GENERAL_RELAYS, filter)
 
     // 各pubkeyの最新プロフィールを取得
     const latestByPubkey: Record<string, NostrEvent> = {}
@@ -373,7 +382,7 @@ export async function fetchEventById(eventId: string): Promise<Event | null> {
       ids: [eventId],
     }
 
-    const events = await p.querySync(RELAYS, filter)
+    const events = await p.querySync(GENERAL_RELAYS, filter)
     if (events.length > 0) {
       return toEvent(events[0])
     }
@@ -396,7 +405,7 @@ export async function fetchEventsByIds(eventIds: string[]): Promise<Record<strin
       ids: eventIds,
     }
 
-    const events = await p.querySync(RELAYS, filter)
+    const events = await p.querySync(GENERAL_RELAYS, filter)
     for (const e of events) {
       result[e.id] = toEvent(e)
     }
@@ -479,7 +488,7 @@ export async function fetchEventMetadata(
       '#e': eventIds,
     }
 
-    const events = await p.querySync(RELAYS, filter)
+    const events = await p.querySync(GENERAL_RELAYS, filter)
 
     // リアクションをイベントごとにグループ化し、ユーザーごとに最新のみ保持
     const reactionsByEvent = new Map<
