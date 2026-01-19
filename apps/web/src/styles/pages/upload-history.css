@@ -6,12 +6,22 @@
   padding: 1rem;
 }
 
-.upload-history-hint {
-  font-size: 0.9rem;
-  margin: 0 0 1rem;
+.upload-history-header {
+  margin-bottom: 1.5rem;
   background: none;
   border: none;
   padding: 0;
+}
+
+.upload-history-header h2 {
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+}
+
+.upload-history-header p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
 }
 
 .upload-history-message {

@@ -105,15 +105,13 @@
 }
 
 .inventory-stella-empty {
-  text-align: center;
-  padding: 1rem;
+  padding: 1rem 0;
   color: var(--text-muted);
   font-size: 0.9rem;
 }
 
 .inventory-not-connected-message {
-  text-align: center;
-  padding: 1rem;
+  padding: 1rem 0;
   color: var(--text-muted);
   font-size: 0.9rem;
 }
@@ -126,7 +124,6 @@
 }
 
 .inventory-connect-section {
-  text-align: center;
   padding: 1rem 0;
 }
 
@@ -189,8 +186,7 @@
 }
 
 .inventory-balance-unavailable {
-  text-align: center;
-  padding: 1rem;
+  padding: 1rem 0;
   color: var(--text-muted);
   font-size: 0.9rem;
 }
@@ -224,27 +220,14 @@
   margin-bottom: 0.75rem;
 }
 
-.inventory-wallet-button {
+.inventory-wallet-buttons .btn {
   flex: 1;
-  padding: 0.75rem 1rem;
-  border: 2px solid #000;
-  border-radius: 4px;
-  background: var(--surface-secondary);
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.inventory-wallet-button:hover {
-  background: var(--surface-hover);
 }
 
 .inventory-wallet-note {
   font-size: 0.8rem;
   color: var(--text-muted);
   margin: 0;
-  text-align: center;
 }
 
 /* Info Section */

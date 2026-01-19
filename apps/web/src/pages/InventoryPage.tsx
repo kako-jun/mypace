@@ -1,15 +1,15 @@
 import { useNavigate } from 'react-router-dom'
-import { BackButton, Icon } from '../components/ui'
+import { BackButton, Button, Icon } from '../components/ui'
 import { getStoredThemeColors, isDarkColor } from '../lib/nostr/events'
 import { useWallet } from '../hooks/useWallet'
 import '../styles/pages/inventory.css'
 
 // Stella color definitions (ordered by sats value descending for denomination conversion)
 const STELLA_COLORS = [
-  { name: 'purple', label: 'パープル', sats: 1000, color: '#9b59b6' },
-  { name: 'blue', label: 'ブルー', sats: 100, color: '#3498db' },
-  { name: 'red', label: 'レッド', sats: 10, color: '#e74c3c' },
-  { name: 'green', label: 'グリーン', sats: 1, color: '#2ecc71' },
+  { name: 'purple', label: 'Purple', sats: 1000, color: '#9b59b6' },
+  { name: 'blue', label: 'Blue', sats: 100, color: '#3498db' },
+  { name: 'red', label: 'Red', sats: 10, color: '#e74c3c' },
+  { name: 'green', label: 'Green', sats: 1, color: '#2ecc71' },
 ] as const
 
 function useTextClass(): string {
@@ -69,53 +69,53 @@ export function InventoryPage() {
       <BackButton onClick={() => navigate(-1)} />
 
       <div className={`inventory-header themed-card ${textClass}`}>
-        <h2>インベントリ</h2>
-        <p>Lightningウォレットの残高がカラーステラとして表示されます</p>
+        <h2>Inventory</h2>
+        <p>Your Lightning wallet balance displayed as Color Stella</p>
       </div>
 
       <div className="inventory-balance-section">
         <div className="inventory-balance-header">
-          <span className="inventory-balance-label">カラーステラ残高</span>
+          <span className="inventory-balance-label">Color Stella Balance</span>
           {connected && balance !== null ? (
             <>
               <span className="inventory-balance-value">{balance.toLocaleString()} sats</span>
-              <button className="inventory-refresh-button" onClick={handleRefresh} title="残高を更新">
+              <button className="inventory-refresh-button" onClick={handleRefresh} title="Refresh balance">
                 <Icon name="RefreshCw" size={16} />
               </button>
             </>
           ) : connected && balance === null ? (
-            <span className="inventory-balance-value inventory-balance-unknown">残高取得不可</span>
+            <span className="inventory-balance-value inventory-balance-unknown">Balance unavailable</span>
           ) : (
-            <span className="inventory-balance-value inventory-not-connected">未接続</span>
+            <span className="inventory-balance-value inventory-not-connected">Not connected</span>
           )}
         </div>
 
         {connected ? (
           <>
-            {walletName && <div className="inventory-wallet-name">接続中: {walletName}</div>}
+            {walletName && <div className="inventory-wallet-name">Connected: {walletName}</div>}
             {balance !== null ? (
               <div className="inventory-stella-list">
                 {stellas.length > 0 ? (
                   stellas.map((stella) => (
                     <div key={stella.name} className="inventory-stella-item">
-                      <span className="inventory-stella-icon" style={{ color: stella.color }}>
-                        ★
+                      <span className="inventory-stella-icon">
+                        <Icon name="Star" size={20} fill={stella.color} />
                       </span>
                       <span className="inventory-stella-label">{stella.label}</span>
-                      <span className="inventory-stella-count">{stella.count}個</span>
+                      <span className="inventory-stella-count">×{stella.count.toLocaleString()}</span>
                     </div>
                   ))
                 ) : (
-                  <div className="inventory-stella-empty">残高がありません</div>
+                  <div className="inventory-stella-empty">No balance</div>
                 )}
               </div>
             ) : (
               <div className="inventory-balance-unavailable">
-                <p>このウォレットは残高の取得に対応していません</p>
+                <p>This wallet does not support balance retrieval</p>
               </div>
             )}
             <button className="inventory-disconnect-button" onClick={disconnect}>
-              切断
+              Disconnect
             </button>
           </>
         ) : (
@@ -123,14 +123,14 @@ export function InventoryPage() {
             {hasWebLN ? (
               <>
                 <button className="inventory-connect-button" onClick={handleConnect} disabled={loading}>
-                  {loading ? '接続中...' : 'ウォレットを接続'}
+                  {loading ? 'Connecting...' : 'Connect Wallet'}
                 </button>
                 {error && <p className="inventory-error">{error}</p>}
               </>
             ) : (
               <div className="inventory-no-webln">
-                <p>Lightningウォレット拡張機能が見つかりません</p>
-                <p className="inventory-install-hint">Alby拡張機能をインストールしてください</p>
+                <p>Lightning wallet extension not found</p>
+                <p className="inventory-install-hint">Please install the Alby extension</p>
               </div>
             )}
           </div>
@@ -138,43 +138,45 @@ export function InventoryPage() {
       </div>
 
       <div className="inventory-wallet-section">
-        <h3>Lightningウォレット</h3>
-        <p className="inventory-wallet-hint">satsを追加するには、Lightningウォレットをご利用ください</p>
+        <h3>Lightning Wallet</h3>
+        <p className="inventory-wallet-hint">Use a Lightning wallet to add sats</p>
         <div className="inventory-wallet-buttons">
-          <button className="inventory-wallet-button" onClick={handleOpenAlby}>
-            <span>Alby</span>
-          </button>
-          <button className="inventory-wallet-button" onClick={handleOpenWalletOfSatoshi}>
-            <span>Wallet of Satoshi</span>
-          </button>
+          <Button variant="secondary" size="sm" onClick={handleOpenAlby}>
+            Alby
+          </Button>
+          <Button variant="secondary" size="sm" onClick={handleOpenWalletOfSatoshi}>
+            Wallet of Satoshi
+          </Button>
         </div>
-        <p className="inventory-wallet-note">※ MY PACEは決済を行いません。ウォレットの残高を表示するのみです。</p>
+        <p className="inventory-wallet-note">
+          * MY PACE does not process payments. It only displays your wallet balance.
+        </p>
       </div>
 
       <div className="inventory-info-section">
-        <h3>カラーステラについて</h3>
+        <h3>About Color Stella</h3>
         <table className="inventory-price-table">
           <thead>
             <tr>
-              <th>色</th>
-              <th>価格</th>
+              <th>Color</th>
+              <th>Value</th>
             </tr>
           </thead>
           <tbody>
             {STELLA_COLORS.map((stella) => (
               <tr key={stella.name}>
                 <td>
-                  <span style={{ color: stella.color }}>★</span> {stella.label}
+                  <Icon name="Star" size={16} fill={stella.color} /> {stella.label}
                 </td>
-                <td>{stella.sats} sats</td>
+                <td>{stella.sats.toLocaleString()} sats</td>
               </tr>
             ))}
           </tbody>
         </table>
         <p className="inventory-info-note">
-          他のNostrクライアントでZapを受け取ったsatsも、ここに反映されます。
+          Sats received via Zap from other Nostr clients are also reflected here.
           <br />
-          MY PACE以外でZapとして使用することもできます。
+          You can also use them as Zap outside of MY PACE.
         </p>
       </div>
     </div>

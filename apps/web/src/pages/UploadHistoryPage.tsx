@@ -124,9 +124,10 @@ export function UploadHistoryPage() {
     <div className="upload-history-page">
       <BackButton onClick={() => navigate(-1)} />
 
-      <p className={`upload-history-hint themed-card ${textClass}`}>
-        Files uploaded to nostr.build. Press DELETE to remove from server.
-      </p>
+      <div className={`upload-history-header themed-card ${textClass}`}>
+        <h2>Upload History</h2>
+        <p>Files uploaded to nostr.build. Press DELETE to remove from server.</p>
+      </div>
       {deleteMessage && <p className={`upload-history-message themed-card ${textClass}`}>{deleteMessage}</p>}
 
       {loading ? (
@@ -135,7 +136,7 @@ export function UploadHistoryPage() {
         </div>
       ) : history.length === 0 ? (
         <div className="upload-history-empty">
-          <p>アップロード履歴がありません</p>
+          <p>No upload history</p>
         </div>
       ) : (
         <div className="upload-history-list">
