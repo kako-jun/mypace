@@ -149,14 +149,26 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
       ;(filter as any).search = searchQuery
     }
 
+    // DEBUG: ログ出力
+    if (searchQuery) {
+      console.log('[NIP-50 Search] filter:', JSON.stringify(filter))
+    }
+
     const rawEvents = await p.querySync(RELAYS, filter)
     rawEvents.sort((a, b) => b.created_at - a.created_at)
+
+    // DEBUG: ログ出力
+    if (searchQuery) {
+      console.log('[NIP-50 Search] rawEvents from relay:', rawEvents.length)
+    }
 
     let events = rawEvents.map(toEvent)
 
     // 検索時はmypaceタグをクライアント側でフィルタ
     if (!showAll && searchQuery) {
+      const beforeFilter = events.length
       events = events.filter((e) => e.tags.some((t) => t[0] === 't' && t[1]?.toLowerCase() === MYPACE_TAG))
+      console.log('[NIP-50 Search] after mypace filter:', beforeFilter, '->', events.length)
     }
 
     // フィルタ適用（除外率の高い順に実行）
