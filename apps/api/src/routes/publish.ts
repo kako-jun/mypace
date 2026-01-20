@@ -314,9 +314,9 @@ async function checkStellaSupernovas(db: D1Database, pubkey: string): Promise<vo
     }
     const totalStella = Object.values(received).reduce((a, b) => a + b, 0)
 
-    // Check first_stella
-    if (!unlockedIds.has('first_stella') && totalStella > 0) {
-      await unlockSupernova(db, pubkey, 'first_stella', now)
+    // Check first_received_stella
+    if (!unlockedIds.has('first_received_stella') && totalStella > 0) {
+      await unlockSupernova(db, pubkey, 'first_received_stella', now)
     }
 
     // Check color-specific received supernovas
@@ -399,6 +399,12 @@ async function checkGivenStellaSupernovas(db: D1Database, pubkey: string): Promi
     const given: Record<string, number> = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
     for (const g of stellaByColor.results || []) {
       given[g.stella_color] = g.total
+    }
+    const totalGiven = Object.values(given).reduce((a, b) => a + b, 0)
+
+    // Check first_given_stella
+    if (!unlockedIds.has('first_given_stella') && totalGiven > 0) {
+      await unlockSupernova(db, pubkey, 'first_given_stella', now)
     }
 
     // Check color-specific given supernovas

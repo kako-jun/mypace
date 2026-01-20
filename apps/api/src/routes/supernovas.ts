@@ -185,8 +185,11 @@ supernovas.post('/check', async (c) => {
         case 'first_post':
           shouldUnlock = event === 'first_post' || userStats.postCount > 0
           break
-        case 'first_stella':
-          shouldUnlock = event === 'first_stella' || userStats.totalStella > 0
+        case 'first_received_stella':
+          shouldUnlock = event === 'first_received_stella' || userStats.totalStella > 0
+          break
+        case 'first_given_stella':
+          shouldUnlock = event === 'first_given_stella' || userStats.totalGivenStella > 0
           break
         case 'serial_under_100':
           shouldUnlock = userStats.serialNumber !== null && userStats.serialNumber <= 100
@@ -270,9 +273,22 @@ supernovas.post('/seed', async (c) => {
       reward_purple: 0,
     },
     {
-      id: 'first_stella',
-      name: 'First Star',
+      id: 'first_received_stella',
+      name: 'First Received Stella',
       description: 'Received your first stella',
+      category: 'single',
+      threshold: 1,
+      trophy_color: 'yellow',
+      reward_yellow: 5,
+      reward_green: 1,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'first_given_stella',
+      name: 'First Given Stella',
+      description: 'Gave your first stella',
       category: 'single',
       threshold: 1,
       trophy_color: 'yellow',
