@@ -154,17 +154,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     return () => clearImageClickHandler()
   }, [eventId])
 
-  if (!mounted) return null
-
-  const getProfileDisplayName = (pubkey: string, profileData?: LoadableProfile): string => {
-    const effectiveProfile = profileData ?? (pubkey === event?.pubkey ? profile : undefined)
-    return getDisplayName(effectiveProfile, pubkey)
-  }
-
-  const getProfileAvatarUrl = (profileData?: Profile | null): string | null => {
-    return getAvatarUrl(profileData || profile)
-  }
-
   // Flush pending stella to server
   const flushStella = useCallback(async () => {
     if (!event || !myPubkey) return
@@ -339,6 +328,17 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
       setLikingId(null)
     }
   }, [event, myPubkey, setReactions])
+
+  if (!mounted) return null
+
+  const getProfileDisplayName = (pubkey: string, profileData?: LoadableProfile): string => {
+    const effectiveProfile = profileData ?? (pubkey === event?.pubkey ? profile : undefined)
+    return getDisplayName(effectiveProfile, pubkey)
+  }
+
+  const getProfileAvatarUrl = (profileData?: Profile | null): string | null => {
+    return getAvatarUrl(profileData || profile)
+  }
 
   const handleRepost = async () => {
     if (!event || repostingId || !myPubkey || reposts.myRepost) return
