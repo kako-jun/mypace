@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
+import { getCurrentTimestamp, isValidPubkey } from '../utils'
 
 const uploads = new Hono<{ Bindings: Bindings }>()
 
@@ -8,7 +9,7 @@ uploads.get('/:pubkey', async (c) => {
   const db = c.env.DB
   const pubkey = c.req.param('pubkey')
 
-  if (!pubkey || pubkey.length !== 64) {
+  if (!isValidPubkey(pubkey)) {
     return c.json({ error: 'Invalid pubkey' }, 400)
   }
 
@@ -46,7 +47,7 @@ uploads.post('/', async (c) => {
       type: 'image' | 'audio'
     }>()
 
-    if (!body.pubkey || body.pubkey.length !== 64) {
+    if (!isValidPubkey(body.pubkey)) {
       return c.json({ error: 'Invalid pubkey' }, 400)
     }
 
@@ -62,7 +63,7 @@ uploads.post('/', async (c) => {
       return c.json({ error: 'Invalid type' }, 400)
     }
 
-    const now = Math.floor(Date.now() / 1000)
+    const now = getCurrentTimestamp()
 
     // UPSERT: update timestamp if URL already exists
     await db
@@ -91,7 +92,7 @@ uploads.delete('/', async (c) => {
   try {
     const body = await c.req.json<{ pubkey: string; url: string }>()
 
-    if (!body.pubkey || body.pubkey.length !== 64) {
+    if (!isValidPubkey(body.pubkey)) {
       return c.json({ error: 'Invalid pubkey' }, 400)
     }
 

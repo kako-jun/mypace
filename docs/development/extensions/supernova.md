@@ -75,6 +75,9 @@ CREATE TABLE IF NOT EXISTS supernova_definitions (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'single',  -- 'single' (単発) or 'cumulative' (段階)
+  threshold INTEGER DEFAULT 1,               -- 達成に必要な数（段階Supernovaで使用）
+  trophy_color TEXT DEFAULT 'yellow',        -- 記念品の色
   reward_yellow INTEGER NOT NULL DEFAULT 0,
   reward_green INTEGER NOT NULL DEFAULT 0,
   reward_red INTEGER NOT NULL DEFAULT 0,
@@ -119,10 +122,10 @@ GET /api/user/:pubkey/stella-balance
 }
 ```
 
-### Supernova一覧取得
+### Supernova一覧取得（ユーザー）
 
 ```
-GET /api/user/:pubkey/supernovas
+GET /api/supernovas/:pubkey
 ```
 
 レスポンス:
@@ -130,50 +133,96 @@ GET /api/user/:pubkey/supernovas
 ```json
 {
   "unlocked": [
-    { "id": "first_light", "name": "First Light", "unlockedAt": 1234567890 }
-  ],
-  "locked": [
-    { "id": "ignition", "name": "Ignition", "description": "最初の投稿をする" }
+    { "supernova_id": "first_post", "unlocked_at": 1234567890 }
   ]
+}
+```
+
+### Supernova定義一覧取得
+
+```
+GET /api/supernovas/definitions
+```
+
+レスポンス:
+
+```json
+{
+  "supernovas": [
+    {
+      "id": "first_post",
+      "name": "First Post",
+      "description": "最初の投稿をする",
+      "category": "single",
+      "threshold": 1,
+      "trophy_color": "yellow",
+      "reward_yellow": 10,
+      "reward_green": 0,
+      "reward_red": 0,
+      "reward_blue": 0,
+      "reward_purple": 0
+    }
+  ]
+}
+```
+
+### ステラ統計取得
+
+```
+GET /api/supernovas/stats/:pubkey
+```
+
+レスポンス:
+
+```json
+{
+  "received": { "yellow": 10, "green": 5, "red": 2, "blue": 1, "purple": 0 },
+  "given": { "yellow": 3, "green": 1, "red": 0, "blue": 0, "purple": 0 }
 }
 ```
 
 ### Supernovaチェック・解除
 
-ステラ送信や投稿などのアクション時に自動的にチェックされる。
+ステラ送信や投稿などのアクション時にAPIを呼び出してチェック。
 
-```typescript
-async function checkAndUnlockSupernovas(pubkey: string, db: D1Database): Promise<void> {
-  // プロフィール設定チェック（First Light）
-  // 投稿数チェック（Ignition）
-  // ステラ累計チェック（Radiance）
-  // etc.
+```
+POST /api/supernovas/check
+```
+
+リクエストボディ:
+
+```json
+{
+  "pubkey": "abc123..."
 }
+```
 
-async function grantStellaReward(
-  pubkey: string,
-  supernovaId: string,
-  db: D1Database
-): Promise<void> {
-  const definition = await getSupernovaDefinition(supernovaId, db)
-  await db.prepare(`
-    UPDATE user_stella_balance
-    SET yellow = yellow + ?,
-        green = green + ?,
-        red = red + ?,
-        blue = blue + ?,
-        purple = purple + ?,
-        updated_at = ?
-    WHERE pubkey = ?
-  `).bind(
-    definition.reward_yellow,
-    definition.reward_green,
-    definition.reward_red,
-    definition.reward_blue,
-    definition.reward_purple,
-    Date.now(),
-    pubkey
-  ).run()
+レスポンス:
+
+```json
+{
+  "success": true,
+  "newlyUnlocked": [
+    { "supernova_id": "first_post", "unlocked_at": 1234567890 }
+  ],
+  "totalUnlocked": 3
+}
+```
+
+### Supernova定義のシード
+
+開発・管理用エンドポイント。Supernova定義をDBに登録する。
+
+```
+POST /api/supernovas/seed
+```
+
+レスポンス:
+
+```json
+{
+  "success": true,
+  "seeded": 10
 }
 ```
 

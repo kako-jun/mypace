@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
+import { getCurrentTimestamp } from '../utils'
 
 const push = new Hono<{ Bindings: Bindings }>()
 
@@ -50,7 +51,7 @@ push.post('/subscribe', async (c) => {
     return c.json({ error: 'Invalid subscription data' }, 400)
   }
 
-  const now = Math.floor(Date.now() / 1000)
+  const now = getCurrentTimestamp()
   const preference = body.preference || 'all'
 
   // Upsert: if endpoint exists, update; otherwise insert
@@ -105,7 +106,7 @@ push.put('/preference', async (c) => {
     return c.json({ error: 'preference must be "all" or "replies_only"' }, 400)
   }
 
-  const now = Math.floor(Date.now() / 1000)
+  const now = getCurrentTimestamp()
 
   await c.env.DB.prepare(
     `UPDATE push_subscriptions SET preference = ?, updated_at = ? WHERE pubkey = ? AND endpoint = ?`

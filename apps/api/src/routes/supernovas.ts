@@ -1,5 +1,13 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
+import {
+  getStellaCountsBoth,
+  getUserUnlockedSupernovaIds,
+  batchUnlockSupernovas,
+  getTotalStellaCount,
+  type StellaColorCounts,
+} from '../services/stella'
+import { getCurrentTimestamp } from '../utils'
 
 const supernovas = new Hono<{ Bindings: Bindings }>()
 
@@ -53,46 +61,9 @@ supernovas.get('/stats/:pubkey', async (c) => {
     return c.json({ error: 'Invalid pubkey' }, 400)
   }
 
-  const db = c.env.DB
-
   try {
-    // Get user's received and given stella by color
-    const [receivedByColor, givenByColor] = await Promise.all([
-      db
-        .prepare(
-          `SELECT stella_color, COALESCE(SUM(stella_count), 0) as total
-           FROM user_stella
-           WHERE author_pubkey = ?
-           GROUP BY stella_color`
-        )
-        .bind(pubkey)
-        .all<{ stella_color: string; total: number }>(),
-      db
-        .prepare(
-          `SELECT stella_color, COALESCE(SUM(stella_count), 0) as total
-           FROM user_stella
-           WHERE reactor_pubkey = ?
-           GROUP BY stella_color`
-        )
-        .bind(pubkey)
-        .all<{ stella_color: string; total: number }>(),
-    ])
-
-    // Build color-specific stats
-    const received: Record<string, number> = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
-    const given: Record<string, number> = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
-    for (const r of receivedByColor.results || []) {
-      received[r.stella_color] = r.total
-    }
-    for (const g of givenByColor.results || []) {
-      given[g.stella_color] = g.total
-    }
-
-    return c.json({
-      pubkey,
-      received,
-      given,
-    })
+    const { received, given } = await getStellaCountsBoth(c.env.DB, pubkey)
+    return c.json({ pubkey, received, given })
   } catch (e) {
     console.error('User stats fetch error:', e)
     return c.json({ error: 'Failed to fetch user stats' }, 500)
@@ -148,7 +119,7 @@ supernovas.post('/check', async (c) => {
   }
 
   const db = c.env.DB
-  const now = Math.floor(Date.now() / 1000)
+  const now = getCurrentTimestamp()
 
   try {
     // Get all supernova definitions
@@ -162,71 +133,29 @@ supernovas.post('/check', async (c) => {
 
     const definitions = definitionsResult.results || []
 
-    // Get user's already unlocked supernovas
-    const unlockedResult = await db
-      .prepare(`SELECT supernova_id FROM user_supernovas WHERE pubkey = ?`)
-      .bind(pubkey)
-      .all<{ supernova_id: string }>()
-
-    const unlockedIds = new Set((unlockedResult.results || []).map((r) => r.supernova_id))
-
-    // Get user stats for cumulative checks
-    const [serialResult, postCountResult, receivedByColor, givenByColor] = await Promise.all([
+    // Get user's already unlocked supernovas and stella stats in parallel
+    const [unlockedIds, stellaCounts, serialResult, postCountResult] = await Promise.all([
+      getUserUnlockedSupernovaIds(db, pubkey),
+      getStellaCountsBoth(db, pubkey),
       db
         .prepare(`SELECT serial_number FROM user_serial WHERE pubkey = ?`)
         .bind(pubkey)
         .first<{ serial_number: number }>(),
-      db
-        .prepare(
-          `SELECT COUNT(*) as count
-           FROM user_serial
-           WHERE pubkey = ?`
-        )
-        .bind(pubkey)
-        .first<{ count: number }>(),
-      // Received stella by color
-      db
-        .prepare(
-          `SELECT stella_color, COALESCE(SUM(stella_count), 0) as total
-           FROM user_stella
-           WHERE author_pubkey = ?
-           GROUP BY stella_color`
-        )
-        .bind(pubkey)
-        .all<{ stella_color: string; total: number }>(),
-      // Given stella by color
-      db
-        .prepare(
-          `SELECT stella_color, COALESCE(SUM(stella_count), 0) as total
-           FROM user_stella
-           WHERE reactor_pubkey = ?
-           GROUP BY stella_color`
-        )
-        .bind(pubkey)
-        .all<{ stella_color: string; total: number }>(),
+      db.prepare(`SELECT COUNT(*) as count FROM user_serial WHERE pubkey = ?`).bind(pubkey).first<{ count: number }>(),
     ])
 
-    // Build color-specific stats
-    const received: Record<string, number> = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
-    const given: Record<string, number> = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
-    for (const r of receivedByColor.results || []) {
-      received[r.stella_color] = r.total
-    }
-    for (const g of givenByColor.results || []) {
-      given[g.stella_color] = g.total
-    }
-
+    const { received, given } = stellaCounts
     const userStats = {
       serialNumber: serialResult?.serial_number || null,
-      totalStella: Object.values(received).reduce((a, b) => a + b, 0),
-      totalGivenStella: Object.values(given).reduce((a, b) => a + b, 0),
+      totalStella: getTotalStellaCount(received),
+      totalGivenStella: getTotalStellaCount(given),
       postCount: postCountResult?.count || 0,
       received,
       given,
     }
 
-    // Check each definition and unlock if conditions are met
-    const newlyUnlocked: (SupernovaDefinition & { unlocked_at: number })[] = []
+    // Check each definition and collect supernovas to unlock
+    const toUnlock: SupernovaDefinition[] = []
 
     for (const def of definitions) {
       // Skip if already unlocked
@@ -256,11 +185,11 @@ supernovas.post('/check', async (c) => {
           const receivedMatch = def.id.match(/^received_(yellow|green|red|blue|purple)_(\d+)$/)
           const givenMatch = def.id.match(/^given_(yellow|green|red|blue|purple)_(\d+)$/)
           if (receivedMatch) {
-            const color = receivedMatch[1]
+            const color = receivedMatch[1] as keyof StellaColorCounts
             const threshold = parseInt(receivedMatch[2], 10)
             shouldUnlock = userStats.received[color] >= threshold
           } else if (givenMatch) {
-            const color = givenMatch[1]
+            const color = givenMatch[1] as keyof StellaColorCounts
             const threshold = parseInt(givenMatch[2], 10)
             shouldUnlock = userStats.given[color] >= threshold
           }
@@ -268,31 +197,20 @@ supernovas.post('/check', async (c) => {
       }
 
       if (shouldUnlock) {
-        // Unlock the supernova
-        await db
-          .prepare(`INSERT OR IGNORE INTO user_supernovas (pubkey, supernova_id, unlocked_at) VALUES (?, ?, ?)`)
-          .bind(pubkey, def.id, now)
-          .run()
+        toUnlock.push(def)
+      }
+    }
 
-        // Add rewards to user's stella balance
-        const totalReward = def.reward_yellow + def.reward_green + def.reward_red + def.reward_blue + def.reward_purple
-        if (totalReward > 0) {
-          await db
-            .prepare(
-              `INSERT INTO user_stella_balance (pubkey, yellow, green, red, blue, purple, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?)
-               ON CONFLICT(pubkey) DO UPDATE SET
-                 yellow = yellow + excluded.yellow,
-                 green = green + excluded.green,
-                 red = red + excluded.red,
-                 blue = blue + excluded.blue,
-                 purple = purple + excluded.purple,
-                 updated_at = excluded.updated_at`
-            )
-            .bind(pubkey, def.reward_yellow, def.reward_green, def.reward_red, def.reward_blue, def.reward_purple, now)
-            .run()
-        }
-
+    // Batch unlock all supernovas at once
+    const newlyUnlocked: (SupernovaDefinition & { unlocked_at: number })[] = []
+    if (toUnlock.length > 0) {
+      await batchUnlockSupernovas(
+        db,
+        pubkey,
+        toUnlock.map((d) => d.id),
+        now
+      )
+      for (const def of toUnlock) {
         newlyUnlocked.push({ ...def, unlocked_at: now })
       }
     }
@@ -847,29 +765,37 @@ supernovas.post('/seed', async (c) => {
   ]
 
   try {
+    // Build batch INSERT values
+    const values: string[] = []
+    const params: (string | number)[] = []
+
     for (const supernova of initialSupernovas) {
-      await db
-        .prepare(
-          `INSERT OR REPLACE INTO supernova_definitions
-           (id, name, description, category, threshold, trophy_color,
-            reward_yellow, reward_green, reward_red, reward_blue, reward_purple)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        )
-        .bind(
-          supernova.id,
-          supernova.name,
-          supernova.description,
-          supernova.category,
-          supernova.threshold,
-          supernova.trophy_color,
-          supernova.reward_yellow,
-          supernova.reward_green,
-          supernova.reward_red,
-          supernova.reward_blue,
-          supernova.reward_purple
-        )
-        .run()
+      values.push('(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      params.push(
+        supernova.id,
+        supernova.name,
+        supernova.description,
+        supernova.category,
+        supernova.threshold,
+        supernova.trophy_color,
+        supernova.reward_yellow,
+        supernova.reward_green,
+        supernova.reward_red,
+        supernova.reward_blue,
+        supernova.reward_purple
+      )
     }
+
+    // Batch INSERT all definitions at once
+    await db
+      .prepare(
+        `INSERT OR REPLACE INTO supernova_definitions
+         (id, name, description, category, threshold, trophy_color,
+          reward_yellow, reward_green, reward_red, reward_blue, reward_purple)
+         VALUES ${values.join(', ')}`
+      )
+      .bind(...params)
+      .run()
 
     return c.json({
       success: true,

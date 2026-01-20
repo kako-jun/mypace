@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
+import { getCurrentTimestamp, isValidPubkey, isValidEventId } from '../utils'
 
 const pins = new Hono<{ Bindings: Bindings }>()
 
@@ -8,7 +9,7 @@ pins.get('/:pubkey', async (c) => {
   const db = c.env.DB
   const pubkey = c.req.param('pubkey')
 
-  if (!pubkey || pubkey.length !== 64) {
+  if (!isValidPubkey(pubkey)) {
     return c.json({ error: 'Invalid pubkey' }, 400)
   }
 
@@ -36,15 +37,15 @@ pins.post('/', async (c) => {
   try {
     const body = await c.req.json<{ pubkey: string; eventId: string }>()
 
-    if (!body.pubkey || body.pubkey.length !== 64) {
+    if (!isValidPubkey(body.pubkey)) {
       return c.json({ error: 'Invalid pubkey' }, 400)
     }
 
-    if (!body.eventId || body.eventId.length !== 64) {
+    if (!isValidEventId(body.eventId)) {
       return c.json({ error: 'Invalid eventId' }, 400)
     }
 
-    const now = Math.floor(Date.now() / 1000)
+    const now = getCurrentTimestamp()
 
     // UPSERT: replace if exists
     await db
@@ -70,7 +71,7 @@ pins.delete('/:pubkey', async (c) => {
   const db = c.env.DB
   const pubkey = c.req.param('pubkey')
 
-  if (!pubkey || pubkey.length !== 64) {
+  if (!isValidPubkey(pubkey)) {
     return c.json({ error: 'Invalid pubkey' }, 400)
   }
 

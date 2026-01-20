@@ -1,14 +1,19 @@
 import { Hono } from 'hono'
 import type { Event } from 'nostr-tools'
-import type { Bindings } from '../types'
+import type { Bindings, NotificationType } from '../types'
 import type { D1Database } from '@cloudflare/workers-types'
 import { registerUserSerial } from './serial'
-import { sendPushToUser, type NotificationType } from '../services/web-push'
+import { sendPushToUser } from '../services/web-push'
+import {
+  getUserUnlockedSupernovaIds,
+  getStellaCounts,
+  batchUnlockSupernovas,
+  getTotalStellaCount,
+} from '../services/stella'
+import { MAX_NOTIFICATIONS, STELLA_COLORS, STELLA_THRESHOLDS } from '../constants'
+import { getCurrentTimestamp } from '../utils'
 
 const publish = new Hono<{ Bindings: Bindings }>()
-
-// Max notifications per user
-const MAX_NOTIFICATIONS = 50
 
 // Record stella to D1
 async function recordStella(
@@ -29,7 +34,7 @@ async function recordStella(
          reaction_id = excluded.reaction_id,
          updated_at = excluded.updated_at`
     )
-    .bind(eventId, authorPubkey, reactorPubkey, stellaCount, stellaColor, reactionId, Math.floor(Date.now() / 1000))
+    .bind(eventId, authorPubkey, reactorPubkey, stellaCount, stellaColor, reactionId, getCurrentTimestamp())
     .run()
 }
 
@@ -77,7 +82,7 @@ async function recordNotification(
   // Don't notify yourself
   if (recipientPubkey === actorPubkey) return
 
-  const now = Math.floor(Date.now() / 1000)
+  const now = getCurrentTimestamp()
   let shouldPush = false
 
   if (type === 'stella') {
@@ -155,28 +160,24 @@ async function recordNotification(
 
 // Check and unlock serial-related supernovas for a user
 async function checkSerialSupernovas(db: D1Database, pubkey: string): Promise<void> {
-  const now = Math.floor(Date.now() / 1000)
+  const now = getCurrentTimestamp()
 
   try {
-    // Get user's serial number
-    const serialResult = await db
-      .prepare(`SELECT serial_number FROM user_serial WHERE pubkey = ?`)
-      .bind(pubkey)
-      .first<{ serial_number: number }>()
+    // Get user's serial number and unlocked supernovas in parallel
+    const [serialResult, unlockedIds] = await Promise.all([
+      db
+        .prepare(`SELECT serial_number FROM user_serial WHERE pubkey = ?`)
+        .bind(pubkey)
+        .first<{ serial_number: number }>(),
+      getUserUnlockedSupernovaIds(db, pubkey),
+    ])
 
     if (!serialResult) return
 
     const serialNumber = serialResult.serial_number
 
-    // Get user's already unlocked supernovas
-    const unlockedResult = await db
-      .prepare(`SELECT supernova_id FROM user_supernovas WHERE pubkey = ?`)
-      .bind(pubkey)
-      .all<{ supernova_id: string }>()
-
-    const unlockedIds = new Set((unlockedResult.results || []).map((r) => r.supernova_id))
-
-    // Check serial-related supernovas
+    // Collect supernovas to unlock
+    const toUnlock: string[] = []
     const serialSupernovas = [
       { id: 'serial_under_100', threshold: 100 },
       { id: 'serial_under_1000', threshold: 1000 },
@@ -185,42 +186,12 @@ async function checkSerialSupernovas(db: D1Database, pubkey: string): Promise<vo
     for (const supernova of serialSupernovas) {
       if (unlockedIds.has(supernova.id)) continue
       if (serialNumber > supernova.threshold) continue
+      toUnlock.push(supernova.id)
+    }
 
-      // Get supernova definition for rewards
-      const def = await db.prepare(`SELECT * FROM supernova_definitions WHERE id = ?`).bind(supernova.id).first<{
-        reward_yellow: number
-        reward_green: number
-        reward_red: number
-        reward_blue: number
-        reward_purple: number
-      }>()
-
-      if (!def) continue
-
-      // Unlock the supernova
-      await db
-        .prepare(`INSERT OR IGNORE INTO user_supernovas (pubkey, supernova_id, unlocked_at) VALUES (?, ?, ?)`)
-        .bind(pubkey, supernova.id, now)
-        .run()
-
-      // Add rewards to user's stella balance
-      const totalReward = def.reward_yellow + def.reward_green + def.reward_red + def.reward_blue + def.reward_purple
-      if (totalReward > 0) {
-        await db
-          .prepare(
-            `INSERT INTO user_stella_balance (pubkey, yellow, green, red, blue, purple, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?)
-             ON CONFLICT(pubkey) DO UPDATE SET
-               yellow = yellow + excluded.yellow,
-               green = green + excluded.green,
-               red = red + excluded.red,
-               blue = blue + excluded.blue,
-               purple = purple + excluded.purple,
-               updated_at = excluded.updated_at`
-          )
-          .bind(pubkey, def.reward_yellow, def.reward_green, def.reward_red, def.reward_blue, def.reward_purple, now)
-          .run()
-      }
+    // Batch unlock all at once
+    if (toUnlock.length > 0) {
+      await batchUnlockSupernovas(db, pubkey, toUnlock, now)
     }
   } catch (e) {
     console.error('Serial supernova check error:', e)
@@ -234,48 +205,51 @@ async function checkContentSupernovas(
   tags: string[][],
   content: string
 ): Promise<void> {
-  const now = Math.floor(Date.now() / 1000)
+  const now = getCurrentTimestamp()
 
   try {
     // Get user's already unlocked supernovas
-    const unlockedResult = await db
-      .prepare(`SELECT supernova_id FROM user_supernovas WHERE pubkey = ?`)
-      .bind(pubkey)
-      .all<{ supernova_id: string }>()
+    const unlockedIds = await getUserUnlockedSupernovaIds(db, pubkey)
 
-    const unlockedIds = new Set((unlockedResult.results || []).map((r) => r.supernova_id))
+    // Collect supernovas to unlock
+    const toUnlock: string[] = []
 
     // Check for teaser tag
     const hasTeaserTag = tags.some((t) => t[0] === 't' && t[1]?.toLowerCase() === 'teaser')
     if (hasTeaserTag && !unlockedIds.has('first_teaser')) {
-      await unlockSupernova(db, pubkey, 'first_teaser', now)
+      toUnlock.push('first_teaser')
     }
 
     // Check for super mention (q tag with super-mention marker)
     const hasSuperMention = tags.some((t) => t[0] === 'q')
     if (hasSuperMention && !unlockedIds.has('first_super_mention')) {
-      await unlockSupernova(db, pubkey, 'first_super_mention', now)
+      toUnlock.push('first_super_mention')
     }
 
     // Check for image (imeta tag or image URL in content)
     const hasImetaTag = tags.some((t) => t[0] === 'imeta')
     const hasImageUrl = /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(content)
     if ((hasImetaTag || hasImageUrl) && !unlockedIds.has('first_image')) {
-      await unlockSupernova(db, pubkey, 'first_image', now)
+      toUnlock.push('first_image')
     }
 
     // Check for voice memo (audio URL or voice tag)
     const hasVoiceTag = tags.some((t) => t[0] === 't' && t[1]?.toLowerCase() === 'voice')
     const hasAudioUrl = /\.(mp3|wav|ogg|m4a|webm)(\?|$)/i.test(content)
     if ((hasVoiceTag || hasAudioUrl) && !unlockedIds.has('first_voice')) {
-      await unlockSupernova(db, pubkey, 'first_voice', now)
+      toUnlock.push('first_voice')
     }
 
     // Check for map/geo (g tag or geo: URL)
     const hasGeoTag = tags.some((t) => t[0] === 'g')
     const hasGeoUrl = /geo:/i.test(content)
     if ((hasGeoTag || hasGeoUrl) && !unlockedIds.has('first_map')) {
-      await unlockSupernova(db, pubkey, 'first_map', now)
+      toUnlock.push('first_map')
+    }
+
+    // Batch unlock all at once
+    if (toUnlock.length > 0) {
+      await batchUnlockSupernovas(db, pubkey, toUnlock, now)
     }
   } catch (e) {
     console.error('Content supernova check error:', e)
@@ -284,39 +258,25 @@ async function checkContentSupernovas(
 
 // Check and unlock stella-related supernovas for a user (received stella by color)
 async function checkStellaSupernovas(db: D1Database, pubkey: string): Promise<void> {
-  const now = Math.floor(Date.now() / 1000)
-  const colors = ['yellow', 'green', 'red', 'blue', 'purple']
-  const thresholds = [10, 100, 1000]
+  const now = getCurrentTimestamp()
+  const colors = STELLA_COLORS
+  const thresholds = STELLA_THRESHOLDS
 
   try {
-    // Get user's already unlocked supernovas
-    const unlockedResult = await db
-      .prepare(`SELECT supernova_id FROM user_supernovas WHERE pubkey = ?`)
-      .bind(pubkey)
-      .all<{ supernova_id: string }>()
+    // Get user's unlocked supernovas and received stella counts in parallel
+    const [unlockedIds, received] = await Promise.all([
+      getUserUnlockedSupernovaIds(db, pubkey),
+      getStellaCounts(db, pubkey, 'received'),
+    ])
 
-    const unlockedIds = new Set((unlockedResult.results || []).map((r) => r.supernova_id))
+    // Collect supernovas to unlock
+    const toUnlock: string[] = []
 
-    // Get user's received stella by color
-    const stellaByColor = await db
-      .prepare(
-        `SELECT stella_color, COALESCE(SUM(stella_count), 0) as total
-         FROM user_stella
-         WHERE author_pubkey = ?
-         GROUP BY stella_color`
-      )
-      .bind(pubkey)
-      .all<{ stella_color: string; total: number }>()
-
-    const received: Record<string, number> = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
-    for (const r of stellaByColor.results || []) {
-      received[r.stella_color] = r.total
-    }
-    const totalStella = Object.values(received).reduce((a, b) => a + b, 0)
+    const totalStella = getTotalStellaCount(received)
 
     // Check first_received_stella
     if (!unlockedIds.has('first_received_stella') && totalStella > 0) {
-      await unlockSupernova(db, pubkey, 'first_received_stella', now)
+      toUnlock.push('first_received_stella')
     }
 
     // Check color-specific received supernovas
@@ -325,86 +285,41 @@ async function checkStellaSupernovas(db: D1Database, pubkey: string): Promise<vo
         const id = `received_${color}_${threshold}`
         if (unlockedIds.has(id)) continue
         if (received[color] >= threshold) {
-          await unlockSupernova(db, pubkey, id, now)
+          toUnlock.push(id)
         }
       }
+    }
+
+    // Batch unlock all at once
+    if (toUnlock.length > 0) {
+      await batchUnlockSupernovas(db, pubkey, toUnlock, now)
     }
   } catch (e) {
     console.error('Stella supernova check error:', e)
   }
 }
 
-// Helper to unlock a supernova and grant rewards
-async function unlockSupernova(db: D1Database, pubkey: string, supernovaId: string, now: number): Promise<void> {
-  const def = await db.prepare(`SELECT * FROM supernova_definitions WHERE id = ?`).bind(supernovaId).first<{
-    reward_yellow: number
-    reward_green: number
-    reward_red: number
-    reward_blue: number
-    reward_purple: number
-  }>()
-
-  if (!def) return
-
-  await db
-    .prepare(`INSERT OR IGNORE INTO user_supernovas (pubkey, supernova_id, unlocked_at) VALUES (?, ?, ?)`)
-    .bind(pubkey, supernovaId, now)
-    .run()
-
-  const totalReward = def.reward_yellow + def.reward_green + def.reward_red + def.reward_blue + def.reward_purple
-  if (totalReward > 0) {
-    await db
-      .prepare(
-        `INSERT INTO user_stella_balance (pubkey, yellow, green, red, blue, purple, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(pubkey) DO UPDATE SET
-           yellow = yellow + excluded.yellow,
-           green = green + excluded.green,
-           red = red + excluded.red,
-           blue = blue + excluded.blue,
-           purple = purple + excluded.purple,
-           updated_at = excluded.updated_at`
-      )
-      .bind(pubkey, def.reward_yellow, def.reward_green, def.reward_red, def.reward_blue, def.reward_purple, now)
-      .run()
-  }
-}
-
 // Check and unlock given-stella-related supernovas for a user (the reactor)
 async function checkGivenStellaSupernovas(db: D1Database, pubkey: string): Promise<void> {
-  const now = Math.floor(Date.now() / 1000)
-  const colors = ['yellow', 'green', 'red', 'blue', 'purple']
-  const thresholds = [10, 100, 1000]
+  const now = getCurrentTimestamp()
+  const colors = STELLA_COLORS
+  const thresholds = STELLA_THRESHOLDS
 
   try {
-    // Get user's already unlocked supernovas
-    const unlockedResult = await db
-      .prepare(`SELECT supernova_id FROM user_supernovas WHERE pubkey = ?`)
-      .bind(pubkey)
-      .all<{ supernova_id: string }>()
+    // Get user's unlocked supernovas and given stella counts in parallel
+    const [unlockedIds, given] = await Promise.all([
+      getUserUnlockedSupernovaIds(db, pubkey),
+      getStellaCounts(db, pubkey, 'given'),
+    ])
 
-    const unlockedIds = new Set((unlockedResult.results || []).map((r) => r.supernova_id))
+    // Collect supernovas to unlock
+    const toUnlock: string[] = []
 
-    // Get user's given stella by color
-    const stellaByColor = await db
-      .prepare(
-        `SELECT stella_color, COALESCE(SUM(stella_count), 0) as total
-         FROM user_stella
-         WHERE reactor_pubkey = ?
-         GROUP BY stella_color`
-      )
-      .bind(pubkey)
-      .all<{ stella_color: string; total: number }>()
-
-    const given: Record<string, number> = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
-    for (const g of stellaByColor.results || []) {
-      given[g.stella_color] = g.total
-    }
-    const totalGiven = Object.values(given).reduce((a, b) => a + b, 0)
+    const totalGiven = getTotalStellaCount(given)
 
     // Check first_given_stella
     if (!unlockedIds.has('first_given_stella') && totalGiven > 0) {
-      await unlockSupernova(db, pubkey, 'first_given_stella', now)
+      toUnlock.push('first_given_stella')
     }
 
     // Check color-specific given supernovas
@@ -413,9 +328,14 @@ async function checkGivenStellaSupernovas(db: D1Database, pubkey: string): Promi
         const id = `given_${color}_${threshold}`
         if (unlockedIds.has(id)) continue
         if (given[color] >= threshold) {
-          await unlockSupernova(db, pubkey, id, now)
+          toUnlock.push(id)
         }
       }
+    }
+
+    // Batch unlock all at once
+    if (toUnlock.length > 0) {
+      await batchUnlockSupernovas(db, pubkey, toUnlock, now)
     }
   } catch (e) {
     console.error('Given stella supernova check error:', e)
@@ -442,14 +362,16 @@ async function deleteStella(db: D1Database, eventIds: string[], pubkey: string):
     .bind(...eventIds, pubkey)
     .run()
 
-  // Delete corresponding stella notifications
-  if (stellaRecords.results) {
-    for (const record of stellaRecords.results) {
-      await db
-        .prepare(`DELETE FROM notifications WHERE actor_pubkey = ? AND type = 'stella' AND target_event_id = ?`)
-        .bind(record.reactor_pubkey, record.event_id)
-        .run()
-    }
+  // Batch delete corresponding stella notifications using IN clause
+  if (stellaRecords.results && stellaRecords.results.length > 0) {
+    const targetEventIds = stellaRecords.results.map((r) => r.event_id)
+    const notifPlaceholders = targetEventIds.map(() => '?').join(',')
+    await db
+      .prepare(
+        `DELETE FROM notifications WHERE actor_pubkey = ? AND type = 'stella' AND target_event_id IN (${notifPlaceholders})`
+      )
+      .bind(pubkey, ...targetEventIds)
+      .run()
   }
 
   // Delete if user is the author (deleting their post by event_id)
@@ -555,29 +477,32 @@ publish.post('/', async (c) => {
       if (eTags.length > 0) {
         // This is a reply
         const pTags = tags.filter((t: string[]) => t[0] === 'p')
-        // Notify all mentioned users (reply targets)
-        for (const pTag of pTags) {
-          if (pTag[1]) {
-            try {
-              // Use the first e tag as target (root or reply)
-              const targetEventId = eTags[0][1]
-              await recordNotification(
-                db,
-                pTag[1],
-                event.pubkey,
-                'reply',
-                targetEventId,
-                event.id,
-                null,
-                null,
-                c.env.VAPID_PUBLIC_KEY,
-                c.env.VAPID_PRIVATE_KEY,
-                c.env.VAPID_SUBJECT
-              )
-            } catch (e) {
-              console.error('Reply notification error:', e)
-            }
-          }
+        const targetEventId = eTags[0][1]
+
+        // Notify all mentioned users in parallel (independent operations)
+        const validPTags = pTags.filter((pTag) => pTag[1])
+        if (validPTags.length > 0) {
+          await Promise.all(
+            validPTags.map(async (pTag) => {
+              try {
+                await recordNotification(
+                  db,
+                  pTag[1],
+                  event.pubkey,
+                  'reply',
+                  targetEventId,
+                  event.id,
+                  null,
+                  null,
+                  c.env.VAPID_PUBLIC_KEY,
+                  c.env.VAPID_PRIVATE_KEY,
+                  c.env.VAPID_SUBJECT
+                )
+              } catch (e) {
+                console.error('Reply notification error:', e)
+              }
+            })
+          )
         }
       }
     }

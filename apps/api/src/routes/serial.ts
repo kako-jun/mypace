@@ -3,7 +3,8 @@ import type { D1Database } from '@cloudflare/workers-types'
 import type { Filter } from 'nostr-tools'
 import { SimplePool } from 'nostr-tools/pool'
 import type { Bindings } from '../types'
-import { MYPACE_TAG, ALL_RELAYS } from '../constants'
+import { MYPACE_TAG, ALL_RELAYS, PAGINATION_MAX_LIMIT, PAGINATION_DEFAULT_LIMIT } from '../constants'
+import { getCurrentTimestamp, parsePaginationLimit, parsePaginationOffset } from '../utils'
 
 const serial = new Hono<{ Bindings: Bindings }>()
 
@@ -36,26 +37,26 @@ serial.get('/:pubkey', async (c) => {
 // GET /api/serial - ユーザー一覧（番号順）
 serial.get('/', async (c) => {
   const db = c.env.DB
-  const limit = parseInt(c.req.query('limit') || '100')
-  const offset = parseInt(c.req.query('offset') || '0')
+  const limit = parsePaginationLimit(c.req.query('limit'), PAGINATION_DEFAULT_LIMIT, PAGINATION_MAX_LIMIT)
+  const offset = parsePaginationOffset(c.req.query('offset'))
   const visibleOnly = c.req.query('visible') !== 'false'
 
   try {
     const whereClause = visibleOnly ? 'WHERE visible = 1' : ''
-    const results = await db
-      .prepare(
-        `SELECT pubkey, serial_number, first_post_at, visible
-         FROM user_serial
-         ${whereClause}
-         ORDER BY serial_number ASC
-         LIMIT ? OFFSET ?`
-      )
-      .bind(limit, offset)
-      .all<{ pubkey: string; serial_number: number; first_post_at: number; visible: number }>()
-
-    const countResult = await db
-      .prepare(`SELECT COUNT(*) as count FROM user_serial ${whereClause}`)
-      .first<{ count: number }>()
+    // Run both queries in parallel
+    const [results, countResult] = await Promise.all([
+      db
+        .prepare(
+          `SELECT pubkey, serial_number, first_post_at, visible
+           FROM user_serial
+           ${whereClause}
+           ORDER BY serial_number ASC
+           LIMIT ? OFFSET ?`
+        )
+        .bind(limit, offset)
+        .all<{ pubkey: string; serial_number: number; first_post_at: number; visible: number }>(),
+      db.prepare(`SELECT COUNT(*) as count FROM user_serial ${whereClause}`).first<{ count: number }>(),
+    ])
 
     const users = (results.results || []).map((u) => ({
       pubkey: u.pubkey,
@@ -99,7 +100,7 @@ serial.post('/register', async (c) => {
     }
 
     // 新規登録
-    const now = Math.floor(Date.now() / 1000)
+    const now = getCurrentTimestamp()
     await db
       .prepare(
         `INSERT INTO user_serial (pubkey, serial_number, first_post_id, first_post_at, visible, created_at)
@@ -192,20 +193,35 @@ serial.post('/init', async (c) => {
 
     console.log(`Found ${sortedUsers.length} unique users`)
 
-    let registered = 0
-    let skipped = 0
+    // 全pubkeyを一括で既存チェック（N+1回避）
+    const allPubkeys = sortedUsers.map(([pubkey]) => pubkey)
+    const existingPubkeys = new Set<string>()
 
-    for (const [pubkey, { id: firstPostId, created_at: firstPostAt }] of sortedUsers) {
-      // 既に登録済みかチェック
-      const existing = await db.prepare('SELECT serial_number FROM user_serial WHERE pubkey = ?').bind(pubkey).first()
+    if (allPubkeys.length > 0) {
+      // D1は大きなIN句をサポートするが、念のためチャンク分割
+      const chunkSize = 500
+      for (let i = 0; i < allPubkeys.length; i += chunkSize) {
+        const chunk = allPubkeys.slice(i, i + chunkSize)
+        const placeholders = chunk.map(() => '?').join(',')
+        const result = await db
+          .prepare(`SELECT pubkey FROM user_serial WHERE pubkey IN (${placeholders})`)
+          .bind(...chunk)
+          .all<{ pubkey: string }>()
 
-      if (existing) {
-        skipped++
-        continue
+        for (const row of result.results || []) {
+          existingPubkeys.add(row.pubkey)
+        }
       }
+    }
 
-      // 新規登録
-      const now = Math.floor(Date.now() / 1000)
+    let registered = 0
+    const skipped = existingPubkeys.size
+
+    // 新規ユーザーのみ登録
+    for (const [pubkey, { id: firstPostId, created_at: firstPostAt }] of sortedUsers) {
+      if (existingPubkeys.has(pubkey)) continue
+
+      const now = getCurrentTimestamp()
       await db
         .prepare(
           `INSERT INTO user_serial (pubkey, serial_number, first_post_id, first_post_at, visible, created_at)
@@ -256,7 +272,7 @@ export async function registerUserSerial(
     }
 
     // 新規登録
-    const now = Math.floor(Date.now() / 1000)
+    const now = getCurrentTimestamp()
     await db
       .prepare(
         `INSERT INTO user_serial (pubkey, serial_number, first_post_id, first_post_at, visible, created_at)

@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
+import { getCurrentTimestamp, parsePaginationLimit } from '../utils'
 
 const sticker = new Hono<{ Bindings: Bindings }>()
 
@@ -14,7 +15,7 @@ sticker.post('/save', async (c) => {
       return c.json({ error: 'url required' }, 400)
     }
 
-    const now = Math.floor(Date.now() / 1000)
+    const now = getCurrentTimestamp()
 
     // UPSERT: increment use_count if exists, otherwise create new with first_used_by
     // first_used_by is only set on initial insert, never updated
@@ -61,7 +62,7 @@ sticker.delete('/delete', async (c) => {
 // GET /api/sticker/history - Get sticker history
 sticker.get('/history', async (c) => {
   const db = c.env.DB
-  const limit = Math.min(parseInt(c.req.query('limit') || '20', 10), 50)
+  const limit = parsePaginationLimit(c.req.query('limit'), 20, 50)
 
   try {
     const result = await db

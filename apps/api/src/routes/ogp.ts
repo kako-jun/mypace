@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
 import { cleanupOgpCache } from '../services/cache'
-import { CACHE_CLEANUP_PROBABILITY } from '../constants'
+import { CACHE_CLEANUP_PROBABILITY, CACHE_TTL_OGP, TIMEOUT_MS_FETCH, OGP_BATCH_LIMIT } from '../constants'
+import { getCurrentTimestamp } from '../utils'
 
 interface OgpData {
   title?: string
@@ -65,7 +66,7 @@ async function fetchSingleOgp(url: string): Promise<OgpData | null> {
 
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS_FETCH)
 
     const response = await fetch(url, {
       headers: {
@@ -94,7 +95,7 @@ ogp.post('/by-urls', async (c) => {
   }
 
   // Limit batch size
-  const limitedUrls = [...new Set(urls)].slice(0, 50)
+  const limitedUrls = [...new Set(urls)].slice(0, OGP_BATCH_LIMIT)
   const db = c.env.DB
   const result: Record<string, OgpData> = {}
 
@@ -103,7 +104,7 @@ ogp.post('/by-urls', async (c) => {
   if (!disableCache) {
     try {
       const placeholders = limitedUrls.map(() => '?').join(',')
-      const now = Math.floor(Date.now() / 1000)
+      const now = getCurrentTimestamp()
       const cached = await db
         .prepare(
           `SELECT url, title, description, image, site_name FROM ogp_cache WHERE url IN (${placeholders}) AND expires_at > ?`
@@ -144,8 +145,8 @@ ogp.post('/by-urls', async (c) => {
     })
 
     const fetchResults = await Promise.all(fetchPromises)
-    const now = Math.floor(Date.now() / 1000)
-    const expiresAt = now + 86400 // 24 hours
+    const now = getCurrentTimestamp()
+    const expiresAt = now + CACHE_TTL_OGP
 
     // バッチINSERTのためのデータ準備
     const cacheData: Array<{ url: string; ogpData: OgpData }> = []

@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
+import { getCurrentTimestamp } from '../utils'
 
 const views = new Hono<{ Bindings: Bindings }>()
 
@@ -25,7 +26,7 @@ views.post('/impressions', async (c) => {
 
   // Limit batch size
   const limitedEvents = events.slice(0, 100)
-  const now = Math.floor(Date.now() / 1000)
+  const now = getCurrentTimestamp()
 
   const stmt = c.env.DB.prepare(
     `INSERT INTO event_views (event_id, author_pubkey, viewer_pubkey, view_type, created_at)

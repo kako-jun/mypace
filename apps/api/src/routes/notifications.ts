@@ -1,16 +1,15 @@
 import { Hono } from 'hono'
-import type { Bindings } from '../types'
+import type { Bindings, NotificationType } from '../types'
+import { MAX_NOTIFICATIONS, AGGREGATED_NOTIFICATIONS_LIMIT } from '../constants'
+import { getCurrentTimestamp } from '../utils'
 
 const notifications = new Hono<{ Bindings: Bindings }>()
-
-// Max notifications per user
-const MAX_NOTIFICATIONS = 50
 
 interface NotificationRow {
   id: number
   recipient_pubkey: string
   actor_pubkey: string
-  type: 'stella' | 'reply' | 'repost'
+  type: NotificationType
   target_event_id: string
   source_event_id: string | null
   stella_count: number | null
@@ -29,7 +28,7 @@ interface StellaByColor {
 
 interface AggregatedNotification {
   ids: number[]
-  type: 'stella' | 'reply' | 'repost'
+  type: NotificationType
   targetEventId: string
   sourceEventId: string | null
   actors: Array<{
@@ -64,34 +63,34 @@ notifications.get('/', async (c) => {
   }
 
   // Collect stella notification keys for fetching from user_stella
-  const stellaKeys: { eventId: string; reactorPubkey: string }[] = []
+  const stellaKeys = new Set<string>()
+  const stellaEventIds = new Set<string>()
   for (const row of rows.results) {
     if (row.type === 'stella') {
-      stellaKeys.push({ eventId: row.target_event_id, reactorPubkey: row.actor_pubkey })
+      stellaKeys.add(`${row.target_event_id}:${row.actor_pubkey}`)
+      stellaEventIds.add(row.target_event_id)
     }
   }
 
-  // Fetch stella details from user_stella table
+  // Fetch stella details from user_stella table using IN clause (more efficient)
   const stellaDetails = new Map<string, StellaByColor>()
-  if (stellaKeys.length > 0) {
-    // Build query for all stella notifications
-    const uniqueKeys = [...new Set(stellaKeys.map((k) => `${k.eventId}:${k.reactorPubkey}`))]
-    const conditions = uniqueKeys.map(() => '(event_id = ? AND reactor_pubkey = ?)').join(' OR ')
-    const bindings: string[] = []
-    for (const key of uniqueKeys) {
-      const [eventId, reactorPubkey] = key.split(':')
-      bindings.push(eventId, reactorPubkey)
-    }
+  if (stellaEventIds.size > 0) {
+    const eventIdArray = [...stellaEventIds]
+    const placeholders = eventIdArray.map(() => '?').join(',')
 
     const stellaRows = await c.env.DB.prepare(
-      `SELECT event_id, reactor_pubkey, stella_color, stella_count FROM user_stella WHERE ${conditions}`
+      `SELECT event_id, reactor_pubkey, stella_color, stella_count
+       FROM user_stella
+       WHERE event_id IN (${placeholders})`
     )
-      .bind(...bindings)
+      .bind(...eventIdArray)
       .all<{ event_id: string; reactor_pubkey: string; stella_color: string; stella_count: number }>()
 
     if (stellaRows.results) {
       for (const row of stellaRows.results) {
         const key = `${row.event_id}:${row.reactor_pubkey}`
+        // Only include if this key was in our notification list
+        if (!stellaKeys.has(key)) continue
         if (!stellaDetails.has(key)) {
           stellaDetails.set(key, {})
         }
@@ -122,7 +121,7 @@ notifications.post('/read', async (c) => {
     return c.json({ error: 'ids array is required' }, 400)
   }
 
-  const now = Math.floor(Date.now() / 1000)
+  const now = getCurrentTimestamp()
   const placeholders = ids.map(() => '?').join(',')
 
   await c.env.DB.prepare(`UPDATE notifications SET read_at = ? WHERE id IN (${placeholders}) AND read_at IS NULL`)
@@ -140,7 +139,7 @@ notifications.post('/:id/read', async (c) => {
     return c.json({ error: 'Invalid notification id' }, 400)
   }
 
-  const now = Math.floor(Date.now() / 1000)
+  const now = getCurrentTimestamp()
 
   await c.env.DB.prepare(`UPDATE notifications SET read_at = ? WHERE id = ? AND read_at IS NULL`).bind(now, id).run()
 
@@ -255,8 +254,8 @@ function aggregateNotifications(
   // Sort by latest created_at
   result.sort((a, b) => b.createdAt - a.createdAt)
 
-  // Limit to ~20 rows
-  return result.slice(0, 20)
+  // Limit aggregated results
+  return result.slice(0, AGGREGATED_NOTIFICATIONS_LIMIT)
 }
 
 export default notifications

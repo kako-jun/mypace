@@ -9,3 +9,17 @@ export type Bindings = {
   VAPID_PRIVATE_KEY?: string
   VAPID_SUBJECT?: string // mailto:xxx or https://xxx
 }
+
+// Notification types
+export type NotificationType = 'stella' | 'reply' | 'repost'
+
+// API response types
+export interface ApiError {
+  error: string
+  code?: string
+}
+
+export interface ApiSuccess<T = unknown> {
+  success: true
+  data?: T
+}

@@ -160,23 +160,90 @@ export type StellaColor = 'yellow' | 'green' | 'red' | 'blue' | 'purple'
 
 ### DBスキーマ
 
+1ユーザーが1投稿に対して、色ごとにステラを送れる（複数行になる）。
+
 ```sql
 CREATE TABLE IF NOT EXISTS user_stella (
-  event_id TEXT NOT NULL,
-  author_pubkey TEXT NOT NULL,
-  reactor_pubkey TEXT NOT NULL,
-  stella_count INTEGER NOT NULL,
-  stella_color TEXT DEFAULT 'yellow',
-  reaction_id TEXT,
+  event_id TEXT NOT NULL,           -- ステラを受けた投稿
+  author_pubkey TEXT NOT NULL,      -- 投稿者（集計用）
+  reactor_pubkey TEXT NOT NULL,     -- ステラを送った人
+  stella_count INTEGER NOT NULL,    -- その色のステラ数（1-10）
+  stella_color TEXT NOT NULL DEFAULT 'yellow',  -- ステラの色
+  reaction_id TEXT,                 -- リアクションイベントID（削除用）
   updated_at INTEGER NOT NULL,
-  PRIMARY KEY (event_id, reactor_pubkey)
+  PRIMARY KEY (event_id, reactor_pubkey, stella_color)
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_stella_author ON user_stella(author_pubkey);
+CREATE INDEX IF NOT EXISTS idx_user_stella_reactor ON user_stella(reactor_pubkey);
 CREATE INDEX IF NOT EXISTS idx_user_stella_reaction ON user_stella(reaction_id);
+CREATE INDEX IF NOT EXISTS idx_user_stella_event_reactor ON user_stella(event_id, reactor_pubkey);
 ```
 
 ### API仕様
+
+#### ステラ所持数取得
+
+```
+GET /api/stella-balance/:pubkey
+```
+
+レスポンス:
+
+```json
+{
+  "pubkey": "abc123...",
+  "balance": {
+    "yellow": 10,
+    "green": 5,
+    "red": 2,
+    "blue": 1,
+    "purple": 0
+  },
+  "updatedAt": 1234567890
+}
+```
+
+#### ステラ送信（所持数を減らす）
+
+```
+POST /api/stella-balance/send
+```
+
+リクエストボディ:
+
+```json
+{
+  "pubkey": "abc123...",
+  "yellow": 2,
+  "green": 1
+}
+```
+
+レスポンス:
+
+```json
+{
+  "success": true,
+  "newBalance": {
+    "yellow": 8,
+    "green": 4,
+    "red": 2,
+    "blue": 1,
+    "purple": 0
+  }
+}
+```
+
+エラー（所持数不足）:
+
+```json
+{
+  "error": "Insufficient balance for yellow"
+}
+```
+
+#### ステラ統計（旧エンドポイント）
 
 ```
 GET /api/user/:pubkey/stats

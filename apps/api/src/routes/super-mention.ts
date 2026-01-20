@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
+import { getCurrentTimestamp, parsePaginationLimit } from '../utils'
 
 const superMention = new Hono<{ Bindings: Bindings }>()
 
@@ -20,7 +21,7 @@ superMention.post('/paths', async (c) => {
       return c.json({ error: 'path required' }, 400)
     }
 
-    const now = Math.floor(Date.now() / 1000)
+    const now = getCurrentTimestamp()
 
     // If clearWikidata is true, explicitly set wikidata fields to NULL
     if (body.clearWikidata) {
@@ -96,7 +97,7 @@ superMention.delete('/delete', async (c) => {
 superMention.get('/suggest', async (c) => {
   const db = c.env.DB
   const prefix = c.req.query('prefix') || ''
-  const limit = Math.min(parseInt(c.req.query('limit') || '10', 10), 50)
+  const limit = parsePaginationLimit(c.req.query('limit'), 10, 50)
 
   try {
     let query: string

@@ -1,21 +1,16 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
+import type { StellaColorCounts } from '../services/stella'
+import { STELLA_COLORS } from '../constants'
+import { getCurrentTimestamp, isValidPubkey } from '../utils'
 
 const stellaBalance = new Hono<{ Bindings: Bindings }>()
-
-interface StellaBalance {
-  yellow: number
-  green: number
-  red: number
-  blue: number
-  purple: number
-}
 
 // GET /api/stella-balance/:pubkey - Get user's stella balance
 stellaBalance.get('/:pubkey', async (c) => {
   const pubkey = c.req.param('pubkey')
 
-  if (!pubkey || pubkey.length !== 64) {
+  if (!isValidPubkey(pubkey)) {
     return c.json({ error: 'Invalid pubkey' }, 400)
   }
 
@@ -29,7 +24,7 @@ stellaBalance.get('/:pubkey', async (c) => {
          WHERE pubkey = ?`
       )
       .bind(pubkey)
-      .first<StellaBalance & { updated_at: number }>()
+      .first<StellaColorCounts & { updated_at: number }>()
 
     if (!result) {
       // Return default balance if user doesn't have a record yet
@@ -67,12 +62,12 @@ stellaBalance.get('/:pubkey', async (c) => {
 stellaBalance.post('/send', async (c) => {
   const body = await c.req.json<{
     senderPubkey: string
-    amounts: Partial<StellaBalance>
+    amounts: Partial<StellaColorCounts>
   }>()
 
   const { senderPubkey, amounts } = body
 
-  if (!senderPubkey || senderPubkey.length !== 64) {
+  if (!isValidPubkey(senderPubkey)) {
     return c.json({ error: 'Invalid sender pubkey' }, 400)
   }
 
@@ -91,15 +86,14 @@ stellaBalance.post('/send', async (c) => {
          WHERE pubkey = ?`
       )
       .bind(senderPubkey)
-      .first<StellaBalance>()
+      .first<StellaColorCounts>()
 
     if (!currentBalance) {
       return c.json({ error: 'Insufficient balance' }, 400)
     }
 
     // Check if user has enough balance for each color
-    const colors: (keyof StellaBalance)[] = ['yellow', 'green', 'red', 'blue', 'purple']
-    for (const color of colors) {
+    for (const color of STELLA_COLORS) {
       const amountToSend = amounts[color] || 0
       if (amountToSend > 0 && currentBalance[color] < amountToSend) {
         return c.json({ error: `Insufficient ${color} stella balance` }, 400)
@@ -107,7 +101,7 @@ stellaBalance.post('/send', async (c) => {
     }
 
     // Calculate new balance
-    const newBalance: StellaBalance = {
+    const newBalance: StellaColorCounts = {
       yellow: currentBalance.yellow - (amounts.yellow || 0),
       green: currentBalance.green - (amounts.green || 0),
       red: currentBalance.red - (amounts.red || 0),
@@ -116,7 +110,7 @@ stellaBalance.post('/send', async (c) => {
     }
 
     // Update balance
-    const now = Math.floor(Date.now() / 1000)
+    const now = getCurrentTimestamp()
     await db
       .prepare(
         `UPDATE user_stella_balance
@@ -140,12 +134,12 @@ stellaBalance.post('/send', async (c) => {
 stellaBalance.post('/add', async (c) => {
   const body = await c.req.json<{
     pubkey: string
-    amounts: Partial<StellaBalance>
+    amounts: Partial<StellaColorCounts>
   }>()
 
   const { pubkey, amounts } = body
 
-  if (!pubkey || pubkey.length !== 64) {
+  if (!isValidPubkey(pubkey)) {
     return c.json({ error: 'Invalid pubkey' }, 400)
   }
 
@@ -154,7 +148,7 @@ stellaBalance.post('/add', async (c) => {
   }
 
   const db = c.env.DB
-  const now = Math.floor(Date.now() / 1000)
+  const now = getCurrentTimestamp()
 
   try {
     // Upsert balance
@@ -189,7 +183,7 @@ stellaBalance.post('/add', async (c) => {
          WHERE pubkey = ?`
       )
       .bind(pubkey)
-      .first<StellaBalance>()
+      .first<StellaColorCounts>()
 
     return c.json({
       success: true,

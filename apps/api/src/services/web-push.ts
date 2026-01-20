@@ -6,6 +6,8 @@
  */
 
 import type { D1Database } from '@cloudflare/workers-types'
+import { getCurrentTimestamp } from '../utils'
+import { VAPID_JWT_EXPIRATION, PUSH_TTL } from '../constants'
 
 export interface PushSubscription {
   id: number
@@ -228,8 +230,8 @@ export async function sendPushNotification(
     const endpointUrl = new URL(subscription.endpoint)
     const audience = `${endpointUrl.protocol}//${endpointUrl.host}`
 
-    // Generate VAPID JWT (expires in 12 hours)
-    const expiration = Math.floor(Date.now() / 1000) + 12 * 60 * 60
+    // Generate VAPID JWT
+    const expiration = getCurrentTimestamp() + VAPID_JWT_EXPIRATION
     const jwt = await generateVapidJwt(audience, vapidSubject, vapidKeys.privateKey, expiration)
 
     // Build request
@@ -241,7 +243,7 @@ export async function sendPushNotification(
         Encryption: `salt=${uint8ArrayToBase64url(salt)}`,
         'Crypto-Key': `dh=${uint8ArrayToBase64url(localPublicKey)};p256ecdsa=${vapidKeys.publicKey}`,
         Authorization: `WebPush ${jwt}`,
-        TTL: '86400', // 24 hours
+        TTL: String(PUSH_TTL),
       },
       body: encrypted,
     })
