@@ -5,6 +5,7 @@ import {
   createReplyEvent,
   getStoredThemeColors,
   getCurrentPubkey,
+  STELLA_COLORS,
   type StellaColor,
 } from '../../lib/nostr/events'
 import { exportNpub } from '../../lib/nostr/keys'
@@ -563,9 +564,11 @@ export function PostForm({
             type="button"
             className={`teaser-button ${teaserColor ? 'active' : ''}`}
             onClick={() => setShowTeaserPicker(true)}
-            title="Teaser設定"
+            title="Teaser"
           >
-            <Icon name="Lock" size={16} />
+            <span style={teaserColor ? { color: STELLA_COLORS[teaserColor].hex } : undefined}>
+              <Icon name="Lock" size={16} />
+            </span>
           </button>
         )}
       </div>

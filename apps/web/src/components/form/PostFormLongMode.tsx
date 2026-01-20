@@ -13,7 +13,7 @@ import { FormActions } from './FormActions'
 import TeaserPicker from './TeaserPicker'
 import { getDisplayName } from '../../lib/utils'
 import { LIMITS } from '../../lib/constants'
-import type { StellaColor } from '../../lib/nostr/events'
+import { STELLA_COLORS, type StellaColor } from '../../lib/nostr/events'
 
 interface PostFormLongModeProps {
   content: string
@@ -215,9 +215,11 @@ export function PostFormLongMode({
                 type="button"
                 className={`teaser-button ${teaserColor ? 'active' : ''}`}
                 onClick={() => setShowTeaserPicker(true)}
-                title="Teaser設定"
+                title="Teaser"
               >
-                <Icon name="Lock" size={16} />
+                <span style={teaserColor ? { color: STELLA_COLORS[teaserColor].hex } : undefined}>
+                  <Icon name="Lock" size={16} />
+                </span>
               </button>
             )}
           </div>
