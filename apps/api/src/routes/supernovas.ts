@@ -117,7 +117,7 @@ supernovas.post('/check', async (c) => {
     const unlockedIds = new Set((unlockedResult.results || []).map((r) => r.supernova_id))
 
     // Get user stats for cumulative checks
-    const [serialResult, stellaResult, postCountResult] = await Promise.all([
+    const [serialResult, stellaResult, givenStellaResult, postCountResult] = await Promise.all([
       db
         .prepare(`SELECT serial_number FROM user_serial WHERE pubkey = ?`)
         .bind(pubkey)
@@ -127,6 +127,14 @@ supernovas.post('/check', async (c) => {
           `SELECT COALESCE(SUM(stella_count), 0) as total
            FROM user_stella
            WHERE author_pubkey = ?`
+        )
+        .bind(pubkey)
+        .first<{ total: number }>(),
+      db
+        .prepare(
+          `SELECT COALESCE(SUM(stella_count), 0) as total
+           FROM user_stella
+           WHERE reactor_pubkey = ?`
         )
         .bind(pubkey)
         .first<{ total: number }>(),
@@ -143,6 +151,7 @@ supernovas.post('/check', async (c) => {
     const userStats = {
       serialNumber: serialResult?.serial_number || null,
       totalStella: stellaResult?.total || 0,
+      totalGivenStella: givenStellaResult?.total || 0,
       postCount: postCountResult?.count || 0,
     }
 
@@ -169,11 +178,23 @@ supernovas.post('/check', async (c) => {
         case 'serial_under_1000':
           shouldUnlock = userStats.serialNumber !== null && userStats.serialNumber <= 1000
           break
-        case 'stella_100':
+        case 'received_10':
+          shouldUnlock = userStats.totalStella >= 10
+          break
+        case 'received_100':
           shouldUnlock = userStats.totalStella >= 100
           break
-        case 'stella_1000':
+        case 'received_1000':
           shouldUnlock = userStats.totalStella >= 1000
+          break
+        case 'given_10':
+          shouldUnlock = userStats.totalGivenStella >= 10
+          break
+        case 'given_100':
+          shouldUnlock = userStats.totalGivenStella >= 100
+          break
+        case 'given_1000':
+          shouldUnlock = userStats.totalGivenStella >= 1000
           break
         // Add more conditions as needed
         default:
@@ -283,7 +304,20 @@ supernovas.post('/seed', async (c) => {
       reward_purple: 0,
     },
     {
-      id: 'stella_100',
+      id: 'received_10',
+      name: 'Rising Star',
+      description: 'Received 10 total stella',
+      category: 'cumulative',
+      threshold: 10,
+      trophy_color: 'yellow',
+      reward_yellow: 5,
+      reward_green: 2,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'received_100',
       name: 'Star Collector',
       description: 'Received 100 total stella',
       category: 'cumulative',
@@ -296,9 +330,48 @@ supernovas.post('/seed', async (c) => {
       reward_purple: 0,
     },
     {
-      id: 'stella_1000',
+      id: 'received_1000',
       name: 'Constellation',
       description: 'Received 1000 total stella',
+      category: 'cumulative',
+      threshold: 1000,
+      trophy_color: 'purple',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 10,
+      reward_blue: 5,
+      reward_purple: 1,
+    },
+    {
+      id: 'given_10',
+      name: 'Generous',
+      description: 'Given 10 total stella',
+      category: 'cumulative',
+      threshold: 10,
+      trophy_color: 'yellow',
+      reward_yellow: 5,
+      reward_green: 2,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'given_100',
+      name: 'Benefactor',
+      description: 'Given 100 total stella',
+      category: 'cumulative',
+      threshold: 100,
+      trophy_color: 'blue',
+      reward_yellow: 0,
+      reward_green: 10,
+      reward_red: 5,
+      reward_blue: 1,
+      reward_purple: 0,
+    },
+    {
+      id: 'given_1000',
+      name: 'Patron',
+      description: 'Given 1000 total stella',
       category: 'cumulative',
       threshold: 1000,
       trophy_color: 'purple',

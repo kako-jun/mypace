@@ -252,11 +252,12 @@ async function checkStellaSupernovas(db: D1Database, pubkey: string): Promise<vo
 
     const totalStella = stellaResult?.total || 0
 
-    // Check stella-related supernovas
+    // Check stella-related supernovas (received)
     const stellaSupernovas = [
       { id: 'first_stella', threshold: 1 },
-      { id: 'stella_100', threshold: 100 },
-      { id: 'stella_1000', threshold: 1000 },
+      { id: 'received_10', threshold: 10 },
+      { id: 'received_100', threshold: 100 },
+      { id: 'received_1000', threshold: 1000 },
     ]
 
     for (const supernova of stellaSupernovas) {
@@ -301,6 +302,83 @@ async function checkStellaSupernovas(db: D1Database, pubkey: string): Promise<vo
     }
   } catch (e) {
     console.error('Stella supernova check error:', e)
+  }
+}
+
+// Check and unlock given-stella-related supernovas for a user (the reactor)
+async function checkGivenStellaSupernovas(db: D1Database, pubkey: string): Promise<void> {
+  const now = Math.floor(Date.now() / 1000)
+
+  try {
+    // Get user's already unlocked supernovas
+    const unlockedResult = await db
+      .prepare(`SELECT supernova_id FROM user_supernovas WHERE pubkey = ?`)
+      .bind(pubkey)
+      .all<{ supernova_id: string }>()
+
+    const unlockedIds = new Set((unlockedResult.results || []).map((r) => r.supernova_id))
+
+    // Get user's total given stella count
+    const stellaResult = await db
+      .prepare(
+        `SELECT COALESCE(SUM(stella_count), 0) as total
+         FROM user_stella
+         WHERE reactor_pubkey = ?`
+      )
+      .bind(pubkey)
+      .first<{ total: number }>()
+
+    const totalGivenStella = stellaResult?.total || 0
+
+    // Check given stella-related supernovas
+    const givenStellaSupernovas = [
+      { id: 'given_10', threshold: 10 },
+      { id: 'given_100', threshold: 100 },
+      { id: 'given_1000', threshold: 1000 },
+    ]
+
+    for (const supernova of givenStellaSupernovas) {
+      if (unlockedIds.has(supernova.id)) continue
+      if (totalGivenStella < supernova.threshold) continue
+
+      // Get supernova definition for rewards
+      const def = await db.prepare(`SELECT * FROM supernova_definitions WHERE id = ?`).bind(supernova.id).first<{
+        reward_yellow: number
+        reward_green: number
+        reward_red: number
+        reward_blue: number
+        reward_purple: number
+      }>()
+
+      if (!def) continue
+
+      // Unlock the supernova
+      await db
+        .prepare(`INSERT OR IGNORE INTO user_supernovas (pubkey, supernova_id, unlocked_at) VALUES (?, ?, ?)`)
+        .bind(pubkey, supernova.id, now)
+        .run()
+
+      // Add rewards to user's stella balance
+      const totalReward = def.reward_yellow + def.reward_green + def.reward_red + def.reward_blue + def.reward_purple
+      if (totalReward > 0) {
+        await db
+          .prepare(
+            `INSERT INTO user_stella_balance (pubkey, yellow, green, red, blue, purple, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)
+             ON CONFLICT(pubkey) DO UPDATE SET
+               yellow = yellow + excluded.yellow,
+               green = green + excluded.green,
+               red = red + excluded.red,
+               blue = blue + excluded.blue,
+               purple = purple + excluded.purple,
+               updated_at = excluded.updated_at`
+          )
+          .bind(pubkey, def.reward_yellow, def.reward_green, def.reward_red, def.reward_blue, def.reward_purple, now)
+          .run()
+      }
+    }
+  } catch (e) {
+    console.error('Given stella supernova check error:', e)
   }
 }
 
@@ -423,6 +501,8 @@ publish.post('/', async (c) => {
           }
           // Check and unlock stella-related supernovas for the author (fire-and-forget)
           checkStellaSupernovas(db, pTag[1]).catch(console.error)
+          // Check and unlock given-stella-related supernovas for the reactor (fire-and-forget)
+          checkGivenStellaSupernovas(db, event.pubkey).catch(console.error)
         }
       }
     }

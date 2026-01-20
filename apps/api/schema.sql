@@ -190,4 +190,7 @@ CREATE INDEX IF NOT EXISTS idx_user_supernovas_supernova ON user_supernovas(supe
 -- ('first_post', 'First Post', 'Posted your first message', 'single', 1, 'yellow', 10, 0, 0, 0, 0),
 -- ('first_stella', 'First Star', 'Received your first stella', 'single', 1, 'yellow', 5, 1, 0, 0, 0),
 -- ('serial_under_100', 'Early Bird', 'Joined within the first 100 users', 'single', 1, 'green', 20, 5, 0, 0, 0),
--- ('stella_100', 'Star Collector', 'Received 100 total stella', 'cumulative', 100, 'blue', 0, 10, 5, 1, 0);
+-- ('received_10', 'Rising Star', 'Received 10 total stella', 'cumulative', 10, 'yellow', 5, 2, 0, 0, 0),
+-- ('received_100', 'Star Collector', 'Received 100 total stella', 'cumulative', 100, 'blue', 0, 10, 5, 1, 0),
+-- ('given_10', 'Generous', 'Given 10 total stella', 'cumulative', 10, 'yellow', 5, 2, 0, 0, 0),
+-- ('given_100', 'Benefactor', 'Given 100 total stella', 'cumulative', 100, 'blue', 0, 10, 5, 1, 0);
