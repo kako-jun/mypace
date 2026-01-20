@@ -117,27 +117,11 @@ supernovas.post('/check', async (c) => {
     const unlockedIds = new Set((unlockedResult.results || []).map((r) => r.supernova_id))
 
     // Get user stats for cumulative checks
-    const [serialResult, stellaResult, givenStellaResult, postCountResult] = await Promise.all([
+    const [serialResult, postCountResult, receivedByColor, givenByColor] = await Promise.all([
       db
         .prepare(`SELECT serial_number FROM user_serial WHERE pubkey = ?`)
         .bind(pubkey)
         .first<{ serial_number: number }>(),
-      db
-        .prepare(
-          `SELECT COALESCE(SUM(stella_count), 0) as total
-           FROM user_stella
-           WHERE author_pubkey = ?`
-        )
-        .bind(pubkey)
-        .first<{ total: number }>(),
-      db
-        .prepare(
-          `SELECT COALESCE(SUM(stella_count), 0) as total
-           FROM user_stella
-           WHERE reactor_pubkey = ?`
-        )
-        .bind(pubkey)
-        .first<{ total: number }>(),
       db
         .prepare(
           `SELECT COUNT(*) as count
@@ -146,13 +130,45 @@ supernovas.post('/check', async (c) => {
         )
         .bind(pubkey)
         .first<{ count: number }>(),
+      // Received stella by color
+      db
+        .prepare(
+          `SELECT stella_color, COALESCE(SUM(stella_count), 0) as total
+           FROM user_stella
+           WHERE author_pubkey = ?
+           GROUP BY stella_color`
+        )
+        .bind(pubkey)
+        .all<{ stella_color: string; total: number }>(),
+      // Given stella by color
+      db
+        .prepare(
+          `SELECT stella_color, COALESCE(SUM(stella_count), 0) as total
+           FROM user_stella
+           WHERE reactor_pubkey = ?
+           GROUP BY stella_color`
+        )
+        .bind(pubkey)
+        .all<{ stella_color: string; total: number }>(),
     ])
+
+    // Build color-specific stats
+    const received: Record<string, number> = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
+    const given: Record<string, number> = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
+    for (const r of receivedByColor.results || []) {
+      received[r.stella_color] = r.total
+    }
+    for (const g of givenByColor.results || []) {
+      given[g.stella_color] = g.total
+    }
 
     const userStats = {
       serialNumber: serialResult?.serial_number || null,
-      totalStella: stellaResult?.total || 0,
-      totalGivenStella: givenStellaResult?.total || 0,
+      totalStella: Object.values(received).reduce((a, b) => a + b, 0),
+      totalGivenStella: Object.values(given).reduce((a, b) => a + b, 0),
       postCount: postCountResult?.count || 0,
+      received,
+      given,
     }
 
     // Check each definition and unlock if conditions are met
@@ -178,31 +194,20 @@ supernovas.post('/check', async (c) => {
         case 'serial_under_1000':
           shouldUnlock = userStats.serialNumber !== null && userStats.serialNumber <= 1000
           break
-        case 'received_10':
-          shouldUnlock = userStats.totalStella >= 10
-          break
-        case 'received_100':
-          shouldUnlock = userStats.totalStella >= 100
-          break
-        case 'received_1000':
-          shouldUnlock = userStats.totalStella >= 1000
-          break
-        case 'given_10':
-          shouldUnlock = userStats.totalGivenStella >= 10
-          break
-        case 'given_100':
-          shouldUnlock = userStats.totalGivenStella >= 100
-          break
-        case 'given_1000':
-          shouldUnlock = userStats.totalGivenStella >= 1000
-          break
-        // Add more conditions as needed
-        default:
-          // For cumulative achievements, check threshold
-          if (def.category === 'cumulative') {
-            // Generic check based on threshold (can be extended)
-            shouldUnlock = userStats.totalStella >= def.threshold
+        default: {
+          // Handle color-specific stella supernovas: received_{color}_{threshold} or given_{color}_{threshold}
+          const receivedMatch = def.id.match(/^received_(yellow|green|red|blue|purple)_(\d+)$/)
+          const givenMatch = def.id.match(/^given_(yellow|green|red|blue|purple)_(\d+)$/)
+          if (receivedMatch) {
+            const color = receivedMatch[1]
+            const threshold = parseInt(receivedMatch[2], 10)
+            shouldUnlock = userStats.received[color] >= threshold
+          } else if (givenMatch) {
+            const color = givenMatch[1]
+            const threshold = parseInt(givenMatch[2], 10)
+            shouldUnlock = userStats.given[color] >= threshold
           }
+        }
       }
 
       if (shouldUnlock) {
@@ -303,83 +308,471 @@ supernovas.post('/seed', async (c) => {
       reward_blue: 0,
       reward_purple: 0,
     },
+    // Content type supernovas
     {
-      id: 'received_10',
-      name: 'Received 10',
-      description: 'Received 10 total stella',
-      category: 'cumulative',
-      threshold: 10,
+      id: 'first_teaser',
+      name: 'First Teaser',
+      description: 'Posted with teaser tag',
+      category: 'single',
+      threshold: 1,
       trophy_color: 'yellow',
       reward_yellow: 5,
-      reward_green: 2,
+      reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
       reward_purple: 0,
     },
     {
-      id: 'received_100',
-      name: 'Received 100',
-      description: 'Received 100 total stella',
-      category: 'cumulative',
-      threshold: 100,
-      trophy_color: 'blue',
-      reward_yellow: 0,
-      reward_green: 10,
-      reward_red: 5,
-      reward_blue: 1,
-      reward_purple: 0,
-    },
-    {
-      id: 'received_1000',
-      name: 'Received 1000',
-      description: 'Received 1000 total stella',
-      category: 'cumulative',
-      threshold: 1000,
-      trophy_color: 'purple',
-      reward_yellow: 0,
-      reward_green: 0,
-      reward_red: 10,
-      reward_blue: 5,
-      reward_purple: 1,
-    },
-    {
-      id: 'given_10',
-      name: 'Given 10',
-      description: 'Given 10 total stella',
-      category: 'cumulative',
-      threshold: 10,
+      id: 'first_super_mention',
+      name: 'First Super Mention',
+      description: 'Used super mention',
+      category: 'single',
+      threshold: 1,
       trophy_color: 'yellow',
       reward_yellow: 5,
-      reward_green: 2,
+      reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
       reward_purple: 0,
     },
     {
-      id: 'given_100',
-      name: 'Given 100',
-      description: 'Given 100 total stella',
+      id: 'first_image',
+      name: 'First Image',
+      description: 'Posted your first image',
+      category: 'single',
+      threshold: 1,
+      trophy_color: 'yellow',
+      reward_yellow: 5,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'first_voice',
+      name: 'First Voice',
+      description: 'Posted your first voice memo',
+      category: 'single',
+      threshold: 1,
+      trophy_color: 'yellow',
+      reward_yellow: 5,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'first_map',
+      name: 'First Map',
+      description: 'Posted your first map location',
+      category: 'single',
+      threshold: 1,
+      trophy_color: 'yellow',
+      reward_yellow: 5,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    // Received Yellow Stella
+    {
+      id: 'received_yellow_10',
+      name: 'Received Yellow 10',
+      description: 'Received 10 yellow stella',
+      category: 'cumulative',
+      threshold: 10,
+      trophy_color: 'yellow',
+      reward_yellow: 5,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'received_yellow_100',
+      name: 'Received Yellow 100',
+      description: 'Received 100 yellow stella',
+      category: 'cumulative',
+      threshold: 100,
+      trophy_color: 'yellow',
+      reward_yellow: 10,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'received_yellow_1000',
+      name: 'Received Yellow 1000',
+      description: 'Received 1000 yellow stella',
+      category: 'cumulative',
+      threshold: 1000,
+      trophy_color: 'yellow',
+      reward_yellow: 20,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    // Received Green Stella
+    {
+      id: 'received_green_10',
+      name: 'Received Green 10',
+      description: 'Received 10 green stella',
+      category: 'cumulative',
+      threshold: 10,
+      trophy_color: 'green',
+      reward_yellow: 0,
+      reward_green: 5,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'received_green_100',
+      name: 'Received Green 100',
+      description: 'Received 100 green stella',
+      category: 'cumulative',
+      threshold: 100,
+      trophy_color: 'green',
+      reward_yellow: 0,
+      reward_green: 10,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'received_green_1000',
+      name: 'Received Green 1000',
+      description: 'Received 1000 green stella',
+      category: 'cumulative',
+      threshold: 1000,
+      trophy_color: 'green',
+      reward_yellow: 0,
+      reward_green: 20,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    // Received Red Stella
+    {
+      id: 'received_red_10',
+      name: 'Received Red 10',
+      description: 'Received 10 red stella',
+      category: 'cumulative',
+      threshold: 10,
+      trophy_color: 'red',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 5,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'received_red_100',
+      name: 'Received Red 100',
+      description: 'Received 100 red stella',
+      category: 'cumulative',
+      threshold: 100,
+      trophy_color: 'red',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 10,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'received_red_1000',
+      name: 'Received Red 1000',
+      description: 'Received 1000 red stella',
+      category: 'cumulative',
+      threshold: 1000,
+      trophy_color: 'red',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 20,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    // Received Blue Stella
+    {
+      id: 'received_blue_10',
+      name: 'Received Blue 10',
+      description: 'Received 10 blue stella',
+      category: 'cumulative',
+      threshold: 10,
+      trophy_color: 'blue',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 5,
+      reward_purple: 0,
+    },
+    {
+      id: 'received_blue_100',
+      name: 'Received Blue 100',
+      description: 'Received 100 blue stella',
       category: 'cumulative',
       threshold: 100,
       trophy_color: 'blue',
       reward_yellow: 0,
-      reward_green: 10,
-      reward_red: 5,
-      reward_blue: 1,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 10,
       reward_purple: 0,
     },
     {
-      id: 'given_1000',
-      name: 'Given 1000',
-      description: 'Given 1000 total stella',
+      id: 'received_blue_1000',
+      name: 'Received Blue 1000',
+      description: 'Received 1000 blue stella',
+      category: 'cumulative',
+      threshold: 1000,
+      trophy_color: 'blue',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 20,
+      reward_purple: 0,
+    },
+    // Received Purple Stella
+    {
+      id: 'received_purple_10',
+      name: 'Received Purple 10',
+      description: 'Received 10 purple stella',
+      category: 'cumulative',
+      threshold: 10,
+      trophy_color: 'purple',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 5,
+    },
+    {
+      id: 'received_purple_100',
+      name: 'Received Purple 100',
+      description: 'Received 100 purple stella',
+      category: 'cumulative',
+      threshold: 100,
+      trophy_color: 'purple',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 10,
+    },
+    {
+      id: 'received_purple_1000',
+      name: 'Received Purple 1000',
+      description: 'Received 1000 purple stella',
       category: 'cumulative',
       threshold: 1000,
       trophy_color: 'purple',
       reward_yellow: 0,
       reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 20,
+    },
+    // Given Yellow Stella
+    {
+      id: 'given_yellow_10',
+      name: 'Given Yellow 10',
+      description: 'Given 10 yellow stella',
+      category: 'cumulative',
+      threshold: 10,
+      trophy_color: 'yellow',
+      reward_yellow: 5,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'given_yellow_100',
+      name: 'Given Yellow 100',
+      description: 'Given 100 yellow stella',
+      category: 'cumulative',
+      threshold: 100,
+      trophy_color: 'yellow',
+      reward_yellow: 10,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'given_yellow_1000',
+      name: 'Given Yellow 1000',
+      description: 'Given 1000 yellow stella',
+      category: 'cumulative',
+      threshold: 1000,
+      trophy_color: 'yellow',
+      reward_yellow: 20,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    // Given Green Stella
+    {
+      id: 'given_green_10',
+      name: 'Given Green 10',
+      description: 'Given 10 green stella',
+      category: 'cumulative',
+      threshold: 10,
+      trophy_color: 'green',
+      reward_yellow: 0,
+      reward_green: 5,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'given_green_100',
+      name: 'Given Green 100',
+      description: 'Given 100 green stella',
+      category: 'cumulative',
+      threshold: 100,
+      trophy_color: 'green',
+      reward_yellow: 0,
+      reward_green: 10,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'given_green_1000',
+      name: 'Given Green 1000',
+      description: 'Given 1000 green stella',
+      category: 'cumulative',
+      threshold: 1000,
+      trophy_color: 'green',
+      reward_yellow: 0,
+      reward_green: 20,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    // Given Red Stella
+    {
+      id: 'given_red_10',
+      name: 'Given Red 10',
+      description: 'Given 10 red stella',
+      category: 'cumulative',
+      threshold: 10,
+      trophy_color: 'red',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 5,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'given_red_100',
+      name: 'Given Red 100',
+      description: 'Given 100 red stella',
+      category: 'cumulative',
+      threshold: 100,
+      trophy_color: 'red',
+      reward_yellow: 0,
+      reward_green: 0,
       reward_red: 10,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'given_red_1000',
+      name: 'Given Red 1000',
+      description: 'Given 1000 red stella',
+      category: 'cumulative',
+      threshold: 1000,
+      trophy_color: 'red',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 20,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    // Given Blue Stella
+    {
+      id: 'given_blue_10',
+      name: 'Given Blue 10',
+      description: 'Given 10 blue stella',
+      category: 'cumulative',
+      threshold: 10,
+      trophy_color: 'blue',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 0,
       reward_blue: 5,
-      reward_purple: 1,
+      reward_purple: 0,
+    },
+    {
+      id: 'given_blue_100',
+      name: 'Given Blue 100',
+      description: 'Given 100 blue stella',
+      category: 'cumulative',
+      threshold: 100,
+      trophy_color: 'blue',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 10,
+      reward_purple: 0,
+    },
+    {
+      id: 'given_blue_1000',
+      name: 'Given Blue 1000',
+      description: 'Given 1000 blue stella',
+      category: 'cumulative',
+      threshold: 1000,
+      trophy_color: 'blue',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 20,
+      reward_purple: 0,
+    },
+    // Given Purple Stella
+    {
+      id: 'given_purple_10',
+      name: 'Given Purple 10',
+      description: 'Given 10 purple stella',
+      category: 'cumulative',
+      threshold: 10,
+      trophy_color: 'purple',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 5,
+    },
+    {
+      id: 'given_purple_100',
+      name: 'Given Purple 100',
+      description: 'Given 100 purple stella',
+      category: 'cumulative',
+      threshold: 100,
+      trophy_color: 'purple',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 10,
+    },
+    {
+      id: 'given_purple_1000',
+      name: 'Given Purple 1000',
+      description: 'Given 1000 purple stella',
+      category: 'cumulative',
+      threshold: 1000,
+      trophy_color: 'purple',
+      reward_yellow: 0,
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 20,
     },
   ]
 

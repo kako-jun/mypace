@@ -227,8 +227,13 @@ async function checkSerialSupernovas(db: D1Database, pubkey: string): Promise<vo
   }
 }
 
-// Check and unlock stella-related supernovas for a user
-async function checkStellaSupernovas(db: D1Database, pubkey: string): Promise<void> {
+// Check and unlock content-type supernovas for a user based on post tags
+async function checkContentSupernovas(
+  db: D1Database,
+  pubkey: string,
+  tags: string[][],
+  content: string
+): Promise<void> {
   const now = Math.floor(Date.now() / 1000)
 
   try {
@@ -240,64 +245,88 @@ async function checkStellaSupernovas(db: D1Database, pubkey: string): Promise<vo
 
     const unlockedIds = new Set((unlockedResult.results || []).map((r) => r.supernova_id))
 
-    // Get user's total stella count
-    const stellaResult = await db
+    // Check for teaser tag
+    const hasTeaserTag = tags.some((t) => t[0] === 't' && t[1]?.toLowerCase() === 'teaser')
+    if (hasTeaserTag && !unlockedIds.has('first_teaser')) {
+      await unlockSupernova(db, pubkey, 'first_teaser', now)
+    }
+
+    // Check for super mention (q tag with super-mention marker)
+    const hasSuperMention = tags.some((t) => t[0] === 'q')
+    if (hasSuperMention && !unlockedIds.has('first_super_mention')) {
+      await unlockSupernova(db, pubkey, 'first_super_mention', now)
+    }
+
+    // Check for image (imeta tag or image URL in content)
+    const hasImetaTag = tags.some((t) => t[0] === 'imeta')
+    const hasImageUrl = /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(content)
+    if ((hasImetaTag || hasImageUrl) && !unlockedIds.has('first_image')) {
+      await unlockSupernova(db, pubkey, 'first_image', now)
+    }
+
+    // Check for voice memo (audio URL or voice tag)
+    const hasVoiceTag = tags.some((t) => t[0] === 't' && t[1]?.toLowerCase() === 'voice')
+    const hasAudioUrl = /\.(mp3|wav|ogg|m4a|webm)(\?|$)/i.test(content)
+    if ((hasVoiceTag || hasAudioUrl) && !unlockedIds.has('first_voice')) {
+      await unlockSupernova(db, pubkey, 'first_voice', now)
+    }
+
+    // Check for map/geo (g tag or geo: URL)
+    const hasGeoTag = tags.some((t) => t[0] === 'g')
+    const hasGeoUrl = /geo:/i.test(content)
+    if ((hasGeoTag || hasGeoUrl) && !unlockedIds.has('first_map')) {
+      await unlockSupernova(db, pubkey, 'first_map', now)
+    }
+  } catch (e) {
+    console.error('Content supernova check error:', e)
+  }
+}
+
+// Check and unlock stella-related supernovas for a user (received stella by color)
+async function checkStellaSupernovas(db: D1Database, pubkey: string): Promise<void> {
+  const now = Math.floor(Date.now() / 1000)
+  const colors = ['yellow', 'green', 'red', 'blue', 'purple']
+  const thresholds = [10, 100, 1000]
+
+  try {
+    // Get user's already unlocked supernovas
+    const unlockedResult = await db
+      .prepare(`SELECT supernova_id FROM user_supernovas WHERE pubkey = ?`)
+      .bind(pubkey)
+      .all<{ supernova_id: string }>()
+
+    const unlockedIds = new Set((unlockedResult.results || []).map((r) => r.supernova_id))
+
+    // Get user's received stella by color
+    const stellaByColor = await db
       .prepare(
-        `SELECT COALESCE(SUM(stella_count), 0) as total
+        `SELECT stella_color, COALESCE(SUM(stella_count), 0) as total
          FROM user_stella
-         WHERE author_pubkey = ?`
+         WHERE author_pubkey = ?
+         GROUP BY stella_color`
       )
       .bind(pubkey)
-      .first<{ total: number }>()
+      .all<{ stella_color: string; total: number }>()
 
-    const totalStella = stellaResult?.total || 0
+    const received: Record<string, number> = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
+    for (const r of stellaByColor.results || []) {
+      received[r.stella_color] = r.total
+    }
+    const totalStella = Object.values(received).reduce((a, b) => a + b, 0)
 
-    // Check stella-related supernovas (received)
-    const stellaSupernovas = [
-      { id: 'first_stella', threshold: 1 },
-      { id: 'received_10', threshold: 10 },
-      { id: 'received_100', threshold: 100 },
-      { id: 'received_1000', threshold: 1000 },
-    ]
+    // Check first_stella
+    if (!unlockedIds.has('first_stella') && totalStella > 0) {
+      await unlockSupernova(db, pubkey, 'first_stella', now)
+    }
 
-    for (const supernova of stellaSupernovas) {
-      if (unlockedIds.has(supernova.id)) continue
-      if (totalStella < supernova.threshold) continue
-
-      // Get supernova definition for rewards
-      const def = await db.prepare(`SELECT * FROM supernova_definitions WHERE id = ?`).bind(supernova.id).first<{
-        reward_yellow: number
-        reward_green: number
-        reward_red: number
-        reward_blue: number
-        reward_purple: number
-      }>()
-
-      if (!def) continue
-
-      // Unlock the supernova
-      await db
-        .prepare(`INSERT OR IGNORE INTO user_supernovas (pubkey, supernova_id, unlocked_at) VALUES (?, ?, ?)`)
-        .bind(pubkey, supernova.id, now)
-        .run()
-
-      // Add rewards to user's stella balance
-      const totalReward = def.reward_yellow + def.reward_green + def.reward_red + def.reward_blue + def.reward_purple
-      if (totalReward > 0) {
-        await db
-          .prepare(
-            `INSERT INTO user_stella_balance (pubkey, yellow, green, red, blue, purple, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?)
-             ON CONFLICT(pubkey) DO UPDATE SET
-               yellow = yellow + excluded.yellow,
-               green = green + excluded.green,
-               red = red + excluded.red,
-               blue = blue + excluded.blue,
-               purple = purple + excluded.purple,
-               updated_at = excluded.updated_at`
-          )
-          .bind(pubkey, def.reward_yellow, def.reward_green, def.reward_red, def.reward_blue, def.reward_purple, now)
-          .run()
+    // Check color-specific received supernovas
+    for (const color of colors) {
+      for (const threshold of thresholds) {
+        const id = `received_${color}_${threshold}`
+        if (unlockedIds.has(id)) continue
+        if (received[color] >= threshold) {
+          await unlockSupernova(db, pubkey, id, now)
+        }
       }
     }
   } catch (e) {
@@ -305,9 +334,47 @@ async function checkStellaSupernovas(db: D1Database, pubkey: string): Promise<vo
   }
 }
 
+// Helper to unlock a supernova and grant rewards
+async function unlockSupernova(db: D1Database, pubkey: string, supernovaId: string, now: number): Promise<void> {
+  const def = await db.prepare(`SELECT * FROM supernova_definitions WHERE id = ?`).bind(supernovaId).first<{
+    reward_yellow: number
+    reward_green: number
+    reward_red: number
+    reward_blue: number
+    reward_purple: number
+  }>()
+
+  if (!def) return
+
+  await db
+    .prepare(`INSERT OR IGNORE INTO user_supernovas (pubkey, supernova_id, unlocked_at) VALUES (?, ?, ?)`)
+    .bind(pubkey, supernovaId, now)
+    .run()
+
+  const totalReward = def.reward_yellow + def.reward_green + def.reward_red + def.reward_blue + def.reward_purple
+  if (totalReward > 0) {
+    await db
+      .prepare(
+        `INSERT INTO user_stella_balance (pubkey, yellow, green, red, blue, purple, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(pubkey) DO UPDATE SET
+           yellow = yellow + excluded.yellow,
+           green = green + excluded.green,
+           red = red + excluded.red,
+           blue = blue + excluded.blue,
+           purple = purple + excluded.purple,
+           updated_at = excluded.updated_at`
+      )
+      .bind(pubkey, def.reward_yellow, def.reward_green, def.reward_red, def.reward_blue, def.reward_purple, now)
+      .run()
+  }
+}
+
 // Check and unlock given-stella-related supernovas for a user (the reactor)
 async function checkGivenStellaSupernovas(db: D1Database, pubkey: string): Promise<void> {
   const now = Math.floor(Date.now() / 1000)
+  const colors = ['yellow', 'green', 'red', 'blue', 'purple']
+  const thresholds = [10, 100, 1000]
 
   try {
     // Get user's already unlocked supernovas
@@ -318,63 +385,30 @@ async function checkGivenStellaSupernovas(db: D1Database, pubkey: string): Promi
 
     const unlockedIds = new Set((unlockedResult.results || []).map((r) => r.supernova_id))
 
-    // Get user's total given stella count
-    const stellaResult = await db
+    // Get user's given stella by color
+    const stellaByColor = await db
       .prepare(
-        `SELECT COALESCE(SUM(stella_count), 0) as total
+        `SELECT stella_color, COALESCE(SUM(stella_count), 0) as total
          FROM user_stella
-         WHERE reactor_pubkey = ?`
+         WHERE reactor_pubkey = ?
+         GROUP BY stella_color`
       )
       .bind(pubkey)
-      .first<{ total: number }>()
+      .all<{ stella_color: string; total: number }>()
 
-    const totalGivenStella = stellaResult?.total || 0
+    const given: Record<string, number> = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
+    for (const g of stellaByColor.results || []) {
+      given[g.stella_color] = g.total
+    }
 
-    // Check given stella-related supernovas
-    const givenStellaSupernovas = [
-      { id: 'given_10', threshold: 10 },
-      { id: 'given_100', threshold: 100 },
-      { id: 'given_1000', threshold: 1000 },
-    ]
-
-    for (const supernova of givenStellaSupernovas) {
-      if (unlockedIds.has(supernova.id)) continue
-      if (totalGivenStella < supernova.threshold) continue
-
-      // Get supernova definition for rewards
-      const def = await db.prepare(`SELECT * FROM supernova_definitions WHERE id = ?`).bind(supernova.id).first<{
-        reward_yellow: number
-        reward_green: number
-        reward_red: number
-        reward_blue: number
-        reward_purple: number
-      }>()
-
-      if (!def) continue
-
-      // Unlock the supernova
-      await db
-        .prepare(`INSERT OR IGNORE INTO user_supernovas (pubkey, supernova_id, unlocked_at) VALUES (?, ?, ?)`)
-        .bind(pubkey, supernova.id, now)
-        .run()
-
-      // Add rewards to user's stella balance
-      const totalReward = def.reward_yellow + def.reward_green + def.reward_red + def.reward_blue + def.reward_purple
-      if (totalReward > 0) {
-        await db
-          .prepare(
-            `INSERT INTO user_stella_balance (pubkey, yellow, green, red, blue, purple, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?)
-             ON CONFLICT(pubkey) DO UPDATE SET
-               yellow = yellow + excluded.yellow,
-               green = green + excluded.green,
-               red = red + excluded.red,
-               blue = blue + excluded.blue,
-               purple = purple + excluded.purple,
-               updated_at = excluded.updated_at`
-          )
-          .bind(pubkey, def.reward_yellow, def.reward_green, def.reward_red, def.reward_blue, def.reward_purple, now)
-          .run()
+    // Check color-specific given supernovas
+    for (const color of colors) {
+      for (const threshold of thresholds) {
+        const id = `given_${color}_${threshold}`
+        if (unlockedIds.has(id)) continue
+        if (given[color] >= threshold) {
+          await unlockSupernova(db, pubkey, id, now)
+        }
       }
     }
   } catch (e) {
@@ -457,6 +491,8 @@ publish.post('/', async (c) => {
           console.error('Serial register error:', e)
         }
       }
+      // Check and unlock content-type supernovas (fire-and-forget)
+      checkContentSupernovas(db, event.pubkey, tags, event.content || '').catch(console.error)
     }
 
     // Kind 7 (リアクション) + stellaタグならD1に記録 + 通知
