@@ -136,34 +136,65 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
     // NIP-50: 検索クエリがある場合はリレー側で全文検索
     const searchQuery = queries.filter((q) => q.trim()).join(' ')
 
-    const filter: Filter = {
+    // ベースフィルタ
+    const baseFilter: Filter = {
       kinds: targetKinds,
       limit: limit * 2, // フィルタで減る分を考慮
     }
-    // #tフィルタをリレーに送信（okTagsも含める）
-    if (!showAll) {
-      filter['#t'] = okTags.length > 0 ? [MYPACE_TAG, ...okTags] : [MYPACE_TAG]
-    } else if (okTags.length > 0) {
-      filter['#t'] = okTags
-    }
     if (since > 0) {
-      filter.since = since
+      baseFilter.since = since
     }
     if (until > 0) {
-      filter.until = until
+      baseFilter.until = until
+    }
+
+    const allRawEvents: NostrEvent[] = []
+
+    // 1回目: #tフィルタでクエリ（tタグを持つ投稿）
+    const tagFilter: Filter = { ...baseFilter }
+    if (!showAll) {
+      tagFilter['#t'] = okTags.length > 0 ? [MYPACE_TAG, ...okTags] : [MYPACE_TAG]
+    } else if (okTags.length > 0) {
+      tagFilter['#t'] = okTags
     }
     if (searchQuery) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(filter as any).search = searchQuery
+      ;(tagFilter as any).search = searchQuery
     }
 
-    // 検索クエリがある場合のみSEARCH_RELAYS（NIP-50対応）を使用
-    // それ以外はGENERAL_RELAYSを使用（より広範なイベントを取得可能）
-    const targetRelays = searchQuery ? SEARCH_RELAYS : GENERAL_RELAYS
-    const rawEvents = await p.querySync(targetRelays, filter)
-    rawEvents.sort((a, b) => b.created_at - a.created_at)
+    const useSearchRelays = !!searchQuery
+    const tagRelays = useSearchRelays ? SEARCH_RELAYS : GENERAL_RELAYS
+    const tagEvents = await p.querySync(tagRelays, tagFilter)
+    allRawEvents.push(...tagEvents)
 
-    let events = rawEvents.map(toEvent)
+    // 2回目: okTagsがある場合、本文内の#tagも検索（NIP-50）
+    if (okTags.length > 0) {
+      const hashtagSearchQuery = okTags.map((tag) => `#${tag}`).join(' ')
+      const fullSearchQuery = searchQuery ? `${searchQuery} ${hashtagSearchQuery}` : hashtagSearchQuery
+
+      const searchFilter: Filter = { ...baseFilter }
+      // showAll=falseの場合でもMYPACE_TAGは必要
+      if (!showAll) {
+        searchFilter['#t'] = [MYPACE_TAG]
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(searchFilter as any).search = fullSearchQuery
+
+      const searchEvents = await p.querySync(SEARCH_RELAYS, searchFilter)
+      allRawEvents.push(...searchEvents)
+    }
+
+    // 重複除去（IDベース）
+    const seenIds = new Set<string>()
+    const uniqueRawEvents = allRawEvents.filter((e) => {
+      if (seenIds.has(e.id)) return false
+      seenIds.add(e.id)
+      return true
+    })
+
+    uniqueRawEvents.sort((a, b) => b.created_at - a.created_at)
+
+    let events = uniqueRawEvents.map(toEvent)
 
     // クライアント側フィルタ（リレーが対応していないもののみ）
     // ※ okTagsとqueriesはリレー側で処理するためここには含めない
@@ -186,8 +217,8 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
     const searchedUntil =
       result.length > 0
         ? Math.min(...result.map((e) => e.created_at))
-        : rawEvents.length > 0
-          ? Math.min(...rawEvents.map((e) => e.created_at))
+        : uniqueRawEvents.length > 0
+          ? Math.min(...uniqueRawEvents.map((e) => e.created_at))
           : null
 
     return { events: result, searchedUntil }
@@ -256,37 +287,67 @@ export async function fetchUserEvents(
     // NIP-50: 検索クエリがある場合はリレー側で全文検索
     const searchQuery = q.filter((query) => query.trim()).join(' ')
 
-    const filter: Filter = {
+    // ベースフィルタ
+    const baseFilter: Filter = {
       kinds: targetKinds,
       authors: [pubkey],
       limit: limit * 2,
     }
-
-    // #tフィルタは常に適用（NIP-50対応リレーはsearch+#tの組み合わせを処理できる）
-    if (!showAll || tags.length > 0) {
-      const tagFilter = showAll ? tags : [MYPACE_TAG, ...tags]
-      if (tagFilter.length > 0) {
-        filter['#t'] = tagFilter
-      }
-    }
     if (since > 0) {
-      filter.since = since
+      baseFilter.since = since
     }
     if (until > 0) {
-      filter.until = until
+      baseFilter.until = until
+    }
+
+    const allRawEvents: NostrEvent[] = []
+
+    // 1回目: #tフィルタでクエリ（tタグを持つ投稿）
+    const tagFilter: Filter = { ...baseFilter }
+    if (!showAll || tags.length > 0) {
+      const tFilter = showAll ? tags : [MYPACE_TAG, ...tags]
+      if (tFilter.length > 0) {
+        tagFilter['#t'] = tFilter
+      }
     }
     if (searchQuery) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(filter as any).search = searchQuery
+      ;(tagFilter as any).search = searchQuery
     }
 
-    // 検索クエリがある場合のみSEARCH_RELAYS（NIP-50対応）を使用
-    // それ以外はGENERAL_RELAYSを使用（より広範なイベントを取得可能）
-    const targetRelays = searchQuery ? SEARCH_RELAYS : GENERAL_RELAYS
-    const rawEvents = await p.querySync(targetRelays, filter)
-    rawEvents.sort((a, b) => b.created_at - a.created_at)
+    const useSearchRelays = !!searchQuery
+    const tagRelays = useSearchRelays ? SEARCH_RELAYS : GENERAL_RELAYS
+    const tagEvents = await p.querySync(tagRelays, tagFilter)
+    allRawEvents.push(...tagEvents)
 
-    let events = rawEvents.map(toEvent)
+    // 2回目: tagsがある場合、本文内の#tagも検索（NIP-50）
+    if (tags.length > 0) {
+      const hashtagSearchQuery = tags.map((tag) => `#${tag}`).join(' ')
+      const fullSearchQuery = searchQuery ? `${searchQuery} ${hashtagSearchQuery}` : hashtagSearchQuery
+
+      const searchFilter: Filter = { ...baseFilter }
+      // showAll=falseの場合でもMYPACE_TAGは必要
+      if (!showAll) {
+        searchFilter['#t'] = [MYPACE_TAG]
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(searchFilter as any).search = fullSearchQuery
+
+      const searchEvents = await p.querySync(SEARCH_RELAYS, searchFilter)
+      allRawEvents.push(...searchEvents)
+    }
+
+    // 重複除去（IDベース）
+    const seenIds = new Set<string>()
+    const uniqueRawEvents = allRawEvents.filter((e) => {
+      if (seenIds.has(e.id)) return false
+      seenIds.add(e.id)
+      return true
+    })
+
+    uniqueRawEvents.sort((a, b) => b.created_at - a.created_at)
+
+    let events = uniqueRawEvents.map(toEvent)
 
     // クライアント側フィルタ（リレーが対応していないもののみ）
     // ※ tagsとqはリレー側で処理するためここには含めない
@@ -309,8 +370,8 @@ export async function fetchUserEvents(
     const searchedUntil =
       result.length > 0
         ? Math.min(...result.map((e) => e.created_at))
-        : rawEvents.length > 0
-          ? Math.min(...rawEvents.map((e) => e.created_at))
+        : uniqueRawEvents.length > 0
+          ? Math.min(...uniqueRawEvents.map((e) => e.created_at))
           : null
 
     return { events: result, searchedUntil }
