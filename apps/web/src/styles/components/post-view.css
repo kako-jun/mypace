@@ -291,17 +291,27 @@
 /* Teaser locked inline (matches timeline style) */
 .teaser-locked-inline {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 0.5rem;
   margin-top: 0.5rem;
+  line-height: 1;
 }
 
 .teaser-locked-inline .read-more-btn {
   display: inline-flex;
   align-items: center;
+  vertical-align: middle;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
 }
 
 .teaser-stella-hint {
+  display: inline-flex;
+  align-items: center;
   font-size: 0.875rem;
   color: var(--text-secondary);
+  line-height: 1;
+  vertical-align: middle;
 }
