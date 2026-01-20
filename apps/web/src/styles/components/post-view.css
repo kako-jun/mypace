@@ -288,28 +288,16 @@
   }
 }
 
-/* Teaser locked message */
-.teaser-locked-message {
+/* Teaser locked inline (matches timeline style) */
+.teaser-locked-inline {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 1rem;
-  padding: 0.75rem 1rem;
-  background: var(--surface-secondary);
-  border: 1px solid var(--border-card);
-  border-radius: 4px;
+  margin-top: 0.5rem;
 }
 
-.teaser-locked-icon {
-  display: flex;
-  align-items: center;
-}
-
-.teaser-lock-icon {
-  font-size: 1.25rem;
-}
-
-.teaser-locked-text {
+.teaser-stella-hint {
   font-size: 0.875rem;
   color: var(--text-secondary);
 }

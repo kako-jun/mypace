@@ -56,7 +56,7 @@ import {
   PostBarcode,
   OriginalPostCard,
 } from './index'
-import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage } from '../ui'
+import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage, Icon } from '../ui'
 import { useDeleteConfirm, usePostViewData, useWallet } from '../../hooks'
 import type { Profile, ReactionData, LoadableProfile } from '../../types'
 import type { ShareOption } from './ShareMenu'
@@ -516,15 +516,21 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
               />
               {/* Locked teaser message */}
               {hasTeaser && hasColorRequirement && !isUnlocked && (
-                <div className="teaser-locked-message">
-                  <span
-                    className="teaser-locked-icon"
-                    style={{ color: STELLA_COLORS[teaserColor as StellaColor]?.hex }}
-                  >
-                    <span className="teaser-lock-icon">&#128274;</span>
-                  </span>
-                  <span className="teaser-locked-text">
-                    続きを読むには{STELLA_COLORS[teaserColor as StellaColor]?.label}ステラが必要です
+                <div className="teaser-locked-inline">
+                  <TextButton variant="primary" className="read-more-btn teaser-read-more">
+                    … READ MORE
+                    <span
+                      style={{
+                        marginLeft: '0.25rem',
+                        color: STELLA_COLORS[teaserColor as StellaColor]?.hex,
+                        display: 'inline-flex',
+                      }}
+                    >
+                      <Icon name="Lock" size={14} />
+                    </span>
+                  </TextButton>
+                  <span className="teaser-stella-hint">
+                    Requires {STELLA_COLORS[teaserColor as StellaColor]?.label} Stella
                   </span>
                 </div>
               )}
