@@ -62,6 +62,34 @@ export function processSuperMentions(html: string, wikidataMap?: Record<string, 
   })
 }
 
+// User mention regex (@username format, but NOT @@)
+// Negative lookbehind (?<!@) ensures we don't match @@ (super mention)
+const USER_MENTION_REGEX = /(^|[\s>])@(?!@)([a-zA-Z0-9_]+)/g
+
+// Find pubkey by name/display_name in profiles map
+function findPubkeyByName(name: string, profiles: ProfileMap): string | null {
+  const lowerName = name.toLowerCase()
+  for (const [pubkey, profile] of Object.entries(profiles)) {
+    if (profile?.name?.toLowerCase() === lowerName || profile?.display_name?.toLowerCase() === lowerName) {
+      return pubkey
+    }
+  }
+  return null
+}
+
+// Process user mentions in HTML (@username -> link if found in profiles)
+export function processUserMentions(html: string, profiles: ProfileMap): string {
+  return html.replace(USER_MENTION_REGEX, (match, prefix, username) => {
+    const pubkey = findPubkeyByName(username, profiles)
+    if (pubkey) {
+      const npub = nip19.npubEncode(pubkey)
+      return `${prefix}<a href="/user/${npub}" class="content-user-mention">@${escapeHtml(username)}</a>`
+    }
+    // Not found - return original text (not a link)
+    return match
+  })
+}
+
 // Nostr URI regex (NIP-19)
 const NOSTR_URI_REGEX = /nostr:(npub1[a-zA-Z0-9]+|nprofile1[a-zA-Z0-9]+|note1[a-zA-Z0-9]+|nevent1[a-zA-Z0-9]+)/g
 

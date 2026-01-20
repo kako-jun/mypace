@@ -282,6 +282,26 @@
   font-family: var(--font-sans);
 }
 
+/* User mentions (@username) */
+.content-user-mention {
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  -webkit-text-stroke: 3px #000;
+  paint-order: stroke fill;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  font-size: 1.1em;
+  font-family: var(--font-sans);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.content-user-mention:hover {
+  color: #eee;
+  -webkit-text-fill-color: #eee;
+  text-decoration: underline;
+}
+
 /* Q badge in post content - matches suggest popup style */
 .content-q-badge {
   display: inline-block;

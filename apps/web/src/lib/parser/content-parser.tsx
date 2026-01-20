@@ -22,7 +22,7 @@ import {
 import { extractAlignments, restoreAlignments } from './alignment'
 import { processFontSyntax } from './font-syntax'
 import { extractCodeBlocks, restoreCodeBlocks } from './code-blocks'
-import { processHashtags, processSuperMentions, processNostrMentions } from './nostr-tags'
+import { processHashtags, processSuperMentions, processNostrMentions, processUserMentions } from './nostr-tags'
 import { processCustomEmojis } from './emoji'
 
 // Load common Prism languages
@@ -95,6 +95,7 @@ export function renderContent(
   html = processNostrMentions(html, profiles)
   html = processHashtags(html)
   html = processSuperMentions(html, wikidataMap)
+  html = processUserMentions(html, profiles)
   html = processLinks(html)
   html = processCustomEmojis(html, emojis)
 
