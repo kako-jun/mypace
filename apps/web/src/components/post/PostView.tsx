@@ -530,23 +530,21 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
               />
               {/* Locked teaser message */}
               {hasTeaser && hasColorRequirement && !isUnlocked && (
-                <div className="teaser-locked-inline">
-                  <TextButton variant="primary" className="read-more-btn teaser-read-more">
-                    … READ MORE
-                    <span
-                      style={{
-                        marginLeft: '0.25rem',
-                        color: STELLA_COLORS[teaserColor as StellaColor]?.hex,
-                        display: 'inline-flex',
-                      }}
-                    >
-                      <Icon name="Lock" size={14} />
-                    </span>
-                  </TextButton>
-                  <span className="teaser-stella-hint">
+                <TextButton variant="primary" className="read-more-btn teaser-read-more">
+                  … READ MORE
+                  <span
+                    style={{
+                      marginLeft: '0.25rem',
+                      color: STELLA_COLORS[teaserColor as StellaColor]?.hex,
+                      display: 'inline-flex',
+                    }}
+                  >
+                    <Icon name="Lock" size={14} />
+                  </span>
+                  <span style={{ marginLeft: '0.25rem' }}>
                     Requires {STELLA_COLORS[teaserColor as StellaColor]?.label} Stella
                   </span>
-                </div>
+                </TextButton>
               )}
             </div>
 
