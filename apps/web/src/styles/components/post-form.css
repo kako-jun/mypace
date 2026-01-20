@@ -1076,6 +1076,13 @@ body.long-mode-active .teaser-picker-backdrop {
   color: var(--text-primary);
 }
 
+.teaser-picker-description {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
 .teaser-picker-stars {
   display: flex;
   justify-content: center;

@@ -29,6 +29,8 @@ export default function TeaserPicker({ selectedColor, onSelect, onClose }: Tease
             <CloseButton onClick={onClose} size={20} />
           </div>
 
+          <p className="teaser-picker-description">Readers need to give a stella to read more</p>
+
           <div className="teaser-picker-stars">
             {COLOR_ORDER.map((color) => {
               const colorInfo = STELLA_COLORS[color]
