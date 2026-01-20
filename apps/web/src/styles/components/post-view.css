@@ -140,6 +140,11 @@
   margin-bottom: 1rem;
 }
 
+/* Modal mode: white text to contrast with dark backdrop */
+.post-view-modal .replies-heading {
+  color: #fff;
+}
+
 .replies-list {
   display: flex;
   flex-direction: column;
