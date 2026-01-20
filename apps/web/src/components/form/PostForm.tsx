@@ -565,7 +565,7 @@ export function PostForm({
             onClick={() => setShowTeaserPicker(true)}
             title="Teaser設定"
           >
-            <Icon name="Lock" size={20} />
+            <Icon name="Lock" size={16} />
           </button>
         )}
       </div>
@@ -619,12 +619,8 @@ export function PostForm({
         />
       )}
 
-      {showTeaserPicker && teaserButtonRef.current && (
+      {showTeaserPicker && (
         <TeaserPicker
-          position={{
-            top: teaserButtonRef.current.getBoundingClientRect().top,
-            left: teaserButtonRef.current.getBoundingClientRect().left + teaserButtonRef.current.offsetWidth / 2,
-          }}
           selectedColor={teaserColor}
           onSelect={(color) => {
             setTeaserColor(color)

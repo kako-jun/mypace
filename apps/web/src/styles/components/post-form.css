@@ -1008,17 +1008,24 @@ body.long-mode-active .location-picker-modal {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: none;
-  border: none;
-  padding: 0.25rem;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-primary, #333);
+  border-radius: 0;
   cursor: pointer;
   color: var(--text-muted);
-  margin-left: auto;
-  transition: color 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .teaser-button:hover {
-  color: var(--text-primary);
+  background: var(--surface-hover);
+  transform: scale(1.05);
+}
+
+[data-theme='dark'] .teaser-button {
+  border-color: #666;
 }
 
 .teaser-button.active {
@@ -1029,31 +1036,38 @@ body.long-mode-active .location-picker-modal {
   fill: currentColor;
 }
 
-.teaser-picker-overlay {
+.teaser-picker-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1051;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+body.long-mode-active .teaser-picker-backdrop {
+  align-items: center;
+  padding: 1rem;
 }
 
 .teaser-picker {
-  position: fixed;
-  transform: translate(-50%, -100%);
-  margin-top: -12px;
   background: var(--surface-primary);
   border: 2px solid var(--border-card);
+  border-bottom: none;
   padding: 1rem;
-  z-index: 1052;
-  min-width: 200px;
+  width: 100%;
+  max-width: 400px;
 }
 
 .teaser-picker-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .teaser-picker-title {
@@ -1062,59 +1076,39 @@ body.long-mode-active .location-picker-modal {
   color: var(--text-primary);
 }
 
-.teaser-picker-description {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin: 0 0 0.75rem 0;
-}
-
-.teaser-picker-options {
+.teaser-picker-stars {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  justify-content: center;
+  gap: 0.75rem;
 }
 
-.teaser-picker-option {
+.teaser-picker-star {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
   background: none;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
-  text-align: left;
-  transition: background 0.15s ease;
+  transition: all 0.15s ease;
 }
 
-.teaser-picker-option:hover {
+.teaser-picker-star:hover {
   background: var(--surface-secondary);
+  transform: scale(1.1);
 }
 
-.teaser-picker-option.selected {
+.teaser-picker-star.selected {
   background: var(--surface-secondary);
   border-color: var(--accent);
 }
 
-.teaser-picker-option svg {
+.teaser-picker-star svg {
   stroke: #333;
   stroke-width: 1.5;
-  flex-shrink: 0;
-}
-
-.teaser-picker-option-label {
-  flex: 1;
-  font-size: 0.875rem;
-  color: var(--text-primary);
-}
-
-.teaser-picker-option-sats {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.teaser-picker-check {
-  color: var(--accent);
-  flex-shrink: 0;
 }
 
 .teaser-picker-clear {
@@ -1123,7 +1117,7 @@ body.long-mode-active .location-picker-modal {
   justify-content: center;
   gap: 0.25rem;
   width: 100%;
-  margin-top: 0.75rem;
+  margin-top: 1rem;
   padding: 0.5rem;
   background: none;
   border: 1px solid var(--border-card);
