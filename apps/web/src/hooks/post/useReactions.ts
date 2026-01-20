@@ -26,10 +26,18 @@ export function useReactions({ event, myPubkey, initialReactions, authorLud16 }:
   const stellaDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingStella = useRef<StellaCountsByColor>({ ...EMPTY_STELLA_COUNTS })
 
-  // Sync with initialReactions when it changes (e.g., after async fetch)
+  // Sync with initialReactions only when reaction data is first loaded
+  // (indicated by myReactionId changing from null to a value, or reactors being populated)
+  const prevReactorsCount = useRef(initialReactions.reactors.length)
   useEffect(() => {
-    setReactions(initialReactions)
-  }, [initialReactions])
+    // Only sync if:
+    // 1. reactors count increased (new data loaded from API/cache)
+    // 2. AND we haven't started any local modifications (likingId is null)
+    if (initialReactions.reactors.length > prevReactorsCount.current && likingId === null) {
+      setReactions(initialReactions)
+    }
+    prevReactorsCount.current = initialReactions.reactors.length
+  }, [initialReactions, likingId])
 
   const flushStella = useCallback(async () => {
     if (!event) return
