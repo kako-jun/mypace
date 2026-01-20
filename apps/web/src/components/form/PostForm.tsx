@@ -25,6 +25,7 @@ import {
   getDisplayName,
 } from '../../lib/utils'
 import { CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
+import { checkSupernovas } from '../../lib/api'
 import { AttachedImages, AttachedLocations, PostPreview } from '../post'
 import { Avatar, Icon, TextButton, ErrorMessage } from '../ui'
 import { setVimMode as saveVimMode } from '../../lib/storage'
@@ -285,6 +286,10 @@ export function PostForm({
       }
 
       window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NEW_POST))
+
+      // Check and unlock supernovas after posting (fire-and-forget)
+      const pubkey = await getCurrentPubkey()
+      checkSupernovas(pubkey, 'first_post').catch(console.error)
 
       if (longMode) {
         onLongModeChange(false)

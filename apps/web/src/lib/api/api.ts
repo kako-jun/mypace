@@ -411,3 +411,109 @@ export async function markNotificationsRead(ids: number[]): Promise<boolean> {
     return false
   }
 }
+
+// ==================== STELLA BALANCE ====================
+
+export interface StellaBalance {
+  yellow: number
+  green: number
+  red: number
+  blue: number
+  purple: number
+}
+
+export interface StellaBalanceResponse {
+  pubkey: string
+  balance: StellaBalance
+  updatedAt: number | null
+}
+
+// Fetch user's stella balance
+export async function fetchStellaBalance(pubkey: string): Promise<StellaBalanceResponse | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/stella-balance/${pubkey}`)
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+// Send stella (decrease sender's balance)
+export async function sendStella(
+  senderPubkey: string,
+  amounts: Partial<StellaBalance>
+): Promise<{ success: boolean; newBalance?: StellaBalance; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/api/stella-balance/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ senderPubkey, amounts }),
+    })
+    return res.json()
+  } catch {
+    return { success: false, error: 'Network error' }
+  }
+}
+
+// ==================== SUPERNOVAS ====================
+
+export interface SupernovaDefinition {
+  id: string
+  name: string
+  description: string
+  category: 'single' | 'cumulative'
+  threshold: number
+  trophy_color: string
+  reward_yellow: number
+  reward_green: number
+  reward_red: number
+  reward_blue: number
+  reward_purple: number
+}
+
+export interface UserSupernova extends SupernovaDefinition {
+  unlocked_at: number
+}
+
+// Fetch all supernova definitions
+export async function fetchSupernovaDefinitions(): Promise<SupernovaDefinition[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/supernovas/definitions`)
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.supernovas || []
+  } catch {
+    return []
+  }
+}
+
+// Fetch user's unlocked supernovas
+export async function fetchUserSupernovas(pubkey: string): Promise<UserSupernova[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/supernovas/${pubkey}`)
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.unlocked || []
+  } catch {
+    return []
+  }
+}
+
+// Check and unlock supernovas for a user
+export async function checkSupernovas(
+  pubkey: string,
+  event?: string
+): Promise<{ success: boolean; newlyUnlocked: UserSupernova[]; totalUnlocked: number }> {
+  try {
+    const res = await fetch(`${API_BASE}/api/supernovas/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pubkey, event }),
+    })
+    if (!res.ok) return { success: false, newlyUnlocked: [], totalUnlocked: 0 }
+    return res.json()
+  } catch {
+    return { success: false, newlyUnlocked: [], totalUnlocked: 0 }
+  }
+}

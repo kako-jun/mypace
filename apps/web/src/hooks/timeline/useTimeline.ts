@@ -12,10 +12,10 @@ import {
   type StellaColor,
   type StellaCountsByColor,
 } from '../../lib/nostr/events'
+import { sendStella } from '../../lib/api'
 import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage, getMutedPubkeys } from '../../lib/utils'
 import { getFilterSettings } from '../../lib/storage'
 import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
-import { sendToLightningAddress } from '../../lib/lightning'
 import type {
   Event,
   ProfileCache,
@@ -220,6 +220,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
 
   // Stella送信（色ごとに処理）
   const flushStella = async (targetEvent: Event) => {
+    if (!myPubkey) return
+
     const eventId = targetEvent.id
     const pending = pendingStella.current[eventId]
     if (!pending) return
@@ -227,8 +229,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     const pendingTotal = getTotalStellaCount(pending)
     if (pendingTotal <= 0) return
 
-    // 送信するステラ数（pending分）をコピーして保存
-    const stellaToSend = { ...pending }
     delete pendingStella.current[eventId]
     delete stellaDebounceTimers.current[eventId]
 
@@ -236,38 +236,22 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     const previousReaction = latestReaction
     const oldReactionId = latestReaction?.myReactionId
 
-    // カラーステラの支払い処理（色ごとに計算）
-    const colorCost =
-      stellaToSend.green * 1 + stellaToSend.red * 10 + stellaToSend.blue * 100 + stellaToSend.purple * 1000
-    if (colorCost > 0) {
-      const authorProfile = profiles[targetEvent.pubkey]
-      const lud16 = authorProfile?.lud16
-
-      if (!lud16) {
-        console.warn('Author has no lightning address, cannot send colored stella')
-        setReactions((prev) => ({
-          ...prev,
-          [eventId]: previousReaction || emptyReaction,
-        }))
-        return
-      }
-
-      setLikingId(eventId)
-      const payResult = await sendToLightningAddress(lud16, colorCost)
-      if (!payResult.success) {
-        console.error('Payment failed:', payResult.error)
-        setLikingId(null)
-        setReactions((prev) => ({
-          ...prev,
-          [eventId]: previousReaction || emptyReaction,
-        }))
-        return
-      }
-    } else {
-      setLikingId(eventId)
-    }
+    setLikingId(eventId)
 
     try {
+      // Deduct stella from user's balance via API
+      const stellaResult = await sendStella(myPubkey, pending)
+      if (!stellaResult.success) {
+        console.error('Failed to send stella:', stellaResult.error)
+        // Revert optimistic update
+        setReactions((prev) => ({
+          ...prev,
+          [eventId]: previousReaction || emptyReaction,
+        }))
+        setLikingId(null)
+        return
+      }
+
       // 楽観的更新済みの現在値をそのまま使用（既にpending分が加算されている）
       const newMyStella: StellaCountsByColor = latestReaction?.myStella || { ...EMPTY_STELLA_COUNTS }
 

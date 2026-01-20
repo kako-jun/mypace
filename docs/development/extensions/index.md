@@ -21,6 +21,12 @@ MY PACEはNostrプロトコルの拡張性を活用し、独自機能を実装�
 | `stella` | [stella.md](./stella.md) | 1投稿に最大10ステラ |
 | `pinned` | [pinned-post.md](./pinned-post.md) | プロフィール先頭固定投稿 |
 
+### ゲーミフィケーション
+
+| 機能 | ドキュメント | 概要 |
+|------|-------------|------|
+| Supernova | [supernova.md](./supernova.md) | 条件達成でステラを獲得する実績システム |
+
 ### Nostr標準機能の実装
 
 | kind | ドキュメント | 概要 |

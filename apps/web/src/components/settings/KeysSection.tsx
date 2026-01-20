@@ -10,10 +10,9 @@ interface KeysSectionProps {
   npub: string
   usingNip07: boolean
   onNavigateUploadHistory: () => void
-  walletSlot?: React.ReactNode
 }
 
-export default function KeysSection({ nsec, npub, usingNip07, onNavigateUploadHistory, walletSlot }: KeysSectionProps) {
+export default function KeysSection({ nsec, npub, usingNip07, onNavigateUploadHistory }: KeysSectionProps) {
   const [showNsec, setShowNsec] = useState(false)
   const [importValue, setImportValue] = useState('')
   const [copied, triggerCopied] = useTemporaryFlag()
@@ -80,8 +79,6 @@ export default function KeysSection({ nsec, npub, usingNip07, onNavigateUploadHi
             Upload History →
           </button>
         </SettingsSection>
-
-        {walletSlot}
       </>
     )
   }
@@ -125,8 +122,6 @@ export default function KeysSection({ nsec, npub, usingNip07, onNavigateUploadHi
           Upload History →
         </button>
       </SettingsSection>
-
-      {walletSlot}
 
       <SettingsSection title="Import Key">
         <p className="hint">Paste your nsec to use an existing identity</p>

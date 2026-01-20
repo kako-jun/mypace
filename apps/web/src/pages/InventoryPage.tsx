@@ -1,16 +1,20 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BackButton, Icon } from '../components/ui'
-import { getStoredThemeColors, isDarkColor } from '../lib/nostr/events'
-import { useWallet } from '../hooks/useWallet'
+import { BackButton, Icon, Loading } from '../components/ui'
+import { getStoredThemeColors, isDarkColor, STELLA_COLORS } from '../lib/nostr/events'
+import { getCurrentPubkey } from '../lib/nostr/events'
+import {
+  fetchStellaBalance,
+  fetchUserSupernovas,
+  fetchSupernovaDefinitions,
+  type StellaBalance,
+  type UserSupernova,
+  type SupernovaDefinition,
+} from '../lib/api'
 import '../styles/pages/inventory.css'
 
-// Stella color definitions (ordered by sats value descending for denomination conversion)
-const STELLA_COLORS = [
-  { name: 'purple', label: 'Purple', sats: 1000, color: '#9b59b6' },
-  { name: 'blue', label: 'Blue', sats: 100, color: '#3498db' },
-  { name: 'red', label: 'Red', sats: 10, color: '#e74c3c' },
-  { name: 'green', label: 'Green', sats: 1, color: '#2ecc71' },
-] as const
+// Stella color order for display
+const STELLA_COLOR_ORDER = ['yellow', 'green', 'red', 'blue', 'purple'] as const
 
 function useTextClass(): string {
   const colors = getStoredThemeColors()
@@ -25,36 +29,56 @@ function useTextClass(): string {
   return darkCount >= 2 ? 'light-text' : 'dark-text'
 }
 
-// Convert sats balance to stella denominations
-function satsToStellas(sats: number): { name: string; label: string; count: number; color: string }[] {
-  const result: { name: string; label: string; count: number; color: string }[] = []
-  let remaining = sats
-
-  for (const stella of STELLA_COLORS) {
-    const count = Math.floor(remaining / stella.sats)
-    if (count > 0) {
-      result.push({ name: stella.name, label: stella.label, count, color: stella.color })
-      remaining = remaining % stella.sats
-    }
-  }
-
-  return result
-}
-
 export function InventoryPage() {
   const navigate = useNavigate()
   const textClass = useTextClass()
-  const { connected, balance, walletName, loading, error, hasWebLN, connect, disconnect, refreshBalance } = useWallet()
 
-  const stellas = balance !== null ? satsToStellas(balance) : []
+  const [_pubkey, setPubkey] = useState<string | null>(null)
+  const [balance, setBalance] = useState<StellaBalance | null>(null)
+  const [supernovas, setSupernovas] = useState<UserSupernova[]>([])
+  const [allSupernovas, setAllSupernovas] = useState<SupernovaDefinition[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleConnect = async () => {
-    await connect()
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const pk = await getCurrentPubkey()
+        setPubkey(pk)
+
+        // Fetch data in parallel
+        const [balanceRes, userSupernovasRes, allSupernovasRes] = await Promise.all([
+          fetchStellaBalance(pk),
+          fetchUserSupernovas(pk),
+          fetchSupernovaDefinitions(),
+        ])
+
+        if (balanceRes) {
+          setBalance(balanceRes.balance)
+        }
+        setSupernovas(userSupernovasRes)
+        setAllSupernovas(allSupernovasRes)
+      } catch (e) {
+        console.error('Failed to load inventory data:', e)
+        setError('Failed to load inventory data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  const getTotalBalance = () => {
+    if (!balance) return 0
+    return balance.yellow + balance.green + balance.red + balance.blue + balance.purple
   }
 
-  const handleRefresh = async () => {
-    await refreshBalance()
-  }
+  const unlockedIds = new Set(supernovas.map((s) => s.id))
+  const lockedSupernovas = allSupernovas.filter((s) => !unlockedIds.has(s.id))
 
   return (
     <div className="inventory-page">
@@ -62,119 +86,181 @@ export function InventoryPage() {
 
       <div className={`inventory-header themed-card ${textClass}`}>
         <h2>Inventory</h2>
-        <p>Your Lightning wallet balance displayed as Color Stella.</p>
+        <p>Your Color Stella balance and unlocked Trophies.</p>
       </div>
 
-      <div className="inventory-balance-section">
-        <div className="inventory-balance-header">
-          <span className="inventory-balance-label">Color Stella Balance</span>
-          {connected && balance !== null ? (
-            <>
-              <span className="inventory-balance-value">{balance.toLocaleString()} sats</span>
-              <button className="inventory-refresh-button" onClick={handleRefresh} title="Refresh balance">
-                <Icon name="RefreshCw" size={16} />
-              </button>
-            </>
-          ) : connected && balance === null ? (
-            <span className="inventory-balance-value inventory-balance-unknown">Balance unavailable</span>
-          ) : (
-            <span className="inventory-balance-value inventory-not-connected">Not connected</span>
-          )}
+      {loading ? (
+        <div className="inventory-loading">
+          <Loading />
         </div>
+      ) : error ? (
+        <div className="inventory-error">{error}</div>
+      ) : (
+        <>
+          {/* Stella Balance Section */}
+          <div className="inventory-balance-section">
+            <div className="inventory-balance-header">
+              <span className="inventory-balance-label">Color Stella Balance</span>
+              <span className="inventory-balance-value">{getTotalBalance().toLocaleString()} stella</span>
+            </div>
 
-        {connected ? (
-          <>
-            {walletName && <div className="inventory-wallet-name">Connected: {walletName}</div>}
-            {balance !== null ? (
-              <div className="inventory-stella-list">
-                {stellas.length > 0 ? (
-                  stellas.map((stella) => (
-                    <div key={stella.name} className="inventory-stella-item">
-                      <span className="inventory-stella-icon">
-                        <Icon name="Star" size={20} fill={stella.color} />
-                      </span>
-                      <span className="inventory-stella-label">{stella.label}</span>
-                      <span className="inventory-stella-count">×{stella.count.toLocaleString()}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="inventory-stella-empty">No balance</div>
-                )}
-              </div>
-            ) : (
-              <div className="inventory-balance-unavailable">
-                <p>This wallet does not support balance retrieval.</p>
-              </div>
-            )}
-            <button className="inventory-disconnect-button" onClick={disconnect}>
-              Disconnect
-            </button>
-          </>
-        ) : (
-          <div className="inventory-connect-section">
-            {hasWebLN ? (
-              <>
-                <button className="inventory-connect-button" onClick={handleConnect} disabled={loading}>
-                  {loading ? 'Connecting...' : 'Connect Wallet'}
-                </button>
-                {error && <p className="inventory-error">{error}</p>}
-              </>
-            ) : (
-              <div className="inventory-no-webln">
-                <p>Lightning wallet extension not found.</p>
-                <p className="inventory-install-hint">Please install a WebLN-compatible extension.</p>
-              </div>
+            <div className="inventory-stella-list">
+              {STELLA_COLOR_ORDER.map((colorName) => {
+                const colorInfo = STELLA_COLORS[colorName]
+                const count = balance?.[colorName] || 0
+                return (
+                  <div key={colorName} className="inventory-stella-item">
+                    <span className="inventory-stella-icon">
+                      <Icon name="Star" size={20} fill={colorInfo.hex} />
+                    </span>
+                    <span className="inventory-stella-label">{colorInfo.label}</span>
+                    <span className="inventory-stella-count">×{count.toLocaleString()}</span>
+                  </div>
+                )
+              })}
+            </div>
+
+            {getTotalBalance() === 0 && (
+              <p className="inventory-balance-hint">Earn stella by unlocking Trophies (Supernovas)!</p>
             )}
           </div>
-        )}
-      </div>
 
-      <div className="inventory-wallet-section">
-        <h3>Lightning Wallet</h3>
-        <p className="inventory-wallet-hint">Use a Lightning wallet to add sats.</p>
-        <div className="inventory-wallet-buttons">
-          <button
-            type="button"
-            className="btn btn-secondary btn-md"
-            onClick={() => window.open('https://www.walletofsatoshi.com/', '_blank', 'noopener,noreferrer')}
-          >
-            Wallet of Satoshi
-          </button>
-        </div>
-        <p className="inventory-wallet-note">
-          * MY PACE does not process payments. It only displays your wallet balance.
-        </p>
-      </div>
+          {/* Unlocked Trophies Section */}
+          <div className="inventory-trophies-section">
+            <h3>
+              <Icon name="Trophy" size={20} /> Trophies ({supernovas.length}/{allSupernovas.length})
+            </h3>
 
-      <div className="inventory-info-section">
-        <h3>About Color Stella</h3>
-        <table className="inventory-price-table">
-          <thead>
-            <tr>
-              <th>Color</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {STELLA_COLORS.map((stella) => (
-              <tr key={stella.name}>
-                <td>
-                  <span className="inventory-color-cell">
-                    <Icon name="Star" size={16} fill={stella.color} />
-                    <span>{stella.label}</span>
-                  </span>
-                </td>
-                <td>{stella.sats.toLocaleString()} sats</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="inventory-info-note">
-          Sats received via Zap from other Nostr clients are also reflected here.
-          <br />
-          You can also use them as Zap outside of MY PACE.
-        </p>
-      </div>
+            {supernovas.length > 0 ? (
+              <div className="inventory-trophy-list">
+                {supernovas.map((supernova) => (
+                  <div key={supernova.id} className="inventory-trophy-item unlocked">
+                    <div className="inventory-trophy-icon">
+                      <Icon
+                        name="Trophy"
+                        size={24}
+                        fill={STELLA_COLORS[supernova.trophy_color as keyof typeof STELLA_COLORS]?.hex || '#ffd700'}
+                      />
+                    </div>
+                    <div className="inventory-trophy-info">
+                      <span className="inventory-trophy-name">{supernova.name}</span>
+                      <span className="inventory-trophy-desc">{supernova.description}</span>
+                      <span className="inventory-trophy-date">
+                        Unlocked: {new Date(supernova.unlocked_at * 1000).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="inventory-trophy-reward">
+                      {supernova.reward_yellow > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.yellow.hex} />+{supernova.reward_yellow}
+                        </span>
+                      )}
+                      {supernova.reward_green > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+{supernova.reward_green}
+                        </span>
+                      )}
+                      {supernova.reward_red > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+{supernova.reward_red}
+                        </span>
+                      )}
+                      {supernova.reward_blue > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+{supernova.reward_blue}
+                        </span>
+                      )}
+                      {supernova.reward_purple > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+{supernova.reward_purple}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="inventory-trophy-empty">No trophies yet. Keep posting to unlock!</p>
+            )}
+          </div>
+
+          {/* Locked Trophies Section */}
+          {lockedSupernovas.length > 0 && (
+            <div className="inventory-trophies-section locked-section">
+              <h3>
+                <Icon name="Lock" size={20} /> Locked ({lockedSupernovas.length})
+              </h3>
+
+              <div className="inventory-trophy-list">
+                {lockedSupernovas.map((supernova) => (
+                  <div key={supernova.id} className="inventory-trophy-item locked">
+                    <div className="inventory-trophy-icon">
+                      <Icon name="Trophy" size={24} fill="#999" />
+                    </div>
+                    <div className="inventory-trophy-info">
+                      <span className="inventory-trophy-name">{supernova.name}</span>
+                      <span className="inventory-trophy-desc">{supernova.description}</span>
+                    </div>
+                    <div className="inventory-trophy-reward">
+                      {supernova.reward_yellow > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.yellow.hex} />+{supernova.reward_yellow}
+                        </span>
+                      )}
+                      {supernova.reward_green > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+{supernova.reward_green}
+                        </span>
+                      )}
+                      {supernova.reward_red > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+{supernova.reward_red}
+                        </span>
+                      )}
+                      {supernova.reward_blue > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+{supernova.reward_blue}
+                        </span>
+                      )}
+                      {supernova.reward_purple > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+{supernova.reward_purple}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Info Section */}
+          <div className="inventory-info-section">
+            <h3>About Trophies (Supernovas)</h3>
+            <p className="inventory-info-text">
+              Trophies are achievements you can unlock by using MY PACE. Each trophy rewards you with Color Stella that
+              you can use to give reactions to other posts.
+            </p>
+            <ul className="inventory-info-list">
+              <li>
+                <Icon name="Star" size={14} fill={STELLA_COLORS.yellow.hex} /> Yellow - Basic stella
+              </li>
+              <li>
+                <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} /> Green - Uncommon stella
+              </li>
+              <li>
+                <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} /> Red - Rare stella
+              </li>
+              <li>
+                <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} /> Blue - Epic stella
+              </li>
+              <li>
+                <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} /> Purple - Legendary stella
+              </li>
+            </ul>
+          </div>
+        </>
+      )}
     </div>
   )
 }

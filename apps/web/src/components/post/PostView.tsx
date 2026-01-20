@@ -34,7 +34,6 @@ import {
   shareOrCopy,
   formatNumber,
 } from '../../lib/utils'
-import { sendToLightningAddress } from '../../lib/lightning'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import { hasTeaserTag, getTeaserContent, getTeaserColor, removeReadMoreLink, parseStickers } from '../../lib/nostr/tags'
 import {
@@ -57,7 +56,7 @@ import {
   OriginalPostCard,
 } from './index'
 import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage, Icon } from '../ui'
-import { useDeleteConfirm, usePostViewData, useWallet } from '../../hooks'
+import { useDeleteConfirm, usePostViewData } from '../../hooks'
 import type { Profile, LoadableProfile, ReactionData } from '../../types'
 import type { ShareOption } from './ShareMenu'
 
@@ -96,7 +95,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   const [copied, setCopied] = useState(false)
 
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
-  const { balance: walletBalance } = useWallet()
 
   const {
     event,
@@ -162,7 +160,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     if (totalPending <= 0) return
 
     // Reset pending immediately
-    const stellaToSend = { ...pending }
     pendingStella.current = { ...EMPTY_STELLA_COUNTS }
 
     // Use ref to get latest reactions
@@ -171,27 +168,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     const oldReactionId = currentReactions.myReactionId
     const newMyStella: StellaCountsByColor = currentReactions.myStella
 
-    // カラーステラの場合は支払い処理
-    const cost = stellaToSend.green * 1 + stellaToSend.red * 10 + stellaToSend.blue * 100 + stellaToSend.purple * 1000
-    if (cost > 0) {
-      const authorLud16 = profile?.lud16
-      if (!authorLud16) {
-        console.warn('Author has no lightning address, cannot send colored stella')
-        setReactions(previousReactions)
-        return
-      }
-
-      setLikingId(event.id)
-      const payResult = await sendToLightningAddress(authorLud16, cost)
-      if (!payResult.success) {
-        console.error('Payment failed:', payResult.error)
-        setLikingId(null)
-        setReactions(previousReactions)
-        return
-      }
-    } else {
-      setLikingId(event.id)
-    }
+    setLikingId(event.id)
 
     try {
       const newReaction = await createReactionEvent(event, '+', newMyStella)
@@ -236,7 +213,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     } finally {
       setLikingId(null)
     }
-  }, [event, myPubkey, profile?.lud16, setReactions])
+  }, [event, myPubkey, setReactions])
 
   // Add stella (with debounce)
   const handleAddStella = useCallback(
@@ -559,7 +536,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
               eventId={event.id}
               copied={copied}
               myPubkey={myPubkey}
-              walletBalance={walletBalance}
               getDisplayName={(pk) => getProfileDisplayName(pk, replyProfiles[pk])}
               onAddStella={handleAddStella}
               onUnlike={handleUnlike}

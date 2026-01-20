@@ -31,7 +31,6 @@ export interface Profile {
   banner?: string
   website?: string // 互換性のため維持（他クライアント用）
   websites?: WebsiteEntry[] // 複数URL（MY PACE拡張）
-  lud16?: string
   emojis?: EmojiTag[]
 }
 

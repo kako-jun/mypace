@@ -1,9 +1,9 @@
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { CloseButton, Icon } from '../ui'
 import { STELLA_COLORS, type StellaColor, type StellaCountsByColor } from '../../lib/nostr/events'
-import { formatNumber } from '../../lib/utils'
+import { fetchStellaBalance, type StellaBalance } from '../../lib/api'
 import ReactorsPopup from './ReactorsPopup'
 
 interface Reactor {
@@ -13,7 +13,6 @@ interface Reactor {
 
 interface StellaColorPickerProps {
   position: { top: number; left: number }
-  walletBalance: number | null // sats balance from wallet, null if not connected
   currentCounts: StellaCountsByColor // Current stella counts for this post (my stella)
   totalCounts: StellaCountsByColor // Total stella counts from all reactors
   reactors: Reactor[]
@@ -31,7 +30,6 @@ const COLOR_ORDER: StellaColor[] = ['yellow', 'green', 'red', 'blue', 'purple']
 
 export default function StellaColorPicker({
   position,
-  walletBalance,
   currentCounts,
   totalCounts,
   reactors,
@@ -45,6 +43,18 @@ export default function StellaColorPicker({
 }: StellaColorPickerProps) {
   // State for showing reactors popup
   const [showReactorsColor, setShowReactorsColor] = useState<StellaColor | null>(null)
+  // State for stella balance
+  const [stellaBalance, setStellaBalance] = useState<StellaBalance | null>(null)
+
+  // Fetch stella balance when component mounts
+  useEffect(() => {
+    if (!myPubkey) return
+    fetchStellaBalance(myPubkey).then((res) => {
+      if (res) {
+        setStellaBalance(res.balance)
+      }
+    })
+  }, [myPubkey])
 
   // Debounce mechanism to prevent double clicks (100ms, max 10 stellas = 1 sec)
   const lastClickTime = useRef<number>(0)
@@ -68,10 +78,10 @@ export default function StellaColorPicker({
     [onAddStella]
   )
 
+  // Check if user has enough stella balance for a color
   const canAfford = (color: StellaColor): boolean => {
-    if (color === 'yellow') return true // Yellow is always free
-    if (walletBalance === null) return false // Wallet not connected
-    return walletBalance >= STELLA_COLORS[color].sats
+    if (!stellaBalance) return false // Loading or no balance
+    return stellaBalance[color] > 0
   }
 
   // Calculate total stella given
@@ -165,29 +175,20 @@ export default function StellaColorPicker({
           />
         )}
 
-        {/* Inventory info - show how many of each color can be purchased */}
-        {walletBalance !== null && (
-          <div className="stella-picker-inventory">
-            <span className="stella-picker-inventory-label">Inventory:</span>
-            {(['green', 'red', 'blue', 'purple'] as const).map((color) => {
-              const colorInfo = STELLA_COLORS[color]
-              const affordable = Math.floor(walletBalance / colorInfo.sats)
-              if (affordable <= 0) return null
-              return (
-                <span key={color} className="stella-picker-inventory-item">
-                  <Icon name="Star" size={14} fill={colorInfo.hex} />
-                  <span>×{formatNumber(affordable)}</span>
-                </span>
-              )
-            })}
+        {/* Show stella balance */}
+        {stellaBalance && (
+          <div className="stella-picker-balance">
+            {COLOR_ORDER.map((color) => (
+              <span key={color} className="stella-picker-balance-item">
+                <Icon name="Star" size={12} fill={STELLA_COLORS[color].hex} />
+                {stellaBalance[color]}
+              </span>
+            ))}
           </div>
         )}
-
-        {walletBalance === null && (
-          <Link to="/inventory" className="stella-picker-hint stella-picker-link" onClick={() => onClose()}>
-            Connect wallet for colored stella
-          </Link>
-        )}
+        <Link to="/inventory" className="stella-picker-hint stella-picker-link" onClick={() => onClose()}>
+          View Inventory
+        </Link>
       </div>
     </>,
     document.body

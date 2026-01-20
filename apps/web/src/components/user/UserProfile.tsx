@@ -113,11 +113,6 @@ export function UserProfile({
               {w.label !== 'Website' ? w.label : w.url.replace(/^https?:\/\//, '')}
             </ExternalLink>
           ))}
-          {profile?.lud16 && (
-            <span className="user-link user-lightning">
-              <Icon name="Zap" size={14} /> {profile.lud16}
-            </span>
-          )}
         </div>
 
         <div className="user-npub-row">

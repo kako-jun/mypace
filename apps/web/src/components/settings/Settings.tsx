@@ -23,7 +23,6 @@ import {
   ExportSection,
   FilterSection,
   PushSection,
-  WalletSection,
 } from './index'
 import { VisitorCounter } from './VisitorCounter'
 import { VersionDisplay } from './VersionDisplay'
@@ -200,7 +199,6 @@ export function Settings() {
               setOpen(false)
               navigate('/upload-history')
             }}
-            walletSlot={<WalletSection onClose={() => setOpen(false)} />}
           />
         </div>
 

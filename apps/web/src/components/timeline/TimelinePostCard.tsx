@@ -39,7 +39,6 @@ interface TimelinePostCardProps {
   copiedId: string | null
   isPinned?: boolean
   showPinButton?: boolean
-  walletBalance: number | null
   onEdit: (event: Event) => void
   onDeleteConfirm: (event: Event) => void
   onAddStella: (event: Event, color: StellaColor) => void
@@ -71,7 +70,6 @@ export default function TimelinePostCard({
   copiedId,
   isPinned = false,
   showPinButton = false,
-  walletBalance,
   onEdit,
   onDeleteConfirm,
   onAddStella,
@@ -267,7 +265,6 @@ export default function TimelinePostCard({
                     eventId={event.id}
                     copied={copiedId === event.id}
                     myPubkey={myPubkey}
-                    walletBalance={walletBalance}
                     getDisplayName={getDisplayName}
                     onAddStella={(color) => onAddStella(event, color)}
                     onUnlike={() => onUnlike(event)}

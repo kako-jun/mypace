@@ -422,7 +422,6 @@ export async function fetchProfiles(pubkeys: string[]): Promise<Record<string, P
           banner: content.banner,
           website: content.website,
           websites: content.websites,
-          lud16: content.lud16,
         }
       } catch {
         // パース失敗はnullのまま

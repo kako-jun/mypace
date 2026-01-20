@@ -5,7 +5,7 @@ import '../../styles/components/timeline-search.css'
 import { setHashtagClickHandler, setSuperMentionClickHandler, setInternalLinkClickHandler } from '../../lib/parser'
 import { TimelinePostCard, TimelineActionButton, TimelineSearch } from './index'
 import { Loading, Button, ErrorMessage, SuccessMessage } from '../ui'
-import { useTimeline, useWallet } from '../../hooks'
+import { useTimeline } from '../../hooks'
 import {
   copyToClipboard,
   downloadAsMarkdown,
@@ -28,7 +28,6 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletedId, setDeletedId] = useState<string | null>(null)
   const [, setThemeVersion] = useState(0)
-  const { balance: walletBalance } = useWallet()
 
   // Search/filter state (public filters from URL)
   const [searchQuery, setSearchQuery] = useState<string[]>([])
@@ -196,7 +195,6 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
               likingId={likingId}
               repostingId={repostingId}
               copiedId={copiedId}
-              walletBalance={walletBalance}
               onEdit={handleEdit}
               onDeleteConfirm={handleDeleteConfirm}
               onAddStella={handleAddStella}

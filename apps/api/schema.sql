@@ -143,3 +143,51 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_pubkey ON push_subscriptions(pubkey);
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_preference ON push_subscriptions(preference);
+
+-- User stella balance table (for tracking stella inventory by color)
+-- This is the "wallet" for sending colored stella to other users
+CREATE TABLE IF NOT EXISTS user_stella_balance (
+  pubkey TEXT PRIMARY KEY,
+  yellow INTEGER NOT NULL DEFAULT 0,
+  green INTEGER NOT NULL DEFAULT 0,
+  red INTEGER NOT NULL DEFAULT 0,
+  blue INTEGER NOT NULL DEFAULT 0,
+  purple INTEGER NOT NULL DEFAULT 0,
+  updated_at INTEGER NOT NULL
+);
+
+-- Supernova achievement definitions
+-- Defines all available Supernovas and their rewards
+CREATE TABLE IF NOT EXISTS supernova_definitions (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'single',  -- 'single' (one-time) or 'cumulative'
+  threshold INTEGER DEFAULT 1,              -- Number required to unlock (1 for single, N for cumulative)
+  trophy_color TEXT DEFAULT 'yellow',       -- Color of the trophy icon
+  reward_yellow INTEGER NOT NULL DEFAULT 0,
+  reward_green INTEGER NOT NULL DEFAULT 0,
+  reward_red INTEGER NOT NULL DEFAULT 0,
+  reward_blue INTEGER NOT NULL DEFAULT 0,
+  reward_purple INTEGER NOT NULL DEFAULT 0
+);
+
+-- User supernova achievements (unlocked achievements)
+CREATE TABLE IF NOT EXISTS user_supernovas (
+  pubkey TEXT NOT NULL,
+  supernova_id TEXT NOT NULL,
+  unlocked_at INTEGER NOT NULL,
+  PRIMARY KEY (pubkey, supernova_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_supernovas_pubkey ON user_supernovas(pubkey);
+CREATE INDEX IF NOT EXISTS idx_user_supernovas_supernova ON user_supernovas(supernova_id);
+
+-- Initial Supernova definitions (seed data)
+-- These will be inserted via API or migration script
+-- Examples:
+-- INSERT INTO supernova_definitions (id, name, description, category, threshold, trophy_color, reward_yellow, reward_green, reward_red, reward_blue, reward_purple) VALUES
+-- ('first_post', 'First Post', 'Posted your first message', 'single', 1, 'yellow', 10, 0, 0, 0, 0),
+-- ('first_stella', 'First Star', 'Received your first stella', 'single', 1, 'yellow', 5, 1, 0, 0, 0),
+-- ('serial_under_100', 'Early Bird', 'Joined within the first 100 users', 'single', 1, 'green', 20, 5, 0, 0, 0),
+-- ('stella_100', 'Star Collector', 'Received 100 total stella', 'cumulative', 100, 'blue', 0, 10, 5, 1, 0);

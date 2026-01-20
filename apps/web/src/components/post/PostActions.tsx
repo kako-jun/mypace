@@ -19,7 +19,6 @@ interface PostActionsProps {
   eventId: string
   copied: boolean
   myPubkey: string | null
-  walletBalance: number | null
   getDisplayName: (pubkey: string) => string
   onAddStella: (color: StellaColor) => void
   onUnlike: () => void
@@ -42,7 +41,6 @@ export default function PostActions({
   eventId,
   copied,
   myPubkey,
-  walletBalance,
   getDisplayName,
   onAddStella,
   onUnlike,
@@ -311,7 +309,6 @@ export default function PostActions({
     showColorPicker && colorPickerPosition ? (
       <StellaColorPicker
         position={colorPickerPosition}
-        walletBalance={walletBalance}
         currentCounts={myStella}
         totalCounts={totalCountsByColor}
         reactors={reactors}

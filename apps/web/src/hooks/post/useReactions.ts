@@ -9,17 +9,16 @@ import {
   type StellaColor,
   type StellaCountsByColor,
 } from '../../lib/nostr/events'
-import { sendToLightningAddress } from '../../lib/lightning'
+import { sendStella } from '../../lib/api'
 import type { Event, ReactionData } from '../../types'
 
 interface UseReactionsOptions {
   event: Event | null
   myPubkey: string | null
   initialReactions: ReactionData
-  authorLud16?: string | null
 }
 
-export function useReactions({ event, myPubkey, initialReactions, authorLud16 }: UseReactionsOptions) {
+export function useReactions({ event, myPubkey, initialReactions }: UseReactionsOptions) {
   const [reactions, setReactions] = useState<ReactionData>(initialReactions)
   const [likingId, setLikingId] = useState<string | null>(null)
 
@@ -40,13 +39,12 @@ export function useReactions({ event, myPubkey, initialReactions, authorLud16 }:
   }, [initialReactions, likingId])
 
   const flushStella = useCallback(async () => {
-    if (!event) return
+    if (!event || !myPubkey) return
     const pending = pendingStella.current
     const totalPending = getTotalStellaCount(pending)
     if (totalPending <= 0) return
 
     // Reset pending immediately
-    const stellaToSend = { ...pending }
     pendingStella.current = { ...EMPTY_STELLA_COUNTS }
 
     const previousReactions = { ...reactions }
@@ -55,29 +53,19 @@ export function useReactions({ event, myPubkey, initialReactions, authorLud16 }:
     // 楽観的更新済みの現在値をそのまま使用（既にpending分が加算されている）
     const newMyStella: StellaCountsByColor = reactions.myStella
 
-    // カラーステラの場合は支払い処理（stellaToSendから直接計算）
-    const cost = stellaToSend.green * 1 + stellaToSend.red * 10 + stellaToSend.blue * 100 + stellaToSend.purple * 1000
-    if (cost > 0) {
-      if (!authorLud16) {
-        console.warn('Author has no lightning address, cannot send colored stella')
-        setReactions(previousReactions)
-        return
-      }
-
-      setLikingId(event.id)
-      const payResult = await sendToLightningAddress(authorLud16, cost)
-      if (!payResult.success) {
-        console.error('Payment failed:', payResult.error)
-        setLikingId(null)
-        setReactions(previousReactions)
-        return
-      }
-      // 支払い成功、続けてステラを送信
-    } else {
-      setLikingId(event.id)
-    }
+    setLikingId(event.id)
 
     try {
+      // Deduct stella from user's balance via API
+      const stellaResult = await sendStella(myPubkey, pending)
+      if (!stellaResult.success) {
+        console.error('Failed to send stella:', stellaResult.error)
+        // Revert optimistic update
+        setReactions(previousReactions)
+        setLikingId(null)
+        return
+      }
+
       const newReaction = await createReactionEvent(event, '+', newMyStella)
       await publishEvent(newReaction)
 
@@ -126,7 +114,7 @@ export function useReactions({ event, myPubkey, initialReactions, authorLud16 }:
     } finally {
       setLikingId(null)
     }
-  }, [event, myPubkey, reactions, authorLud16])
+  }, [event, myPubkey, reactions])
 
   const handleAddStella = useCallback(
     (color: StellaColor) => {

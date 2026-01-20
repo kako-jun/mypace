@@ -38,7 +38,7 @@ import { LightBox, triggerLightBox } from '../ui'
 import { UserProfile } from './UserProfile'
 import { UserProfileEditor } from './UserProfileEditor'
 import { UserPosts } from './UserPosts'
-import { useTimeline, useWallet } from '../../hooks'
+import { useTimeline } from '../../hooks'
 import '../../styles/components/timeline-search.css'
 import { nip19 } from 'nostr-tools'
 import type { Event, LoadableProfile, Profile } from '../../types'
@@ -91,7 +91,6 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const [, setThemeVersion] = useState(0)
   const [searchQuery, setSearchQuery] = useState<string[]>([])
   const [searchTags, setSearchTags] = useState<string[]>([])
-  const { balance: walletBalance } = useWallet()
 
   useEffect(() => {
     const handleAppThemeChange = () => setThemeVersion((v) => v + 1)
@@ -366,7 +365,6 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
         pinnedEvent={pinnedEvent}
         hasMore={hasMore}
         loadingMore={loadingMore}
-        walletBalance={walletBalance}
         onAddStella={handleAddStella}
         onUnlike={handleUnlike}
         onRepost={handleRepost}

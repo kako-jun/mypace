@@ -19,7 +19,6 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
   const [editPicture, setEditPicture] = useState(profile?.picture || '')
   const [editBanner, setEditBanner] = useState(profile?.banner || '')
   const [editNip05, setEditNip05] = useState(profile?.nip05 || '')
-  const [editLud16, setEditLud16] = useState(profile?.lud16 || '')
   const [saving, setSaving] = useState(false)
   const [editError, setEditError] = useState('')
   const [editSaved, triggerEditSaved] = useTemporaryFlag()
@@ -34,7 +33,6 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
     banner: profile?.banner || '',
     websites: initialWebsites,
     nip05: profile?.nip05 || '',
-    lud16: profile?.lud16 || '',
   })
 
   // Image upload hooks
@@ -89,8 +87,7 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
     editPicture !== editInitialRef.current.picture ||
     editBanner !== editInitialRef.current.banner ||
     websiteEditor.hasChanged(editInitialRef.current.websites) ||
-    editNip05 !== editInitialRef.current.nip05 ||
-    editLud16 !== editInitialRef.current.lud16
+    editNip05 !== editInitialRef.current.nip05
 
   // Save profile
   const handleSaveProfile = async () => {
@@ -119,7 +116,6 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
         website: validWebsites[0]?.url || undefined,
         websites: validWebsites.length > 0 ? validWebsites : undefined,
         nip05: editNip05.trim() || undefined,
-        lud16: editLud16.trim() || undefined,
       }
 
       const event = await createProfileEvent(newProfile)
@@ -238,10 +234,6 @@ export function UserProfileEditor({ profile, onSave, onCancel }: UserProfileEdit
         <div className="edit-field">
           <label>NIP-05</label>
           <Input value={editNip05} onChange={setEditNip05} placeholder="you@example.com" />
-        </div>
-        <div className="edit-field">
-          <label>Lightning Address</label>
-          <Input value={editLud16} onChange={setEditLud16} placeholder="you@walletofsatoshi.com" />
         </div>
 
         <ErrorMessage>{editError}</ErrorMessage>

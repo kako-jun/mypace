@@ -36,7 +36,6 @@ interface UserPostsProps {
   pinnedEvent: Event | null
   hasMore: boolean
   loadingMore: boolean
-  walletBalance: number | null
   onAddStella: (event: Event, color: StellaColor) => void
   onUnlike: (event: Event) => Promise<void>
   onRepost: (event: Event) => Promise<void>
@@ -69,7 +68,6 @@ export function UserPosts({
   pinnedEvent,
   hasMore,
   loadingMore,
-  walletBalance,
   onAddStella,
   onUnlike,
   onRepost,
@@ -135,7 +133,6 @@ export function UserPosts({
           copiedId={copiedId}
           isPinned={pinnedEventId === event.id}
           showPinButton={isMyPost}
-          walletBalance={walletBalance}
           onEdit={() => handleEdit(event)}
           onDeleteConfirm={() => onDeleteConfirm(event)}
           onAddStella={(_ev, color) => onAddStella(event, color)}

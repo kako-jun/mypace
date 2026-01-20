@@ -544,6 +544,22 @@
   stroke-width: 1.5;
 }
 
+.stella-picker-balance {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+
+.stella-picker-balance-item {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
 .stella-picker-hint {
   display: block;
   font-size: 0.75rem;
