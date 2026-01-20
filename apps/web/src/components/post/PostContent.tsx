@@ -70,9 +70,14 @@ export function PostContent({
             <TextButton variant="primary" className="read-more-btn teaser-read-more" onClick={onReadMore}>
               … READ MORE
               {hasColorRequirement && (
-                <span style={{ marginLeft: '0.25rem', color: getLockColor(), display: 'inline-flex' }}>
-                  <Icon name="Lock" size={14} />
-                </span>
+                <>
+                  <span style={{ marginLeft: '0.25rem', color: getLockColor(), display: 'inline-flex' }}>
+                    <Icon name="Lock" size={14} />
+                  </span>
+                  <span style={{ marginLeft: '0.25rem' }}>
+                    Requires {STELLA_COLORS[teaserColor as keyof typeof STELLA_COLORS]?.label} Stella
+                  </span>
+                </>
               )}
             </TextButton>
           )}
