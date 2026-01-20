@@ -7,9 +7,11 @@ import {
   fetchStellaBalance,
   fetchUserSupernovas,
   fetchSupernovaDefinitions,
+  fetchUserStellaStats,
   type StellaBalance,
   type UserSupernova,
   type SupernovaDefinition,
+  type UserStellaStats,
 } from '../lib/api'
 import '../styles/pages/inventory.css'
 
@@ -37,6 +39,7 @@ export function InventoryPage() {
   const [balance, setBalance] = useState<StellaBalance | null>(null)
   const [supernovas, setSupernovas] = useState<UserSupernova[]>([])
   const [allSupernovas, setAllSupernovas] = useState<SupernovaDefinition[]>([])
+  const [userStats, setUserStats] = useState<UserStellaStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -50,10 +53,11 @@ export function InventoryPage() {
         setPubkey(pk)
 
         // Fetch data in parallel
-        const [balanceRes, userSupernovasRes, allSupernovasRes] = await Promise.all([
+        const [balanceRes, userSupernovasRes, allSupernovasRes, statsRes] = await Promise.all([
           fetchStellaBalance(pk),
           fetchUserSupernovas(pk),
           fetchSupernovaDefinitions(),
+          fetchUserStellaStats(pk),
         ])
 
         if (balanceRes) {
@@ -61,6 +65,7 @@ export function InventoryPage() {
         }
         setSupernovas(userSupernovasRes)
         setAllSupernovas(allSupernovasRes)
+        setUserStats(statsRes)
       } catch (e) {
         console.error('Failed to load inventory data:', e)
         setError('Failed to load inventory data')
@@ -79,6 +84,28 @@ export function InventoryPage() {
 
   const unlockedIds = new Set(supernovas.map((s) => s.id))
   const lockedSupernovas = allSupernovas.filter((s) => !unlockedIds.has(s.id))
+
+  // Get progress for cumulative supernovas
+  const getProgress = (supernova: SupernovaDefinition): { current: number; target: number } | null => {
+    if (supernova.category !== 'cumulative' || !userStats) return null
+
+    // Parse supernova ID to determine type: received_{color}_{threshold} or given_{color}_{threshold}
+    const receivedMatch = supernova.id.match(/^received_(yellow|green|red|blue|purple)_(\d+)$/)
+    const givenMatch = supernova.id.match(/^given_(yellow|green|red|blue|purple)_(\d+)$/)
+
+    if (receivedMatch) {
+      const color = receivedMatch[1]
+      const threshold = parseInt(receivedMatch[2], 10)
+      return { current: userStats.received[color] || 0, target: threshold }
+    }
+    if (givenMatch) {
+      const color = givenMatch[1]
+      const threshold = parseInt(givenMatch[2], 10)
+      return { current: userStats.given[color] || 0, target: threshold }
+    }
+
+    return null
+  }
 
   return (
     <div className="inventory-page">
@@ -192,44 +219,65 @@ export function InventoryPage() {
               </h3>
 
               <div className="inventory-trophy-list">
-                {lockedSupernovas.map((supernova) => (
-                  <div key={supernova.id} className="inventory-trophy-item locked">
-                    <div className="inventory-trophy-icon">
-                      <Icon name="Trophy" size={24} fill="#999" />
+                {lockedSupernovas.map((supernova) => {
+                  const progress = getProgress(supernova)
+                  return (
+                    <div key={supernova.id} className="inventory-trophy-item locked">
+                      <div className="inventory-trophy-icon">
+                        <Icon name="Trophy" size={24} fill="#999" />
+                      </div>
+                      <div className="inventory-trophy-info">
+                        <span className="inventory-trophy-name">{supernova.name}</span>
+                        <span className="inventory-trophy-desc">{supernova.description}</span>
+                        {progress && (
+                          <div className="inventory-trophy-progress">
+                            <div className="inventory-progress-bar">
+                              <div
+                                className="inventory-progress-fill"
+                                style={{
+                                  width: `${Math.min(100, (progress.current / progress.target) * 100)}%`,
+                                  backgroundColor:
+                                    STELLA_COLORS[supernova.trophy_color as keyof typeof STELLA_COLORS]?.hex ||
+                                    '#ffd700',
+                                }}
+                              />
+                            </div>
+                            <span className="inventory-progress-text">
+                              {progress.current.toLocaleString()} / {progress.target.toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="inventory-trophy-reward">
+                        {supernova.reward_yellow > 0 && (
+                          <span>
+                            <Icon name="Star" size={14} fill={STELLA_COLORS.yellow.hex} />+{supernova.reward_yellow}
+                          </span>
+                        )}
+                        {supernova.reward_green > 0 && (
+                          <span>
+                            <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+{supernova.reward_green}
+                          </span>
+                        )}
+                        {supernova.reward_red > 0 && (
+                          <span>
+                            <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+{supernova.reward_red}
+                          </span>
+                        )}
+                        {supernova.reward_blue > 0 && (
+                          <span>
+                            <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+{supernova.reward_blue}
+                          </span>
+                        )}
+                        {supernova.reward_purple > 0 && (
+                          <span>
+                            <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+{supernova.reward_purple}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="inventory-trophy-info">
-                      <span className="inventory-trophy-name">{supernova.name}</span>
-                      <span className="inventory-trophy-desc">{supernova.description}</span>
-                    </div>
-                    <div className="inventory-trophy-reward">
-                      {supernova.reward_yellow > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.yellow.hex} />+{supernova.reward_yellow}
-                        </span>
-                      )}
-                      {supernova.reward_green > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+{supernova.reward_green}
-                        </span>
-                      )}
-                      {supernova.reward_red > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+{supernova.reward_red}
-                        </span>
-                      )}
-                      {supernova.reward_blue > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+{supernova.reward_blue}
-                        </span>
-                      )}
-                      {supernova.reward_purple > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+{supernova.reward_purple}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}

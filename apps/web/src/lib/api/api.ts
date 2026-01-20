@@ -500,6 +500,24 @@ export async function fetchUserSupernovas(pubkey: string): Promise<UserSupernova
   }
 }
 
+// User stella stats for progress display
+export interface UserStellaStats {
+  pubkey: string
+  received: Record<string, number>
+  given: Record<string, number>
+}
+
+// Fetch user's stella stats for progress display
+export async function fetchUserStellaStats(pubkey: string): Promise<UserStellaStats | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/supernovas/stats/${pubkey}`)
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
 // Check and unlock supernovas for a user
 export async function checkSupernovas(
   pubkey: string,

@@ -284,3 +284,161 @@
   line-height: 1.5;
 }
 
+/* Trophies Section */
+.inventory-trophies-section {
+  background: var(--surface-primary);
+  border: 2px solid #000;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.inventory-trophies-section h3 {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inventory-trophies-section.locked-section {
+  opacity: 0.8;
+}
+
+.inventory-trophy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.inventory-trophy-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--surface-secondary);
+  border-radius: 4px;
+}
+
+.inventory-trophy-item.locked {
+  opacity: 0.7;
+}
+
+.inventory-trophy-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inventory-trophy-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.inventory-trophy-name {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.inventory-trophy-desc {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.inventory-trophy-date {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.inventory-trophy-reward {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.inventory-trophy-reward span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.inventory-trophy-empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 0.5rem 0;
+}
+
+/* Progress Bar */
+.inventory-trophy-progress {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inventory-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--surface-primary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.inventory-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.inventory-progress-text {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Balance Hint */
+.inventory-balance-hint {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Info List */
+.inventory-info-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.inventory-info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.inventory-info-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  padding: 0.25rem 0;
+}
+
+/* Loading */
+.inventory-loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+

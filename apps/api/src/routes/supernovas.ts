@@ -45,6 +45,60 @@ supernovas.get('/definitions', async (c) => {
   }
 })
 
+// GET /api/supernovas/stats/:pubkey - Get user's stella stats for progress display
+supernovas.get('/stats/:pubkey', async (c) => {
+  const pubkey = c.req.param('pubkey')
+
+  if (!pubkey || pubkey.length !== 64) {
+    return c.json({ error: 'Invalid pubkey' }, 400)
+  }
+
+  const db = c.env.DB
+
+  try {
+    // Get user's received and given stella by color
+    const [receivedByColor, givenByColor] = await Promise.all([
+      db
+        .prepare(
+          `SELECT stella_color, COALESCE(SUM(stella_count), 0) as total
+           FROM user_stella
+           WHERE author_pubkey = ?
+           GROUP BY stella_color`
+        )
+        .bind(pubkey)
+        .all<{ stella_color: string; total: number }>(),
+      db
+        .prepare(
+          `SELECT stella_color, COALESCE(SUM(stella_count), 0) as total
+           FROM user_stella
+           WHERE reactor_pubkey = ?
+           GROUP BY stella_color`
+        )
+        .bind(pubkey)
+        .all<{ stella_color: string; total: number }>(),
+    ])
+
+    // Build color-specific stats
+    const received: Record<string, number> = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
+    const given: Record<string, number> = { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 }
+    for (const r of receivedByColor.results || []) {
+      received[r.stella_color] = r.total
+    }
+    for (const g of givenByColor.results || []) {
+      given[g.stella_color] = g.total
+    }
+
+    return c.json({
+      pubkey,
+      received,
+      given,
+    })
+  } catch (e) {
+    console.error('User stats fetch error:', e)
+    return c.json({ error: 'Failed to fetch user stats' }, 500)
+  }
+})
+
 // GET /api/supernovas/:pubkey - Get user's unlocked supernovas
 supernovas.get('/:pubkey', async (c) => {
   const pubkey = c.req.param('pubkey')
