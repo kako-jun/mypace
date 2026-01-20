@@ -171,17 +171,33 @@ function getFullContent(event: NostrEvent): string {
 ### タイムライン表示
 
 ```
-┌─ 投稿（ブルーステラ必須）─────────────────┐
+┌─ 投稿（ブルーステラ必須）───────────────┐
 │ @username                              │
 │                                        │
-│ 今日は特別なレシピを紹介します。        │
-│ まず材料から...                         │
+│ Today I'll share a special recipe.     │
+│ First, the ingredients...              │
 │                                        │
-├─────────────────────────────────────────┤
-│ ▼ 続きを読む              🔒★          │
-│                     （青の錠前アイコン） │
+│ … READ MORE 🔒                         │
+│         (blue lock icon)               │
 └────────────────────────────────────────┘
 ```
+
+### 個別ページ（ロック状態）
+
+```
+┌─ 投稿詳細 ──────────────────────────────┐
+│ @username                              │
+│                                        │
+│ Today I'll share a special recipe.     │
+│ First, the ingredients...              │
+│                                        │
+│ … READ MORE 🔒 Requires Blue Stella    │
+│                                        │
+└────────────────────────────────────────┘
+```
+
+- タイムラインと同じスタイルで「… READ MORE」+ 錠前アイコン
+- 右側に「Requires {color} Stella」と必要なステラ色を表示
 
 ## READ MOREリンク
 
