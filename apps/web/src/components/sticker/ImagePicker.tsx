@@ -32,6 +32,7 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deletePopupPosition, setDeletePopupPosition] = useState<{ top: number; left: number } | null>(null)
   const [clipboardError, setClipboardError] = useState('')
+  const [loadingReEdit, setLoadingReEdit] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { uploading, uploadFile } = useImageUpload()
 
@@ -201,6 +202,32 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
     }
   }
 
+  const handleReEdit = async () => {
+    if (!selectedUrl.trim()) return
+    setLoadingReEdit(true)
+    try {
+      const response = await fetch(selectedUrl.trim())
+      if (!response.ok) throw new Error('Failed to fetch image')
+      const blob = await response.blob()
+      if (!blob.type.startsWith('image/')) throw new Error('Not an image')
+      // Extract filename from URL or use default
+      const urlPath = new URL(selectedUrl.trim()).pathname
+      const filename = urlPath.split('/').pop() || `image.${blob.type.split('/')[1]}`
+      const file = new File([blob], filename, { type: blob.type })
+      // Check if animated - if so, show error since we can't edit animated images
+      const isAnimated = await isAnimatedImage(file)
+      if (isAnimated) {
+        onError?.('Cannot edit animated images')
+        return
+      }
+      setPendingFile(file)
+    } catch {
+      onError?.('Failed to load image for editing')
+    } finally {
+      setLoadingReEdit(false)
+    }
+  }
+
   return (
     <div className="image-picker">
       <button type="button" className="image-picker-toggle" onClick={() => setIsOpen(!isOpen)} title="Add image">
@@ -266,6 +293,19 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
                   placeholder="Image URL..."
                   className="image-picker-url-input"
                 />
+                <button
+                  type="button"
+                  className="image-picker-reedit-btn"
+                  onClick={handleReEdit}
+                  disabled={!selectedUrl.trim() || uploading || loadingReEdit}
+                  title="Re-edit image"
+                >
+                  {loadingReEdit ? (
+                    <Icon name="Loader" size={16} className="spinning" />
+                  ) : (
+                    <Icon name="Crop" size={16} />
+                  )}
+                </button>
               </div>
 
               {/* Preview */}

@@ -208,6 +208,46 @@ body.long-mode-active .image-picker-modal {
   color: var(--text-placeholder);
 }
 
+.image-picker-reedit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border-primary, #666);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.image-picker-reedit-btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}
+
+.image-picker-reedit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.image-picker-reedit-btn .spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Preview */
 .image-picker-preview {
   display: flex;
