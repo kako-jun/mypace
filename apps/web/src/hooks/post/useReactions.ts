@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { publishEvent } from '../../lib/nostr/relay'
 import {
   createDeleteEvent,
@@ -25,6 +25,11 @@ export function useReactions({ event, myPubkey, initialReactions, authorLud16 }:
 
   const stellaDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingStella = useRef<StellaCountsByColor>({ ...EMPTY_STELLA_COUNTS })
+
+  // Sync with initialReactions when it changes (e.g., after async fetch)
+  useEffect(() => {
+    setReactions(initialReactions)
+  }, [initialReactions])
 
   const flushStella = useCallback(async () => {
     if (!event) return
