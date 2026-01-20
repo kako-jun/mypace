@@ -84,7 +84,6 @@ export function PostForm({
   const [teaserColor, setTeaserColor] = useState<StellaColor | null>(null)
   const [showTeaserPicker, setShowTeaserPicker] = useState(false)
   const teaserButtonRef = useRef<HTMLButtonElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const shortTextEditorRef = useRef<ShortTextEditorRef>(null)
   const fileImportRef = useRef<HTMLInputElement>(null)
 
@@ -316,22 +315,7 @@ export function PostForm({
   }
 
   const insertImageUrl = (url: string) => {
-    const textarea = textareaRef.current
-    if (textarea) {
-      const start = textarea.selectionStart || content.length
-      const end = textarea.selectionEnd || content.length
-      const before = content.slice(0, start)
-      const after = content.slice(end)
-      const newContent =
-        before +
-        (before && !before.endsWith('\n') ? '\n' : '') +
-        url +
-        (after && !after.startsWith('\n') ? '\n' : '') +
-        after
-      onContentChange(newContent)
-    } else {
-      onContentChange(content + (content ? '\n' : '') + url)
-    }
+    shortTextEditorRef.current?.insertText(url)
   }
 
   const handleRemoveImage = (url: string) => {
