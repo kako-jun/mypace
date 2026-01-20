@@ -53,3 +53,11 @@ export const REACTION = {
 export function isValidReaction(content: string): boolean {
   return content === '+' || content === ''
 }
+
+// Default theme colors (white)
+export const DEFAULT_COLORS = {
+  topLeft: '#f8f8f8',
+  topRight: '#f8f8f8',
+  bottomLeft: '#f8f8f8',
+  bottomRight: '#f8f8f8',
+} as const

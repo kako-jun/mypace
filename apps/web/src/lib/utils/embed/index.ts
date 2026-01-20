@@ -4,15 +4,13 @@ import { extractTweetId } from './twitter'
 import { extractInstagramInfo } from './instagram'
 import { extractTikTokId } from './tiktok'
 import { extractSpotifyInfo } from './spotify'
-import { isVideoUrl, isAudioUrl, isImageUrl, isAllowedIframeDomain } from './utils'
+import { isVideoUrl, isAudioUrl, isImageUrl, isAllowedIframeDomain, URL_REGEX } from './utils'
 
 export type { EmbedType, EmbedInfo } from './types'
 export { getYouTubeThumbnail, getYouTubeEmbedUrl, getYouTubeShortsEmbedUrl } from './youtube'
 export { getInstagramEmbedUrl } from './instagram'
 export { getSpotifyEmbedUrl } from './spotify'
-export { isVideoUrl, isAudioUrl, isAllowedIframeDomain, ALLOWED_IFRAME_DOMAINS } from './utils'
-
-const URL_REGEX = /https?:\/\/[^\s<"]+/gi
+export { isVideoUrl, isAudioUrl, isAllowedIframeDomain, ALLOWED_IFRAME_DOMAINS, URL_REGEX } from './utils'
 
 // Super mention URL regex (@@domain.com/path format)
 const SUPER_MENTION_URL_REGEX = /@@([\w][\w.-]*\.[a-z]{2,}(?:\/[^\s<"]*)?)/gi

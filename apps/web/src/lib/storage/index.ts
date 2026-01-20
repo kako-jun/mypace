@@ -1,5 +1,6 @@
 // Unified localStorage management under single "mypace" key
 import type { ThemeColors, SearchFilters, FilterPreset, Profile } from '../../types'
+import { DEFAULT_COLORS } from '../constants'
 
 const STORAGE_KEY = 'mypace'
 
@@ -33,14 +34,6 @@ export interface MypaceStorage {
     draft: string
     draftReplyTo: string
   }
-}
-
-// Default values
-const DEFAULT_COLORS: ThemeColors = {
-  topLeft: '#ff6b6b',
-  topRight: '#4ecdc4',
-  bottomLeft: '#45b7d1',
-  bottomRight: '#96ceb4',
 }
 
 export const DEFAULT_SEARCH_FILTERS: SearchFilters = {

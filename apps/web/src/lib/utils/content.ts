@@ -1,3 +1,5 @@
+import { URL_REGEX } from './embed'
+
 /**
  * Normalize content by trimming trailing ASCII spaces/tabs from each line
  * and removing leading/trailing ASCII whitespace from the entire content.
@@ -15,9 +17,6 @@ export function normalizeContent(content: string): string {
 const SUPER_MENTION_PATH_REGEX =
   /@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
 const URL_PATTERN = /^(https?:\/\/)?[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(\/.*)?$/
-
-// URL extraction regex
-const URL_REGEX = /https?:\/\/[^\s<"]+/gi
 
 /**
  * Extract super mention paths from content (for Wikidata lookup)

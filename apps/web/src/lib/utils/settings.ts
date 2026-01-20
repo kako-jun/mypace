@@ -1,14 +1,9 @@
 import type { ThemeColors } from '../../types'
 import { getThemeColors, getThemeMode, getVimMode } from '../storage'
 import { isDarkColor } from '../nostr/theme'
+import { DEFAULT_COLORS } from '../constants'
 
-// Default colors for UI
-export const DEFAULT_COLORS: ThemeColors = {
-  topLeft: '#f8f8f8',
-  topRight: '#f8f8f8',
-  bottomLeft: '#f8f8f8',
-  bottomRight: '#f8f8f8',
-}
+export { DEFAULT_COLORS }
 
 function applyThemeColors(colors: ThemeColors) {
   if (typeof document === 'undefined') return

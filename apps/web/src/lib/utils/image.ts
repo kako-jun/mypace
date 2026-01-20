@@ -1,6 +1,5 @@
 // Image URL regex pattern
 const IMAGE_EXTENSIONS_PATTERN = '(jpg|jpeg|png|gif|webp|svg)'
-export const IMAGE_EXTENSIONS = new RegExp(`\\.${IMAGE_EXTENSIONS_PATTERN}(\\?[^\\s]*)?$`, 'i')
 
 // Match image URLs in content
 const IMAGE_URL_REGEX = new RegExp(`https?://[^\\s<>"]+\\.${IMAGE_EXTENSIONS_PATTERN}(\\?[^\\s<>"]*)?`, 'gi')
@@ -18,9 +17,4 @@ export function removeImageUrl(content: string, urlToRemove: string): string {
     .replace(regex, '\n')
     .replace(/^\n+|\n+$/g, '')
     .replace(/\n{3,}/g, '\n\n')
-}
-
-// Check if URL is an image
-export function isImageUrl(url: string): boolean {
-  return IMAGE_EXTENSIONS.test(url)
 }
