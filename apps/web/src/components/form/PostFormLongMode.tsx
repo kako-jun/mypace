@@ -10,7 +10,10 @@ import { LocationPicker } from '../location'
 import { DrawingPicker } from '../drawing'
 import { VoicePicker } from '../voice'
 import { FormActions } from './FormActions'
+import TeaserPicker from './TeaserPicker'
 import { getDisplayName } from '../../lib/utils'
+import { LIMITS } from '../../lib/constants'
+import type { StellaColor } from '../../lib/nostr/events'
 
 interface PostFormLongModeProps {
   content: string
@@ -44,6 +47,8 @@ interface PostFormLongModeProps {
   onStickerLayerChange: (index: number, layer: StickerLayer) => void
   locations: { geohash: string; name?: string }[]
   onLocationsChange: (locations: { geohash: string; name?: string }[]) => void
+  teaserColor: StellaColor | null
+  onTeaserColorChange: (color: StellaColor | null) => void
 }
 
 export function PostFormLongMode({
@@ -78,11 +83,15 @@ export function PostFormLongMode({
   onStickerLayerChange,
   locations,
   onLocationsChange,
+  teaserColor,
+  onTeaserColorChange,
 }: PostFormLongModeProps) {
   const longModeFormRef = useRef<HTMLFormElement>(null)
   const editorRef = useRef<LongModeEditorRef>(null)
   const fileImportRef = useRef<HTMLInputElement>(null)
+  const teaserButtonRef = useRef<HTMLButtonElement>(null)
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
+  const [showTeaserPicker, setShowTeaserPicker] = useState(false)
 
   const handleInsertToEditor = (text: string) => {
     editorRef.current?.insertText(text)
@@ -200,6 +209,17 @@ export function PostFormLongMode({
               onSelect={(geohash, name) => onLocationsChange([...locations, { geohash, name }])}
               currentLocations={locations}
             />
+            {content.length > LIMITS.FOLD_THRESHOLD && (
+              <button
+                ref={teaserButtonRef}
+                type="button"
+                className={`teaser-button ${teaserColor ? 'active' : ''}`}
+                onClick={() => setShowTeaserPicker(true)}
+                title="Teaser設定"
+              >
+                <Icon name="Lock" size={20} />
+              </button>
+            )}
           </div>
 
           <LongModeEditor
@@ -255,6 +275,21 @@ export function PostFormLongMode({
 
       {showSuperMentionPopup && (
         <SuperMentionPopup onSelect={handleInsertToEditor} onClose={() => setShowSuperMentionPopup(false)} />
+      )}
+
+      {showTeaserPicker && teaserButtonRef.current && (
+        <TeaserPicker
+          position={{
+            top: teaserButtonRef.current.getBoundingClientRect().top,
+            left: teaserButtonRef.current.getBoundingClientRect().left + teaserButtonRef.current.offsetWidth / 2,
+          }}
+          selectedColor={teaserColor}
+          onSelect={(color: StellaColor | null) => {
+            onTeaserColorChange(color)
+            setShowTeaserPicker(false)
+          }}
+          onClose={() => setShowTeaserPicker(false)}
+        />
       )}
     </div>
   )

@@ -282,3 +282,29 @@
     line-height: inherit;
   }
 }
+
+/* Teaser locked message */
+.teaser-locked-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-card);
+  border-radius: 4px;
+}
+
+.teaser-locked-icon {
+  display: flex;
+  align-items: center;
+}
+
+.teaser-lock-icon {
+  font-size: 1.25rem;
+}
+
+.teaser-locked-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}

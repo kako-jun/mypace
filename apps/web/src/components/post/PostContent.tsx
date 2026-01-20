@@ -1,8 +1,9 @@
 import { renderContent } from '../../lib/parser'
 import { PostEmbeds } from '../embed'
-import { TextButton } from '../ui'
+import { TextButton, Icon } from '../ui'
 import { LIMITS } from '../../lib/constants'
-import { hasTeaserTag as checkTeaserTag, removeReadMoreLink } from '../../lib/nostr/tags'
+import { hasTeaserTag as checkTeaserTag, removeReadMoreLink, getTeaserColor } from '../../lib/nostr/tags'
+import { STELLA_COLORS } from '../../lib/nostr/events'
 import type { EmojiTag, ProfileMap, Event, OgpData } from '../../types'
 
 interface PostContentProps {
@@ -33,6 +34,8 @@ export function PostContent({
   // If event has teaser tag, content is already properly sized (280 chars + READ MORE link)
   // So we skip GUI truncation for long posts with teaser
   const hasTeaser = tags ? checkTeaserTag({ tags } as Event) : false
+  const teaserColor = tags ? getTeaserColor(tags) : undefined
+  const hasColorRequirement = !!teaserColor
 
   const shouldTruncate =
     truncate &&
@@ -43,6 +46,13 @@ export function PostContent({
 
   // For teaser posts in timeline, remove the READ MORE URL and show styled button instead
   const displayContent = hasTeaser && truncate ? removeReadMoreLink(content) : content
+
+  // Get lock icon color based on teaser color
+  const getLockColor = () => {
+    if (!teaserColor) return undefined
+    const colorInfo = STELLA_COLORS[teaserColor as keyof typeof STELLA_COLORS]
+    return colorInfo?.hex
+  }
 
   return (
     <>
@@ -57,8 +67,13 @@ export function PostContent({
         <>
           {renderContent(displayContent, emojis, profiles, wikidataMap)}
           {hasTeaser && truncate && (
-            <TextButton variant="primary" className="read-more-btn" onClick={onReadMore}>
+            <TextButton variant="primary" className="read-more-btn teaser-read-more" onClick={onReadMore}>
               … READ MORE
+              {hasColorRequirement && (
+                <span style={{ marginLeft: '0.25rem', color: getLockColor(), display: 'inline-flex' }}>
+                  <Icon name="Lock" size={14} />
+                </span>
+              )}
             </TextButton>
           )}
         </>

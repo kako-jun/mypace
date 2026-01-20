@@ -1,29 +1,40 @@
-# teaser（長文フォールド）【廃止】
-
-> **注意**: この機能は廃止されました。新規投稿時のティザータグ追加は行われません。
-> 既存のティザー付き投稿の表示・編集機能は残っています。
+# teaser（長文フォールド / ステラ必須）
 
 280文字を超える投稿を折りたたみ、他のNostrクライアントのタイムラインを圧迫しない仕組み。
+オプションでステラ必須（続きを読むにはステラが必要）を設定可能。
 
 ## 背景
 
 - SNSのタイムラインに長文が流れると迷惑になる
 - しかし「じっくり書きたい」ニーズもある
 - Kind 30023（長文記事）は対応クライアントが少ない
+- ステラ必須記事で収益化したいニーズもある
 
 ## 解決策
 
 Kind 1のまま、本文を分割してタグに格納する。
+第3要素でステラの色を指定可能。
 
 ## タグ形式
 
 ```json
-["teaser", "<続きの本文>"]
+["teaser", "<続きの本文>"]           // 通常の折りたたみ（誰でも展開可能）
+["teaser", "<続きの本文>", "blue"]   // ステラ必須（ブルーステラで展開可能）
 ```
+
+### 指定可能な色
+
+| 色 | 値 | 必要なステラ |
+|----|-----|-------------|
+| イエロー | `yellow` | 無料（練習用） |
+| グリーン | `green` | 1 sat |
+| レッド | `red` | 10 sats |
+| ブルー | `blue` | 100 sats |
+| パープル | `purple` | 1,000 sats |
 
 ## 投稿時の処理
 
-280文字を超える場合:
+### 通常の折りたたみ（280文字超）
 
 ```json
 {
@@ -37,6 +48,25 @@ Kind 1のまま、本文を分割してタグに格納する。
 }
 ```
 
+### ステラ必須設定時
+
+```json
+{
+  "kind": 1,
+  "content": "最初の280文字...\n\n...READ MORE → https://mypace.llll-ll.com/user/{npub}",
+  "tags": [
+    ["t", "mypace"],
+    ["client", "mypace"],
+    ["teaser", "281文字目以降の本文すべて", "blue"]
+  ]
+}
+```
+
+### 投稿時の安全処理
+
+- 280文字以下の投稿にはteaserタグを付けない（ステラ必須設定されていても無視）
+- エディタでは281文字超の場合のみティーザー設定UIを表示
+
 ## 閾値
 
 **280文字**（Twitter/X基準）
@@ -44,7 +74,8 @@ Kind 1のまま、本文を分割してタグに格納する。
 この値は以下で共通:
 1. 投稿時のteaser分割
 2. エディタの「折りたたまれます」警告
-3. 他クライアント投稿のGUI側切り詰め
+3. エディタのティーザー設定ボタン表示条件
+4. 他クライアント投稿のGUI側切り詰め
 
 ## 表示ロジック
 
@@ -53,6 +84,7 @@ Kind 1のまま、本文を分割してタグに格納する。
 ```typescript
 if (hasTeaserTag(event)) {
   // contentをそのまま表示（既に280字+リンク）
+  // ステラ必須の場合は錠前アイコンを表示
 } else if (content.length > 280) {
   // GUI側で切り詰め + READ MORE
 } else {
@@ -60,16 +92,88 @@ if (hasTeaserTag(event)) {
 }
 ```
 
-### 個別ページ
+### 個別ページ / 展開時
 
 ```typescript
-if (hasTeaserTag(event)) {
-  const teaserContent = getTeaserContent(event.tags)
-  const baseContent = removeReadMoreLink(event.content)
-  return baseContent + teaserContent  // 全文表示
-} else {
-  return event.content
+function canExpandTeaser(event: NostrEvent, currentUserPubkey: string): boolean {
+  // 投稿者自身は常に展開可能
+  if (event.pubkey === currentUserPubkey) {
+    return true
+  }
+
+  const teaserTag = event.tags.find(t => t[0] === 'teaser')
+  if (!teaserTag) return true  // teaserタグなし = 展開不要
+
+  const requiredColor = teaserTag[2]  // 第3要素
+  if (!requiredColor) return true  // 色指定なし = 誰でも展開可能
+
+  // 指定色のステラを付けているかチェック
+  return hasGivenStella(event.id, currentUserPubkey, requiredColor)
 }
+
+function getFullContent(event: NostrEvent): string {
+  const teaserTag = event.tags.find(t => t[0] === 'teaser')
+  if (!teaserTag) return event.content
+
+  const teaserContent = teaserTag[1]
+  const baseContent = removeReadMoreLink(event.content)
+  return baseContent + teaserContent
+}
+```
+
+## アンロック条件
+
+| 条件 | 展開可否 |
+|------|---------|
+| 投稿者自身 | 常に可能 |
+| 色指定なし（通常teaser） | 誰でも可能 |
+| 色指定あり + 指定色のステラを付けた | 可能 |
+| 色指定あり + ステラなし or 別の色 | 不可 |
+
+### 重要なルール
+
+- **色は完全一致が必要**: ブルー必須の投稿にグリーンを付けてもアンロックされない
+- **一度アンロックしたら永久に読める**: ステラを付けた履歴で判定
+- **厳密なDRMではない**: デベロッパーツールで読める可能性はある（許容）
+
+## ティーザーUI
+
+### エディタ
+
+281文字超の場合のみ表示:
+
+```
+┌─ 投稿作成 ──────────────────────────────┐
+│                                         │
+│ [本文入力エリア]                         │
+│ (320文字)                               │
+│                                         │
+├─────────────────────────────────────────┤
+│ ☑ ステラ必須にする                       │
+│                                         │
+│ ○ ★ イエロー (無料)                     │
+│ ○ ★ グリーン (1 sat)                   │
+│ ○ ★ レッド (10 sats)                   │
+│ ● ★ ブルー (100 sats) ← 選択中         │
+│ ○ ★ パープル (1,000 sats)              │
+│                                         │
+│ [投稿]                                   │
+└─────────────────────────────────────────┘
+```
+
+### タイムライン表示
+
+```
+┌─ 投稿（ブルーステラ必須）─────────────────┐
+│ @username                              │
+│                                        │
+│ 今日は特別なレシピを紹介します。        │
+│ まず材料から...                         │
+│                                        │
+├─────────────────────────────────────────┤
+│ ▼ 続きを読む              🔒★          │
+│                     （青の錠前アイコン） │
+└────────────────────────────────────────┘
 ```
 
 ## READ MOREリンク
@@ -85,6 +189,7 @@ if (hasTeaserTag(event)) {
 
 - 長文返信は280文字で切り詰め + READ MORE
 - teaser付き返信もタイムラインと同様に折りたたみ
+- ステラ必須の返信は錠前アイコン表示
 - READ MOREをクリックすると該当返信の詳細ページへ遷移
 
 ## 他クライアントでの表示
@@ -92,3 +197,12 @@ if (hasTeaserTag(event)) {
 - `content` 部分（280字+リンク）のみ表示される
 - `teaser` タグは無視される
 - READ MOREリンクをクリックするとMY PACEで全文を読める
+- **ステラ必須設定されていても、他クライアントでは280字までしか見えない**
+
+## 編集時の挙動
+
+投稿の編集は「削除 + 新規投稿」として扱われる。
+
+- IDが変わる
+- アンロック済みの状態はリセットされる
+- ティーザー設定も自由に変更可能

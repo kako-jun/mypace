@@ -5,7 +5,9 @@ import {
   createReplyEvent,
   getStoredThemeColors,
   getCurrentPubkey,
+  type StellaColor,
 } from '../../lib/nostr/events'
+import { exportNpub } from '../../lib/nostr/keys'
 import '../../styles/components/post-form.css'
 import { navigateToUser } from '../../lib/utils'
 import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant, StickerLayer, Profile } from '../../types'
@@ -31,8 +33,9 @@ import { SuperMentionPopup } from '../superMention'
 import { LocationPicker } from '../location'
 import { DrawingPicker } from '../drawing'
 import { VoicePicker } from '../voice'
-import { FormActions, ShortTextEditor, PostFormLongMode } from './index'
+import { FormActions, ShortTextEditor, PostFormLongMode, TeaserPicker } from './index'
 import type { ShortTextEditorRef } from './ShortTextEditor'
+import { getTeaserColor } from '../../lib/nostr/tags'
 
 interface PostFormProps {
   longMode: boolean
@@ -77,6 +80,9 @@ export function PostForm({
   const [showSuperMentionPopup, setShowSuperMentionPopup] = useState(false)
   const [locations, setLocations] = useState<{ geohash: string; name?: string }[]>([])
   const [replyToProfile, setReplyToProfile] = useState<Profile | null | undefined>(undefined)
+  const [teaserColor, setTeaserColor] = useState<StellaColor | null>(null)
+  const [showTeaserPicker, setShowTeaserPicker] = useState(false)
+  const teaserButtonRef = useRef<HTMLButtonElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const shortTextEditorRef = useRef<ShortTextEditorRef>(null)
   const fileImportRef = useRef<HTMLInputElement>(null)
@@ -142,9 +148,14 @@ export function PostForm({
         name: locationTags[i]?.[1],
       }))
       setLocations(restoredLocations)
+
+      // Restore teaser color
+      const restoredTeaserColor = getTeaserColor(editingEvent.tags) as StellaColor | undefined
+      setTeaserColor(restoredTeaserColor ?? null)
     } else {
       setStickers([])
       setLocations([])
+      setTeaserColor(null)
     }
   }, [editingEvent])
 
@@ -233,29 +244,44 @@ export function PostForm({
 
       const extraTags = [...stickerTags, ...locationTags]
 
+      // Teaser processing: split content if > 280 chars and teaserColor is set
+      let finalContent = normalizedContent
+      if (teaserColor && normalizedContent.length > LIMITS.FOLD_THRESHOLD) {
+        const pubkey = await getCurrentPubkey()
+        const npub = exportNpub(pubkey)
+        const baseContent = normalizedContent.slice(0, LIMITS.FOLD_THRESHOLD)
+        const teaserContent = normalizedContent.slice(LIMITS.FOLD_THRESHOLD)
+        const readMoreLink = `\n\n...READ MORE → https://mypace.llll-ll.com/user/${npub}`
+        finalContent = baseContent + readMoreLink
+        extraTags.push(['teaser', teaserContent, teaserColor])
+      }
+
       if (replyingTo) {
-        const event = await createReplyEvent(normalizedContent, replyingTo, undefined, extraTags)
+        const event = await createReplyEvent(finalContent, replyingTo, undefined, extraTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])
         setLocations([])
+        setTeaserColor(null)
         onReplyComplete?.()
       } else if (editingEvent) {
         const deleteEvent = await createDeleteEvent([editingEvent.id])
         await publishEvent(deleteEvent)
         const preserveTags = editingEvent.tags.filter((tag) => !['sticker', 'g', 'location', 'teaser'].includes(tag[0]))
-        const event = await createTextNote(normalizedContent, preserveTags, extraTags)
+        const event = await createTextNote(finalContent, preserveTags, extraTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])
         setLocations([])
+        setTeaserColor(null)
         onEditComplete?.()
       } else {
-        const event = await createTextNote(normalizedContent, undefined, extraTags)
+        const event = await createTextNote(finalContent, undefined, extraTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])
         setLocations([])
+        setTeaserColor(null)
       }
 
       window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NEW_POST))
@@ -428,6 +454,8 @@ export function PostForm({
         onStickerLayerChange={handleStickerLayerChange}
         locations={locations}
         onLocationsChange={setLocations}
+        teaserColor={teaserColor}
+        onTeaserColorChange={setTeaserColor}
       />
     )
   }
@@ -529,6 +557,17 @@ export function PostForm({
           onSelect={(geohash, name) => setLocations([...locations, { geohash, name }])}
           currentLocations={locations}
         />
+        {content.length > LIMITS.FOLD_THRESHOLD && (
+          <button
+            ref={teaserButtonRef}
+            type="button"
+            className={`teaser-button ${teaserColor ? 'active' : ''}`}
+            onClick={() => setShowTeaserPicker(true)}
+            title="Teaser設定"
+          >
+            <Icon name="Lock" size={20} />
+          </button>
+        )}
       </div>
 
       <ShortTextEditor
@@ -577,6 +616,21 @@ export function PostForm({
         <SuperMentionPopup
           onSelect={(text) => shortTextEditorRef.current?.insertText(text)}
           onClose={() => setShowSuperMentionPopup(false)}
+        />
+      )}
+
+      {showTeaserPicker && teaserButtonRef.current && (
+        <TeaserPicker
+          position={{
+            top: teaserButtonRef.current.getBoundingClientRect().top,
+            left: teaserButtonRef.current.getBoundingClientRect().left + teaserButtonRef.current.offsetWidth / 2,
+          }}
+          selectedColor={teaserColor}
+          onSelect={(color) => {
+            setTeaserColor(color)
+            setShowTeaserPicker(false)
+          }}
+          onClose={() => setShowTeaserPicker(false)}
         />
       )}
     </form>

@@ -44,6 +44,17 @@ export function getTeaserContent(tags: string[][]): string | undefined {
   return tags.find((t) => t[0] === 'teaser')?.[1]
 }
 
+// Get the teaser required color from event tags (third element)
+export function getTeaserColor(tags: string[][]): string | undefined {
+  return tags.find((t) => t[0] === 'teaser')?.[2]
+}
+
+// Check if teaser has a color requirement (stella required)
+export function hasTeaserColorRequirement(event: Event): boolean {
+  const teaserTag = event.tags?.find((t) => t[0] === 'teaser')
+  return teaserTag ? !!teaserTag[2] : false
+}
+
 // Remove READ MORE link from content (for displaying full post)
 export function removeReadMoreLink(content: string): string {
   // Match pattern: "\n\n...READ MORE → https://..." at the end

@@ -12,6 +12,7 @@ import {
   createReactionEvent,
   EMPTY_STELLA_COUNTS,
   getTotalStellaCount,
+  STELLA_COLORS,
   type StellaColor,
   type StellaCountsByColor,
 } from '../../lib/nostr/events'
@@ -35,7 +36,7 @@ import {
 } from '../../lib/utils'
 import { sendToLightningAddress } from '../../lib/lightning'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
-import { hasTeaserTag, getTeaserContent, removeReadMoreLink, parseStickers } from '../../lib/nostr/tags'
+import { hasTeaserTag, getTeaserContent, getTeaserColor, removeReadMoreLink, parseStickers } from '../../lib/nostr/tags'
 import {
   setHashtagClickHandler,
   setSuperMentionClickHandler,
@@ -413,9 +414,18 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   const isMyPost = myPubkey === event.pubkey
   const themeColors = getEventThemeColors(event)
   const stickers = parseStickers(event.tags)
-  const fullContent = hasTeaserTag(event)
-    ? removeReadMoreLink(event.content) + (getTeaserContent(event.tags) || '')
-    : event.content
+
+  // Teaser/unlock logic
+  const hasTeaser = hasTeaserTag(event)
+  const teaserColor = hasTeaser ? getTeaserColor(event.tags) : undefined
+  const hasColorRequirement = !!teaserColor
+
+  // Check if unlocked: own post, no color requirement, or has given the required color stella
+  const isUnlocked =
+    isMyPost || !hasColorRequirement || (teaserColor && reactions.myStella[teaserColor as StellaColor] > 0)
+
+  const fullContent =
+    hasTeaser && isUnlocked ? removeReadMoreLink(event.content) + (getTeaserContent(event.tags) || '') : event.content
   const themeProps = getThemeCardProps(themeColors)
 
   // Extract locations from tags
@@ -502,7 +512,22 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
                 profiles={{ ...(profile ? { [event.pubkey]: profile } : {}), ...replyProfiles }}
                 wikidataMap={wikidataMap}
                 enableOgpFallback={true}
+                tags={event.tags}
               />
+              {/* Locked teaser message */}
+              {hasTeaser && hasColorRequirement && !isUnlocked && (
+                <div className="teaser-locked-message">
+                  <span
+                    className="teaser-locked-icon"
+                    style={{ color: STELLA_COLORS[teaserColor as StellaColor]?.hex }}
+                  >
+                    <span className="teaser-lock-icon">&#128274;</span>
+                  </span>
+                  <span className="teaser-locked-text">
+                    続きを読むには{STELLA_COLORS[teaserColor as StellaColor]?.label}ステラが必要です
+                  </span>
+                </div>
+              )}
             </div>
 
             {locations.map((loc) => (
