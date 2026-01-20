@@ -36,7 +36,6 @@ import {
 } from '../../lib/utils'
 import { sendToLightningAddress } from '../../lib/lightning'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
-import { cachePostMetadata } from '../../lib/utils/storage/cache'
 import { hasTeaserTag, getTeaserContent, getTeaserColor, removeReadMoreLink, parseStickers } from '../../lib/nostr/tags'
 import {
   setHashtagClickHandler,
@@ -235,22 +234,12 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
                 ...prev.reactors,
               ]
 
-        const newReactions: ReactionData = {
+        return {
           myReaction: true,
           myStella: newMyStella,
           myReactionId: newReaction.id,
           reactors: updatedReactors,
         }
-
-        // Update cache so reload preserves the stella state
-        cachePostMetadata(event.id, {
-          reactions: newReactions,
-          replies,
-          reposts,
-          views: views || { impression: 0, detail: 0 },
-        })
-
-        return newReactions
       })
     } catch (error) {
       console.error('Failed to publish reaction:', error)
