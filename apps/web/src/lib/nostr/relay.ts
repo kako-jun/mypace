@@ -157,7 +157,10 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
       ;(filter as any).search = searchQuery
     }
 
-    const rawEvents = await p.querySync(SEARCH_RELAYS, filter)
+    // 検索クエリがある場合のみSEARCH_RELAYS（NIP-50対応）を使用
+    // それ以外はGENERAL_RELAYSを使用（より広範なイベントを取得可能）
+    const targetRelays = searchQuery ? SEARCH_RELAYS : GENERAL_RELAYS
+    const rawEvents = await p.querySync(targetRelays, filter)
     rawEvents.sort((a, b) => b.created_at - a.created_at)
 
     let events = rawEvents.map(toEvent)
@@ -277,7 +280,10 @@ export async function fetchUserEvents(
       ;(filter as any).search = searchQuery
     }
 
-    const rawEvents = await p.querySync(SEARCH_RELAYS, filter)
+    // 検索クエリがある場合のみSEARCH_RELAYS（NIP-50対応）を使用
+    // それ以外はGENERAL_RELAYSを使用（より広範なイベントを取得可能）
+    const targetRelays = searchQuery ? SEARCH_RELAYS : GENERAL_RELAYS
+    const rawEvents = await p.querySync(targetRelays, filter)
     rawEvents.sort((a, b) => b.created_at - a.created_at)
 
     let events = rawEvents.map(toEvent)
