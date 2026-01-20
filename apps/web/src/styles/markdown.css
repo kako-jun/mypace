@@ -62,11 +62,11 @@
   border: none;
   height: 1px;
   margin: 1.5rem 0;
-  background: linear-gradient(90deg, transparent, #ccc 20%, #ccc 80%, transparent);
+  background: #ddd;
 }
 
 [data-theme="dark"] .markdown-content hr {
-  background: linear-gradient(90deg, transparent, #555 20%, #555 80%, transparent);
+  background: #444;
 }
 
 /* Markdown tables */
