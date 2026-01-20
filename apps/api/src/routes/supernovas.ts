@@ -305,7 +305,7 @@ supernovas.post('/seed', async (c) => {
     },
     {
       id: 'received_10',
-      name: 'Rising Star',
+      name: 'Received 10',
       description: 'Received 10 total stella',
       category: 'cumulative',
       threshold: 10,
@@ -318,7 +318,7 @@ supernovas.post('/seed', async (c) => {
     },
     {
       id: 'received_100',
-      name: 'Star Collector',
+      name: 'Received 100',
       description: 'Received 100 total stella',
       category: 'cumulative',
       threshold: 100,
@@ -331,7 +331,7 @@ supernovas.post('/seed', async (c) => {
     },
     {
       id: 'received_1000',
-      name: 'Constellation',
+      name: 'Received 1000',
       description: 'Received 1000 total stella',
       category: 'cumulative',
       threshold: 1000,
@@ -344,7 +344,7 @@ supernovas.post('/seed', async (c) => {
     },
     {
       id: 'given_10',
-      name: 'Generous',
+      name: 'Given 10',
       description: 'Given 10 total stella',
       category: 'cumulative',
       threshold: 10,
@@ -357,7 +357,7 @@ supernovas.post('/seed', async (c) => {
     },
     {
       id: 'given_100',
-      name: 'Benefactor',
+      name: 'Given 100',
       description: 'Given 100 total stella',
       category: 'cumulative',
       threshold: 100,
@@ -370,7 +370,7 @@ supernovas.post('/seed', async (c) => {
     },
     {
       id: 'given_1000',
-      name: 'Patron',
+      name: 'Given 1000',
       description: 'Given 1000 total stella',
       category: 'cumulative',
       threshold: 1000,
