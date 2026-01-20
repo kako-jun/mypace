@@ -8,7 +8,7 @@
 |------|------|
 | 表示ページ | ホームページのみ |
 | 表示位置 | 画面右下（固定） |
-| 表示内容 | posts数、views（詳細/印象）、stella数 |
+| 表示内容 | posts数、views（詳細/印象）、獲得stella数、与えたstella数 |
 | 配置 | 縦並び、右寄せ |
 | 表示条件 | ユーザー名（プロフィール）設定済みの場合のみ |
 
@@ -26,12 +26,15 @@
 ```
      243 posts
  📊 3 / 52
-    ⭐ 99
+ ↓ ⭐ 99
+ ↑ ⭐ 50
 ```
 
 - **posts**: 投稿数
 - **views**: 詳細閲覧数 / インプレッション数
-- **stella**: 獲得ステラ数（黄色で表示）
+- **↓ stella**: 獲得ステラ数
+- **↑ stella**: 与えたステラ数
+- カラーステラがある場合は色別に表示
 
 ### スタイル
 
@@ -92,20 +95,25 @@ apps/web/src/
 
 ## データ取得
 
-既存のAPI関数を使用：
+統合API関数を使用：
 
 | 関数 | エンドポイント | 戻り値 |
 |------|---------------|--------|
-| `fetchUserPostsCount(pubkey)` | `/api/user/:pubkey/count` | `number` |
-| `fetchUserStellaCount(pubkey)` | `/api/user/:pubkey/stella` | `number` |
-| `fetchUserViewsCount(pubkey)` | `/api/user/:pubkey/views` | `{ details, impressions }` |
+| `fetchUserStats(pubkey)` | `/api/user/:pubkey/stats` | `UserStats` |
+
+レスポンスに含まれるフィールド:
+- `postsCount` - 投稿数
+- `stellaCount` / `stellaByColor` - 獲得ステラ
+- `givenStellaCount` / `givenStellaByColor` - 与えたステラ
+- `viewsCount` - 閲覧数
 
 ### データの性質
 
 | 項目 | 元記事削除時 |
 |------|------------|
 | posts | 減る（Primal cache参照） |
-| stella | 減る（user_stellaテーブルから削除） |
+| stella（獲得） | 減る（user_stellaテーブルから削除） |
+| stella（与えた） | 減る（user_stellaテーブルから削除） |
 | views | **減らない**（event_viewsテーブルは削除されない） |
 
 ## 関連ドキュメント

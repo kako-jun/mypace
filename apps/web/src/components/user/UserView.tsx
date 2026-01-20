@@ -85,6 +85,8 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   const [postsCount, setPostsCount] = useState<number | null>(null)
   const [stellaCount, setStellaCount] = useState<number | null>(null)
   const [stellaByColor, setStellaByColor] = useState<StellaByColor | null>(null)
+  const [givenStellaCount, setGivenStellaCount] = useState<number | null>(null)
+  const [givenStellaByColor, setGivenStellaByColor] = useState<StellaByColor | null>(null)
   const [viewsCount, setViewsCount] = useState<{ details: number; impressions: number } | null>(null)
   const [, setThemeVersion] = useState(0)
   const [searchQuery, setSearchQuery] = useState<string[]>([])
@@ -174,6 +176,8 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
         setPostsCount(stats.postsCount)
         setStellaCount(stats.stellaCount)
         setStellaByColor(stats.stellaByColor)
+        setGivenStellaCount(stats.givenStellaCount)
+        setGivenStellaByColor(stats.givenStellaByColor)
         setViewsCount(stats.viewsCount)
       }
     } catch (err) {
@@ -333,6 +337,8 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
           postsCount={postsCount}
           stellaCount={stellaCount}
           stellaByColor={stellaByColor}
+          givenStellaCount={givenStellaCount}
+          givenStellaByColor={givenStellaByColor}
           viewsCount={viewsCount}
           serialData={serialData}
           onCopyNpub={handleCopyNpub}

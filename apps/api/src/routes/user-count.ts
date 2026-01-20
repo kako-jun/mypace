@@ -71,7 +71,7 @@ userCount.get('/:pubkey/stats', async (c) => {
 
   try {
     // 並列で全てのスタッツを取得
-    const [primalStats, stellaByColor, viewsResult] = await Promise.all([
+    const [primalStats, stellaByColor, givenStellaByColor, viewsResult] = await Promise.all([
       fetchUserStatsFromPrimal(pubkey),
       db
         .prepare(
@@ -80,6 +80,17 @@ userCount.get('/:pubkey/stats', async (c) => {
             COALESCE(SUM(stella_count), 0) as total
           FROM user_stella
           WHERE author_pubkey = ?
+          GROUP BY COALESCE(stella_color, 'yellow')`
+        )
+        .bind(pubkey)
+        .all<{ color: string; total: number }>(),
+      db
+        .prepare(
+          `SELECT
+            COALESCE(stella_color, 'yellow') as color,
+            COALESCE(SUM(stella_count), 0) as total
+          FROM user_stella
+          WHERE reactor_pubkey = ?
           GROUP BY COALESCE(stella_color, 'yellow')`
         )
         .bind(pubkey)
@@ -114,10 +125,30 @@ userCount.get('/:pubkey/stats', async (c) => {
       }
     }
 
+    // Build givenStellaByColor object with default 0 for all colors
+    const givenStellaColors: Record<string, number> = {
+      yellow: 0,
+      green: 0,
+      red: 0,
+      blue: 0,
+      purple: 0,
+    }
+    let totalGivenStella = 0
+    if (givenStellaByColor.results) {
+      for (const row of givenStellaByColor.results) {
+        if (row.color in givenStellaColors) {
+          givenStellaColors[row.color] = row.total
+        }
+        totalGivenStella += row.total
+      }
+    }
+
     return c.json({
       postsCount: primalStats ? (primalStats.note_count || 0) + (primalStats.long_form_note_count || 0) : null,
       stellaCount: totalStella,
       stellaByColor: stellaColors,
+      givenStellaCount: totalGivenStella,
+      givenStellaByColor: givenStellaColors,
       viewsCount: {
         details: viewsResult?.details ?? 0,
         impressions: viewsResult?.impressions ?? 0,
@@ -129,6 +160,8 @@ userCount.get('/:pubkey/stats', async (c) => {
       postsCount: null,
       stellaCount: 0,
       stellaByColor: { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 },
+      givenStellaCount: 0,
+      givenStellaByColor: { yellow: 0, green: 0, red: 0, blue: 0, purple: 0 },
       viewsCount: { details: 0, impressions: 0 },
       error: String(e),
     })

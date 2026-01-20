@@ -258,6 +258,10 @@
   white-space: nowrap;
 }
 
+.user-stella-row .stella-direction {
+  opacity: 0.6;
+}
+
 /* Post Header User Button */
 .post-header-user {
   display: flex;

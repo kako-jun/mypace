@@ -7,6 +7,8 @@ interface MyStats {
   postsCount: number | null
   stellaCount: number | null
   stellaByColor: StellaByColor | null
+  givenStellaCount: number | null
+  givenStellaByColor: StellaByColor | null
   viewsCount: { details: number; impressions: number } | null
 }
 
@@ -59,6 +61,8 @@ export function useMyStats(): UseMyStatsResult {
           postsCount: userStats.postsCount,
           stellaCount: userStats.stellaCount,
           stellaByColor: userStats.stellaByColor,
+          givenStellaCount: userStats.givenStellaCount,
+          givenStellaByColor: userStats.givenStellaByColor,
           viewsCount: userStats.viewsCount,
         })
       }

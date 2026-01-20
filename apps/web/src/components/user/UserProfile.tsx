@@ -27,6 +27,8 @@ interface UserProfileProps {
   postsCount: number | null
   stellaCount: number | null
   stellaByColor: StellaByColor | null
+  givenStellaCount: number | null
+  givenStellaByColor: StellaByColor | null
   viewsCount: { details: number; impressions: number } | null
   serialData: UserSerialData | null
   onCopyNpub: () => void
@@ -45,6 +47,8 @@ export function UserProfile({
   postsCount,
   stellaCount,
   stellaByColor,
+  givenStellaCount,
+  givenStellaByColor,
   viewsCount,
   serialData,
   onCopyNpub,
@@ -132,6 +136,7 @@ export function UserProfile({
             </span>
           </div>
           <div className="user-stats-row user-stella-row">
+            <Icon name="ArrowDown" size={14} className="stella-direction" />
             {stellaByColor && STELLA_COLORS.some((c) => c.key !== 'yellow' && stellaByColor[c.key] > 0) ? (
               STELLA_COLORS.map(
                 ({ key, fill }) =>
@@ -144,6 +149,23 @@ export function UserProfile({
             ) : (
               <span>
                 <Icon name="Star" size={14} fill="#f1c40f" /> {formatNumber(stellaCount)}
+              </span>
+            )}
+          </div>
+          <div className="user-stats-row user-stella-row">
+            <Icon name="ArrowUp" size={14} className="stella-direction" />
+            {givenStellaByColor && STELLA_COLORS.some((c) => c.key !== 'yellow' && givenStellaByColor[c.key] > 0) ? (
+              STELLA_COLORS.map(
+                ({ key, fill }) =>
+                  givenStellaByColor[key] > 0 && (
+                    <span key={key} className="user-stella-item">
+                      <Icon name="Star" size={14} fill={fill} /> {formatNumber(givenStellaByColor[key])}
+                    </span>
+                  )
+              )
+            ) : (
+              <span>
+                <Icon name="Star" size={14} fill="#f1c40f" /> {formatNumber(givenStellaCount)}
               </span>
             )}
           </div>

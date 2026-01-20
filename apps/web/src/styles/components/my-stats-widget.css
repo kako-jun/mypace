@@ -62,6 +62,11 @@
   font-size: clamp(0.85rem, 2.2vw, 1rem);
 }
 
+/* Stella direction arrow */
+.stella-direction {
+  opacity: 0.6;
+}
+
 /* Inventory button - uses TextButton base style */
 .my-stats-inventory-btn {
   font-size: 0.75rem;

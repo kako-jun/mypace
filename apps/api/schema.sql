@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS user_stella (
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_stella_author ON user_stella(author_pubkey);
+CREATE INDEX IF NOT EXISTS idx_user_stella_reactor ON user_stella(reactor_pubkey);
 CREATE INDEX IF NOT EXISTS idx_user_stella_reaction ON user_stella(reaction_id);
 CREATE INDEX IF NOT EXISTS idx_user_stella_event_reactor ON user_stella(event_id, reactor_pubkey);
 

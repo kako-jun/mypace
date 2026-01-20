@@ -313,6 +313,8 @@ export interface UserStats {
   postsCount: number | null
   stellaCount: number
   stellaByColor: StellaByColor
+  givenStellaCount: number
+  givenStellaByColor: StellaByColor
   viewsCount: {
     details: number
     impressions: number

@@ -382,10 +382,10 @@ CREATE INDEX IF NOT EXISTS idx_user_stella_reaction ON user_stella(reaction_id);
 
 ### API仕様
 
-ユーザーステラ統計は `/api/user/:pubkey/count` で取得:
+ユーザーステラ統計は `/api/user/:pubkey/stats` で取得:
 
 ```
-GET /api/user/:pubkey/count
+GET /api/user/:pubkey/stats
 ```
 
 レスポンス:
@@ -401,6 +401,14 @@ GET /api/user/:pubkey/count
     "blue": 20,
     "purple": 4
   },
+  "givenStellaCount": 567,
+  "givenStellaByColor": {
+    "yellow": 400,
+    "green": 100,
+    "red": 50,
+    "blue": 15,
+    "purple": 2
+  },
   "viewsCount": { ... }
 }
 ```
@@ -410,11 +418,15 @@ GET /api/user/:pubkey/count
 ユーザーページのプロフィールカード内に表示:
 
 ```
-123 posts ★ 456
-          ↑累計ステラ
+123 posts  📊 10 / 500
+↓ ★ 456    ← 獲得したステラ
+↑ ★ 123    ← 与えたステラ
 ```
 
+- `↓` = 獲得（received）
+- `↑` = 与えた（given）
 - 0でも表示（ローディング中は「...」）
+- カラーステラがある場合は色別に表示
 
 ### 制限事項
 
