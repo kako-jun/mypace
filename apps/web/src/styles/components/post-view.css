@@ -290,8 +290,7 @@
 
 /* Teaser locked inline (matches timeline style) */
 .teaser-locked-inline {
-  display: flex;
-  flex-wrap: wrap;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   margin-top: 0.5rem;
@@ -300,4 +299,5 @@
 .teaser-stella-hint {
   font-size: 0.875rem;
   color: var(--text-secondary);
+  line-height: 1;
 }

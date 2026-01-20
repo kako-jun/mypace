@@ -424,8 +424,11 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   const isUnlocked =
     isMyPost || !hasColorRequirement || (teaserColor && reactions.myStella[teaserColor as StellaColor] > 0)
 
-  const fullContent =
-    hasTeaser && isUnlocked ? removeReadMoreLink(event.content) + (getTeaserContent(event.tags) || '') : event.content
+  // For teaser posts: always remove the READ MORE link from content
+  // If unlocked, append the teaser content; if locked, show styled READ MORE button instead
+  const fullContent = hasTeaser
+    ? removeReadMoreLink(event.content) + (isUnlocked ? getTeaserContent(event.tags) || '' : '')
+    : event.content
   const themeProps = getThemeCardProps(themeColors)
 
   // Extract locations from tags
