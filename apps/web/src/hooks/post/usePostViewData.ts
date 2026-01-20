@@ -135,7 +135,8 @@ export function usePostViewData(eventId: string): PostViewData {
             const fetchedProfiles = await fetchProfiles(allPubkeys)
             const profiles: { [pubkey: string]: LoadableProfile } = {}
             for (const pk of allPubkeys) {
-              profiles[pk] = fetchedProfiles[pk] as LoadableProfile
+              // null means "tried to fetch but not found", undefined means "not yet fetched"
+              profiles[pk] = fetchedProfiles[pk] ?? null
             }
             setReplyProfiles(profiles)
           } catch {}
@@ -195,7 +196,8 @@ export function usePostViewData(eventId: string): PostViewData {
         const replyReactorProfiles = await fetchProfiles(allPubkeys)
         const profiles: { [pubkey: string]: LoadableProfile } = {}
         for (const pk of allPubkeys) {
-          profiles[pk] = replyReactorProfiles[pk] as LoadableProfile
+          // null means "tried to fetch but not found", undefined means "not yet fetched"
+          profiles[pk] = replyReactorProfiles[pk] ?? null
         }
         setReplyProfiles(profiles)
       }
