@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { nip19 } from 'nostr-tools'
 import { publishEvent, parseRepostEvent } from '../../lib/nostr/relay'
 import { KIND_REPOST } from '../../lib/nostr/constants'
@@ -8,13 +8,8 @@ import {
   createRepostEvent,
   getEventThemeColors,
   getThemeCardProps,
-  MAX_STELLA_PER_USER,
-  createReactionEvent,
-  EMPTY_STELLA_COUNTS,
-  getTotalStellaCount,
   STELLA_COLORS,
   type StellaColor,
-  type StellaCountsByColor,
 } from '../../lib/nostr/events'
 import {
   getDisplayName,
@@ -34,7 +29,6 @@ import {
   shareOrCopy,
   formatNumber,
 } from '../../lib/utils'
-import { sendToLightningAddress } from '../../lib/lightning'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import { hasTeaserTag, getTeaserContent, getTeaserColor, removeReadMoreLink, parseStickers } from '../../lib/nostr/tags'
 import {
@@ -57,8 +51,8 @@ import {
   OriginalPostCard,
 } from './index'
 import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage, Icon } from '../ui'
-import { useDeleteConfirm, usePostViewData, useWallet } from '../../hooks'
-import type { Profile, ReactionData, LoadableProfile } from '../../types'
+import { useDeleteConfirm, usePostViewData, useWallet, useReactions } from '../../hooks'
+import type { Profile, LoadableProfile } from '../../types'
 import type { ShareOption } from './ShareMenu'
 
 interface PostViewProps {
@@ -104,7 +98,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     myPubkey,
     loading,
     error,
-    reactions,
+    reactions: initialReactions,
     replies,
     reposts,
     views,
@@ -112,9 +106,16 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     replyProfiles,
     parentEvent,
     parentProfile,
-    setReactions,
     setReposts,
   } = usePostViewData(eventId)
+
+  // Use the shared reactions hook for consistent stella handling
+  const { reactions, likingId, handleAddStella, handleUnlike } = useReactions({
+    event,
+    myPubkey,
+    initialReactions,
+    authorLud16: profile?.lud16,
+  })
 
   // リポスト（kind:6）の場合、オリジナルイベントをパース
   const originalEvent = useMemo(() => {
@@ -125,11 +126,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   }, [event])
 
   const isRepost = event?.kind === KIND_REPOST && originalEvent !== null
-
-  // Stella debounce
-  const stellaDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pendingStella = useRef<StellaCountsByColor>({ ...EMPTY_STELLA_COUNTS })
-  const [likingId, setLikingId] = useState<string | null>(null)
 
   useEffect(() => {
     const handleAppThemeChange = () => setThemeVersion((v) => v + 1)
@@ -159,183 +155,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
   const getProfileAvatarUrl = (profileData?: Profile | null): string | null => {
     return getAvatarUrl(profileData || profile)
-  }
-
-  const flushStella = async () => {
-    if (!event) return
-    const pending = pendingStella.current
-    const totalPending = getTotalStellaCount(pending)
-    if (totalPending <= 0) return
-
-    // Reset pending immediately
-    const stellaToSend = { ...pending }
-    pendingStella.current = { ...EMPTY_STELLA_COUNTS }
-
-    const previousReactions = { ...reactions }
-    const oldReactionId = reactions.myReactionId
-
-    // 楽観的更新済みの現在値をそのまま使用（既にpending分が加算されている）
-    const newMyStella: StellaCountsByColor = reactions.myStella
-
-    // カラーステラの場合は支払い処理（stellaToSendから直接計算）
-    const cost = stellaToSend.green * 1 + stellaToSend.red * 10 + stellaToSend.blue * 100 + stellaToSend.purple * 1000
-    if (cost > 0) {
-      const authorLud16 = profile?.lud16
-      if (!authorLud16) {
-        console.warn('Author has no lightning address, cannot send colored stella')
-        setReactions(previousReactions)
-        return
-      }
-
-      setLikingId(event.id)
-      const payResult = await sendToLightningAddress(authorLud16, cost)
-      if (!payResult.success) {
-        console.error('Payment failed:', payResult.error)
-        setLikingId(null)
-        setReactions(previousReactions)
-        return
-      }
-      // 支払い成功、続けてステラを送信
-    } else {
-      setLikingId(event.id)
-    }
-
-    try {
-      const newReaction = await createReactionEvent(event, '+', newMyStella)
-      await publishEvent(newReaction)
-
-      if (oldReactionId) {
-        try {
-          await publishEvent(await createDeleteEvent([oldReactionId]))
-        } catch {}
-      }
-
-      setReactions((prev: ReactionData) => {
-        const myIndex = prev.reactors.findIndex((r) => r.pubkey === myPubkey)
-        const updatedReactors =
-          myIndex >= 0
-            ? prev.reactors.map((r, i) =>
-                i === myIndex
-                  ? {
-                      ...r,
-                      stella: newMyStella,
-                      reactionId: newReaction.id,
-                      createdAt: newReaction.created_at,
-                    }
-                  : r
-              )
-            : [
-                {
-                  pubkey: myPubkey!,
-                  stella: newMyStella,
-                  reactionId: newReaction.id,
-                  createdAt: newReaction.created_at,
-                },
-                ...prev.reactors,
-              ]
-
-        return {
-          myReaction: true,
-          myStella: newMyStella,
-          myReactionId: newReaction.id,
-          reactors: updatedReactors,
-        }
-      })
-    } catch (error) {
-      console.error('Failed to publish reaction:', error)
-      setReactions(previousReactions)
-    } finally {
-      setLikingId(null)
-    }
-  }
-
-  const handleAddStella = (color: StellaColor) => {
-    if (!event || !myPubkey || event.pubkey === myPubkey) return
-
-    const currentMyTotal = getTotalStellaCount(reactions.myStella)
-    const pendingTotal = getTotalStellaCount(pendingStella.current)
-
-    if (currentMyTotal + pendingTotal >= MAX_STELLA_PER_USER) return
-
-    // Add to pending for this color
-    pendingStella.current = {
-      ...pendingStella.current,
-      [color]: pendingStella.current[color] + 1,
-    }
-
-    // Optimistic UI update
-    setReactions((prev: ReactionData) => ({
-      myReaction: true,
-      myStella: {
-        ...prev.myStella,
-        [color]: prev.myStella[color] + 1,
-      },
-      myReactionId: prev.myReactionId,
-      reactors: prev.reactors,
-    }))
-
-    if (stellaDebounceTimer.current) clearTimeout(stellaDebounceTimer.current)
-    stellaDebounceTimer.current = setTimeout(() => flushStella(), 500)
-  }
-
-  const handleUnlike = async () => {
-    if (!event || !myPubkey || !reactions.myReactionId) return
-
-    const myStella = reactions.myStella
-    // イエローがなければ取り消す対象がない
-    if (myStella.yellow <= 0) return
-
-    if (stellaDebounceTimer.current) {
-      clearTimeout(stellaDebounceTimer.current)
-      stellaDebounceTimer.current = null
-    }
-    pendingStella.current = { ...EMPTY_STELLA_COUNTS }
-
-    // イエローを0にして、カラーステラは残す
-    const newMyStella: StellaCountsByColor = {
-      yellow: 0,
-      green: myStella.green,
-      red: myStella.red,
-      blue: myStella.blue,
-      purple: myStella.purple,
-    }
-    const remainingTotal = getTotalStellaCount(newMyStella)
-
-    setLikingId(event.id)
-    try {
-      if (remainingTotal > 0) {
-        // カラーステラが残る場合は新しいリアクションを発行
-        const newReaction = await createReactionEvent(event, '+', newMyStella)
-        await publishEvent(newReaction)
-        // 古いリアクションを削除
-        try {
-          await publishEvent(await createDeleteEvent([reactions.myReactionId]))
-        } catch {
-          // 削除失敗は無視
-        }
-        setReactions((prev: ReactionData) => ({
-          myReaction: true,
-          myStella: newMyStella,
-          myReactionId: newReaction.id,
-          reactors: prev.reactors.map((r) =>
-            r.pubkey === myPubkey
-              ? { ...r, stella: newMyStella, reactionId: newReaction.id, createdAt: newReaction.created_at }
-              : r
-          ),
-        }))
-      } else {
-        // 全てのステラを削除
-        await publishEvent(await createDeleteEvent([reactions.myReactionId]))
-        setReactions((prev: ReactionData) => ({
-          myReaction: false,
-          myStella: { ...EMPTY_STELLA_COUNTS },
-          myReactionId: null,
-          reactors: prev.reactors.filter((r) => r.pubkey !== myPubkey),
-        }))
-      }
-    } finally {
-      setLikingId(null)
-    }
   }
 
   const handleRepost = async () => {
