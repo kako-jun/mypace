@@ -25,7 +25,7 @@ export default function TeaserPicker({ selectedColor, onSelect, onClose }: Tease
       <div className="teaser-picker-backdrop" onClick={onClose}>
         <div className="teaser-picker" onClick={(e) => e.stopPropagation()}>
           <div className="teaser-picker-header">
-            <span className="teaser-picker-title">Teaser</span>
+            <h3 className="teaser-picker-title">Teaser</h3>
             <CloseButton onClick={onClose} size={20} />
           </div>
 
@@ -43,7 +43,7 @@ export default function TeaserPicker({ selectedColor, onSelect, onClose }: Tease
                   className={`teaser-picker-star ${isSelected ? 'selected' : ''}`}
                   onClick={() => handleSelect(color)}
                 >
-                  <Icon name="Star" size={32} fill={colorInfo.hex} />
+                  <Icon name="Star" size={24} fill={colorInfo.hex} />
                 </button>
               )
             })}
