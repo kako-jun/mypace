@@ -94,34 +94,45 @@ export function InventoryPage() {
 
   // Define tier thresholds for each series
   const SERIES_THRESHOLDS: Record<string, number[]> = {
-    posts: [10, 100, 1000, 10000],
+    posts: [10, 100, 1000],
     supernova: [10, 25, 50],
-    received_yellow: [10, 100, 1000],
     received_green: [10, 100, 1000],
     received_red: [10, 100, 1000],
     received_blue: [10, 100, 1000],
     received_purple: [10, 100, 1000],
-    given_yellow: [10, 100, 1000],
     given_green: [10, 100, 1000],
     given_red: [10, 100, 1000],
     given_blue: [10, 100, 1000],
     given_purple: [10, 100, 1000],
   }
 
-  // Define single supernova series with explicit previous tier mapping
-  const SINGLE_SERIES_PREV: Record<string, string> = {
-    // Long post series: first_long_post (281) → first_1000_chars → first_2000_chars → first_3000_chars → first_4000_chars
+  // Define previous tier mapping for series that start with "first_*"
+  const SERIES_FIRST_TIER: Record<string, string> = {
+    // Long post series: first_long_post → first_1000_chars → first_2000_chars → first_4000_chars
     first_1000_chars: 'first_long_post',
     first_2000_chars: 'first_1000_chars',
-    first_3000_chars: 'first_2000_chars',
-    first_4000_chars: 'first_3000_chars',
+    first_4000_chars: 'first_2000_chars',
+    // Posts series: first_post → posts_10 → posts_100 → posts_1000
+    posts_10: 'first_post',
+    // Supernova series: first_supernova → supernova_10 → supernova_25 → supernova_50
+    supernova_10: 'first_supernova',
+    // Received series: first_received_stella → received_*_10 → ...
+    received_green_10: 'first_received_stella',
+    received_red_10: 'first_received_stella',
+    received_blue_10: 'first_received_stella',
+    received_purple_10: 'first_received_stella',
+    // Given series: first_given_stella → given_*_10 → ...
+    given_green_10: 'first_given_stella',
+    given_red_10: 'first_given_stella',
+    given_blue_10: 'first_given_stella',
+    given_purple_10: 'first_given_stella',
   }
 
   // Get the previous tier ID that must be completed before showing this supernova
   const getPreviousTierId = (supernovaId: string): string | null => {
-    // Check single series first
-    if (SINGLE_SERIES_PREV[supernovaId]) {
-      return SINGLE_SERIES_PREV[supernovaId]
+    // Check explicit first tier mapping
+    if (SERIES_FIRST_TIER[supernovaId]) {
+      return SERIES_FIRST_TIER[supernovaId]
     }
 
     // Parse series and threshold from ID

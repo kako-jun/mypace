@@ -232,8 +232,8 @@ supernovas.post('/check', async (c) => {
           break
         default: {
           // Handle pattern-based supernovas
-          const receivedMatch = def.id.match(/^received_(yellow|green|red|blue|purple)_(\d+)$/)
-          const givenMatch = def.id.match(/^given_(yellow|green|red|blue|purple)_(\d+)$/)
+          const receivedMatch = def.id.match(/^received_(green|red|blue|purple)_(\d+)$/)
+          const givenMatch = def.id.match(/^given_(green|red|blue|purple)_(\d+)$/)
           const postsMatch = def.id.match(/^posts_(\d+)$/)
           const supernovaMatch = def.id.match(/^supernova_(\d+)$/)
           if (receivedMatch) {
@@ -530,28 +530,16 @@ supernovas.post('/seed', async (c) => {
       reward_purple: 0,
     },
     {
-      id: 'first_3000_chars',
-      name: 'First 3000 Chars',
-      description: 'Posted 3000+ characters',
-      category: 'single',
-      threshold: 3000,
-      supernova_color: 'blue',
-      reward_green: 400,
-      reward_red: 40,
-      reward_blue: 4,
-      reward_purple: 0,
-    },
-    {
       id: 'first_4000_chars',
       name: 'First 4000 Chars',
       description: 'Posted 4000+ characters',
       category: 'single',
       threshold: 4000,
-      supernova_color: 'purple',
-      reward_green: 5000,
-      reward_red: 500,
-      reward_blue: 50,
-      reward_purple: 5,
+      supernova_color: 'blue',
+      reward_green: 400,
+      reward_red: 40,
+      reward_blue: 4,
+      reward_purple: 0,
     },
     // === Posts count series (green→green→red→blue) ===
     {
@@ -584,22 +572,10 @@ supernovas.post('/seed', async (c) => {
       description: 'Posted 1000 times',
       category: 'cumulative',
       threshold: 1000,
-      supernova_color: 'red',
-      reward_green: 30,
-      reward_red: 3,
-      reward_blue: 0,
-      reward_purple: 0,
-    },
-    {
-      id: 'posts_10000',
-      name: 'Posts 10000',
-      description: 'Posted 10000 times',
-      category: 'cumulative',
-      threshold: 10000,
       supernova_color: 'blue',
-      reward_green: 400,
-      reward_red: 40,
-      reward_blue: 4,
+      reward_green: 300,
+      reward_red: 30,
+      reward_blue: 3,
       reward_purple: 0,
     },
     // === Supernova count series (green→red→blue) ===
@@ -639,7 +615,7 @@ supernovas.post('/seed', async (c) => {
       reward_blue: 3,
       reward_purple: 0,
     },
-    // === Received Green Stella series (green→green→red) ===
+    // === Received Green Stella series (green→green→red→blue) ===
     {
       id: 'received_green_10',
       name: 'Received Green 10',
