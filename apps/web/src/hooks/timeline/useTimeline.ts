@@ -1,17 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { fetchTimeline, fetchUserEvents, publishEvent, parseRepostEvent } from '../../lib/nostr/relay'
 import { KIND_REPOST } from '../../lib/nostr/constants'
+import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostEvent } from '../../lib/nostr/events'
 import {
-  getCurrentPubkey,
-  createDeleteEvent,
-  createReactionEvent,
-  createRepostEvent,
-  MAX_STELLA_PER_USER,
-  EMPTY_STELLA_COUNTS,
+  canAddStella,
+  addStellaToColor,
+  removeYellowStella,
+  createEmptyStellaCounts,
   getTotalStellaCount,
+  EMPTY_STELLA_COUNTS,
   type StellaColor,
   type StellaCountsByColor,
-} from '../../lib/nostr/events'
+} from '../../lib/utils/stella'
 import { sendStella } from '../../lib/api'
 import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage, getMutedPubkeys } from '../../lib/utils'
 import { getFilterSettings } from '../../lib/storage'
@@ -316,26 +316,18 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     const eventId = event.id
 
     const currentReaction = reactions[eventId]
-    const currentMyStella = currentReaction?.myStella || { ...EMPTY_STELLA_COUNTS }
-    const currentTotal = getTotalStellaCount(currentMyStella)
-    const pendingCounts = pendingStella.current[eventId] || { ...EMPTY_STELLA_COUNTS }
-    const pendingTotal = getTotalStellaCount(pendingCounts)
+    const currentMyStella = currentReaction?.myStella || createEmptyStellaCounts()
+    const pendingCounts = pendingStella.current[eventId] || createEmptyStellaCounts()
 
-    if (currentTotal + pendingTotal >= MAX_STELLA_PER_USER) return
+    if (!canAddStella(currentMyStella, pendingCounts)) return
 
     // pending に追加
-    pendingStella.current[eventId] = {
-      ...pendingCounts,
-      [color]: pendingCounts[color] + 1,
-    }
+    pendingStella.current[eventId] = addStellaToColor(pendingCounts, color)
 
     // 楽観的更新
     setReactions((prev) => {
       const prevData = prev[eventId] || emptyReaction
-      const newMyStella = {
-        ...prevData.myStella,
-        [color]: prevData.myStella[color] + 1,
-      }
+      const newMyStella = addStellaToColor(prevData.myStella, color)
       return {
         ...prev,
         [eventId]: {
@@ -371,13 +363,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     delete pendingStella.current[eventId]
 
     // イエローを0にして、カラーステラは残す
-    const newMyStella: StellaCountsByColor = {
-      yellow: 0,
-      green: myStella.green,
-      red: myStella.red,
-      blue: myStella.blue,
-      purple: myStella.purple,
-    }
+    const newMyStella = removeYellowStella(myStella)
     const remainingTotal = getTotalStellaCount(newMyStella)
 
     setLikingId(eventId)

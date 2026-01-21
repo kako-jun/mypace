@@ -9,13 +9,18 @@ import {
   createReactionEvent,
   getEventThemeColors,
   getThemeCardProps,
-  MAX_STELLA_PER_USER,
-  EMPTY_STELLA_COUNTS,
-  getTotalStellaCount,
   STELLA_COLORS,
+} from '../../lib/nostr/events'
+import {
+  canAddStella,
+  addStellaToColor,
+  removeYellowStella,
+  createEmptyStellaCounts,
+  getTotalStellaCount,
+  EMPTY_STELLA_COUNTS,
   type StellaColor,
   type StellaCountsByColor,
-} from '../../lib/nostr/events'
+} from '../../lib/utils/stella'
 import {
   getDisplayName,
   getAvatarUrl,
@@ -221,21 +226,15 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
       if (!event || !myPubkey || event.pubkey === myPubkey) return
 
       const currentReactions = reactionsRef.current
-      const currentMyTotal = getTotalStellaCount(currentReactions.myStella)
-      const pendingTotal = getTotalStellaCount(pendingStella.current)
-
-      if (currentMyTotal + pendingTotal >= MAX_STELLA_PER_USER) return
+      if (!canAddStella(currentReactions.myStella, pendingStella.current)) return
 
       // Add to pending
-      pendingStella.current = {
-        ...pendingStella.current,
-        [color]: pendingStella.current[color] + 1,
-      }
+      pendingStella.current = addStellaToColor(pendingStella.current, color)
 
       // Optimistic UI update
       setReactions((prev: ReactionData) => ({
         myReaction: true,
-        myStella: { ...prev.myStella, [color]: prev.myStella[color] + 1 },
+        myStella: addStellaToColor(prev.myStella, color),
         myReactionId: prev.myReactionId,
         reactors: prev.reactors,
       }))
@@ -261,15 +260,9 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
       clearTimeout(stellaDebounceTimer.current)
       stellaDebounceTimer.current = null
     }
-    pendingStella.current = { ...EMPTY_STELLA_COUNTS }
+    pendingStella.current = createEmptyStellaCounts()
 
-    const newMyStella: StellaCountsByColor = {
-      yellow: 0,
-      green: myStella.green,
-      red: myStella.red,
-      blue: myStella.blue,
-      purple: myStella.purple,
-    }
+    const newMyStella = removeYellowStella(myStella)
     const remainingTotal = getTotalStellaCount(newMyStella)
 
     setLikingId(event.id)
