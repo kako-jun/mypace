@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BackButton, Icon, Loading } from '../components/ui'
 import { useCelebration } from '../components/supernova'
-import { getStoredThemeColors, isDarkColor, STELLA_COLORS } from '../lib/nostr/events'
+import { getThemeCardProps, STELLA_COLORS } from '../lib/nostr/events'
 import { getCurrentPubkey } from '../lib/nostr/events'
 import {
   fetchStellaBalance,
@@ -23,22 +23,9 @@ import '../styles/pages/inventory.css'
 // Stella color order for display (yellow excluded - infinite use)
 const STELLA_COLOR_ORDER = ['green', 'red', 'blue', 'purple'] as const
 
-function useTextClass(): string {
-  const colors = getStoredThemeColors()
-  if (!colors) return ''
-
-  const darkCount =
-    (isDarkColor(colors.topLeft) ? 1 : 0) +
-    (isDarkColor(colors.topRight) ? 1 : 0) +
-    (isDarkColor(colors.bottomLeft) ? 1 : 0) +
-    (isDarkColor(colors.bottomRight) ? 1 : 0)
-
-  return darkCount >= 2 ? 'light-text' : 'dark-text'
-}
-
 export function InventoryPage() {
   const navigate = useNavigate()
-  const textClass = useTextClass()
+  const themeProps = getThemeCardProps(null)
   const { celebrate } = useCelebration()
 
   const [_pubkey, setPubkey] = useState<string | null>(null)
@@ -333,7 +320,7 @@ export function InventoryPage() {
     <div className="inventory-page">
       <BackButton onClick={() => navigate(-1)} />
 
-      <div className={`inventory-header themed-card ${textClass}`}>
+      <div className={`inventory-header ${themeProps.className}`}>
         <h2>Inventory</h2>
         <p>Your Color Stella balance and unlocked Supernovas.</p>
       </div>

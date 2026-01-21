@@ -5,22 +5,9 @@ import { copyToClipboard } from '../lib/utils'
 import { getCurrentPubkey } from '../lib/nostr/events'
 import { BackButton, CopyButton, TextButton, LightBox, triggerLightBox, Icon } from '../components/ui'
 import DeleteConfirmDialog from '../components/post/DeleteConfirmDialog'
-import { formatTimestamp, getStoredThemeColors, isDarkColor } from '../lib/nostr/events'
+import { formatTimestamp, getThemeCardProps } from '../lib/nostr/events'
 import { TIMEOUTS } from '../lib/constants'
 import '../styles/pages/upload-history.css'
-
-function useTextClass(): string {
-  const colors = getStoredThemeColors()
-  if (!colors) return ''
-
-  const darkCount =
-    (isDarkColor(colors.topLeft) ? 1 : 0) +
-    (isDarkColor(colors.topRight) ? 1 : 0) +
-    (isDarkColor(colors.bottomLeft) ? 1 : 0) +
-    (isDarkColor(colors.bottomRight) ? 1 : 0)
-
-  return darkCount >= 2 ? 'light-text' : 'dark-text'
-}
 
 export function UploadHistoryPage() {
   const navigate = useNavigate()
@@ -32,7 +19,7 @@ export function UploadHistoryPage() {
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null)
   const [pubkey, setPubkey] = useState<string>('')
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
-  const textClass = useTextClass()
+  const themeProps = getThemeCardProps(null)
 
   const handleDeleteCancel = useCallback(() => {
     setConfirmDelete(null)
@@ -122,11 +109,11 @@ export function UploadHistoryPage() {
     <div className="upload-history-page">
       <BackButton onClick={() => navigate(-1)} />
 
-      <div className={`upload-history-header themed-card ${textClass}`}>
+      <div className={`upload-history-header ${themeProps.className}`}>
         <h2>Upload History</h2>
         <p>Files uploaded to nostr.build. Press DELETE to remove from server.</p>
       </div>
-      {deleteMessage && <p className={`upload-history-message themed-card ${textClass}`}>{deleteMessage}</p>}
+      {deleteMessage && <p className={`upload-history-message ${themeProps.className}`}>{deleteMessage}</p>}
 
       {loading ? (
         <div className="upload-history-empty">

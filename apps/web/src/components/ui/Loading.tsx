@@ -1,21 +1,9 @@
-import { getStoredThemeColors, isDarkColor } from '../../lib/nostr/theme'
+import { getThemeCardProps } from '../../lib/nostr/theme'
 import './Loading.css'
 
-function useLoadingColorClass(): string {
-  const colors = getStoredThemeColors()
-  if (!colors) return ''
-
-  const darkCount =
-    (isDarkColor(colors.topLeft) ? 1 : 0) +
-    (isDarkColor(colors.topRight) ? 1 : 0) +
-    (isDarkColor(colors.bottomLeft) ? 1 : 0) +
-    (isDarkColor(colors.bottomRight) ? 1 : 0)
-
-  return darkCount >= 2 ? 'loading-light' : 'loading-dark'
-}
-
 export default function Loading() {
-  const colorClass = useLoadingColorClass()
+  const themeProps = getThemeCardProps(null)
+  const colorClass = themeProps.className.includes('light-text') ? 'loading-light' : 'loading-dark'
 
   return (
     <div className="loading-overlay">
