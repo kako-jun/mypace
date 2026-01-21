@@ -207,6 +207,13 @@ apps/web/src/
     └── supernova-celebration.css # アニメーション・スタイル
 ```
 
+### チェックタイミング
+
+**HomePageのみ**でcheckSupernovasを呼び出す。
+
+- 投稿後はタイムラインに遷移するため、PostFormでのチェックは不要
+- インベントリページでのチェックも不要（HomePageで済んでいる）
+
 ### 使用方法
 
 ```tsx
@@ -221,19 +228,24 @@ function App() {
   )
 }
 
-// PostForm.tsx - Supernovaチェック後に呼び出し
-import { useCelebration } from '../supernova'
+// HomePage.tsx - ページ読み込み時にチェック
+import { useCelebration } from '../components/supernova'
+import { checkSupernovas } from '../lib/api'
+import { getCurrentPubkey } from '../lib/nostr/events'
 
-function PostForm() {
+function HomePage() {
   const { celebrate } = useCelebration()
 
-  const handlePost = async () => {
-    // ... post logic
-    const result = await checkSupernovas(pubkey, 'first_post')
-    if (result.newlyUnlocked.length > 0) {
-      celebrate(result.newlyUnlocked)
-    }
-  }
+  useEffect(() => {
+    getCurrentPubkey()
+      .then((pubkey) => checkSupernovas(pubkey))
+      .then((result) => {
+        if (result.newlyUnlocked.length > 0) {
+          celebrate(result.newlyUnlocked)
+        }
+      })
+      .catch(() => {})
+  }, [celebrate])
 }
 ```
 
