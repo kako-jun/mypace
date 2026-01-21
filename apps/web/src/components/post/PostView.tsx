@@ -384,8 +384,9 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   if (loading) return <Loading />
 
   if (error || !event) {
+    const fallbackTheme = getThemeCardProps(null)
     return (
-      <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
+      <div className={`post-view ${isModal ? 'post-view-modal' : ''} ${fallbackTheme.className}`}>
         <p className="post-not-found">{error || 'Post not found'}</p>
         <TextButton onClick={handleBack}>Back to Timeline</TextButton>
       </div>
