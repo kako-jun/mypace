@@ -388,7 +388,9 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     return (
       <div className={`post-view ${isModal ? 'post-view-modal' : ''} ${fallbackTheme.className}`}>
         <p className="post-not-found">{error || 'Post not found'}</p>
-        <TextButton onClick={handleBack}>Back to Timeline</TextButton>
+        <div className="flex justify-center">
+          <TextButton onClick={handleBack}>Back to Timeline</TextButton>
+        </div>
       </div>
     )
   }
