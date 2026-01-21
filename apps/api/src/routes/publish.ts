@@ -15,7 +15,7 @@ import { getCurrentTimestamp } from '../utils'
 
 const publish = new Hono<{ Bindings: Bindings }>()
 
-// Record stella to D1
+// Record stella to D1 (with refund for count decreases)
 async function recordStella(
   db: D1Database,
   eventId: string,
@@ -25,6 +25,22 @@ async function recordStella(
   stellaColor: string,
   reactionId: string
 ): Promise<void> {
+  // Check current count to refund difference if decreased (for non-yellow colors)
+  if (stellaColor !== 'yellow') {
+    const existing = await db
+      .prepare(`SELECT stella_count FROM user_stella WHERE event_id = ? AND reactor_pubkey = ? AND stella_color = ?`)
+      .bind(eventId, reactorPubkey, stellaColor)
+      .first<{ stella_count: number }>()
+
+    if (existing && existing.stella_count > stellaCount) {
+      const refundAmount = existing.stella_count - stellaCount
+      await db
+        .prepare(`UPDATE user_stella_balance SET ${stellaColor} = ${stellaColor} + ?, updated_at = ? WHERE pubkey = ?`)
+        .bind(refundAmount, getCurrentTimestamp(), reactorPubkey)
+        .run()
+    }
+  }
+
   await db
     .prepare(
       `INSERT INTO user_stella (event_id, author_pubkey, reactor_pubkey, stella_count, stella_color, reaction_id, updated_at)
@@ -176,14 +192,16 @@ async function checkSerialSupernovas(db: D1Database, pubkey: string): Promise<vo
 
     const serialNumber = serialResult.serial_number
 
-    // Collect supernovas to unlock
+    // Collect supernovas to unlock (penguin series: lower serial = higher achievement)
     const toUnlock: string[] = []
-    const serialSupernovas = [
-      { id: 'serial_under_100', threshold: 100 },
-      { id: 'serial_under_1000', threshold: 1000 },
+    const penguinSupernovas = [
+      { id: 'penguin_1000', threshold: 1000 },
+      { id: 'penguin_500', threshold: 500 },
+      { id: 'penguin_250', threshold: 250 },
+      { id: 'penguin_100', threshold: 100 },
     ]
 
-    for (const supernova of serialSupernovas) {
+    for (const supernova of penguinSupernovas) {
       if (unlockedIds.has(supernova.id)) continue
       if (serialNumber > supernova.threshold) continue
       toUnlock.push(supernova.id)
