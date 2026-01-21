@@ -30,20 +30,6 @@ export function addStellaToColor(counts: StellaCountsByColor, color: StellaColor
 }
 
 /**
- * Remove all yellow stella (for unlike operation)
- * Colored stella (green, red, blue, purple) are preserved
- */
-export function removeYellowStella(counts: StellaCountsByColor): StellaCountsByColor {
-  return {
-    yellow: 0,
-    green: counts.green,
-    red: counts.red,
-    blue: counts.blue,
-    purple: counts.purple,
-  }
-}
-
-/**
  * Remove all stella of a specific color
  */
 export function removeStellaColor(counts: StellaCountsByColor, color: StellaColor): StellaCountsByColor {
