@@ -433,67 +433,69 @@ export function InventoryPage() {
                     </div>
                   )
                 })}
-                {/* Completed supernovas */}
-                {supernovas.map((supernova) => {
-                  const hasReward =
-                    supernova.reward_green > 0 ||
-                    supernova.reward_red > 0 ||
-                    supernova.reward_blue > 0 ||
-                    supernova.reward_purple > 0
-                  return (
-                    <div key={supernova.id} className="inventory-supernova-item completed">
-                      <div className="inventory-supernova-icon">
-                        <Icon
-                          name="Sparkles"
-                          size={24}
-                          fill={
-                            STELLA_COLORS[supernova.supernova_color as keyof typeof STELLA_COLORS]?.hex || '#ffd700'
-                          }
-                        />
+                {/* Completed supernovas - sorted by unlock date (newest first, oldest at bottom) */}
+                {[...supernovas]
+                  .sort((a, b) => b.unlocked_at - a.unlocked_at)
+                  .map((supernova) => {
+                    const hasReward =
+                      supernova.reward_green > 0 ||
+                      supernova.reward_red > 0 ||
+                      supernova.reward_blue > 0 ||
+                      supernova.reward_purple > 0
+                    return (
+                      <div key={supernova.id} className="inventory-supernova-item completed">
+                        <div className="inventory-supernova-icon">
+                          <Icon
+                            name="Sparkles"
+                            size={24}
+                            fill={
+                              STELLA_COLORS[supernova.supernova_color as keyof typeof STELLA_COLORS]?.hex || '#ffd700'
+                            }
+                          />
+                        </div>
+                        <div className="inventory-supernova-info">
+                          <span className="inventory-supernova-name">
+                            <Icon name="Check" size={14} className="inventory-check-icon" />
+                            {supernova.name}
+                          </span>
+                          {supernova.description !== supernova.name && (
+                            <span className="inventory-supernova-desc">{supernova.description}</span>
+                          )}
+                          <span className="inventory-supernova-date">
+                            {new Date(supernova.unlocked_at * 1000).toLocaleDateString()}
+                          </span>
+                          {hasReward && (
+                            <div className="inventory-supernova-reward-inline">
+                              {supernova.reward_green > 0 && (
+                                <span>
+                                  <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+
+                                  {formatNumber(supernova.reward_green)}
+                                </span>
+                              )}
+                              {supernova.reward_red > 0 && (
+                                <span>
+                                  <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+
+                                  {formatNumber(supernova.reward_red)}
+                                </span>
+                              )}
+                              {supernova.reward_blue > 0 && (
+                                <span>
+                                  <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+
+                                  {formatNumber(supernova.reward_blue)}
+                                </span>
+                              )}
+                              {supernova.reward_purple > 0 && (
+                                <span>
+                                  <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+
+                                  {formatNumber(supernova.reward_purple)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="inventory-supernova-info">
-                        <span className="inventory-supernova-name">
-                          <Icon name="Check" size={14} className="inventory-check-icon" />
-                          {supernova.name}
-                        </span>
-                        {supernova.description !== supernova.name && (
-                          <span className="inventory-supernova-desc">{supernova.description}</span>
-                        )}
-                        <span className="inventory-supernova-date">
-                          {new Date(supernova.unlocked_at * 1000).toLocaleDateString()}
-                        </span>
-                        {hasReward && (
-                          <div className="inventory-supernova-reward-inline">
-                            {supernova.reward_green > 0 && (
-                              <span>
-                                <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+
-                                {formatNumber(supernova.reward_green)}
-                              </span>
-                            )}
-                            {supernova.reward_red > 0 && (
-                              <span>
-                                <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+
-                                {formatNumber(supernova.reward_red)}
-                              </span>
-                            )}
-                            {supernova.reward_blue > 0 && (
-                              <span>
-                                <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+
-                                {formatNumber(supernova.reward_blue)}
-                              </span>
-                            )}
-                            {supernova.reward_purple > 0 && (
-                              <span>
-                                <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+
-                                {formatNumber(supernova.reward_purple)}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
               </div>
             )}
           </div>
