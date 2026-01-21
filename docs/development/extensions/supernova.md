@@ -30,11 +30,20 @@
 
 | ID | 名称 | 条件 | 判定タイミング | 報酬 |
 |----|------|------|---------------|------|
-| `first_post` | First Post | 初めての投稿 | 投稿時 | - |
+| `first_post` | First Post | 初めての投稿 | 投稿時 | Green ×1 |
 | `first_received_stella` | First Received Stella | 初めてステラを受け取る | ステラ受信時 | Green ×1 |
 | `first_given_stella` | First Given Stella | 初めてステラを送る | ステラ送信時 | Green ×1 |
-| `serial_under_100` | Early Bird | 参加番号100番以内 | 初回投稿時 | Green ×5, Red ×1 |
-| `serial_under_1000` | Pioneer | 参加番号1000番以内 | 初回投稿時 | Green ×2 |
+
+### ペンギンシリーズ（参加番号）
+
+参加番号（シリアルナンバー）に応じて解除。番号が小さいほど高いティア。
+
+| ID | 名称 | 条件 | 判定タイミング | 報酬 |
+|----|------|------|---------------|------|
+| `penguin_1000` | Penguin 1000 | 参加番号1000番以内 | 初回投稿時 | Green ×1 |
+| `penguin_500` | Penguin 500 | 参加番号500番以内 | 初回投稿時 | Green ×10, Red ×1 |
+| `penguin_250` | Penguin 250 | 参加番号250番以内 | 初回投稿時 | Green ×100, Red ×10, Blue ×1 |
+| `penguin_100` | Penguin 100 | 参加番号100番以内 | 初回投稿時 | Green ×1000, Red ×100, Blue ×10, Purple ×1 |
 
 ### 2. コンテンツ系（Single）
 
@@ -69,56 +78,55 @@
 
 累計で受け取ったステラ数に応じて解除。
 
-| ID | 名称 | 条件 | 判定タイミング | 報酬 |
-|----|------|------|---------------|------|
-| `received_yellow_10` | Received Yellow 10 | Yellow 10個受信 | ステラ受信時 | - |
-| `received_yellow_100` | Received Yellow 100 | Yellow 100個受信 | ステラ受信時 | - |
-| `received_yellow_1000` | Received Yellow 1000 | Yellow 1000個受信 | ステラ受信時 | - |
-| `received_green_10` | Received Green 10 | Green 10個受信 | ステラ受信時 | Green ×5 |
-| `received_green_100` | Received Green 100 | Green 100個受信 | ステラ受信時 | Green ×10 |
-| `received_green_1000` | Received Green 1000 | Green 1000個受信 | ステラ受信時 | Green ×20 |
-| `received_red_10` | Received Red 10 | Red 10個受信 | ステラ受信時 | Red ×5 |
-| `received_red_100` | Received Red 100 | Red 100個受信 | ステラ受信時 | Red ×10 |
-| `received_red_1000` | Received Red 1000 | Red 1000個受信 | ステラ受信時 | Red ×20 |
-| `received_blue_10` | Received Blue 10 | Blue 10個受信 | ステラ受信時 | Blue ×5 |
-| `received_blue_100` | Received Blue 100 | Blue 100個受信 | ステラ受信時 | Blue ×10 |
-| `received_blue_1000` | Received Blue 1000 | Blue 1000個受信 | ステラ受信時 | Blue ×20 |
-| `received_purple_10` | Received Purple 10 | Purple 10個受信 | ステラ受信時 | Purple ×5 |
-| `received_purple_100` | Received Purple 100 | Purple 100個受信 | ステラ受信時 | Purple ×10 |
-| `received_purple_1000` | Received Purple 1000 | Purple 1000個受信 | ステラ受信時 | Purple ×20 |
+**報酬ルール（×10法則）**:
+- グリーンSupernova: Green ×1
+- レッドSupernova: Green ×10, Red ×1
+- ブルーSupernova: Green ×100, Red ×10, Blue ×1
+- パープルSupernova: Green ×1000, Red ×100, Blue ×10, Purple ×1
+
+| ID | 名称 | 条件 | Supernova色 | 報酬 |
+|----|------|------|------------|------|
+| `received_green_10` | Received Green 10 | Green 10個受信 | 緑 | Green ×1 |
+| `received_green_100` | Received Green 100 | Green 100個受信 | 緑 | Green ×1 |
+| `received_green_1000` | Received Green 1000 | Green 1000個受信 | 赤 | Green ×10, Red ×1 |
+| `received_red_10` | Received Red 10 | Red 10個受信 | 赤 | Green ×10, Red ×1 |
+| `received_red_100` | Received Red 100 | Red 100個受信 | 赤 | Green ×10, Red ×1 |
+| `received_red_1000` | Received Red 1000 | Red 1000個受信 | 青 | Green ×100, Red ×10, Blue ×1 |
+| `received_blue_10` | Received Blue 10 | Blue 10個受信 | 青 | Green ×100, Red ×10, Blue ×1 |
+| `received_blue_100` | Received Blue 100 | Blue 100個受信 | 青 | Green ×100, Red ×10, Blue ×1 |
+| `received_blue_1000` | Received Blue 1000 | Blue 1000個受信 | 紫 | Green ×1000, Red ×100, Blue ×10, Purple ×1 |
+| `received_purple_10` | Received Purple 10 | Purple 10個受信 | 紫 | Green ×1000, Red ×100, Blue ×10, Purple ×1 |
+| `received_purple_100` | Received Purple 100 | Purple 100個受信 | 紫 | Green ×1000, Red ×100, Blue ×10, Purple ×1 |
+| `received_purple_1000` | Received Purple 1000 | Purple 1000個受信 | 紫 | Green ×1000, Red ×100, Blue ×10, Purple ×1 |
 
 ### 5. 送ったステラ系（Cumulative）
 
-累計で送ったステラ数に応じて解除。
+累計で送ったステラ数に応じて解除。報酬ルールは受け取ったステラ系と同様。
 
-| ID | 名称 | 条件 | 判定タイミング | 報酬 |
-|----|------|------|---------------|------|
-| `given_yellow_10` | Given Yellow 10 | Yellow 10個送信 | ステラ送信時 | - |
-| `given_yellow_100` | Given Yellow 100 | Yellow 100個送信 | ステラ送信時 | - |
-| `given_yellow_1000` | Given Yellow 1000 | Yellow 1000個送信 | ステラ送信時 | - |
-| `given_green_10` | Given Green 10 | Green 10個送信 | ステラ送信時 | Green ×5 |
-| `given_green_100` | Given Green 100 | Green 100個送信 | ステラ送信時 | Green ×10 |
-| `given_green_1000` | Given Green 1000 | Green 1000個送信 | ステラ送信時 | Green ×20 |
-| `given_red_10` | Given Red 10 | Red 10個送信 | ステラ送信時 | Red ×5 |
-| `given_red_100` | Given Red 100 | Red 100個送信 | ステラ送信時 | Red ×10 |
-| `given_red_1000` | Given Red 1000 | Red 1000個送信 | ステラ送信時 | Red ×20 |
-| `given_blue_10` | Given Blue 10 | Blue 10個送信 | ステラ送信時 | Blue ×5 |
-| `given_blue_100` | Given Blue 100 | Blue 100個送信 | ステラ送信時 | Blue ×10 |
-| `given_blue_1000` | Given Blue 1000 | Blue 1000個送信 | ステラ送信時 | Blue ×20 |
-| `given_purple_10` | Given Purple 10 | Purple 10個送信 | ステラ送信時 | Purple ×5 |
-| `given_purple_100` | Given Purple 100 | Purple 100個送信 | ステラ送信時 | Purple ×10 |
-| `given_purple_1000` | Given Purple 1000 | Purple 1000個送信 | ステラ送信時 | Purple ×20 |
+| ID | 名称 | 条件 | Supernova色 | 報酬 |
+|----|------|------|------------|------|
+| `given_green_10` | Given Green 10 | Green 10個送信 | 緑 | Green ×1 |
+| `given_green_100` | Given Green 100 | Green 100個送信 | 緑 | Green ×1 |
+| `given_green_1000` | Given Green 1000 | Green 1000個送信 | 赤 | Green ×10, Red ×1 |
+| `given_red_10` | Given Red 10 | Red 10個送信 | 赤 | Green ×10, Red ×1 |
+| `given_red_100` | Given Red 100 | Red 100個送信 | 赤 | Green ×10, Red ×1 |
+| `given_red_1000` | Given Red 1000 | Red 1000個送信 | 青 | Green ×100, Red ×10, Blue ×1 |
+| `given_blue_10` | Given Blue 10 | Blue 10個送信 | 青 | Green ×100, Red ×10, Blue ×1 |
+| `given_blue_100` | Given Blue 100 | Blue 100個送信 | 青 | Green ×100, Red ×10, Blue ×1 |
+| `given_blue_1000` | Given Blue 1000 | Blue 1000個送信 | 紫 | Green ×1000, Red ×100, Blue ×10, Purple ×1 |
+| `given_purple_10` | Given Purple 10 | Purple 10個送信 | 紫 | Green ×1000, Red ×100, Blue ×10, Purple ×1 |
+| `given_purple_100` | Given Purple 100 | Purple 100個送信 | 紫 | Green ×1000, Red ×100, Blue ×10, Purple ×1 |
+| `given_purple_1000` | Given Purple 1000 | Purple 1000個送信 | 紫 | Green ×1000, Red ×100, Blue ×10, Purple ×1 |
 
 ### 6. 投稿回数系（Cumulative）
 
 Nostr全体での投稿回数に応じて解除。Primalから取得するため、MY PACE外の投稿も含む。
 
-| ID | 名称 | 条件 | 判定タイミング | 報酬 |
-|----|------|------|---------------|------|
-| `posts_10` | Posts 10 | 10回投稿 | 投稿時 | Green ×5 |
-| `posts_100` | Posts 100 | 100回投稿 | 投稿時 | Green ×10, Red ×5 |
-| `posts_1000` | Posts 1000 | 1000回投稿 | 投稿時 | Green ×10, Red ×10, Blue ×5 |
-| `posts_10000` | Posts 10000 | 10000回投稿 | 投稿時 | Green ×10, Red ×10, Blue ×10, Purple ×5 |
+| ID | 名称 | 条件 | Supernova色 | 報酬 |
+|----|------|------|------------|------|
+| `posts_10` | Posts 10 | 10回投稿 | 緑 | Green ×1 |
+| `posts_100` | Posts 100 | 100回投稿 | 赤 | Green ×10, Red ×1 |
+| `posts_1000` | Posts 1000 | 1000回投稿 | 青 | Green ×100, Red ×10, Blue ×1 |
 
 **注意**: 投稿回数はNostr全体でカウントされるため、既に数万回投稿しているユーザーはMY PACEで初めて投稿した瞬間に複数のSupernovaを同時達成する可能性がある。
 
@@ -126,12 +134,12 @@ Nostr全体での投稿回数に応じて解除。Primalから取得するため
 
 Supernova達成数に応じて解除。
 
-| ID | 名称 | 条件 | 判定タイミング | 報酬 |
-|----|------|------|---------------|------|
-| `first_supernova` | First Supernova | 1個達成 | Supernova達成時 | Green ×2 |
-| `supernova_10` | Supernova Collector | 10個達成 | Supernova達成時 | Green ×5, Red ×1 |
-| `supernova_25` | Supernova Hunter | 25個達成 | Supernova達成時 | Green ×5, Red ×3, Blue ×1 |
-| `supernova_50` | Supernova Master | 50個達成 | Supernova達成時 | Green ×5, Red ×3, Blue ×3, Purple ×1 |
+| ID | 名称 | 条件 | Supernova色 | 報酬 |
+|----|------|------|------------|------|
+| `first_supernova` | First Supernova | 1個達成 | 緑 | Green ×1 |
+| `supernova_10` | Supernova 10 | 10個達成 | 赤 | Green ×10, Red ×1 |
+| `supernova_25` | Supernova 25 | 25個達成 | 青 | Green ×100, Red ×10, Blue ×1 |
+| `supernova_50` | Supernova 50 | 50個達成 | 紫 | Green ×1000, Red ×100, Blue ×10, Purple ×1 |
 
 ## 判定フロー
 
@@ -263,10 +271,21 @@ POST /api/supernovas/seed
 
 ## インベントリページ表示ルール
 
-1. **達成済みSupernova**: 下部に表示、日付付き
-2. **進捗中Supernova**: 上部に表示、進捗バー付き
-3. **隠しSupernova**: 進捗が0のうちは非表示（長文系など）
-4. **ソート**: 進捗率が高いものほど上に表示
+### 進捗中Supernova（上部）
+
+1. 進捗が1以上のものを表示（0は非表示）
+2. シリーズ内で前のティアが未達成なら非表示
+3. **ソート順**:
+   1. 進捗率（高い順）
+   2. Supernova色（緑→赤→青→紫）
+   3. 名前（アルファベット順）
+
+### 達成済みSupernova（下部）
+
+1. 達成日時付きで表示
+2. **ソート順**:
+   1. 達成日時（新しい順）
+   2. 同じ日時の場合、シリーズ内の高いティアが先
 
 ## 今後の拡張候補
 
