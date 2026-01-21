@@ -78,51 +78,76 @@ stellaBalance.post('/send', async (c) => {
   const db = c.env.DB
 
   try {
-    // Get current balance
-    const currentBalance = await db
-      .prepare(
-        `SELECT yellow, green, red, blue, purple
-         FROM user_stella_balance
-         WHERE pubkey = ?`
-      )
-      .bind(senderPubkey)
-      .first<StellaColorCounts>()
+    // Yellow stella is infinite (no balance check needed)
+    // Only check balance for non-yellow colors
+    const hasNonYellowAmounts =
+      (amounts.green || 0) > 0 || (amounts.red || 0) > 0 || (amounts.blue || 0) > 0 || (amounts.purple || 0) > 0
 
-    if (!currentBalance) {
-      return c.json({ error: 'Insufficient balance' }, 400)
-    }
+    let currentBalance: StellaColorCounts | null = null
 
-    // Check if user has enough balance for each color
-    for (const color of STELLA_COLORS) {
-      const amountToSend = amounts[color] || 0
-      if (amountToSend > 0 && currentBalance[color] < amountToSend) {
-        return c.json({ error: `Insufficient ${color} stella balance` }, 400)
+    if (hasNonYellowAmounts) {
+      // Get current balance only if sending non-yellow stella
+      currentBalance = await db
+        .prepare(
+          `SELECT yellow, green, red, blue, purple
+           FROM user_stella_balance
+           WHERE pubkey = ?`
+        )
+        .bind(senderPubkey)
+        .first<StellaColorCounts>()
+
+      if (!currentBalance) {
+        return c.json({ error: 'Insufficient balance' }, 400)
       }
+
+      // Check if user has enough balance for each non-yellow color
+      for (const color of STELLA_COLORS) {
+        if (color === 'yellow') continue // Yellow is infinite, skip check
+        const amountToSend = amounts[color] || 0
+        if (amountToSend > 0 && currentBalance[color] < amountToSend) {
+          return c.json({ error: `Insufficient ${color} stella balance` }, 400)
+        }
+      }
+
+      // Calculate new balance (yellow unchanged, only deduct non-yellow)
+      const newBalance: StellaColorCounts = {
+        yellow: currentBalance.yellow, // Yellow is not deducted
+        green: currentBalance.green - (amounts.green || 0),
+        red: currentBalance.red - (amounts.red || 0),
+        blue: currentBalance.blue - (amounts.blue || 0),
+        purple: currentBalance.purple - (amounts.purple || 0),
+      }
+
+      // Update balance
+      const now = getCurrentTimestamp()
+      await db
+        .prepare(
+          `UPDATE user_stella_balance
+           SET yellow = ?, green = ?, red = ?, blue = ?, purple = ?, updated_at = ?
+           WHERE pubkey = ?`
+        )
+        .bind(
+          newBalance.yellow,
+          newBalance.green,
+          newBalance.red,
+          newBalance.blue,
+          newBalance.purple,
+          now,
+          senderPubkey
+        )
+        .run()
+
+      return c.json({
+        success: true,
+        newBalance,
+      })
     }
 
-    // Calculate new balance
-    const newBalance: StellaColorCounts = {
-      yellow: currentBalance.yellow - (amounts.yellow || 0),
-      green: currentBalance.green - (amounts.green || 0),
-      red: currentBalance.red - (amounts.red || 0),
-      blue: currentBalance.blue - (amounts.blue || 0),
-      purple: currentBalance.purple - (amounts.purple || 0),
-    }
-
-    // Update balance
-    const now = getCurrentTimestamp()
-    await db
-      .prepare(
-        `UPDATE user_stella_balance
-         SET yellow = ?, green = ?, red = ?, blue = ?, purple = ?, updated_at = ?
-         WHERE pubkey = ?`
-      )
-      .bind(newBalance.yellow, newBalance.green, newBalance.red, newBalance.blue, newBalance.purple, now, senderPubkey)
-      .run()
-
+    // Yellow-only send: no balance check or deduction needed
+    // Just return success (yellow is infinite)
     return c.json({
       success: true,
-      newBalance,
+      newBalance: null, // Balance unchanged for yellow-only
     })
   } catch (e) {
     console.error('Stella send error:', e)

@@ -199,6 +199,10 @@ export function Settings() {
               setOpen(false)
               navigate('/upload-history')
             }}
+            onNavigateInventory={() => {
+              setOpen(false)
+              navigate('/inventory')
+            }}
           />
         </div>
 

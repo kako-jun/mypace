@@ -10,9 +10,16 @@ interface KeysSectionProps {
   npub: string
   usingNip07: boolean
   onNavigateUploadHistory: () => void
+  onNavigateInventory: () => void
 }
 
-export default function KeysSection({ nsec, npub, usingNip07, onNavigateUploadHistory }: KeysSectionProps) {
+export default function KeysSection({
+  nsec,
+  npub,
+  usingNip07,
+  onNavigateUploadHistory,
+  onNavigateInventory,
+}: KeysSectionProps) {
   const [showNsec, setShowNsec] = useState(false)
   const [importValue, setImportValue] = useState('')
   const [copied, triggerCopied] = useTemporaryFlag()
@@ -79,6 +86,12 @@ export default function KeysSection({ nsec, npub, usingNip07, onNavigateUploadHi
             Upload History →
           </button>
         </SettingsSection>
+
+        <SettingsSection title="Inventory">
+          <button className="profile-edit-link" onClick={onNavigateInventory}>
+            Color Stella & Supernovas →
+          </button>
+        </SettingsSection>
       </>
     )
   }
@@ -120,6 +133,12 @@ export default function KeysSection({ nsec, npub, usingNip07, onNavigateUploadHi
       <SettingsSection title="Uploads">
         <button className="profile-edit-link" onClick={onNavigateUploadHistory}>
           Upload History →
+        </button>
+      </SettingsSection>
+
+      <SettingsSection title="Inventory">
+        <button className="profile-edit-link" onClick={onNavigateInventory}>
+          Color Stella & Supernovas →
         </button>
       </SettingsSection>
 
