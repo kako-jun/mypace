@@ -50,7 +50,8 @@
   gap: 0;
 }
 
-.like-button svg {
+/* Default star color (for action-stella without color) */
+.like-button .action-stella svg {
   stroke: #333;
   fill: #f1c40f;
 }
