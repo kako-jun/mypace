@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS supernova_definitions (
   description TEXT NOT NULL,
   category TEXT NOT NULL DEFAULT 'single',  -- 'single' (単発) or 'cumulative' (段階)
   threshold INTEGER DEFAULT 1,               -- 達成に必要な数（段階Supernovaで使用）
-  trophy_color TEXT DEFAULT 'yellow',        -- 記念品の色
+  supernova_color TEXT DEFAULT 'yellow',        -- 記念品の色
   reward_yellow INTEGER NOT NULL DEFAULT 0,
   reward_green INTEGER NOT NULL DEFAULT 0,
   reward_red INTEGER NOT NULL DEFAULT 0,
@@ -155,7 +155,7 @@ GET /api/supernovas/definitions
       "description": "最初の投稿をする",
       "category": "single",
       "threshold": 1,
-      "trophy_color": "yellow",
+      "supernova_color": "yellow",
       "reward_yellow": 10,
       "reward_green": 0,
       "reward_red": 0,

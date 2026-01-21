@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS supernova_definitions (
   description TEXT NOT NULL,
   category TEXT NOT NULL DEFAULT 'single',  -- 'single' (one-time) or 'cumulative'
   threshold INTEGER DEFAULT 1,              -- Number required to unlock (1 for single, N for cumulative)
-  trophy_color TEXT DEFAULT 'yellow',       -- Color of the trophy icon
+  supernova_color TEXT DEFAULT 'yellow',       -- Color of the trophy icon
   reward_yellow INTEGER NOT NULL DEFAULT 0,
   reward_green INTEGER NOT NULL DEFAULT 0,
   reward_red INTEGER NOT NULL DEFAULT 0,
@@ -186,7 +186,7 @@ CREATE INDEX IF NOT EXISTS idx_user_supernovas_supernova ON user_supernovas(supe
 -- Initial Supernova definitions (seed data)
 -- These will be inserted via API or migration script
 -- Examples:
--- INSERT INTO supernova_definitions (id, name, description, category, threshold, trophy_color, reward_yellow, reward_green, reward_red, reward_blue, reward_purple) VALUES
+-- INSERT INTO supernova_definitions (id, name, description, category, threshold, supernova_color, reward_yellow, reward_green, reward_red, reward_blue, reward_purple) VALUES
 -- ('first_post', 'First Post', 'Posted your first message', 'single', 1, 'yellow', 10, 0, 0, 0, 0),
 -- ('first_stella', 'First Star', 'Received your first stella', 'single', 1, 'yellow', 5, 1, 0, 0, 0),
 -- ('serial_under_100', 'Early Bird', 'Joined within the first 100 users', 'single', 1, 'green', 20, 5, 0, 0, 0),

@@ -464,7 +464,7 @@ export interface SupernovaDefinition {
   description: string
   category: 'single' | 'cumulative'
   threshold: number
-  trophy_color: string
+  supernova_color: string
   reward_yellow: number
   reward_green: number
   reward_red: number

@@ -15,8 +15,8 @@ import {
 } from '../lib/api'
 import '../styles/pages/inventory.css'
 
-// Stella color order for display
-const STELLA_COLOR_ORDER = ['yellow', 'green', 'red', 'blue', 'purple'] as const
+// Stella color order for display (yellow excluded - infinite use)
+const STELLA_COLOR_ORDER = ['green', 'red', 'blue', 'purple'] as const
 
 function useTextClass(): string {
   const colors = getStoredThemeColors()
@@ -79,11 +79,48 @@ export function InventoryPage() {
 
   const getTotalBalance = () => {
     if (!balance) return 0
-    return balance.yellow + balance.green + balance.red + balance.blue + balance.purple
+    // Yellow excluded from total (infinite use)
+    return balance.green + balance.red + balance.blue + balance.purple
   }
 
   const unlockedIds = new Set(supernovas.map((s) => s.id))
-  const lockedSupernovas = allSupernovas.filter((s) => !unlockedIds.has(s.id))
+  const allLockedSupernovas = allSupernovas.filter((s) => !unlockedIds.has(s.id))
+
+  // Helper to extract cumulative group key (e.g., "received_yellow", "given_green")
+  const getCumulativeGroupKey = (id: string): string | null => {
+    const match = id.match(/^(received|given)_(yellow|green|red|blue|purple)_\d+$/)
+    return match ? `${match[1]}_${match[2]}` : null
+  }
+
+  // Filter cumulative supernovas to show only the next milestone for each group
+  const lockedSupernovas = (() => {
+    const nonCumulative = allLockedSupernovas.filter((s) => s.category !== 'cumulative')
+
+    // Group cumulative supernovas by type (received_yellow, given_green, etc.)
+    const cumulativeGroups = new Map<string, SupernovaDefinition[]>()
+    for (const s of allLockedSupernovas.filter((s) => s.category === 'cumulative')) {
+      const groupKey = getCumulativeGroupKey(s.id)
+      if (groupKey) {
+        if (!cumulativeGroups.has(groupKey)) {
+          cumulativeGroups.set(groupKey, [])
+        }
+        cumulativeGroups.get(groupKey)!.push(s)
+      }
+    }
+
+    // For each group, only show the lowest threshold (next milestone to unlock)
+    const nextMilestones: SupernovaDefinition[] = []
+    for (const [_groupKey, group] of cumulativeGroups) {
+      // Sort by threshold ascending
+      group.sort((a, b) => (a.threshold || 0) - (b.threshold || 0))
+      // Add only the first one (lowest threshold = next to unlock)
+      if (group.length > 0) {
+        nextMilestones.push(group[0])
+      }
+    }
+
+    return [...nonCumulative, ...nextMilestones]
+  })()
 
   // Get progress for cumulative supernovas
   const getProgress = (supernova: SupernovaDefinition): { current: number; target: number } | null => {
@@ -113,7 +150,7 @@ export function InventoryPage() {
 
       <div className={`inventory-header themed-card ${textClass}`}>
         <h2>Inventory</h2>
-        <p>Your Color Stella balance and unlocked Trophies.</p>
+        <p>Your Color Stella balance and unlocked Supernovas.</p>
       </div>
 
       {loading ? (
@@ -147,97 +184,39 @@ export function InventoryPage() {
               })}
             </div>
 
-            {getTotalBalance() === 0 && (
-              <p className="inventory-balance-hint">Earn stella by unlocking Trophies (Supernovas)!</p>
-            )}
+            {getTotalBalance() === 0 && <p className="inventory-balance-hint">Earn stella by unlocking Supernovas!</p>}
           </div>
 
-          {/* Unlocked Trophies Section */}
-          <div className="inventory-trophies-section">
+          {/* Supernovas Section - Locked on top, Unlocked below */}
+          <div className="inventory-supernovas-section">
             <h3>
-              <Icon name="Trophy" size={20} /> Trophies ({supernovas.length}/{allSupernovas.length})
+              <Icon name="Sparkles" size={20} /> Supernovas ({supernovas.length}/{allSupernovas.length})
             </h3>
 
-            {supernovas.length > 0 ? (
-              <div className="inventory-trophy-list">
-                {supernovas.map((supernova) => (
-                  <div key={supernova.id} className="inventory-trophy-item unlocked">
-                    <div className="inventory-trophy-icon">
-                      <Icon
-                        name="Trophy"
-                        size={24}
-                        fill={STELLA_COLORS[supernova.trophy_color as keyof typeof STELLA_COLORS]?.hex || '#ffd700'}
-                      />
-                    </div>
-                    <div className="inventory-trophy-info">
-                      <span className="inventory-trophy-name">{supernova.name}</span>
-                      <span className="inventory-trophy-desc">{supernova.description}</span>
-                      <span className="inventory-trophy-date">
-                        Unlocked: {new Date(supernova.unlocked_at * 1000).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="inventory-trophy-reward">
-                      {supernova.reward_yellow > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.yellow.hex} />+{supernova.reward_yellow}
-                        </span>
-                      )}
-                      {supernova.reward_green > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+{supernova.reward_green}
-                        </span>
-                      )}
-                      {supernova.reward_red > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+{supernova.reward_red}
-                        </span>
-                      )}
-                      {supernova.reward_blue > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+{supernova.reward_blue}
-                        </span>
-                      )}
-                      {supernova.reward_purple > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+{supernova.reward_purple}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {lockedSupernovas.length === 0 && supernovas.length === 0 ? (
+              <p className="inventory-supernova-empty">No supernovas yet. Keep posting to unlock!</p>
             ) : (
-              <p className="inventory-trophy-empty">No trophies yet. Keep posting to unlock!</p>
-            )}
-          </div>
-
-          {/* Locked Trophies Section */}
-          {lockedSupernovas.length > 0 && (
-            <div className="inventory-trophies-section locked-section">
-              <h3>
-                <Icon name="Lock" size={20} /> Locked ({lockedSupernovas.length})
-              </h3>
-
-              <div className="inventory-trophy-list">
+              <div className="inventory-supernova-list">
+                {/* Locked supernovas (next to unlock) */}
                 {lockedSupernovas.map((supernova) => {
                   const progress = getProgress(supernova)
                   return (
-                    <div key={supernova.id} className="inventory-trophy-item locked">
-                      <div className="inventory-trophy-icon">
-                        <Icon name="Trophy" size={24} fill="#999" />
+                    <div key={supernova.id} className="inventory-supernova-item locked">
+                      <div className="inventory-supernova-icon">
+                        <Icon name="Sparkles" size={24} fill="#999" />
                       </div>
-                      <div className="inventory-trophy-info">
-                        <span className="inventory-trophy-name">{supernova.name}</span>
-                        <span className="inventory-trophy-desc">{supernova.description}</span>
+                      <div className="inventory-supernova-info">
+                        <span className="inventory-supernova-name">{supernova.name}</span>
+                        <span className="inventory-supernova-desc">{supernova.description}</span>
                         {progress && (
-                          <div className="inventory-trophy-progress">
+                          <div className="inventory-supernova-progress">
                             <div className="inventory-progress-bar">
                               <div
                                 className="inventory-progress-fill"
                                 style={{
                                   width: `${Math.min(100, (progress.current / progress.target) * 100)}%`,
                                   backgroundColor:
-                                    STELLA_COLORS[supernova.trophy_color as keyof typeof STELLA_COLORS]?.hex ||
+                                    STELLA_COLORS[supernova.supernova_color as keyof typeof STELLA_COLORS]?.hex ||
                                     '#ffd700',
                                 }}
                               />
@@ -248,7 +227,7 @@ export function InventoryPage() {
                           </div>
                         )}
                       </div>
-                      <div className="inventory-trophy-reward">
+                      <div className="inventory-supernova-reward">
                         {supernova.reward_yellow > 0 && (
                           <span>
                             <Icon name="Star" size={14} fill={STELLA_COLORS.yellow.hex} />+{supernova.reward_yellow}
@@ -278,34 +257,54 @@ export function InventoryPage() {
                     </div>
                   )
                 })}
+                {/* Unlocked supernovas */}
+                {supernovas.map((supernova) => (
+                  <div key={supernova.id} className="inventory-supernova-item unlocked">
+                    <div className="inventory-supernova-icon">
+                      <Icon
+                        name="Sparkles"
+                        size={24}
+                        fill={STELLA_COLORS[supernova.supernova_color as keyof typeof STELLA_COLORS]?.hex || '#ffd700'}
+                      />
+                    </div>
+                    <div className="inventory-supernova-info">
+                      <span className="inventory-supernova-name">{supernova.name}</span>
+                      <span className="inventory-supernova-desc">{supernova.description}</span>
+                      <span className="inventory-supernova-date">
+                        Unlocked: {new Date(supernova.unlocked_at * 1000).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="inventory-supernova-reward">
+                      {supernova.reward_yellow > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.yellow.hex} />+{supernova.reward_yellow}
+                        </span>
+                      )}
+                      {supernova.reward_green > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+{supernova.reward_green}
+                        </span>
+                      )}
+                      {supernova.reward_red > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+{supernova.reward_red}
+                        </span>
+                      )}
+                      {supernova.reward_blue > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+{supernova.reward_blue}
+                        </span>
+                      )}
+                      {supernova.reward_purple > 0 && (
+                        <span>
+                          <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+{supernova.reward_purple}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-          )}
-
-          {/* Info Section */}
-          <div className="inventory-info-section">
-            <h3>About Trophies (Supernovas)</h3>
-            <p className="inventory-info-text">
-              Trophies are achievements you can unlock by using MY PACE. Each trophy rewards you with Color Stella that
-              you can use to give reactions to other posts.
-            </p>
-            <ul className="inventory-info-list">
-              <li>
-                <Icon name="Star" size={14} fill={STELLA_COLORS.yellow.hex} /> Yellow - Basic stella
-              </li>
-              <li>
-                <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} /> Green - Uncommon stella
-              </li>
-              <li>
-                <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} /> Red - Rare stella
-              </li>
-              <li>
-                <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} /> Blue - Epic stella
-              </li>
-              <li>
-                <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} /> Purple - Legendary stella
-              </li>
-            </ul>
+            )}
           </div>
         </>
       )}
