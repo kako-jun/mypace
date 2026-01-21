@@ -93,6 +93,7 @@ export function InventoryPage() {
   const allIncompleteSupernovas = allSupernovas.filter((s) => !completedIds.has(s.id))
 
   // Define tier thresholds for each series (starting from 1)
+  // Single-item series have only [1] for now but can be expanded to [1, 10, 100, 1000] later
   const SERIES_THRESHOLDS: Record<string, number[]> = {
     posts: [1, 10, 100, 1000],
     supernova: [1, 10, 25, 50],
@@ -106,6 +107,17 @@ export function InventoryPage() {
     given_red: [1, 10, 100, 1000],
     given_blue: [1, 10, 100, 1000],
     given_purple: [1, 10, 100, 1000],
+    // Future-expandable series (currently single-item)
+    teaser: [1],
+    super_mention: [1],
+    image: [1],
+    voice: [1],
+    map: [1],
+    url: [1],
+    table: [1],
+    list: [1],
+    reply: [1],
+    repost: [1],
   }
 
   // Map series + threshold to actual supernova ID
@@ -135,6 +147,27 @@ export function InventoryPage() {
         case 'given_blue':
         case 'given_purple':
           return 'first_given_stella'
+        // Single-item series (expandable in future)
+        case 'teaser':
+          return 'first_teaser'
+        case 'super_mention':
+          return 'first_super_mention'
+        case 'image':
+          return 'first_image'
+        case 'voice':
+          return 'first_voice'
+        case 'map':
+          return 'first_map'
+        case 'url':
+          return 'first_url'
+        case 'table':
+          return 'first_table'
+        case 'list':
+          return 'first_list'
+        case 'reply':
+          return 'first_reply'
+        case 'repost':
+          return 'first_repost'
         default:
           return `${series}_${threshold}`
       }
@@ -151,6 +184,10 @@ export function InventoryPage() {
     const penguinMatch = supernovaId.match(/^penguin_(\d+)$/)
     const receivedMatch = supernovaId.match(/^(received_(?:green|red|blue|purple))_(\d+)$/)
     const givenMatch = supernovaId.match(/^(given_(?:green|red|blue|purple))_(\d+)$/)
+    // Future-expandable series: teaser_10, image_100, url_1000, etc.
+    const expandableMatch = supernovaId.match(
+      /^(teaser|super_mention|image|voice|map|url|table|list|reply|repost)_(\d+)$/
+    )
 
     let series: string | null = null
     let threshold: number | null = null
@@ -173,6 +210,9 @@ export function InventoryPage() {
     } else if (givenMatch) {
       series = givenMatch[1]
       threshold = parseInt(givenMatch[2], 10)
+    } else if (expandableMatch) {
+      series = expandableMatch[1]
+      threshold = parseInt(expandableMatch[2], 10)
     }
 
     if (!series || threshold === null) return null
