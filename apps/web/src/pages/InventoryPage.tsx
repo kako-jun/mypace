@@ -297,17 +297,28 @@ export function InventoryPage() {
       }
     }
 
-    // Sort by progress percentage (descending) - items with higher progress appear first
+    // Sort by: 1) progress percentage (descending), 2) color tier (green→red→blue→purple), 3) name alphabetically
+    const colorOrder: Record<string, number> = { green: 0, red: 1, blue: 2, purple: 3 }
     result.sort((a, b) => {
       const progressA = getProgress(a)
       const progressB = getProgress(b)
 
-      // Calculate progress percentage (0-1)
+      // Primary: progress percentage (descending)
       const percentA = progressA ? progressA.current / progressA.target : 0
       const percentB = progressB ? progressB.current / progressB.target : 0
+      if (percentA !== percentB) {
+        return percentB - percentA
+      }
 
-      // Sort descending (higher progress first)
-      return percentB - percentA
+      // Secondary: color tier (green first, purple last)
+      const colorA = colorOrder[a.supernova_color] ?? 99
+      const colorB = colorOrder[b.supernova_color] ?? 99
+      if (colorA !== colorB) {
+        return colorA - colorB
+      }
+
+      // Tertiary: name alphabetically
+      return a.name.localeCompare(b.name)
     })
 
     return result
@@ -434,8 +445,26 @@ export function InventoryPage() {
                   )
                 })}
                 {/* Completed supernovas - sorted by unlock date (newest first, oldest at bottom) */}
+                {/* When timestamps are equal, higher tier (later in series array) comes first */}
                 {[...supernovas]
-                  .sort((a, b) => b.unlocked_at - a.unlocked_at)
+                  .sort((a, b) => {
+                    // Primary sort: by unlock date (newest first)
+                    if (a.unlocked_at !== b.unlocked_at) {
+                      return b.unlocked_at - a.unlocked_at
+                    }
+                    // Secondary sort: use series array index (higher index = higher tier = first)
+                    const getTierIndex = (id: string): number => {
+                      for (const [series, thresholds] of Object.entries(SERIES_THRESHOLDS)) {
+                        for (let i = 0; i < thresholds.length; i++) {
+                          if (getSeriesId(series, thresholds[i]) === id) {
+                            return i
+                          }
+                        }
+                      }
+                      return -1
+                    }
+                    return getTierIndex(b.id) - getTierIndex(a.id)
+                  })
                   .map((supernova) => {
                     const hasReward =
                       supernova.reward_green > 0 ||
