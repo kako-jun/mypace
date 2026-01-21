@@ -6,6 +6,12 @@
   padding: 0.5rem;
 }
 
+.post-not-found {
+  text-align: center;
+  color: var(--text-secondary);
+  margin: 2rem 0 1rem;
+}
+
 /* Back button - uses .text-outlined-button for base style */
 .back-button {
   display: flex;

@@ -60,7 +60,7 @@ import {
   PostBarcode,
   OriginalPostCard,
 } from './index'
-import { parseEmojiTags, Loading, TextButton, ErrorMessage, BackButton, SuccessMessage, Icon } from '../ui'
+import { parseEmojiTags, Loading, TextButton, BackButton, SuccessMessage, Icon } from '../ui'
 import { useDeleteConfirm, usePostViewData } from '../../hooks'
 import type { Profile, LoadableProfile, ReactionData } from '../../types'
 import type { ShareOption } from './ShareMenu'
@@ -386,10 +386,8 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   if (error || !event) {
     return (
       <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
-        <ErrorMessage variant="box">
-          <p>{error || 'Post not found'}</p>
-          <TextButton onClick={handleBack}>Back to Timeline</TextButton>
-        </ErrorMessage>
+        <p className="post-not-found">{error || 'Post not found'}</p>
+        <TextButton onClick={handleBack}>Back to Timeline</TextButton>
       </div>
     )
   }
