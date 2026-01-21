@@ -92,54 +92,59 @@ export function InventoryPage() {
   const completedIds = new Set(supernovas.map((s) => s.id))
   const allIncompleteSupernovas = allSupernovas.filter((s) => !completedIds.has(s.id))
 
-  // Define tier thresholds for each series
+  // Define tier thresholds for each series (starting from 1)
   const SERIES_THRESHOLDS: Record<string, number[]> = {
-    posts: [10, 100, 1000],
-    supernova: [10, 25, 50],
-    received_green: [10, 100, 1000],
-    received_red: [10, 100, 1000],
-    received_blue: [10, 100, 1000],
-    received_purple: [10, 100, 1000],
-    given_green: [10, 100, 1000],
-    given_red: [10, 100, 1000],
-    given_blue: [10, 100, 1000],
-    given_purple: [10, 100, 1000],
+    posts: [1, 10, 100, 1000],
+    supernova: [1, 10, 25, 50],
+    long_post: [281, 1000, 2000, 4000],
+    received_green: [1, 10, 100, 1000],
+    received_red: [1, 10, 100, 1000],
+    received_blue: [1, 10, 100, 1000],
+    received_purple: [1, 10, 100, 1000],
+    given_green: [1, 10, 100, 1000],
+    given_red: [1, 10, 100, 1000],
+    given_blue: [1, 10, 100, 1000],
+    given_purple: [1, 10, 100, 1000],
   }
 
-  // Define previous tier mapping for series that start with "first_*"
-  const SERIES_FIRST_TIER: Record<string, string> = {
-    // Long post series: first_long_post → first_1000_chars → first_2000_chars → first_4000_chars
-    first_1000_chars: 'first_long_post',
-    first_2000_chars: 'first_1000_chars',
-    first_4000_chars: 'first_2000_chars',
-    // Posts series: first_post → posts_10 → posts_100 → posts_1000
-    posts_10: 'first_post',
-    // Supernova series: first_supernova → supernova_10 → supernova_25 → supernova_50
-    supernova_10: 'first_supernova',
-    // Received series: first_received_stella → received_*_10 → ...
-    received_green_10: 'first_received_stella',
-    received_red_10: 'first_received_stella',
-    received_blue_10: 'first_received_stella',
-    received_purple_10: 'first_received_stella',
-    // Given series: first_given_stella → given_*_10 → ...
-    given_green_10: 'first_given_stella',
-    given_red_10: 'first_given_stella',
-    given_blue_10: 'first_given_stella',
-    given_purple_10: 'first_given_stella',
+  // Map series + threshold to actual supernova ID
+  const getSeriesId = (series: string, threshold: number): string => {
+    // Long post series has different naming
+    if (series === 'long_post') {
+      return threshold === 281 ? 'first_long_post' : `first_${threshold}_chars`
+    }
+    // First tier (threshold=1) has special names
+    if (threshold === 1) {
+      switch (series) {
+        case 'posts':
+          return 'first_post'
+        case 'supernova':
+          return 'first_supernova'
+        case 'received_green':
+        case 'received_red':
+        case 'received_blue':
+        case 'received_purple':
+          return 'first_received_stella'
+        case 'given_green':
+        case 'given_red':
+        case 'given_blue':
+        case 'given_purple':
+          return 'first_given_stella'
+        default:
+          return `${series}_${threshold}`
+      }
+    }
+    return `${series}_${threshold}`
   }
 
   // Get the previous tier ID that must be completed before showing this supernova
   const getPreviousTierId = (supernovaId: string): string | null => {
-    // Check explicit first tier mapping
-    if (SERIES_FIRST_TIER[supernovaId]) {
-      return SERIES_FIRST_TIER[supernovaId]
-    }
-
     // Parse series and threshold from ID
     const postsMatch = supernovaId.match(/^posts_(\d+)$/)
     const supernovaMatch = supernovaId.match(/^supernova_(\d+)$/)
-    const receivedMatch = supernovaId.match(/^(received_(?:yellow|green|red|blue|purple))_(\d+)$/)
-    const givenMatch = supernovaId.match(/^(given_(?:yellow|green|red|blue|purple))_(\d+)$/)
+    const longPostMatch = supernovaId.match(/^first_(\d+)_chars$/)
+    const receivedMatch = supernovaId.match(/^(received_(?:green|red|blue|purple))_(\d+)$/)
+    const givenMatch = supernovaId.match(/^(given_(?:green|red|blue|purple))_(\d+)$/)
 
     let series: string | null = null
     let threshold: number | null = null
@@ -150,6 +155,9 @@ export function InventoryPage() {
     } else if (supernovaMatch) {
       series = 'supernova'
       threshold = parseInt(supernovaMatch[1], 10)
+    } else if (longPostMatch) {
+      series = 'long_post'
+      threshold = parseInt(longPostMatch[1], 10)
     } else if (receivedMatch) {
       series = receivedMatch[1]
       threshold = parseInt(receivedMatch[2], 10)
@@ -167,7 +175,7 @@ export function InventoryPage() {
     if (idx <= 0) return null // First tier or not found
 
     const prevThreshold = thresholds[idx - 1]
-    return `${series}_${prevThreshold}`
+    return getSeriesId(series, prevThreshold)
   }
 
   // Get progress for cumulative supernovas
