@@ -375,7 +375,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         // 古いリアクションを削除
         try {
           const deleteEvent = await createDeleteEvent([currentReaction.myReactionId])
-          console.log('[handleUnlike] Publishing delete event for old reaction:', currentReaction.myReactionId)
           await publishEvent(deleteEvent)
         } catch (error) {
           console.error('[handleUnlike] Failed to delete old reaction:', error)
@@ -400,7 +399,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       } else {
         // 全てのステラを削除
         const deleteEvent = await createDeleteEvent([currentReaction.myReactionId])
-        console.log('[handleUnlike] Publishing delete event for all stella:', currentReaction.myReactionId)
         await publishEvent(deleteEvent)
         setReactions((prev) => ({
           ...prev,
