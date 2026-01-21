@@ -9,6 +9,7 @@ import {
   fetchSupernovaDefinitions,
   fetchUserStellaStats,
   fetchUserStats,
+  checkSupernovas,
   type StellaBalance,
   type UserSupernova,
   type SupernovaDefinition,
@@ -56,7 +57,10 @@ export function InventoryPage() {
         const pk = await getCurrentPubkey()
         setPubkey(pk)
 
-        // Fetch data in parallel
+        // First, check and unlock any pending supernovas based on current stats
+        await checkSupernovas(pk)
+
+        // Then fetch data in parallel
         const [balanceRes, userSupernovasRes, allSupernovasRes, statsRes, fullStatsRes] = await Promise.all([
           fetchStellaBalance(pk),
           fetchUserSupernovas(pk),
