@@ -23,6 +23,8 @@ async function refundStellaBalance(
 ): Promise<void> {
   if (amounts.green === 0 && amounts.red === 0 && amounts.blue === 0 && amounts.purple === 0) return
 
+  console.log('[refundStellaBalance] Refunding to', pubkey, ':', amounts)
+
   const now = getCurrentTimestamp()
   await db
     .prepare(
@@ -37,6 +39,8 @@ async function refundStellaBalance(
     )
     .bind(pubkey, amounts.green, amounts.red, amounts.blue, amounts.purple, now)
     .run()
+
+  console.log('[refundStellaBalance] Refund complete')
 }
 
 // Record stella to D1
@@ -49,6 +53,13 @@ async function recordStella(
   stellaColor: string,
   reactionId: string
 ): Promise<void> {
+  console.log('[recordStella] Saving:', {
+    eventId,
+    reactorPubkey,
+    stellaCount,
+    stellaColor,
+    reactionId,
+  })
   await db
     .prepare(
       `INSERT INTO user_stella (event_id, author_pubkey, reactor_pubkey, stella_count, stella_color, reaction_id, updated_at)
@@ -372,6 +383,8 @@ async function checkGivenStellaSupernovas(db: D1Database, pubkey: string): Promi
 async function deleteStella(db: D1Database, eventIds: string[], pubkey: string): Promise<void> {
   if (eventIds.length === 0) return
 
+  console.log('[deleteStella] Deleting stella for eventIds:', eventIds, 'pubkey:', pubkey)
+
   const placeholders = eventIds.map(() => '?').join(',')
 
   // Get stella records that will be deleted (for refund and notification cleanup)
@@ -381,6 +394,8 @@ async function deleteStella(db: D1Database, eventIds: string[], pubkey: string):
     )
     .bind(...eventIds, pubkey)
     .all<{ event_id: string; reactor_pubkey: string; stella_count: number; stella_color: string }>()
+
+  console.log('[deleteStella] Found stella records:', stellaRecords.results?.length || 0, stellaRecords.results)
 
   // Calculate refund amounts by color (excluding yellow which is infinite)
   if (stellaRecords.results && stellaRecords.results.length > 0) {
@@ -392,7 +407,10 @@ async function deleteStella(db: D1Database, eventIds: string[], pubkey: string):
       }
     }
 
+    console.log('[deleteStella] Refunding stella:', refund)
     await refundStellaBalance(db, pubkey, refund)
+  } else {
+    console.log('[deleteStella] No stella records found - no refund')
   }
 
   // Delete if user is the reactor (deleting their reaction by reaction_id)

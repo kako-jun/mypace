@@ -49,11 +49,31 @@ export default function StellaColorPicker({
   // Fetch stella balance when component mounts
   useEffect(() => {
     if (!myPubkey) return
-    fetchStellaBalance(myPubkey).then((res) => {
+
+    const loadBalance = async () => {
+      const res = await fetchStellaBalance(myPubkey)
       if (res) {
         setStellaBalance(res.balance)
       }
-    })
+    }
+
+    loadBalance()
+
+    // Listen for balance updates (e.g., after stella refund)
+    const handleBalanceUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent<StellaBalance>
+      if (customEvent.detail) {
+        setStellaBalance(customEvent.detail)
+      } else {
+        loadBalance()
+      }
+    }
+
+    window.addEventListener('stella-balance-updated', handleBalanceUpdate)
+
+    return () => {
+      window.removeEventListener('stella-balance-updated', handleBalanceUpdate)
+    }
   }, [myPubkey])
 
   // Debounce mechanism to prevent double clicks (100ms, max 10 stellas = 1 sec)

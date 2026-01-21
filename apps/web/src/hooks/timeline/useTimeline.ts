@@ -12,7 +12,7 @@ import {
   type StellaColor,
   type StellaCountsByColor,
 } from '../../lib/utils/stella'
-import { sendStella } from '../../lib/api'
+import { sendStella, fetchStellaBalance } from '../../lib/api'
 import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage, getMutedPubkeys } from '../../lib/utils'
 import { getFilterSettings } from '../../lib/storage'
 import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
@@ -374,9 +374,11 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         await publishEvent(newReaction)
         // 古いリアクションを削除
         try {
-          await publishEvent(await createDeleteEvent([currentReaction.myReactionId]))
-        } catch {
-          // 削除失敗は無視
+          const deleteEvent = await createDeleteEvent([currentReaction.myReactionId])
+          console.log('[handleUnlike] Publishing delete event for old reaction:', currentReaction.myReactionId)
+          await publishEvent(deleteEvent)
+        } catch (error) {
+          console.error('[handleUnlike] Failed to delete old reaction:', error)
         }
         setReactions((prev) => {
           const prevReactors = prev[eventId]?.reactors || []
@@ -397,7 +399,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
         })
       } else {
         // 全てのステラを削除
-        await publishEvent(await createDeleteEvent([currentReaction.myReactionId]))
+        const deleteEvent = await createDeleteEvent([currentReaction.myReactionId])
+        console.log('[handleUnlike] Publishing delete event for all stella:', currentReaction.myReactionId)
+        await publishEvent(deleteEvent)
         setReactions((prev) => ({
           ...prev,
           [eventId]: {
@@ -408,6 +412,22 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
           },
         }))
       }
+
+      // 返金処理完了を待って残高を再取得
+      setTimeout(async () => {
+        try {
+          const balanceRes = await fetchStellaBalance(myPubkey)
+          if (balanceRes) {
+            window.dispatchEvent(
+              new CustomEvent('stella-balance-updated', {
+                detail: balanceRes.balance,
+              })
+            )
+          }
+        } catch (error) {
+          console.error('Failed to refresh stella balance:', error)
+        }
+      }, 1000)
     } catch (error) {
       console.error('Failed to delete reaction:', error)
     } finally {

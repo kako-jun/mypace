@@ -1,7 +1,6 @@
 import { finalizeEvent, type EventTemplate } from 'nostr-tools'
 import { hasNip07, getOrCreateSecretKey, getPublicKeyFromSecret } from './keys'
 import { MYPACE_TAG, AURORA_TAG } from './constants'
-import { hasMypaceTag } from './tags'
 import { getStoredThemeColors } from './theme'
 import { unixNow } from '../utils'
 import type { Event, Profile } from '../../types'
@@ -90,6 +89,7 @@ export async function createProfileEvent(profile: Profile): Promise<Event> {
 }
 
 export async function createDeleteEvent(eventIds: string[]): Promise<Event> {
+  console.log('[createDeleteEvent] Creating delete event for:', eventIds)
   const template: EventTemplate = {
     kind: 5,
     created_at: unixNow(),
@@ -98,10 +98,14 @@ export async function createDeleteEvent(eventIds: string[]): Promise<Event> {
   }
 
   if (hasNip07() && window.nostr) {
-    return (await window.nostr.signEvent(template)) as Event
+    const signed = (await window.nostr.signEvent(template)) as Event
+    console.log('[createDeleteEvent] Signed delete event:', signed.id)
+    return signed
   }
 
-  return finalizeEvent(template, getOrCreateSecretKey())
+  const signed = finalizeEvent(template, getOrCreateSecretKey())
+  console.log('[createDeleteEvent] Signed delete event:', signed.id)
+  return signed
 }
 
 export async function createNip98AuthEvent(url: string, method: string): Promise<Event> {
@@ -235,12 +239,8 @@ export async function createRepostEvent(targetEvent: Event): Promise<Event> {
   const tags: string[][] = [
     ['e', targetEvent.id, ''],
     ['p', targetEvent.pubkey],
+    ['t', MYPACE_TAG], // リポスト自体がMYPACEからのアクションなので常にタグを付ける
   ]
-
-  // 元投稿がmypaceタグ付きなら、リポストにもmypaceタグを付ける
-  if (hasMypaceTag(targetEvent)) {
-    tags.push(['t', MYPACE_TAG])
-  }
 
   const template: EventTemplate = {
     kind: 6,
