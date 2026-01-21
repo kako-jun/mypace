@@ -177,17 +177,6 @@ export default function StellaColorPicker({
           />
         )}
 
-        {/* Show stella balance */}
-        {stellaBalance && (
-          <div className="stella-picker-balance">
-            {COLOR_ORDER.map((color) => (
-              <span key={color} className="stella-picker-balance-item">
-                <Icon name="Star" size={12} fill={STELLA_COLORS[color].hex} />
-                {stellaBalance[color]}
-              </span>
-            ))}
-          </div>
-        )}
         <Link to="/inventory" className="stella-picker-hint stella-picker-link" onClick={() => onClose()}>
           View Inventory
         </Link>
