@@ -87,42 +87,6 @@ export function InventoryPage() {
   const completedIds = new Set(supernovas.map((s) => s.id))
   const allIncompleteSupernovas = allSupernovas.filter((s) => !completedIds.has(s.id))
 
-  // Helper to extract cumulative group key (e.g., "received_yellow", "given_green")
-  const getCumulativeGroupKey = (id: string): string | null => {
-    const match = id.match(/^(received|given)_(yellow|green|red|blue|purple)_\d+$/)
-    return match ? `${match[1]}_${match[2]}` : null
-  }
-
-  // Filter cumulative supernovas to show only the next milestone for each group
-  const pendingSupernovas = (() => {
-    const nonCumulative = allIncompleteSupernovas.filter((s) => s.category !== 'cumulative')
-
-    // Group cumulative supernovas by type (received_yellow, given_green, etc.)
-    const cumulativeGroups = new Map<string, SupernovaDefinition[]>()
-    for (const s of allIncompleteSupernovas.filter((s) => s.category === 'cumulative')) {
-      const groupKey = getCumulativeGroupKey(s.id)
-      if (groupKey) {
-        if (!cumulativeGroups.has(groupKey)) {
-          cumulativeGroups.set(groupKey, [])
-        }
-        cumulativeGroups.get(groupKey)!.push(s)
-      }
-    }
-
-    // For each group, only show the lowest threshold (next milestone to unlock)
-    const nextMilestones: SupernovaDefinition[] = []
-    for (const [_groupKey, group] of cumulativeGroups) {
-      // Sort by threshold ascending
-      group.sort((a, b) => (a.threshold || 0) - (b.threshold || 0))
-      // Add only the first one (lowest threshold = next to unlock)
-      if (group.length > 0) {
-        nextMilestones.push(group[0])
-      }
-    }
-
-    return [...nonCumulative, ...nextMilestones]
-  })()
-
   // Get progress for cumulative supernovas
   const getProgress = (supernova: SupernovaDefinition): { current: number; target: number } | null => {
     if (supernova.category !== 'cumulative' || !userStats) return null
@@ -144,6 +108,42 @@ export function InventoryPage() {
 
     return null
   }
+
+  // Filter and sort pending supernovas
+  // - Show all non-cumulative (single) supernovas
+  // - Show cumulative supernovas only if progress > 0 (hide until started)
+  // - Sort by progress percentage (higher progress = higher in list)
+  const pendingSupernovas = (() => {
+    const result: SupernovaDefinition[] = []
+
+    for (const s of allIncompleteSupernovas) {
+      if (s.category === 'cumulative') {
+        // Cumulative: only show if progress > 0
+        const progress = getProgress(s)
+        if (progress && progress.current > 0) {
+          result.push(s)
+        }
+      } else {
+        // Single (non-cumulative): always show
+        result.push(s)
+      }
+    }
+
+    // Sort by progress percentage (descending) - items with higher progress appear first
+    result.sort((a, b) => {
+      const progressA = getProgress(a)
+      const progressB = getProgress(b)
+
+      // Calculate progress percentage (0-1)
+      const percentA = progressA ? progressA.current / progressA.target : 0
+      const percentB = progressB ? progressB.current / progressB.target : 0
+
+      // Sort descending (higher progress first)
+      return percentB - percentA
+    })
+
+    return result
+  })()
 
   return (
     <div className="inventory-page">
