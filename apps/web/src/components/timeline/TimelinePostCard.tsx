@@ -42,7 +42,7 @@ interface TimelinePostCardProps {
   onEdit: (event: Event) => void
   onDeleteConfirm: (event: Event) => void
   onAddStella: (event: Event, color: StellaColor) => void
-  onUnlike: (event: Event) => void
+  onUnlike: (event: Event, color: StellaColor) => void
   onReply: (event: Event) => void
   onRepost: (event: Event) => void
   onPin?: (event: Event) => void
@@ -267,7 +267,7 @@ export default function TimelinePostCard({
                     myPubkey={myPubkey}
                     getDisplayName={getDisplayName}
                     onAddStella={(color) => onAddStella(event, color)}
-                    onUnlike={() => onUnlike(event)}
+                    onUnlike={(color) => onUnlike(event, color)}
                     onReply={() => onReply(event)}
                     onRepost={() => onRepost(event)}
                     onShareOption={(option) => onShareOption(event.id, event.content, option)}

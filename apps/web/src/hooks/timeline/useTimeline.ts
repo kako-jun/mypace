@@ -5,7 +5,7 @@ import { getCurrentPubkey, createDeleteEvent, createReactionEvent, createRepostE
 import {
   canAddStella,
   addStellaToColor,
-  removeYellowStella,
+  removeStellaColor,
   createEmptyStellaCounts,
   getTotalStellaCount,
   EMPTY_STELLA_COUNTS,
@@ -345,16 +345,16 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     stellaDebounceTimers.current[eventId] = setTimeout(() => flushStella(event), 500)
   }
 
-  // ステラを取り消し（イエローのみ可能）
-  const handleUnlike = async (event: Event) => {
+  // ステラを取り消し（指定色）
+  const handleUnlike = async (event: Event, color: StellaColor) => {
     if (!myPubkey) return
     const eventId = event.id
     const currentReaction = reactions[eventId]
     if (!currentReaction?.myReactionId) return
 
     const myStella = currentReaction.myStella
-    // イエローがなければ取り消す対象がない
-    if (myStella.yellow <= 0) return
+    // 指定色がなければ取り消す対象がない
+    if (myStella[color] <= 0) return
 
     if (stellaDebounceTimers.current[eventId]) {
       clearTimeout(stellaDebounceTimers.current[eventId])
@@ -362,8 +362,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     }
     delete pendingStella.current[eventId]
 
-    // イエローを0にして、カラーステラは残す
-    const newMyStella = removeYellowStella(myStella)
+    // 指定色を0にして、他の色は残す
+    const newMyStella = removeStellaColor(myStella, color)
     const remainingTotal = getTotalStellaCount(newMyStella)
 
     setLikingId(eventId)

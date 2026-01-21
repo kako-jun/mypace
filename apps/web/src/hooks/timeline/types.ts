@@ -38,7 +38,7 @@ export interface UseTimelineResult {
   loadNewEvents: () => void
   loadOlderEvents: () => Promise<void>
   handleAddStella: (event: Event, color: StellaColor) => void
-  handleUnlike: (event: Event) => Promise<void>
+  handleUnlike: (event: Event, color: StellaColor) => Promise<void>
   handleRepost: (event: Event) => Promise<void>
   handleDelete: (event: Event) => Promise<void>
   getDisplayName: (pubkey: string) => string

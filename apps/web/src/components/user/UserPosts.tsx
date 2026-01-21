@@ -37,7 +37,7 @@ interface UserPostsProps {
   hasMore: boolean
   loadingMore: boolean
   onAddStella: (event: Event, color: StellaColor) => void
-  onUnlike: (event: Event) => Promise<void>
+  onUnlike: (event: Event, color: StellaColor) => Promise<void>
   onRepost: (event: Event) => Promise<void>
   onDeleteConfirm: (event: Event) => void
   onShareOption: (eventId: string, content: string, option: ShareOption) => void
@@ -136,7 +136,7 @@ export function UserPosts({
           onEdit={() => handleEdit(event)}
           onDeleteConfirm={() => onDeleteConfirm(event)}
           onAddStella={(_ev, color) => onAddStella(event, color)}
-          onUnlike={() => onUnlike(event)}
+          onUnlike={(_ev, color) => onUnlike(event, color)}
           onReply={() => handleReplyClick(event)}
           onRepost={() => onRepost(event)}
           onPin={() => onPin(event)}
