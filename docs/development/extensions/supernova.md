@@ -160,7 +160,81 @@ Supernova達成数に応じて解除。
       ↓
 [レスポンス: newlyUnlocked]
       ↓
-[GUI: トースト表示]
+[GUI: 祝福モーダル表示]
+```
+
+## 祝福モーダル（Celebration Modal）
+
+Supernovaを達成した際に表示される祝福モーダル。
+
+### デザイン
+
+- **形状**: 真円（320x320px）、黒枠（3px）
+- **背景**: 暗いバックドロップ（rgba(0, 0, 0, 0.85)）
+- **アニメーション**: スパークルパーティクル + アイコンパルス
+- **z-index**: 2000（最前面）
+
+### 表示内容（すべて英語）
+
+1. **アイコン**: Sparkles（色はSupernova色に対応）
+2. **タイトル**: "Supernova Unlocked!"
+3. **名前**: Supernovaの名前（Supernova色で表示）
+4. **説明**: 名前と異なる場合のみ表示
+5. **報酬**: ステラアイコン + 数量（報酬がある場合）
+6. **リンク**: "View in Inventory"
+7. **ヒント**: "Tap anywhere to continue"
+
+### 閉じる方法
+
+- バックドロップをタップ/クリック
+- Escapeキー
+- 5秒後に自動クローズ
+- "View in Inventory"リンクをクリック
+
+### キュー処理
+
+複数のSupernovaを同時達成した場合、キューで順番に表示。
+1つのモーダルが閉じると、次のモーダルが300ms後に表示される。
+
+### コンポーネント構成
+
+```
+apps/web/src/
+├── components/supernova/
+│   ├── SupernovaCelebration.tsx  # CelebrationProvider + Modal
+│   └── index.ts                  # exports
+└── styles/components/
+    └── supernova-celebration.css # アニメーション・スタイル
+```
+
+### 使用方法
+
+```tsx
+// App.tsx - Providerでラップ
+import { CelebrationProvider } from './components/supernova'
+
+function App() {
+  return (
+    <CelebrationProvider>
+      {/* ... */}
+    </CelebrationProvider>
+  )
+}
+
+// PostForm.tsx - Supernovaチェック後に呼び出し
+import { useCelebration } from '../supernova'
+
+function PostForm() {
+  const { celebrate } = useCelebration()
+
+  const handlePost = async () => {
+    // ... post logic
+    const result = await checkSupernovas(pubkey, 'first_post')
+    if (result.newlyUnlocked.length > 0) {
+      celebrate(result.newlyUnlocked)
+    }
+  }
+}
 ```
 
 ## DBスキーマ

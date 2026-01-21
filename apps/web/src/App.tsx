@@ -10,6 +10,7 @@ import { InventoryPage } from './pages/InventoryPage'
 import { EmbedPage } from './pages/EmbedPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PostModal } from './components/post'
+import { CelebrationProvider } from './components/supernova'
 import { initializeNavigation } from './lib/utils'
 
 export default function App() {
@@ -31,7 +32,7 @@ export default function App() {
   const backgroundLocation = state?.backgroundLocation
 
   return (
-    <>
+    <CelebrationProvider>
       <Routes location={backgroundLocation || location}>
         {/* Embed page - no Layout */}
         <Route path="/embed/:noteId" element={<EmbedPage />} />
@@ -54,6 +55,6 @@ export default function App() {
           <Route path="/post/:id" element={<PostModal />} />
         </Routes>
       )}
-    </>
+    </CelebrationProvider>
   )
 }
