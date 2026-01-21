@@ -348,13 +348,36 @@ async function deleteStella(db: D1Database, eventIds: string[], pubkey: string):
 
   const placeholders = eventIds.map(() => '?').join(',')
 
-  // Get stella records that will be deleted (for notification cleanup)
+  // Get stella records that will be deleted (for refund and notification cleanup)
   const stellaRecords = await db
     .prepare(
-      `SELECT event_id, reactor_pubkey FROM user_stella WHERE reaction_id IN (${placeholders}) AND reactor_pubkey = ?`
+      `SELECT event_id, reactor_pubkey, stella_count, stella_color FROM user_stella WHERE reaction_id IN (${placeholders}) AND reactor_pubkey = ?`
     )
     .bind(...eventIds, pubkey)
-    .all<{ event_id: string; reactor_pubkey: string }>()
+    .all<{ event_id: string; reactor_pubkey: string; stella_count: number; stella_color: string }>()
+
+  // Calculate refund amounts by color (excluding yellow which is infinite)
+  if (stellaRecords.results && stellaRecords.results.length > 0) {
+    const refund = { green: 0, red: 0, blue: 0, purple: 0 }
+    for (const record of stellaRecords.results) {
+      const color = record.stella_color as keyof typeof refund
+      if (color in refund) {
+        refund[color] += record.stella_count
+      }
+    }
+
+    // Refund non-yellow stella to balance
+    if (refund.green > 0 || refund.red > 0 || refund.blue > 0 || refund.purple > 0) {
+      await db
+        .prepare(
+          `UPDATE user_stella_balance
+           SET green = green + ?, red = red + ?, blue = blue + ?, purple = purple + ?, updated_at = ?
+           WHERE pubkey = ?`
+        )
+        .bind(refund.green, refund.red, refund.blue, refund.purple, getCurrentTimestamp(), pubkey)
+        .run()
+    }
+  }
 
   // Delete if user is the reactor (deleting their reaction by reaction_id)
   await db
