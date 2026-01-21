@@ -108,8 +108,22 @@ export function InventoryPage() {
     given_purple: [10, 100, 1000],
   }
 
+  // Define single supernova series with explicit previous tier mapping
+  const SINGLE_SERIES_PREV: Record<string, string> = {
+    // Long post series: first_long_post (281) → first_1000_chars → first_2000_chars → first_3000_chars → first_4000_chars
+    first_1000_chars: 'first_long_post',
+    first_2000_chars: 'first_1000_chars',
+    first_3000_chars: 'first_2000_chars',
+    first_4000_chars: 'first_3000_chars',
+  }
+
   // Get the previous tier ID that must be completed before showing this supernova
   const getPreviousTierId = (supernovaId: string): string | null => {
+    // Check single series first
+    if (SINGLE_SERIES_PREV[supernovaId]) {
+      return SINGLE_SERIES_PREV[supernovaId]
+    }
+
     // Parse series and threshold from ID
     const postsMatch = supernovaId.match(/^posts_(\d+)$/)
     const supernovaMatch = supernovaId.match(/^supernova_(\d+)$/)
@@ -201,7 +215,12 @@ export function InventoryPage() {
           result.push(s)
         }
       } else {
-        // Single (non-cumulative): always show
+        // Single (non-cumulative): check if previous tier is required
+        const prevTierId = getPreviousTierId(s.id)
+        if (prevTierId && !completedIds.has(prevTierId)) {
+          // Previous tier not completed - don't show this one
+          continue
+        }
         result.push(s)
       }
     }
