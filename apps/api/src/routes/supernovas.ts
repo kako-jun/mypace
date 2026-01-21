@@ -611,7 +611,7 @@ supernovas.post('/seed', async (c) => {
     // === Supernova count series (green→red→blue) ===
     {
       id: 'supernova_10',
-      name: 'Supernova Collector',
+      name: 'Supernova 10',
       description: 'Unlocked 10 supernovas',
       category: 'cumulative',
       threshold: 10,
@@ -623,7 +623,7 @@ supernovas.post('/seed', async (c) => {
     },
     {
       id: 'supernova_25',
-      name: 'Supernova Hunter',
+      name: 'Supernova 25',
       description: 'Unlocked 25 supernovas',
       category: 'cumulative',
       threshold: 25,
@@ -635,7 +635,7 @@ supernovas.post('/seed', async (c) => {
     },
     {
       id: 'supernova_50',
-      name: 'Supernova Master',
+      name: 'Supernova 50',
       description: 'Unlocked 50 supernovas',
       category: 'cumulative',
       threshold: 50,
