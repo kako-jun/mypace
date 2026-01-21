@@ -80,6 +80,8 @@ export default function StellaColorPicker({
 
   // Check if user has enough stella balance for a color
   const canAfford = (color: StellaColor): boolean => {
+    // Yellow stella is infinite - always affordable
+    if (color === 'yellow') return true
     if (!stellaBalance) return false // Loading or no balance
     return stellaBalance[color] > 0
   }
