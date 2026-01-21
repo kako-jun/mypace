@@ -11,6 +11,56 @@ import { getCurrentTimestamp } from '../utils'
 
 const supernovas = new Hono<{ Bindings: Bindings }>()
 
+const PRIMAL_CACHE_URL = 'wss://cache1.primal.net/v1'
+const PRIMAL_TIMEOUT_MS = 5000
+const PRIMAL_STATS_KIND = 10000105
+
+interface PrimalStats {
+  note_count?: number
+  long_form_note_count?: number
+}
+
+// Fetch post count from Primal cache
+async function fetchPostCountFromPrimal(pubkey: string): Promise<number> {
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      ws.close()
+      resolve(0)
+    }, PRIMAL_TIMEOUT_MS)
+
+    const ws = new WebSocket(PRIMAL_CACHE_URL)
+
+    ws.addEventListener('open', () => {
+      const req = JSON.stringify(['REQ', 'stats', { cache: ['user_profile', { pubkey }] }])
+      ws.send(req)
+    })
+
+    ws.addEventListener('message', (event) => {
+      try {
+        const data = JSON.parse(event.data as string)
+        if (Array.isArray(data) && data[0] === 'EVENT' && data[2]?.kind === PRIMAL_STATS_KIND) {
+          const content = JSON.parse(data[2].content) as PrimalStats
+          clearTimeout(timeout)
+          ws.close()
+          resolve((content.note_count || 0) + (content.long_form_note_count || 0))
+        } else if (Array.isArray(data) && data[0] === 'EOSE') {
+          clearTimeout(timeout)
+          ws.close()
+          resolve(0)
+        }
+      } catch {
+        // Parse error, ignore
+      }
+    })
+
+    ws.addEventListener('error', () => {
+      clearTimeout(timeout)
+      ws.close()
+      resolve(0)
+    })
+  })
+}
+
 interface SupernovaDefinition {
   id: string
   name: string
@@ -18,7 +68,6 @@ interface SupernovaDefinition {
   category: 'single' | 'cumulative'
   threshold: number
   supernova_color: string
-  reward_yellow: number
   reward_green: number
   reward_red: number
   reward_blue: number
@@ -38,7 +87,7 @@ supernovas.get('/definitions', async (c) => {
     const result = await db
       .prepare(
         `SELECT id, name, description, category, threshold, supernova_color,
-                reward_yellow, reward_green, reward_red, reward_blue, reward_purple
+                reward_green, reward_red, reward_blue, reward_purple
          FROM supernova_definitions
          ORDER BY id`
       )
@@ -86,7 +135,7 @@ supernovas.get('/:pubkey', async (c) => {
       .prepare(
         `SELECT sd.id, us.unlocked_at,
                 sd.name, sd.description, sd.category, sd.threshold, sd.supernova_color,
-                sd.reward_yellow, sd.reward_green, sd.reward_red, sd.reward_blue, sd.reward_purple
+                sd.reward_green, sd.reward_red, sd.reward_blue, sd.reward_purple
          FROM user_supernovas us
          JOIN supernova_definitions sd ON us.supernova_id = sd.id
          WHERE us.pubkey = ?
@@ -126,7 +175,7 @@ supernovas.post('/check', async (c) => {
     const definitionsResult = await db
       .prepare(
         `SELECT id, name, description, category, threshold, supernova_color,
-                reward_yellow, reward_green, reward_red, reward_blue, reward_purple
+                reward_green, reward_red, reward_blue, reward_purple
          FROM supernova_definitions`
       )
       .all<SupernovaDefinition>()
@@ -134,14 +183,14 @@ supernovas.post('/check', async (c) => {
     const definitions = definitionsResult.results || []
 
     // Get user's already unlocked supernovas and stella stats in parallel
-    const [unlockedIds, stellaCounts, serialResult, postCountResult] = await Promise.all([
+    const [unlockedIds, stellaCounts, serialResult, postCount] = await Promise.all([
       getUserUnlockedSupernovaIds(db, pubkey),
       getStellaCountsBoth(db, pubkey),
       db
         .prepare(`SELECT serial_number FROM user_serial WHERE pubkey = ?`)
         .bind(pubkey)
         .first<{ serial_number: number }>(),
-      db.prepare(`SELECT COUNT(*) as count FROM user_serial WHERE pubkey = ?`).bind(pubkey).first<{ count: number }>(),
+      fetchPostCountFromPrimal(pubkey),
     ])
 
     const { received, given } = stellaCounts
@@ -149,7 +198,8 @@ supernovas.post('/check', async (c) => {
       serialNumber: serialResult?.serial_number || null,
       totalStella: getTotalStellaCount(received),
       totalGivenStella: getTotalStellaCount(given),
-      postCount: postCountResult?.count || 0,
+      postCount,
+      supernovaCount: unlockedIds.size,
       received,
       given,
     }
@@ -181,9 +231,11 @@ supernovas.post('/check', async (c) => {
           shouldUnlock = userStats.serialNumber !== null && userStats.serialNumber <= 1000
           break
         default: {
-          // Handle color-specific stella supernovas: received_{color}_{threshold} or given_{color}_{threshold}
+          // Handle pattern-based supernovas
           const receivedMatch = def.id.match(/^received_(yellow|green|red|blue|purple)_(\d+)$/)
           const givenMatch = def.id.match(/^given_(yellow|green|red|blue|purple)_(\d+)$/)
+          const postsMatch = def.id.match(/^posts_(\d+)$/)
+          const supernovaMatch = def.id.match(/^supernova_(\d+)$/)
           if (receivedMatch) {
             const color = receivedMatch[1] as keyof StellaColorCounts
             const threshold = parseInt(receivedMatch[2], 10)
@@ -192,6 +244,14 @@ supernovas.post('/check', async (c) => {
             const color = givenMatch[1] as keyof StellaColorCounts
             const threshold = parseInt(givenMatch[2], 10)
             shouldUnlock = userStats.given[color] >= threshold
+          } else if (postsMatch) {
+            const threshold = parseInt(postsMatch[1], 10)
+            shouldUnlock = userStats.postCount >= threshold
+          } else if (supernovaMatch) {
+            // Meta supernova: unlocked N supernovas
+            const threshold = parseInt(supernovaMatch[1], 10)
+            // Include current batch being unlocked in count
+            shouldUnlock = userStats.supernovaCount + toUnlock.length >= threshold
           }
         }
       }
@@ -238,7 +298,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 1,
       supernova_color: 'yellow',
-      reward_yellow: 10,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -251,7 +310,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 1,
       supernova_color: 'yellow',
-      reward_yellow: 5,
       reward_green: 1,
       reward_red: 0,
       reward_blue: 0,
@@ -264,7 +322,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 1,
       supernova_color: 'yellow',
-      reward_yellow: 5,
       reward_green: 1,
       reward_red: 0,
       reward_blue: 0,
@@ -277,7 +334,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 100,
       supernova_color: 'green',
-      reward_yellow: 20,
       reward_green: 5,
       reward_red: 1,
       reward_blue: 0,
@@ -290,7 +346,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 1000,
       supernova_color: 'green',
-      reward_yellow: 10,
       reward_green: 2,
       reward_red: 0,
       reward_blue: 0,
@@ -304,7 +359,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 1,
       supernova_color: 'yellow',
-      reward_yellow: 5,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -317,7 +371,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 1,
       supernova_color: 'yellow',
-      reward_yellow: 5,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -330,7 +383,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 1,
       supernova_color: 'yellow',
-      reward_yellow: 5,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -343,7 +395,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 1,
       supernova_color: 'yellow',
-      reward_yellow: 5,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -356,7 +407,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 1,
       supernova_color: 'yellow',
-      reward_yellow: 5,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -370,7 +420,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 281,
       supernova_color: 'yellow',
-      reward_yellow: 5,
       reward_green: 1,
       reward_red: 0,
       reward_blue: 0,
@@ -383,7 +432,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 1000,
       supernova_color: 'green',
-      reward_yellow: 5,
       reward_green: 2,
       reward_red: 0,
       reward_blue: 0,
@@ -396,7 +444,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 2000,
       supernova_color: 'green',
-      reward_yellow: 5,
       reward_green: 3,
       reward_red: 1,
       reward_blue: 0,
@@ -409,7 +456,6 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 3000,
       supernova_color: 'red',
-      reward_yellow: 5,
       reward_green: 3,
       reward_red: 2,
       reward_blue: 1,
@@ -422,10 +468,169 @@ supernovas.post('/seed', async (c) => {
       category: 'single',
       threshold: 4000,
       supernova_color: 'blue',
-      reward_yellow: 5,
       reward_green: 3,
       reward_red: 2,
       reward_blue: 2,
+      reward_purple: 1,
+    },
+    // URL and markdown supernovas
+    {
+      id: 'first_url',
+      name: 'First URL',
+      description: 'Posted with a URL',
+      category: 'single',
+      threshold: 1,
+      supernova_color: 'yellow',
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'first_table',
+      name: 'First Table',
+      description: 'Used markdown table',
+      category: 'single',
+      threshold: 1,
+      supernova_color: 'yellow',
+      reward_green: 1,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'first_list',
+      name: 'First List',
+      description: 'Used markdown list',
+      category: 'single',
+      threshold: 1,
+      supernova_color: 'yellow',
+      reward_green: 0,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    // Interaction supernovas
+    {
+      id: 'first_reply',
+      name: 'First Reply',
+      description: 'Replied to a post',
+      category: 'single',
+      threshold: 1,
+      supernova_color: 'yellow',
+      reward_green: 1,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'first_repost',
+      name: 'First Repost',
+      description: 'Reposted a post',
+      category: 'single',
+      threshold: 1,
+      supernova_color: 'yellow',
+      reward_green: 1,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    // Post count supernovas (total Nostr posts)
+    {
+      id: 'posts_10',
+      name: 'Posts 10',
+      description: 'Posted 10 times',
+      category: 'cumulative',
+      threshold: 10,
+      supernova_color: 'yellow',
+      reward_green: 5,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'posts_100',
+      name: 'Posts 100',
+      description: 'Posted 100 times',
+      category: 'cumulative',
+      threshold: 100,
+      supernova_color: 'green',
+      reward_green: 10,
+      reward_red: 5,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'posts_1000',
+      name: 'Posts 1000',
+      description: 'Posted 1000 times',
+      category: 'cumulative',
+      threshold: 1000,
+      supernova_color: 'green',
+      reward_green: 10,
+      reward_red: 10,
+      reward_blue: 5,
+      reward_purple: 0,
+    },
+    {
+      id: 'posts_10000',
+      name: 'Posts 10000',
+      description: 'Posted 10000 times',
+      category: 'cumulative',
+      threshold: 10000,
+      supernova_color: 'red',
+      reward_green: 10,
+      reward_red: 10,
+      reward_blue: 10,
+      reward_purple: 5,
+    },
+    // Meta supernovas (supernova achievements)
+    {
+      id: 'first_supernova',
+      name: 'First Supernova',
+      description: 'Unlocked your first supernova',
+      category: 'single',
+      threshold: 1,
+      supernova_color: 'yellow',
+      reward_green: 2,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'supernova_10',
+      name: 'Supernova Collector',
+      description: 'Unlocked 10 supernovas',
+      category: 'cumulative',
+      threshold: 10,
+      supernova_color: 'green',
+      reward_green: 5,
+      reward_red: 1,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'supernova_25',
+      name: 'Supernova Hunter',
+      description: 'Unlocked 25 supernovas',
+      category: 'cumulative',
+      threshold: 25,
+      supernova_color: 'red',
+      reward_green: 5,
+      reward_red: 3,
+      reward_blue: 1,
+      reward_purple: 0,
+    },
+    {
+      id: 'supernova_50',
+      name: 'Supernova Master',
+      description: 'Unlocked 50 supernovas',
+      category: 'cumulative',
+      threshold: 50,
+      supernova_color: 'blue',
+      reward_green: 5,
+      reward_red: 3,
+      reward_blue: 3,
       reward_purple: 1,
     },
     // Received Yellow Stella
@@ -436,7 +641,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 10,
       supernova_color: 'yellow',
-      reward_yellow: 5,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -449,7 +653,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 100,
       supernova_color: 'yellow',
-      reward_yellow: 10,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -462,7 +665,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 1000,
       supernova_color: 'yellow',
-      reward_yellow: 20,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -476,7 +678,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 10,
       supernova_color: 'green',
-      reward_yellow: 0,
       reward_green: 5,
       reward_red: 0,
       reward_blue: 0,
@@ -489,7 +690,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 100,
       supernova_color: 'green',
-      reward_yellow: 0,
       reward_green: 10,
       reward_red: 0,
       reward_blue: 0,
@@ -502,7 +702,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 1000,
       supernova_color: 'green',
-      reward_yellow: 0,
       reward_green: 20,
       reward_red: 0,
       reward_blue: 0,
@@ -516,7 +715,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 10,
       supernova_color: 'red',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 5,
       reward_blue: 0,
@@ -529,7 +727,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 100,
       supernova_color: 'red',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 10,
       reward_blue: 0,
@@ -542,7 +739,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 1000,
       supernova_color: 'red',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 20,
       reward_blue: 0,
@@ -556,7 +752,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 10,
       supernova_color: 'blue',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 5,
@@ -569,7 +764,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 100,
       supernova_color: 'blue',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 10,
@@ -582,7 +776,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 1000,
       supernova_color: 'blue',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 20,
@@ -596,7 +789,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 10,
       supernova_color: 'purple',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -609,7 +801,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 100,
       supernova_color: 'purple',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -622,7 +813,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 1000,
       supernova_color: 'purple',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -636,7 +826,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 10,
       supernova_color: 'yellow',
-      reward_yellow: 5,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -649,7 +838,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 100,
       supernova_color: 'yellow',
-      reward_yellow: 10,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -662,7 +850,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 1000,
       supernova_color: 'yellow',
-      reward_yellow: 20,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -676,7 +863,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 10,
       supernova_color: 'green',
-      reward_yellow: 0,
       reward_green: 5,
       reward_red: 0,
       reward_blue: 0,
@@ -689,7 +875,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 100,
       supernova_color: 'green',
-      reward_yellow: 0,
       reward_green: 10,
       reward_red: 0,
       reward_blue: 0,
@@ -702,7 +887,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 1000,
       supernova_color: 'green',
-      reward_yellow: 0,
       reward_green: 20,
       reward_red: 0,
       reward_blue: 0,
@@ -716,7 +900,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 10,
       supernova_color: 'red',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 5,
       reward_blue: 0,
@@ -729,7 +912,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 100,
       supernova_color: 'red',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 10,
       reward_blue: 0,
@@ -742,7 +924,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 1000,
       supernova_color: 'red',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 20,
       reward_blue: 0,
@@ -756,7 +937,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 10,
       supernova_color: 'blue',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 5,
@@ -769,7 +949,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 100,
       supernova_color: 'blue',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 10,
@@ -782,7 +961,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 1000,
       supernova_color: 'blue',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 20,
@@ -796,7 +974,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 10,
       supernova_color: 'purple',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -809,7 +986,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 100,
       supernova_color: 'purple',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -822,7 +998,6 @@ supernovas.post('/seed', async (c) => {
       category: 'cumulative',
       threshold: 1000,
       supernova_color: 'purple',
-      reward_yellow: 0,
       reward_green: 0,
       reward_red: 0,
       reward_blue: 0,
@@ -831,37 +1006,30 @@ supernovas.post('/seed', async (c) => {
   ]
 
   try {
-    // Build batch INSERT values
-    const values: string[] = []
-    const params: (string | number)[] = []
+    // Use db.batch() for atomic inserts
+    const statements = initialSupernovas.map((supernova) =>
+      db
+        .prepare(
+          `INSERT OR REPLACE INTO supernova_definitions
+           (id, name, description, category, threshold, supernova_color,
+            reward_green, reward_red, reward_blue, reward_purple)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        )
+        .bind(
+          supernova.id,
+          supernova.name,
+          supernova.description,
+          supernova.category,
+          supernova.threshold,
+          supernova.supernova_color,
+          supernova.reward_green,
+          supernova.reward_red,
+          supernova.reward_blue,
+          supernova.reward_purple
+        )
+    )
 
-    for (const supernova of initialSupernovas) {
-      values.push('(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      params.push(
-        supernova.id,
-        supernova.name,
-        supernova.description,
-        supernova.category,
-        supernova.threshold,
-        supernova.supernova_color,
-        supernova.reward_yellow,
-        supernova.reward_green,
-        supernova.reward_red,
-        supernova.reward_blue,
-        supernova.reward_purple
-      )
-    }
-
-    // Batch INSERT all definitions at once
-    await db
-      .prepare(
-        `INSERT OR REPLACE INTO supernova_definitions
-         (id, name, description, category, threshold, supernova_color,
-          reward_yellow, reward_green, reward_red, reward_blue, reward_purple)
-         VALUES ${values.join(', ')}`
-      )
-      .bind(...params)
-      .run()
+    await db.batch(statements)
 
     return c.json({
       success: true,

@@ -8,10 +8,12 @@ import {
   fetchUserSupernovas,
   fetchSupernovaDefinitions,
   fetchUserStellaStats,
+  fetchUserStats,
   type StellaBalance,
   type UserSupernova,
   type SupernovaDefinition,
   type UserStellaStats,
+  type UserStats,
 } from '../lib/api'
 import { formatNumber } from '../lib/utils/format'
 import '../styles/pages/inventory.css'
@@ -41,6 +43,7 @@ export function InventoryPage() {
   const [supernovas, setSupernovas] = useState<UserSupernova[]>([])
   const [allSupernovas, setAllSupernovas] = useState<SupernovaDefinition[]>([])
   const [userStats, setUserStats] = useState<UserStellaStats | null>(null)
+  const [userFullStats, setUserFullStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -54,11 +57,12 @@ export function InventoryPage() {
         setPubkey(pk)
 
         // Fetch data in parallel
-        const [balanceRes, userSupernovasRes, allSupernovasRes, statsRes] = await Promise.all([
+        const [balanceRes, userSupernovasRes, allSupernovasRes, statsRes, fullStatsRes] = await Promise.all([
           fetchStellaBalance(pk),
           fetchUserSupernovas(pk),
           fetchSupernovaDefinitions(),
           fetchUserStellaStats(pk),
+          fetchUserStats(pk),
         ])
 
         if (balanceRes) {
@@ -67,6 +71,7 @@ export function InventoryPage() {
         setSupernovas(userSupernovasRes)
         setAllSupernovas(allSupernovasRes)
         setUserStats(statsRes)
+        setUserFullStats(fullStatsRes)
       } catch (e) {
         console.error('Failed to load inventory data:', e)
         setError('Failed to load inventory data')
@@ -89,21 +94,31 @@ export function InventoryPage() {
 
   // Get progress for cumulative supernovas
   const getProgress = (supernova: SupernovaDefinition): { current: number; target: number } | null => {
-    if (supernova.category !== 'cumulative' || !userStats) return null
+    if (supernova.category !== 'cumulative') return null
 
-    // Parse supernova ID to determine type: received_{color}_{threshold} or given_{color}_{threshold}
+    // Parse supernova ID to determine type
     const receivedMatch = supernova.id.match(/^received_(yellow|green|red|blue|purple)_(\d+)$/)
     const givenMatch = supernova.id.match(/^given_(yellow|green|red|blue|purple)_(\d+)$/)
+    const postsMatch = supernova.id.match(/^posts_(\d+)$/)
+    const supernovaMatch = supernova.id.match(/^supernova_(\d+)$/)
 
-    if (receivedMatch) {
+    if (receivedMatch && userStats) {
       const color = receivedMatch[1]
       const threshold = parseInt(receivedMatch[2], 10)
       return { current: userStats.received[color] || 0, target: threshold }
     }
-    if (givenMatch) {
+    if (givenMatch && userStats) {
       const color = givenMatch[1]
       const threshold = parseInt(givenMatch[2], 10)
       return { current: userStats.given[color] || 0, target: threshold }
+    }
+    if (postsMatch && userFullStats?.postsCount != null) {
+      const threshold = parseInt(postsMatch[1], 10)
+      return { current: userFullStats.postsCount, target: threshold }
+    }
+    if (supernovaMatch) {
+      const threshold = parseInt(supernovaMatch[1], 10)
+      return { current: supernovas.length, target: threshold }
     }
 
     return null
@@ -230,12 +245,6 @@ export function InventoryPage() {
                         )}
                       </div>
                       <div className="inventory-supernova-reward">
-                        {supernova.reward_yellow > 0 && (
-                          <span>
-                            <Icon name="Star" size={14} fill={STELLA_COLORS.yellow.hex} />+
-                            {formatNumber(supernova.reward_yellow)}
-                          </span>
-                        )}
                         {supernova.reward_green > 0 && (
                           <span>
                             <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+
@@ -284,12 +293,6 @@ export function InventoryPage() {
                       </span>
                     </div>
                     <div className="inventory-supernova-reward">
-                      {supernova.reward_yellow > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.yellow.hex} />+
-                          {formatNumber(supernova.reward_yellow)}
-                        </span>
-                      )}
                       {supernova.reward_green > 0 && (
                         <span>
                           <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+
