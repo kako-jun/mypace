@@ -372,39 +372,16 @@ export function InventoryPage() {
                       />
                     </div>
                     <div className="inventory-supernova-info">
-                      <span className="inventory-supernova-name">{supernova.name}</span>
+                      <span className="inventory-supernova-name">
+                        <Icon name="Check" size={14} className="inventory-check-icon" />
+                        {supernova.name}
+                      </span>
                       {supernova.description !== supernova.name && (
                         <span className="inventory-supernova-desc">{supernova.description}</span>
                       )}
                       <span className="inventory-supernova-date">
                         {new Date(supernova.unlocked_at * 1000).toLocaleDateString()}
                       </span>
-                    </div>
-                    <div className="inventory-supernova-reward">
-                      {supernova.reward_green > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+
-                          {formatNumber(supernova.reward_green)}
-                        </span>
-                      )}
-                      {supernova.reward_red > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+
-                          {formatNumber(supernova.reward_red)}
-                        </span>
-                      )}
-                      {supernova.reward_blue > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+
-                          {formatNumber(supernova.reward_blue)}
-                        </span>
-                      )}
-                      {supernova.reward_purple > 0 && (
-                        <span>
-                          <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+
-                          {formatNumber(supernova.reward_purple)}
-                        </span>
-                      )}
                     </div>
                   </div>
                 ))}
