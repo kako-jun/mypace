@@ -11,7 +11,6 @@ export interface StellaColorCounts {
 }
 
 export interface SupernovaRewards {
-  reward_yellow: number
   reward_green: number
   reward_red: number
   reward_blue: number
@@ -111,9 +110,7 @@ export async function unlockSupernova(
 
   // Get supernova definition for rewards
   const def = await db
-    .prepare(
-      `SELECT reward_yellow, reward_green, reward_red, reward_blue, reward_purple FROM supernova_definitions WHERE id = ?`
-    )
+    .prepare(`SELECT reward_green, reward_red, reward_blue, reward_purple FROM supernova_definitions WHERE id = ?`)
     .bind(supernovaId)
     .first<SupernovaRewards>()
 
@@ -126,13 +123,13 @@ export async function unlockSupernova(
     .run()
 
   // Add rewards to user's stella balance
-  const totalReward = def.reward_yellow + def.reward_green + def.reward_red + def.reward_blue + def.reward_purple
+  const totalReward = def.reward_green + def.reward_red + def.reward_blue + def.reward_purple
   if (totalReward > 0) {
     await addStellaBalance(
       db,
       pubkey,
       {
-        yellow: def.reward_yellow,
+        yellow: 0,
         green: def.reward_green,
         red: def.reward_red,
         blue: def.reward_blue,
@@ -165,7 +162,7 @@ export async function batchUnlockSupernovas(
   const placeholders = supernovaIds.map(() => '?').join(',')
   const defs = await db
     .prepare(
-      `SELECT id, reward_yellow, reward_green, reward_red, reward_blue, reward_purple
+      `SELECT id, reward_green, reward_red, reward_blue, reward_purple
        FROM supernova_definitions WHERE id IN (${placeholders})`
     )
     .bind(...supernovaIds)
@@ -183,7 +180,6 @@ export async function batchUnlockSupernovas(
     insertParams.push(pubkey, def.id, timestamp)
 
     // Aggregate rewards
-    aggregatedRewards.yellow += def.reward_yellow
     aggregatedRewards.green += def.reward_green
     aggregatedRewards.red += def.reward_red
     aggregatedRewards.blue += def.reward_blue
