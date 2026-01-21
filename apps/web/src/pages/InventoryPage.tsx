@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BackButton, Icon, Loading } from '../components/ui'
-import { useCelebration } from '../components/supernova'
 import { getStoredThemeColors, isDarkColor, STELLA_COLORS } from '../lib/nostr/events'
 import { getCurrentPubkey } from '../lib/nostr/events'
 import {
@@ -10,7 +9,6 @@ import {
   fetchSupernovaDefinitions,
   fetchUserStellaStats,
   fetchUserStats,
-  checkSupernovas,
   type StellaBalance,
   type UserSupernova,
   type SupernovaDefinition,
@@ -39,7 +37,6 @@ function useTextClass(): string {
 export function InventoryPage() {
   const navigate = useNavigate()
   const textClass = useTextClass()
-  const { celebrate } = useCelebration()
 
   const [_pubkey, setPubkey] = useState<string | null>(null)
   const [balance, setBalance] = useState<StellaBalance | null>(null)
@@ -59,13 +56,7 @@ export function InventoryPage() {
         const pk = await getCurrentPubkey()
         setPubkey(pk)
 
-        // First, check and unlock any pending supernovas based on current stats
-        const checkResult = await checkSupernovas(pk)
-        if (checkResult.newlyUnlocked.length > 0) {
-          celebrate(checkResult.newlyUnlocked)
-        }
-
-        // Then fetch data in parallel
+        // Fetch data in parallel
         const [balanceRes, userSupernovasRes, allSupernovasRes, statsRes, fullStatsRes] = await Promise.all([
           fetchStellaBalance(pk),
           fetchUserSupernovas(pk),

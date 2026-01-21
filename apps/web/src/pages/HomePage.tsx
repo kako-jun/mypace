@@ -4,11 +4,14 @@ import { PostForm } from '../components/form'
 import { Timeline } from '../components/timeline'
 import { LightBox, triggerLightBox } from '../components/ui'
 import { MyStatsWidget } from '../components/stats/MyStatsWidget'
+import { useCelebration } from '../components/supernova'
 import { setImageClickHandler, clearImageClickHandler } from '../lib/parser'
 import { getUIThemeColors, applyThemeColors } from '../lib/utils'
 import { getDraft, setDraft, getDraftReplyTo, setDraftReplyTo, clearDraft } from '../lib/storage'
 import { fetchEventById } from '../lib/nostr/relay'
+import { getCurrentPubkey } from '../lib/nostr/events'
 import { getFullContentForEdit } from '../lib/nostr/tags'
+import { checkSupernovas } from '../lib/api'
 import { CUSTOM_EVENTS, TIMEOUTS, LIMITS } from '../lib/constants'
 import type { Event } from '../types'
 
@@ -20,6 +23,7 @@ export function HomePage() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [replyingTo, setReplyingTo] = useState<Event | null>(null)
   const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { celebrate } = useCelebration()
 
   // Auto-save draft to localStorage with debounce
   useEffect(() => {
@@ -60,6 +64,20 @@ export function HomePage() {
   useEffect(() => {
     applyThemeColors(getUIThemeColors())
   }, [])
+
+  // Check and unlock supernovas on page load
+  useEffect(() => {
+    getCurrentPubkey()
+      .then((pubkey) => checkSupernovas(pubkey))
+      .then((result) => {
+        if (result.newlyUnlocked.length > 0) {
+          celebrate(result.newlyUnlocked)
+        }
+      })
+      .catch(() => {
+        // Ignore errors (user might not be logged in)
+      })
+  }, [celebrate])
 
   // Handle edit/reply/share URL parameters or restore from localStorage
   useEffect(() => {

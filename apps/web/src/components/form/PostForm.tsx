@@ -25,7 +25,6 @@ import {
   getDisplayName,
 } from '../../lib/utils'
 import { CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
-import { checkSupernovas } from '../../lib/api'
 import { AttachedImages, AttachedLocations, PostPreview } from '../post'
 import { Avatar, Icon, TextButton, ErrorMessage } from '../ui'
 import { setVimMode as saveVimMode } from '../../lib/storage'
@@ -38,7 +37,6 @@ import { VoicePicker } from '../voice'
 import { FormActions, ShortTextEditor, PostFormLongMode, TeaserPicker } from './index'
 import type { ShortTextEditorRef } from './ShortTextEditor'
 import { getTeaserColor } from '../../lib/nostr/tags'
-import { useCelebration } from '../supernova'
 
 interface PostFormProps {
   longMode: boolean
@@ -88,7 +86,6 @@ export function PostForm({
   const teaserButtonRef = useRef<HTMLButtonElement>(null)
   const shortTextEditorRef = useRef<ShortTextEditorRef>(null)
   const fileImportRef = useRef<HTMLInputElement>(null)
-  const { celebrate } = useCelebration()
 
   useEffect(() => {
     const profile = getLocalProfile()
@@ -288,16 +285,6 @@ export function PostForm({
       }
 
       window.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.NEW_POST))
-
-      // Check and unlock supernovas after posting
-      const pubkey = await getCurrentPubkey()
-      checkSupernovas(pubkey, 'first_post')
-        .then((result) => {
-          if (result.newlyUnlocked.length > 0) {
-            celebrate(result.newlyUnlocked)
-          }
-        })
-        .catch(console.error)
 
       if (longMode) {
         onLongModeChange(false)
