@@ -353,25 +353,15 @@ export default function PostActions({
       )
     }
 
-    // Colors that have counts > 0
-    const activeColors = COLOR_ORDER.filter((c) => totalCountsByColor[c] > 0)
+    // Yellow is always shown, other colors only when count > 0
+    const activeColors = COLOR_ORDER.filter((c) => c === 'yellow' || totalCountsByColor[c] > 0)
 
-    // Handle star icon click - show color picker
-    const handleStarClick = (e: React.MouseEvent) => {
-      e.stopPropagation()
-      if (canAddMoreStella || isMyPost) {
-        setShowColorPicker(true)
-      }
-    }
-
-    // Show colored stars with counts in a container
+    // Show colored stars with counts in a container (entire container is clickable)
     return (
       <span className="stella-display-container">
         {activeColors.map((color) => (
           <span key={color} className="stella-display-item">
-            <span className="stella-star-clickable" onClick={handleStarClick}>
-              <Icon name="Star" size={20} fill={STELLA_COLORS[color].hex} />
-            </span>
+            <Icon name="Star" size={20} fill={STELLA_COLORS[color].hex} />
             <span className="action-count">{formatNumber(totalCountsByColor[color])}</span>
           </span>
         ))}

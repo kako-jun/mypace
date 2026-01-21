@@ -692,6 +692,12 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+  transition: transform 0.15s ease;
+}
+
+/* Hover effect scales entire container together */
+.like-button:hover .stella-display-container {
+  transform: scale(1.1);
 }
 
 .stella-display-item {
@@ -704,12 +710,6 @@
 .stella-display-item svg {
   stroke: #333;
   stroke-width: 1.5;
-}
-
-/* Clickable star icon */
-.stella-star-clickable {
-  display: inline-flex;
-  cursor: pointer;
 }
 
 /* Reactor popup multi-color styles */

@@ -231,13 +231,21 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
       // Add to pending
       pendingStella.current = addStellaToColor(pendingStella.current, color)
 
-      // Optimistic UI update
-      setReactions((prev: ReactionData) => ({
-        myReaction: true,
-        myStella: addStellaToColor(prev.myStella, color),
-        myReactionId: prev.myReactionId,
-        reactors: prev.reactors,
-      }))
+      // Optimistic UI update - also update reactors to reflect in display
+      setReactions((prev: ReactionData) => {
+        const newMyStella = addStellaToColor(prev.myStella, color)
+        const myIndex = prev.reactors.findIndex((r) => r.pubkey === myPubkey)
+        const updatedReactors =
+          myIndex >= 0
+            ? prev.reactors.map((r, i) => (i === myIndex ? { ...r, stella: newMyStella } : r))
+            : [...prev.reactors, { pubkey: myPubkey, stella: newMyStella, reactionId: '', createdAt: 0 }]
+        return {
+          myReaction: true,
+          myStella: newMyStella,
+          myReactionId: prev.myReactionId,
+          reactors: updatedReactors,
+        }
+      })
 
       if (stellaDebounceTimer.current) {
         clearTimeout(stellaDebounceTimer.current)
