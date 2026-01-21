@@ -97,6 +97,7 @@ export function InventoryPage() {
     posts: [1, 10, 100, 1000],
     supernova: [1, 10, 25, 50],
     long_post: [281, 1000, 2000, 4000],
+    penguin: [1000, 500, 250, 100], // Reverse order: lower number = higher tier
     received_green: [1, 10, 100, 1000],
     received_red: [1, 10, 100, 1000],
     received_blue: [1, 10, 100, 1000],
@@ -112,6 +113,10 @@ export function InventoryPage() {
     // Long post series has different naming
     if (series === 'long_post') {
       return threshold === 281 ? 'first_long_post' : `first_${threshold}_chars`
+    }
+    // Penguin series: penguin_1000, penguin_500, etc.
+    if (series === 'penguin') {
+      return `penguin_${threshold}`
     }
     // First tier (threshold=1) has special names
     if (threshold === 1) {
@@ -143,6 +148,7 @@ export function InventoryPage() {
     const postsMatch = supernovaId.match(/^posts_(\d+)$/)
     const supernovaMatch = supernovaId.match(/^supernova_(\d+)$/)
     const longPostMatch = supernovaId.match(/^first_(\d+)_chars$/)
+    const penguinMatch = supernovaId.match(/^penguin_(\d+)$/)
     const receivedMatch = supernovaId.match(/^(received_(?:green|red|blue|purple))_(\d+)$/)
     const givenMatch = supernovaId.match(/^(given_(?:green|red|blue|purple))_(\d+)$/)
 
@@ -158,6 +164,9 @@ export function InventoryPage() {
     } else if (longPostMatch) {
       series = 'long_post'
       threshold = parseInt(longPostMatch[1], 10)
+    } else if (penguinMatch) {
+      series = 'penguin'
+      threshold = parseInt(penguinMatch[1], 10)
     } else if (receivedMatch) {
       series = receivedMatch[1]
       threshold = parseInt(receivedMatch[2], 10)
@@ -381,29 +390,66 @@ export function InventoryPage() {
                   )
                 })}
                 {/* Completed supernovas */}
-                {supernovas.map((supernova) => (
-                  <div key={supernova.id} className="inventory-supernova-item completed">
-                    <div className="inventory-supernova-icon">
-                      <Icon
-                        name="Sparkles"
-                        size={24}
-                        fill={STELLA_COLORS[supernova.supernova_color as keyof typeof STELLA_COLORS]?.hex || '#ffd700'}
-                      />
+                {supernovas.map((supernova) => {
+                  const hasReward =
+                    supernova.reward_green > 0 ||
+                    supernova.reward_red > 0 ||
+                    supernova.reward_blue > 0 ||
+                    supernova.reward_purple > 0
+                  return (
+                    <div key={supernova.id} className="inventory-supernova-item completed">
+                      <div className="inventory-supernova-icon">
+                        <Icon
+                          name="Sparkles"
+                          size={24}
+                          fill={
+                            STELLA_COLORS[supernova.supernova_color as keyof typeof STELLA_COLORS]?.hex || '#ffd700'
+                          }
+                        />
+                      </div>
+                      <div className="inventory-supernova-info">
+                        <span className="inventory-supernova-name">
+                          <Icon name="Check" size={14} className="inventory-check-icon" />
+                          {supernova.name}
+                        </span>
+                        {supernova.description !== supernova.name && (
+                          <span className="inventory-supernova-desc">{supernova.description}</span>
+                        )}
+                        <span className="inventory-supernova-date">
+                          {new Date(supernova.unlocked_at * 1000).toLocaleDateString()}
+                        </span>
+                        {hasReward && (
+                          <div className="inventory-supernova-reward-inline">
+                            {supernova.reward_green > 0 && (
+                              <span>
+                                <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+
+                                {formatNumber(supernova.reward_green)}
+                              </span>
+                            )}
+                            {supernova.reward_red > 0 && (
+                              <span>
+                                <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+
+                                {formatNumber(supernova.reward_red)}
+                              </span>
+                            )}
+                            {supernova.reward_blue > 0 && (
+                              <span>
+                                <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+
+                                {formatNumber(supernova.reward_blue)}
+                              </span>
+                            )}
+                            {supernova.reward_purple > 0 && (
+                              <span>
+                                <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+
+                                {formatNumber(supernova.reward_purple)}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="inventory-supernova-info">
-                      <span className="inventory-supernova-name">
-                        <Icon name="Check" size={14} className="inventory-check-icon" />
-                        {supernova.name}
-                      </span>
-                      {supernova.description !== supernova.name && (
-                        <span className="inventory-supernova-desc">{supernova.description}</span>
-                      )}
-                      <span className="inventory-supernova-date">
-                        {new Date(supernova.unlocked_at * 1000).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>

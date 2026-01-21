@@ -224,10 +224,16 @@ supernovas.post('/check', async (c) => {
         case 'first_given_stella':
           shouldUnlock = event === 'first_given_stella' || userStats.totalGivenStella > 0
           break
-        case 'serial_under_100':
+        case 'penguin_100':
           shouldUnlock = userStats.serialNumber !== null && userStats.serialNumber <= 100
           break
-        case 'serial_under_1000':
+        case 'penguin_250':
+          shouldUnlock = userStats.serialNumber !== null && userStats.serialNumber <= 250
+          break
+        case 'penguin_500':
+          shouldUnlock = userStats.serialNumber !== null && userStats.serialNumber <= 500
+          break
+        case 'penguin_1000':
           shouldUnlock = userStats.serialNumber !== null && userStats.serialNumber <= 1000
           break
         default: {
@@ -467,29 +473,53 @@ supernovas.post('/seed', async (c) => {
       reward_blue: 0,
       reward_purple: 0,
     },
-    // === Special achievements (red, tier 1) ===
+    // === Serial series (green→green→red→blue) 1000→500→250→100 ===
     {
-      id: 'serial_under_1000',
-      name: 'Pioneer',
+      id: 'penguin_1000',
+      name: 'Penguin 1000',
       description: 'Joined within the first 1000 users',
       category: 'single',
       threshold: 1000,
-      supernova_color: 'red',
-      reward_green: 10,
-      reward_red: 1,
+      supernova_color: 'green',
+      reward_green: 1,
+      reward_red: 0,
       reward_blue: 0,
       reward_purple: 0,
     },
     {
-      id: 'serial_under_100',
-      name: 'Early Bird',
+      id: 'penguin_500',
+      name: 'Penguin 500',
+      description: 'Joined within the first 500 users',
+      category: 'single',
+      threshold: 500,
+      supernova_color: 'green',
+      reward_green: 2,
+      reward_red: 0,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'penguin_250',
+      name: 'Penguin 250',
+      description: 'Joined within the first 250 users',
+      category: 'single',
+      threshold: 250,
+      supernova_color: 'red',
+      reward_green: 30,
+      reward_red: 3,
+      reward_blue: 0,
+      reward_purple: 0,
+    },
+    {
+      id: 'penguin_100',
+      name: 'Penguin 100',
       description: 'Joined within the first 100 users',
       category: 'single',
       threshold: 100,
       supernova_color: 'blue',
-      reward_green: 100,
-      reward_red: 10,
-      reward_blue: 1,
+      reward_green: 400,
+      reward_red: 40,
+      reward_blue: 4,
       reward_purple: 0,
     },
     // === Long post series (green→green→red→blue→purple) ===
