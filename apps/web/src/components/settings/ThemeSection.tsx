@@ -192,14 +192,14 @@ export default function ThemeSection({
             variant={appTheme === 'light' ? 'primary' : 'secondary'}
             onClick={() => onAppThemeChange('light')}
           >
-            LIGHT
+            Light
           </Button>
           <Button
             size="md"
             variant={appTheme === 'dark' ? 'primary' : 'secondary'}
             onClick={() => onAppThemeChange('dark')}
           >
-            DARK
+            Dark
           </Button>
         </div>
       </SettingsSection>
