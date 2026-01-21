@@ -15,7 +15,31 @@ import { getCurrentTimestamp } from '../utils'
 
 const publish = new Hono<{ Bindings: Bindings }>()
 
-// Record stella to D1 (with refund for count decreases)
+// Refund stella to user's balance (UPSERT to handle missing row)
+async function refundStellaBalance(
+  db: D1Database,
+  pubkey: string,
+  amounts: { green: number; red: number; blue: number; purple: number }
+): Promise<void> {
+  if (amounts.green === 0 && amounts.red === 0 && amounts.blue === 0 && amounts.purple === 0) return
+
+  const now = getCurrentTimestamp()
+  await db
+    .prepare(
+      `INSERT INTO user_stella_balance (pubkey, yellow, green, red, blue, purple, updated_at)
+       VALUES (?, 0, ?, ?, ?, ?, ?)
+       ON CONFLICT(pubkey) DO UPDATE SET
+         green = green + excluded.green,
+         red = red + excluded.red,
+         blue = blue + excluded.blue,
+         purple = purple + excluded.purple,
+         updated_at = excluded.updated_at`
+    )
+    .bind(pubkey, amounts.green, amounts.red, amounts.blue, amounts.purple, now)
+    .run()
+}
+
+// Record stella to D1
 async function recordStella(
   db: D1Database,
   eventId: string,
@@ -25,22 +49,6 @@ async function recordStella(
   stellaColor: string,
   reactionId: string
 ): Promise<void> {
-  // Check current count to refund difference if decreased (for non-yellow colors)
-  if (stellaColor !== 'yellow') {
-    const existing = await db
-      .prepare(`SELECT stella_count FROM user_stella WHERE event_id = ? AND reactor_pubkey = ? AND stella_color = ?`)
-      .bind(eventId, reactorPubkey, stellaColor)
-      .first<{ stella_count: number }>()
-
-    if (existing && existing.stella_count > stellaCount) {
-      const refundAmount = existing.stella_count - stellaCount
-      await db
-        .prepare(`UPDATE user_stella_balance SET ${stellaColor} = ${stellaColor} + ?, updated_at = ? WHERE pubkey = ?`)
-        .bind(refundAmount, getCurrentTimestamp(), reactorPubkey)
-        .run()
-    }
-  }
-
   await db
     .prepare(
       `INSERT INTO user_stella (event_id, author_pubkey, reactor_pubkey, stella_count, stella_color, reaction_id, updated_at)
@@ -384,17 +392,7 @@ async function deleteStella(db: D1Database, eventIds: string[], pubkey: string):
       }
     }
 
-    // Refund non-yellow stella to balance
-    if (refund.green > 0 || refund.red > 0 || refund.blue > 0 || refund.purple > 0) {
-      await db
-        .prepare(
-          `UPDATE user_stella_balance
-           SET green = green + ?, red = red + ?, blue = blue + ?, purple = purple + ?, updated_at = ?
-           WHERE pubkey = ?`
-        )
-        .bind(refund.green, refund.red, refund.blue, refund.purple, getCurrentTimestamp(), pubkey)
-        .run()
-    }
+    await refundStellaBalance(db, pubkey, refund)
   }
 
   // Delete if user is the reactor (deleting their reaction by reaction_id)
