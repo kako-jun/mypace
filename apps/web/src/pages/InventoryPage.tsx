@@ -92,6 +92,59 @@ export function InventoryPage() {
   const completedIds = new Set(supernovas.map((s) => s.id))
   const allIncompleteSupernovas = allSupernovas.filter((s) => !completedIds.has(s.id))
 
+  // Define tier thresholds for each series
+  const SERIES_THRESHOLDS: Record<string, number[]> = {
+    posts: [10, 100, 1000, 10000],
+    supernova: [10, 25, 50],
+    received_yellow: [10, 100, 1000],
+    received_green: [10, 100, 1000],
+    received_red: [10, 100, 1000],
+    received_blue: [10, 100, 1000],
+    received_purple: [10, 100, 1000],
+    given_yellow: [10, 100, 1000],
+    given_green: [10, 100, 1000],
+    given_red: [10, 100, 1000],
+    given_blue: [10, 100, 1000],
+    given_purple: [10, 100, 1000],
+  }
+
+  // Get the previous tier ID that must be completed before showing this supernova
+  const getPreviousTierId = (supernovaId: string): string | null => {
+    // Parse series and threshold from ID
+    const postsMatch = supernovaId.match(/^posts_(\d+)$/)
+    const supernovaMatch = supernovaId.match(/^supernova_(\d+)$/)
+    const receivedMatch = supernovaId.match(/^(received_(?:yellow|green|red|blue|purple))_(\d+)$/)
+    const givenMatch = supernovaId.match(/^(given_(?:yellow|green|red|blue|purple))_(\d+)$/)
+
+    let series: string | null = null
+    let threshold: number | null = null
+
+    if (postsMatch) {
+      series = 'posts'
+      threshold = parseInt(postsMatch[1], 10)
+    } else if (supernovaMatch) {
+      series = 'supernova'
+      threshold = parseInt(supernovaMatch[1], 10)
+    } else if (receivedMatch) {
+      series = receivedMatch[1]
+      threshold = parseInt(receivedMatch[2], 10)
+    } else if (givenMatch) {
+      series = givenMatch[1]
+      threshold = parseInt(givenMatch[2], 10)
+    }
+
+    if (!series || threshold === null) return null
+
+    const thresholds = SERIES_THRESHOLDS[series]
+    if (!thresholds) return null
+
+    const idx = thresholds.indexOf(threshold)
+    if (idx <= 0) return null // First tier or not found
+
+    const prevThreshold = thresholds[idx - 1]
+    return `${series}_${prevThreshold}`
+  }
+
   // Get progress for cumulative supernovas
   const getProgress = (supernova: SupernovaDefinition): { current: number; target: number } | null => {
     if (supernova.category !== 'cumulative') return null
@@ -126,13 +179,22 @@ export function InventoryPage() {
 
   // Filter and sort pending supernovas
   // - Show all non-cumulative (single) supernovas
-  // - Show cumulative supernovas only if progress > 0 (hide until started)
+  // - Show cumulative supernovas only if:
+  //   1. It's the first tier of a series, OR previous tier is completed
+  //   2. progress > 0 (hide until started)
   // - Sort by progress percentage (higher progress = higher in list)
   const pendingSupernovas = (() => {
     const result: SupernovaDefinition[] = []
 
     for (const s of allIncompleteSupernovas) {
       if (s.category === 'cumulative') {
+        // Check if previous tier must be completed first
+        const prevTierId = getPreviousTierId(s.id)
+        if (prevTierId && !completedIds.has(prevTierId)) {
+          // Previous tier not completed - don't show this one
+          continue
+        }
+
         // Cumulative: only show if progress > 0
         const progress = getProgress(s)
         if (progress && progress.current > 0) {
@@ -215,6 +277,11 @@ export function InventoryPage() {
                 {/* Pending supernovas */}
                 {pendingSupernovas.map((supernova) => {
                   const progress = getProgress(supernova)
+                  const hasReward =
+                    supernova.reward_green > 0 ||
+                    supernova.reward_red > 0 ||
+                    supernova.reward_blue > 0 ||
+                    supernova.reward_purple > 0
                   return (
                     <div key={supernova.id} className="inventory-supernova-item pending">
                       <div className="inventory-supernova-icon">
@@ -243,31 +310,33 @@ export function InventoryPage() {
                             </span>
                           </div>
                         )}
-                      </div>
-                      <div className="inventory-supernova-reward">
-                        {supernova.reward_green > 0 && (
-                          <span>
-                            <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+
-                            {formatNumber(supernova.reward_green)}
-                          </span>
-                        )}
-                        {supernova.reward_red > 0 && (
-                          <span>
-                            <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+
-                            {formatNumber(supernova.reward_red)}
-                          </span>
-                        )}
-                        {supernova.reward_blue > 0 && (
-                          <span>
-                            <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+
-                            {formatNumber(supernova.reward_blue)}
-                          </span>
-                        )}
-                        {supernova.reward_purple > 0 && (
-                          <span>
-                            <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+
-                            {formatNumber(supernova.reward_purple)}
-                          </span>
+                        {hasReward && (
+                          <div className="inventory-supernova-reward-inline">
+                            {supernova.reward_green > 0 && (
+                              <span>
+                                <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+
+                                {formatNumber(supernova.reward_green)}
+                              </span>
+                            )}
+                            {supernova.reward_red > 0 && (
+                              <span>
+                                <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+
+                                {formatNumber(supernova.reward_red)}
+                              </span>
+                            )}
+                            {supernova.reward_blue > 0 && (
+                              <span>
+                                <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+
+                                {formatNumber(supernova.reward_blue)}
+                              </span>
+                            )}
+                            {supernova.reward_purple > 0 && (
+                              <span>
+                                <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+
+                                {formatNumber(supernova.reward_purple)}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
