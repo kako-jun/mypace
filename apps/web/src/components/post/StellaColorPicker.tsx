@@ -20,7 +20,7 @@ interface StellaColorPickerProps {
   getDisplayName: (pubkey: string) => string
   onNavigateToProfile: (pubkey: string) => void
   onAddStella: (color: StellaColor) => void
-  onRemoveStella?: () => void
+  onRemoveStella?: (color: StellaColor) => void
   onClose: (e?: React.MouseEvent) => void
   disabled?: boolean // Disable all buttons (for own posts)
 }
@@ -103,15 +103,17 @@ export default function StellaColorPicker({
     }
   }
 
-  // Handle remove stella (yellow only)
+  // Handle remove stella
   const handleRemoveStella = () => {
+    if (showReactorsColor) {
+      onRemoveStella?.(showReactorsColor)
+    }
     setShowReactorsColor(null)
-    onRemoveStella?.()
   }
 
-  // Check if current user can remove (only when viewing yellow and user has yellow stella)
+  // Check if current user can remove (when viewing a color and user has that color stella)
   const myReactor = reactors.find((r) => r.pubkey === myPubkey)
-  const canRemove = onRemoveStella && showReactorsColor === 'yellow' && myReactor && myReactor.stella.yellow > 0
+  const canRemove = onRemoveStella && showReactorsColor && myReactor && myReactor.stella[showReactorsColor] > 0
 
   return createPortal(
     <>

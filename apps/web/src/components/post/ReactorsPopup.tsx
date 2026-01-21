@@ -30,9 +30,9 @@ export default function ReactorsPopup({
   onClose,
   filterColor,
 }: ReactorsPopupProps) {
-  // Check if current user can remove (only when viewing yellow and user has yellow stella)
+  // Check if current user can remove (when viewing a color and user has that color stella)
   const myReactor = reactors.find((r) => r.pubkey === myPubkey)
-  const canRemove = onRemove && filterColor === 'yellow' && myReactor && myReactor.stella.yellow > 0
+  const canRemove = onRemove && filterColor && myReactor && myReactor.stella[filterColor] > 0
 
   // Title based on filter color
   const title = filterColor ? `${STELLA_COLORS[filterColor].label} Stella` : 'Stella'

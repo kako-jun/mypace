@@ -44,6 +44,16 @@ export function removeYellowStella(counts: StellaCountsByColor): StellaCountsByC
 }
 
 /**
+ * Remove all stella of a specific color
+ */
+export function removeStellaColor(counts: StellaCountsByColor, color: StellaColor): StellaCountsByColor {
+  return {
+    ...counts,
+    [color]: 0,
+  }
+}
+
+/**
  * Create empty stella counts object
  */
 export function createEmptyStellaCounts(): StellaCountsByColor {

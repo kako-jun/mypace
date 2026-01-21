@@ -21,7 +21,7 @@ interface PostActionsProps {
   myPubkey: string | null
   getDisplayName: (pubkey: string) => string
   onAddStella: (color: StellaColor) => void
-  onUnlike: () => void
+  onUnlike: (color: StellaColor) => void
   onReply: () => void
   onRepost: () => void
   onShareOption: (option: ShareOption) => void
@@ -152,10 +152,13 @@ export default function PostActions({
     setShowColorPicker(true)
   }, [showReactorsPopup, showColorPicker])
 
-  const handleUnlikeConfirm = useCallback(() => {
-    setShowReactorsPopup(null)
-    onUnlike()
-  }, [onUnlike])
+  const handleUnlikeConfirm = useCallback(
+    (color: StellaColor) => {
+      setShowReactorsPopup(null)
+      onUnlike(color)
+    },
+    [onUnlike]
+  )
 
   const handleClosePopup = useCallback((e?: React.MouseEvent) => {
     if (e) {
@@ -298,7 +301,7 @@ export default function PostActions({
         myPubkey={myPubkey}
         getDisplayName={getDisplayName}
         onNavigateToProfile={onNavigateToProfile}
-        onRemove={showReactorsPopup === 'yellow' ? handleUnlikeConfirm : undefined}
+        onRemove={myStella[showReactorsPopup] > 0 ? () => handleUnlikeConfirm(showReactorsPopup) : undefined}
         onClose={handleClosePopup}
         filterColor={showReactorsPopup}
       />

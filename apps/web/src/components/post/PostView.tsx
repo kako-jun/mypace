@@ -14,7 +14,7 @@ import {
 import {
   canAddStella,
   addStellaToColor,
-  removeYellowStella,
+  removeStellaColor,
   createEmptyStellaCounts,
   getTotalStellaCount,
   EMPTY_STELLA_COUNTS,
@@ -247,57 +247,60 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     [event, myPubkey, setReactions, flushStella]
   )
 
-  // Unlike (remove yellow stella only)
-  const handleUnlike = useCallback(async () => {
-    if (!event || !myPubkey) return
-    const currentReactions = reactionsRef.current
-    if (!currentReactions.myReactionId) return
+  // Remove stella of a specific color
+  const handleUnlike = useCallback(
+    async (color: StellaColor) => {
+      if (!event || !myPubkey) return
+      const currentReactions = reactionsRef.current
+      if (!currentReactions.myReactionId) return
 
-    const myStella = currentReactions.myStella
-    if (myStella.yellow <= 0) return
+      const myStella = currentReactions.myStella
+      if (myStella[color] <= 0) return
 
-    if (stellaDebounceTimer.current) {
-      clearTimeout(stellaDebounceTimer.current)
-      stellaDebounceTimer.current = null
-    }
-    pendingStella.current = createEmptyStellaCounts()
-
-    const newMyStella = removeYellowStella(myStella)
-    const remainingTotal = getTotalStellaCount(newMyStella)
-
-    setLikingId(event.id)
-    try {
-      if (remainingTotal > 0) {
-        const newReaction = await createReactionEvent(event, '+', newMyStella)
-        await publishEvent(newReaction)
-        try {
-          await publishEvent(await createDeleteEvent([currentReactions.myReactionId]))
-        } catch {
-          // Ignore delete errors
-        }
-        setReactions((prev: ReactionData) => ({
-          myReaction: true,
-          myStella: newMyStella,
-          myReactionId: newReaction.id,
-          reactors: prev.reactors.map((r) =>
-            r.pubkey === myPubkey
-              ? { ...r, stella: newMyStella, reactionId: newReaction.id, createdAt: newReaction.created_at }
-              : r
-          ),
-        }))
-      } else {
-        await publishEvent(await createDeleteEvent([currentReactions.myReactionId]))
-        setReactions((prev: ReactionData) => ({
-          myReaction: false,
-          myStella: { ...EMPTY_STELLA_COUNTS },
-          myReactionId: null,
-          reactors: prev.reactors.filter((r) => r.pubkey !== myPubkey),
-        }))
+      if (stellaDebounceTimer.current) {
+        clearTimeout(stellaDebounceTimer.current)
+        stellaDebounceTimer.current = null
       }
-    } finally {
-      setLikingId(null)
-    }
-  }, [event, myPubkey, setReactions])
+      pendingStella.current = createEmptyStellaCounts()
+
+      const newMyStella = removeStellaColor(myStella, color)
+      const remainingTotal = getTotalStellaCount(newMyStella)
+
+      setLikingId(event.id)
+      try {
+        if (remainingTotal > 0) {
+          const newReaction = await createReactionEvent(event, '+', newMyStella)
+          await publishEvent(newReaction)
+          try {
+            await publishEvent(await createDeleteEvent([currentReactions.myReactionId]))
+          } catch {
+            // Ignore delete errors
+          }
+          setReactions((prev: ReactionData) => ({
+            myReaction: true,
+            myStella: newMyStella,
+            myReactionId: newReaction.id,
+            reactors: prev.reactors.map((r) =>
+              r.pubkey === myPubkey
+                ? { ...r, stella: newMyStella, reactionId: newReaction.id, createdAt: newReaction.created_at }
+                : r
+            ),
+          }))
+        } else {
+          await publishEvent(await createDeleteEvent([currentReactions.myReactionId]))
+          setReactions((prev: ReactionData) => ({
+            myReaction: false,
+            myStella: { ...EMPTY_STELLA_COUNTS },
+            myReactionId: null,
+            reactors: prev.reactors.filter((r) => r.pubkey !== myPubkey),
+          }))
+        }
+      } finally {
+        setLikingId(null)
+      }
+    },
+    [event, myPubkey, setReactions]
+  )
 
   if (!mounted) return null
 
