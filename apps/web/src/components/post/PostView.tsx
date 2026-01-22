@@ -383,11 +383,13 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
 
   if (error || !event) {
     const fallbackTheme = getThemeCardProps(getThemeColors())
+    const textClass = fallbackTheme.className.includes('light-text') ? 'light-text' : 'dark-text'
     return (
-      <div className={`post-view ${isModal ? 'post-view-modal' : ''} ${fallbackTheme.className}`}>
-        <p className="post-not-found">{error || 'Post not found'}</p>
-        <div className="flex justify-center">
-          <TextButton onClick={handleBack}>Back to Timeline</TextButton>
+      <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
+        <BackButton onClick={handleBack} icon={isModal ? '×' : '←'} label={isModal ? 'CLOSE' : 'BACK'} />
+        <div className={`post-not-found-header ${textClass}`}>
+          <h2>Post not found</h2>
+          <p>{error || 'The post may have been deleted or is unavailable.'}</p>
         </div>
       </div>
     )

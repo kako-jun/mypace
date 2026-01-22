@@ -3,11 +3,11 @@
 .not-found-page {
   max-width: 600px;
   margin: 0 auto;
-  padding: 4rem 1rem;
-  text-align: center;
+  padding: 1rem;
 }
 
 .not-found-header {
+  margin-bottom: 1.5rem;
   background: none;
   border: none;
   padding: 0;
@@ -21,8 +21,13 @@
   color: #333;
 }
 
-.not-found-header h1 {
-  font-size: 3rem;
+.not-found-header h2 {
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+}
+
+.not-found-header p {
+  font-size: 0.85rem;
+  color: inherit;
   margin: 0;
-  opacity: 0.5;
 }

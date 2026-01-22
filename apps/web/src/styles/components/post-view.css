@@ -6,9 +6,30 @@
   padding: 0.5rem;
 }
 
-.post-not-found {
-  text-align: center;
-  margin: 2rem 0 1rem;
+.post-not-found-header {
+  margin-bottom: 1.5rem;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.post-not-found-header.light-text {
+  color: #ffffff;
+}
+
+.post-not-found-header.dark-text {
+  color: #333;
+}
+
+.post-not-found-header h2 {
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+}
+
+.post-not-found-header p {
+  font-size: 0.85rem;
+  color: inherit;
+  margin: 0;
 }
 
 /* Back button - uses .text-outlined-button for base style */
