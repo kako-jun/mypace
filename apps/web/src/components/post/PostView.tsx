@@ -385,7 +385,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     const fallbackTheme = getThemeCardProps(getThemeColors())
     const textClass = fallbackTheme.className.includes('light-text') ? 'light-text' : 'dark-text'
     return (
-      <div className={`post-view ${isModal ? 'post-view-modal' : ''}`}>
+      <div className="post-not-found-page">
         <BackButton onClick={handleBack} icon={isModal ? '×' : '←'} label={isModal ? 'CLOSE' : 'BACK'} />
         <div className={`post-not-found-header ${textClass}`}>
           <h2>Post not found</h2>

@@ -9,6 +9,9 @@ import {
   getStellaCounts,
   batchUnlockSupernovas,
   getTotalStellaCount,
+  addStellaBalance,
+  deductStellaBalance,
+  type StellaColorCounts,
 } from '../services/stella'
 import { MAX_NOTIFICATIONS, STELLA_COLORS, STELLA_THRESHOLDS } from '../constants'
 import { getCurrentTimestamp } from '../utils'
@@ -49,6 +52,21 @@ async function recordStella(
   stellaColor: string,
   reactionId: string
 ): Promise<void> {
+  const now = getCurrentTimestamp()
+
+  // Get previous stella count for this reaction (to calculate delta)
+  const previous = await db
+    .prepare(
+      `SELECT stella_count FROM user_stella
+       WHERE event_id = ? AND reactor_pubkey = ? AND stella_color = ?`
+    )
+    .bind(eventId, reactorPubkey, stellaColor)
+    .first<{ stella_count: number }>()
+
+  const previousCount = previous?.stella_count || 0
+  const delta = stellaCount - previousCount
+
+  // Update user_stella table
   await db
     .prepare(
       `INSERT INTO user_stella (event_id, author_pubkey, reactor_pubkey, stella_count, stella_color, reaction_id, updated_at)
@@ -58,8 +76,19 @@ async function recordStella(
          reaction_id = excluded.reaction_id,
          updated_at = excluded.updated_at`
     )
-    .bind(eventId, authorPubkey, reactorPubkey, stellaCount, stellaColor, reactionId, getCurrentTimestamp())
+    .bind(eventId, authorPubkey, reactorPubkey, stellaCount, stellaColor, reactionId, now)
     .run()
+
+  // Add stella to author's inventory (green and above only, yellow is infinite)
+  if (delta > 0 && stellaColor !== 'yellow') {
+    const amounts: Partial<StellaColorCounts> = {
+      green: stellaColor === 'green' ? delta : 0,
+      red: stellaColor === 'red' ? delta : 0,
+      blue: stellaColor === 'blue' ? delta : 0,
+      purple: stellaColor === 'purple' ? delta : 0,
+    }
+    await addStellaBalance(db, authorPubkey, amounts, now)
+  }
 }
 
 // Send push notification (fire and forget)
@@ -416,22 +445,58 @@ async function deleteStella(db: D1Database, eventIds: string[], pubkey: string):
   // Get stella records that will be deleted (for refund and notification cleanup)
   const stellaRecords = await db
     .prepare(
-      `SELECT event_id, reactor_pubkey, stella_count, stella_color FROM user_stella WHERE reaction_id IN (${placeholders}) AND reactor_pubkey = ?`
+      `SELECT event_id, author_pubkey, reactor_pubkey, stella_count, stella_color FROM user_stella WHERE reaction_id IN (${placeholders}) AND reactor_pubkey = ?`
     )
     .bind(...eventIds, pubkey)
-    .all<{ event_id: string; reactor_pubkey: string; stella_count: number; stella_color: string }>()
+    .all<{
+      event_id: string
+      author_pubkey: string
+      reactor_pubkey: string
+      stella_count: number
+      stella_color: string
+    }>()
 
   // Calculate refund amounts by color (excluding yellow which is infinite)
   if (stellaRecords.results && stellaRecords.results.length > 0) {
-    const refund = { green: 0, red: 0, blue: 0, purple: 0 }
+    const refundToReactor = { green: 0, red: 0, blue: 0, purple: 0 }
+    const deductFromAuthor = { green: 0, red: 0, blue: 0, purple: 0 }
+
     for (const record of stellaRecords.results) {
-      const color = record.stella_color as keyof typeof refund
-      if (color in refund) {
-        refund[color] += record.stella_count
+      const color = record.stella_color as keyof typeof refundToReactor
+      if (color in refundToReactor) {
+        refundToReactor[color] += record.stella_count
+        deductFromAuthor[color] += record.stella_count
       }
     }
 
-    await refundStellaBalance(db, pubkey, refund)
+    // Refund to reactor (who sent the stella)
+    await refundStellaBalance(db, pubkey, refundToReactor)
+
+    // Deduct from author (who received the stella) - only if they are different users
+    // and only for green+ stella (yellow is infinite)
+    const hasNonZero =
+      deductFromAuthor.green > 0 || deductFromAuthor.red > 0 || deductFromAuthor.blue > 0 || deductFromAuthor.purple > 0
+    if (hasNonZero && stellaRecords.results.length > 0) {
+      // Get unique author pubkeys
+      const authorPubkeys = new Set(stellaRecords.results.map((r) => r.author_pubkey))
+      for (const authorPubkey of authorPubkeys) {
+        if (authorPubkey === pubkey) continue // Don't deduct from self
+
+        // Calculate per-author deduction
+        const authorDeduction = { green: 0, red: 0, blue: 0, purple: 0 }
+        for (const record of stellaRecords.results) {
+          if (record.author_pubkey === authorPubkey) {
+            const color = record.stella_color as keyof typeof authorDeduction
+            if (color in authorDeduction) {
+              authorDeduction[color] += record.stella_count
+            }
+          }
+        }
+
+        // Deduct from author's balance (negative amounts)
+        await deductStellaBalance(db, authorPubkey, authorDeduction)
+      }
+    }
   }
 
   // Delete if user is the reactor (deleting their reaction by reaction_id)

@@ -6,6 +6,12 @@
   padding: 0.5rem;
 }
 
+.post-not-found-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
 .post-not-found-header {
   margin-bottom: 1.5rem;
   background: none;
@@ -38,6 +44,10 @@
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
+  margin: 0 0 1rem;
+}
+
+.post-view .back-button {
   margin: 0 auto 1rem;
 }
 

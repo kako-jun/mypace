@@ -99,6 +99,30 @@ export async function addStellaBalance(
     .run()
 }
 
+// Deduct stella from user balance (subtract amounts, ensure non-negative)
+export async function deductStellaBalance(
+  db: D1Database,
+  pubkey: string,
+  amounts: Partial<StellaColorCounts>,
+  now?: number
+): Promise<void> {
+  const timestamp = now ?? getCurrentTimestamp()
+
+  await db
+    .prepare(
+      `INSERT INTO user_stella_balance (pubkey, yellow, green, red, blue, purple, updated_at)
+       VALUES (?, 0, 0, 0, 0, 0, ?)
+       ON CONFLICT(pubkey) DO UPDATE SET
+         green = MAX(0, green - ?),
+         red = MAX(0, red - ?),
+         blue = MAX(0, blue - ?),
+         purple = MAX(0, purple - ?),
+         updated_at = excluded.updated_at`
+    )
+    .bind(pubkey, timestamp, amounts.green || 0, amounts.red || 0, amounts.blue || 0, amounts.purple || 0)
+    .run()
+}
+
 // Unlock a supernova and grant rewards
 export async function unlockSupernova(
   db: D1Database,
