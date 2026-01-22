@@ -6,6 +6,7 @@ import { getCurrentPubkey } from '../lib/nostr/events'
 import { BackButton, CopyButton, TextButton, LightBox, triggerLightBox, Icon } from '../components/ui'
 import DeleteConfirmDialog from '../components/post/DeleteConfirmDialog'
 import { formatTimestamp, getThemeCardProps } from '../lib/nostr/events'
+import { getThemeColors } from '../lib/storage'
 import { TIMEOUTS } from '../lib/constants'
 import '../styles/pages/upload-history.css'
 
@@ -19,7 +20,7 @@ export function UploadHistoryPage() {
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null)
   const [pubkey, setPubkey] = useState<string>('')
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
-  const themeProps = getThemeCardProps(null)
+  const themeProps = getThemeCardProps(getThemeColors())
   const textClass = themeProps.className.includes('light-text') ? 'light-text' : 'dark-text'
 
   const handleDeleteCancel = useCallback(() => {

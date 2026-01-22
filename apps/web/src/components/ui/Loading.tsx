@@ -1,8 +1,9 @@
 import { getThemeCardProps } from '../../lib/nostr/theme'
+import { getThemeColors } from '../../lib/storage'
 import './Loading.css'
 
 export default function Loading() {
-  const themeProps = getThemeCardProps(null)
+  const themeProps = getThemeCardProps(getThemeColors())
   const colorClass = themeProps.className.includes('light-text') ? 'loading-light' : 'loading-dark'
 
   return (

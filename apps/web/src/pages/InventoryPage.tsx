@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { BackButton, Icon, Loading } from '../components/ui'
 import { useCelebration } from '../components/supernova'
 import { getThemeCardProps, STELLA_COLORS } from '../lib/nostr/events'
+import { getThemeColors } from '../lib/storage'
 import { getCurrentPubkey } from '../lib/nostr/events'
 import {
   fetchStellaBalance,
@@ -25,7 +26,7 @@ const STELLA_COLOR_ORDER = ['green', 'red', 'blue', 'purple'] as const
 
 export function InventoryPage() {
   const navigate = useNavigate()
-  const themeProps = getThemeCardProps(null)
+  const themeProps = getThemeCardProps(getThemeColors())
   const textClass = themeProps.className.includes('light-text') ? 'light-text' : 'dark-text'
   const { celebrate } = useCelebration()
 
