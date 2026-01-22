@@ -236,6 +236,10 @@ supernovas.post('/check', async (c) => {
         case 'penguin_1000':
           shouldUnlock = userStats.serialNumber !== null && userStats.serialNumber <= 1000
           break
+        case 'first_supernova':
+          // Unlock if user already has any supernova or is about to unlock one
+          shouldUnlock = userStats.supernovaCount > 0 || toUnlock.length > 0
+          break
         default: {
           // Handle pattern-based supernovas
           const receivedMatch = def.id.match(/^received_(green|red|blue|purple)_(\d+)$/)

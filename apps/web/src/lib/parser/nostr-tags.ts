@@ -3,7 +3,8 @@ import { escapeHtml } from './html-utils'
 import type { ProfileMap } from '../../types'
 
 // Hashtag regex (requires whitespace or start of string before #)
-const HASHTAG_REGEX = /(^|[\s>])#([a-zA-Z0-9_\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+)/g
+// Character ranges: alphanumeric, Latin extended (é, ü, etc.), hiragana, katakana, CJK
+const HASHTAG_REGEX = /(^|[\s>])#([a-zA-Z0-9_\u00C0-\u017F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+)/g
 
 // Process hashtags in HTML (after markdown parsing)
 export function processHashtags(html: string): string {
@@ -15,10 +16,10 @@ export function processHashtags(html: string): string {
 }
 
 // Super mention regex (@@label format)
-// Character ranges: \w (alphanumeric), hiragana, katakana, CJK, CJK punctuation,
-// geometric shapes (■▲), miscellaneous symbols (☆★), and common URL chars
+// Character ranges: \w (alphanumeric), Latin extended (é, ü, etc.), hiragana, katakana, CJK,
+// CJK punctuation, geometric shapes (■▲), miscellaneous symbols (☆★), and common URL chars
 const SUPER_MENTION_REGEX =
-  /(^|[\s>])@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\u2600-\u26FF\-:.?=&%#,/]+)/g
+  /(^|[\s>])@@([\w\u00C0-\u017F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\u2600-\u26FF\-:.?=&%#,/]+)/g
 
 const PROTOCOL_PREFIX = /^https?:\/\//i
 

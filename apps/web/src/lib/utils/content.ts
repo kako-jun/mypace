@@ -14,8 +14,9 @@ export function normalizeContent(content: string): string {
 }
 
 // Super mention path extraction regex (@@path format, excluding URLs)
+// Character ranges: \w (alphanumeric), Latin extended (é, ü, etc.), hiragana, katakana, CJK, etc.
 const SUPER_MENTION_PATH_REGEX =
-  /@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
+  /@@([\w\u00C0-\u017F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
 const URL_PATTERN = /^(https?:\/\/)?[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(\/.*)?$/
 
 /**

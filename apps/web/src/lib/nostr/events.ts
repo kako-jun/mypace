@@ -38,7 +38,8 @@ export async function createTextNote(
   }
 
   // Extract super mentions (@@label) and add as t tags
-  const superMentionRegex = /@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
+  const superMentionRegex =
+    /@@([\w\u00C0-\u017F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
   const refs = new Set<string>()
   let match
   while ((match = superMentionRegex.exec(content)) !== null) {
@@ -285,7 +286,8 @@ export async function createReplyEvent(
   }
 
   // Extract super mentions (@@label) and add as t tags
-  const superMentionRegex = /@@([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
+  const superMentionRegex =
+    /@@([\w\u00C0-\u017F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3000-\u303F\u25A0-\u25FF\-:.?=&%#,/]+)/g
   const refs = new Set<string>()
   let match
   while ((match = superMentionRegex.exec(content)) !== null) {

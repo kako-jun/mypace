@@ -273,6 +273,45 @@ async function checkContentSupernovas(
       toUnlock.push('first_map')
     }
 
+    // Check for URL in content
+    const hasUrl = /https?:\/\/[^\s]+/i.test(content)
+    if (hasUrl && !unlockedIds.has('first_url')) {
+      toUnlock.push('first_url')
+    }
+
+    // Check for markdown table (| --- | pattern)
+    const hasTable = /\|[\s-]+\|/.test(content)
+    if (hasTable && !unlockedIds.has('first_table')) {
+      toUnlock.push('first_table')
+    }
+
+    // Check for markdown list (- or * or numbered at start of line)
+    const hasList = /^[\s]*[-*+][\s]+|^[\s]*\d+\.[\s]+/m.test(content)
+    if (hasList && !unlockedIds.has('first_list')) {
+      toUnlock.push('first_list')
+    }
+
+    // Check for long post (281+ characters)
+    const contentLength = content.length
+    if (contentLength >= 281 && !unlockedIds.has('first_long_post')) {
+      toUnlock.push('first_long_post')
+    }
+    if (contentLength >= 1000 && !unlockedIds.has('first_1000_chars')) {
+      toUnlock.push('first_1000_chars')
+    }
+    if (contentLength >= 2000 && !unlockedIds.has('first_2000_chars')) {
+      toUnlock.push('first_2000_chars')
+    }
+    if (contentLength >= 4000 && !unlockedIds.has('first_4000_chars')) {
+      toUnlock.push('first_4000_chars')
+    }
+
+    // Check for reply (has e tag with reply marker or root)
+    const isReply = tags.some((t) => t[0] === 'e' && (t[3] === 'reply' || t[3] === 'root'))
+    if (isReply && !unlockedIds.has('first_reply')) {
+      toUnlock.push('first_reply')
+    }
+
     // Batch unlock all at once
     if (toUnlock.length > 0) {
       await batchUnlockSupernovas(db, pubkey, toUnlock, now)
@@ -546,7 +585,7 @@ publish.post('/', async (c) => {
       }
     }
 
-    // Kind 6 (リポスト) なら通知を記録
+    // Kind 6 (リポスト) なら通知を記録 + first_repost スーパーノヴァチェック
     if (event.kind === 6) {
       const eTag = tags.find((t: string[]) => t[0] === 'e')
       const pTag = tags.find((t: string[]) => t[0] === 'p')
@@ -569,6 +608,17 @@ publish.post('/', async (c) => {
           console.error('Repost notification error:', e)
         }
       }
+      // Check first_repost supernova (fire-and-forget)
+      ;(async () => {
+        try {
+          const unlockedIds = await getUserUnlockedSupernovaIds(db, event.pubkey)
+          if (!unlockedIds.has('first_repost')) {
+            await batchUnlockSupernovas(db, event.pubkey, ['first_repost'], getCurrentTimestamp())
+          }
+        } catch (e) {
+          console.error('First repost supernova check error:', e)
+        }
+      })()
     }
 
     // Kind 5 (削除) なら関連するステラ記録を削除
