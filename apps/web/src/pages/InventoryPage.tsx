@@ -26,6 +26,7 @@ const STELLA_COLOR_ORDER = ['green', 'red', 'blue', 'purple'] as const
 export function InventoryPage() {
   const navigate = useNavigate()
   const themeProps = getThemeCardProps(null)
+  const textClass = themeProps.className.includes('light-text') ? 'light-text' : 'dark-text'
   const { celebrate } = useCelebration()
 
   const [_pubkey, setPubkey] = useState<string | null>(null)
@@ -320,7 +321,7 @@ export function InventoryPage() {
     <div className="inventory-page">
       <BackButton onClick={() => navigate(-1)} />
 
-      <div className={`inventory-header ${themeProps.className}`}>
+      <div className={`inventory-header ${textClass}`}>
         <h2>Inventory</h2>
         <p>Your Color Stella balance and unlocked Supernovas.</p>
       </div>

@@ -20,6 +20,7 @@ export function UploadHistoryPage() {
   const [pubkey, setPubkey] = useState<string>('')
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
   const themeProps = getThemeCardProps(null)
+  const textClass = themeProps.className.includes('light-text') ? 'light-text' : 'dark-text'
 
   const handleDeleteCancel = useCallback(() => {
     setConfirmDelete(null)
@@ -109,11 +110,11 @@ export function UploadHistoryPage() {
     <div className="upload-history-page">
       <BackButton onClick={() => navigate(-1)} />
 
-      <div className={`upload-history-header ${themeProps.className}`}>
+      <div className={`upload-history-header ${textClass}`}>
         <h2>Upload History</h2>
         <p>Files uploaded to nostr.build. Press DELETE to remove from server.</p>
       </div>
-      {deleteMessage && <p className={`upload-history-message ${themeProps.className}`}>{deleteMessage}</p>}
+      {deleteMessage && <p className={`upload-history-message ${textClass}`}>{deleteMessage}</p>}
 
       {loading ? (
         <div className="upload-history-empty">
