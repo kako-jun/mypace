@@ -31,8 +31,6 @@ import {
   navigateToReply,
   navigateToPost,
   navigateToUser,
-  getUIThemeColors,
-  applyThemeColors,
   copyToClipboard,
   downloadAsMarkdown,
   openRawUrl,
@@ -150,7 +148,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   }, [])
 
   useEffect(() => {
-    applyThemeColors(getUIThemeColors())
     setHashtagClickHandler((tag) => navigateToTag(tag))
     setSuperMentionClickHandler((path) => navigateToTag(path))
     setInternalLinkClickHandler((path) => navigateTo(path))

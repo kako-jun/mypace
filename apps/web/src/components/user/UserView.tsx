@@ -17,8 +17,6 @@ import {
   navigateToHome,
   navigateToTag,
   navigateTo,
-  getUIThemeColors,
-  applyThemeColors,
   copyToClipboard,
   downloadAsMarkdown,
   openRawUrl,
@@ -208,7 +206,6 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   }, [])
 
   useEffect(() => {
-    applyThemeColors(getUIThemeColors())
     setHashtagClickHandler((tag) => navigateToTag(tag))
     setSuperMentionClickHandler((path) => navigateToTag(path))
     setInternalLinkClickHandler((path) => navigateTo(path))

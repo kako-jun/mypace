@@ -6,7 +6,6 @@ import { LightBox, triggerLightBox } from '../components/ui'
 import { MyStatsWidget } from '../components/stats/MyStatsWidget'
 import { useCelebration } from '../components/supernova'
 import { setImageClickHandler, clearImageClickHandler } from '../lib/parser'
-import { getUIThemeColors, applyThemeColors } from '../lib/utils'
 import { getDraft, setDraft, getDraftReplyTo, setDraftReplyTo, clearDraft } from '../lib/storage'
 import { fetchEventById } from '../lib/nostr/relay'
 import { getCurrentPubkey } from '../lib/nostr/events'
@@ -58,11 +57,6 @@ export function HomePage() {
     }
     window.addEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
     return () => window.removeEventListener(CUSTOM_EVENTS.NEW_POST, handleNewPost)
-  }, [])
-
-  // Apply theme colors on initial load
-  useEffect(() => {
-    applyThemeColors(getUIThemeColors())
   }, [])
 
   // Check and unlock supernovas on page load

@@ -11,11 +11,16 @@ import { EmbedPage } from './pages/EmbedPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PostModal } from './components/post'
 import { CelebrationProvider } from './components/supernova'
-import { initializeNavigation } from './lib/utils'
+import { initializeNavigation, applyThemeColors, getUIThemeColors } from './lib/utils'
 
 export default function App() {
   const location = useLocation()
   const navigate = useNavigate()
+
+  // Apply theme colors on app initialization
+  useEffect(() => {
+    applyThemeColors(getUIThemeColors())
+  }, [])
 
   // Initialize router navigation utilities
   useEffect(() => {
