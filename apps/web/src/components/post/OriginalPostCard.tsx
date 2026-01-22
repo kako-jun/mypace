@@ -4,7 +4,7 @@ import { PostStickers } from './PostStickers'
 import { PostLocation } from './PostLocation'
 import { parseEmojiTags } from '../ui'
 import { getEventThemeColors, getThemeCardProps } from '../../lib/nostr/events'
-import { parseStickers, hasTeaserTag } from '../../lib/nostr/tags'
+import { parseStickers, hasTeaserTag, extractUniqueLocations } from '../../lib/nostr/tags'
 import { navigateToPost } from '../../lib/utils'
 import type { Event, EmojiTag, ProfileMap, OgpData } from '../../types'
 
@@ -35,13 +35,8 @@ export default function OriginalPostCard({
   const stickers = parseStickers(event.tags)
   const isTruncated = hasTeaserTag(event)
 
-  // Extract locations from tags
-  const gTags = event.tags.filter((tag) => tag[0] === 'g')
-  const locationTags = event.tags.filter((tag) => tag[0] === 'location')
-  const locations = gTags.map((gTag, i) => ({
-    geohash: gTag[1],
-    name: locationTags[i]?.[1],
-  }))
+  // Extract unique locations from tags (deduplicates hierarchical geohashes)
+  const locations = extractUniqueLocations(event.tags)
 
   const handleClick = () => {
     if (onClick) {

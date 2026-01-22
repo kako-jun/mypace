@@ -77,6 +77,38 @@ export function hasStickers(event: Event): boolean {
   return event.tags?.some((t) => t[0] === 'sticker') ?? false
 }
 
+// Extract unique locations from tags, deduplicating hierarchical geohashes
+// NIP-52 specifies multiple precision levels for the same location (e.g., xn77h07j, xn77h07, xn77h0)
+// We keep only the most precise (longest) geohash for each location
+export function extractUniqueLocations(tags: string[][]): Array<{ geohash: string; name?: string }> {
+  const gTags = tags.filter((tag) => tag[0] === 'g')
+  const locationTags = tags.filter((tag) => tag[0] === 'location')
+
+  if (gTags.length === 0) return []
+
+  // Sort by geohash length descending (most precise first)
+  const sortedGTags = [...gTags].sort((a, b) => (b[1]?.length || 0) - (a[1]?.length || 0))
+
+  const uniqueGeohashes: string[] = []
+
+  for (const gTag of sortedGTags) {
+    const geohash = gTag[1]
+    if (!geohash) continue
+
+    // Check if this geohash is a prefix of any already-added geohash
+    const isPrefix = uniqueGeohashes.some((existing) => existing.startsWith(geohash))
+    if (!isPrefix) {
+      uniqueGeohashes.push(geohash)
+    }
+  }
+
+  // Map to locations with names (use the first location tag if available)
+  return uniqueGeohashes.map((geohash, i) => ({
+    geohash,
+    name: locationTags[i]?.[1],
+  }))
+}
+
 // Parse sticker tags from event
 // Format: ["sticker", "<url>", "<x>", "<y>", "<size>", "<rotation>", "<quadrant>", "<layer>"]
 export function parseStickers(tags: string[][]): Array<{

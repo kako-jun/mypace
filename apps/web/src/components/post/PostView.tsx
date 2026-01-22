@@ -39,7 +39,14 @@ import {
 } from '../../lib/utils'
 import { getThemeColors } from '../../lib/storage'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
-import { hasTeaserTag, getTeaserContent, getTeaserColor, removeReadMoreLink, parseStickers } from '../../lib/nostr/tags'
+import {
+  hasTeaserTag,
+  getTeaserContent,
+  getTeaserColor,
+  removeReadMoreLink,
+  parseStickers,
+  extractUniqueLocations,
+} from '../../lib/nostr/tags'
 import {
   setHashtagClickHandler,
   setSuperMentionClickHandler,
@@ -415,13 +422,8 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     : event.content
   const themeProps = getThemeCardProps(themeColors)
 
-  // Extract locations from tags
-  const gTags = event.tags.filter((tag) => tag[0] === 'g')
-  const locationTags = event.tags.filter((tag) => tag[0] === 'location')
-  const locations = gTags.map((gTag, i) => ({
-    geohash: gTag[1],
-    name: locationTags[i]?.[1],
-  }))
+  // Extract unique locations from tags (deduplicates hierarchical geohashes)
+  const locations = extractUniqueLocations(event.tags)
 
   // Parent post theme props
   const parentThemeColors = parentEvent ? getEventThemeColors(parentEvent) : null

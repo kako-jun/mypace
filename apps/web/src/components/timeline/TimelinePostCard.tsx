@@ -15,7 +15,7 @@ import {
   OriginalPostCard,
 } from '../post'
 import { cachePostWithMetadata, navigateToPostModal, navigateToUser } from '../../lib/utils'
-import { parseStickers, hasTeaserTag } from '../../lib/nostr/tags'
+import { parseStickers, hasTeaserTag, extractUniqueLocations } from '../../lib/nostr/tags'
 import { useDeleteConfirm } from '../../hooks'
 import type { Event, ReactionData, ReplyData, RepostData, ViewCountData, ProfileCache, OgpData } from '../../types'
 import type { ShareOption } from '../post/ShareMenu'
@@ -91,13 +91,8 @@ export default function TimelinePostCard({
   const themeProps = getThemeCardProps(getEventThemeColors(event))
   const stickers = parseStickers(event.tags)
 
-  // Extract locations from tags
-  const gTags = event.tags.filter((tag) => tag[0] === 'g')
-  const locationTags = event.tags.filter((tag) => tag[0] === 'location')
-  const locations = gTags.map((gTag, i) => ({
-    geohash: gTag[1],
-    name: locationTags[i]?.[1],
-  }))
+  // Extract unique locations from tags (deduplicates hierarchical geohashes)
+  const locations = extractUniqueLocations(event.tags)
 
   // Replies - filtering is done server-side
   const replyList = replies?.replies || []
