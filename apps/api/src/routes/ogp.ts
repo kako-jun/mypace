@@ -60,6 +60,51 @@ function validateUrl(url: string): URL | null {
   }
 }
 
+// HTMLをcharsetを考慮してデコード
+function decodeHtml(buffer: ArrayBuffer, contentType: string | null): string {
+  // Content-Typeヘッダーからcharsetを取得
+  let headerCharset: string | null = null
+  if (contentType) {
+    const match = contentType.match(/charset=([^\s;]+)/i)
+    if (match) {
+      headerCharset = match[1].toLowerCase().replace(/['"]/g, '')
+    }
+  }
+
+  // ヘッダーでcharsetが指定されていてUTF-8でない場合は直接デコード
+  if (headerCharset && headerCharset !== 'utf-8') {
+    try {
+      const decoder = new TextDecoder(headerCharset, { fatal: false, ignoreBOM: false })
+      return decoder.decode(buffer)
+    } catch {
+      // デコーダーがサポートしていない場合はフォールバック
+    }
+  }
+
+  // まずUTF-8として試す
+  const utf8Decoder = new TextDecoder('utf-8', { fatal: false, ignoreBOM: false })
+  const html = utf8Decoder.decode(buffer)
+
+  // HTMLからmeta charsetを検出
+  const metaCharsetMatch = html.match(/<meta[^>]*charset=["']?([^"'\s>]+)/i)
+  const metaHttpEquivMatch = html.match(
+    /<meta[^>]*http-equiv=["']?Content-Type["']?[^>]*content=["'][^"']*charset=([^"'\s;]+)/i
+  )
+  const detectedCharset = (metaCharsetMatch?.[1] || metaHttpEquivMatch?.[1])?.toLowerCase()
+
+  if (detectedCharset && detectedCharset !== 'utf-8') {
+    try {
+      // 検出されたcharsetで再デコード
+      const decoder = new TextDecoder(detectedCharset, { fatal: false, ignoreBOM: false })
+      return decoder.decode(buffer)
+    } catch {
+      // デコーダーがサポートしていない場合はUTF-8のまま
+    }
+  }
+
+  return html
+}
+
 // 単一URLのOGP取得
 async function fetchSingleOgp(url: string): Promise<OgpData | null> {
   if (!validateUrl(url)) return null
@@ -78,7 +123,9 @@ async function fetchSingleOgp(url: string): Promise<OgpData | null> {
 
     if (!response.ok) return null
 
-    const html = await response.text()
+    // charsetを検出してデコード
+    const arrayBuffer = await response.arrayBuffer()
+    const html = decodeHtml(arrayBuffer, response.headers.get('content-type'))
     return extractOgpFromHtml(html)
   } catch {
     return null
