@@ -1,0 +1,28 @@
+/* Not Found Page */
+
+.not-found-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 4rem 1rem;
+  text-align: center;
+}
+
+.not-found-header {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.not-found-header.light-text {
+  color: #ffffff;
+}
+
+.not-found-header.dark-text {
+  color: #333;
+}
+
+.not-found-header h1 {
+  font-size: 3rem;
+  margin: 0;
+  opacity: 0.5;
+}

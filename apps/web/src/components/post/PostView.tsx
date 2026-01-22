@@ -39,6 +39,7 @@ import {
   shareOrCopy,
   formatNumber,
 } from '../../lib/utils'
+import { getThemeColors } from '../../lib/storage'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import { hasTeaserTag, getTeaserContent, getTeaserColor, removeReadMoreLink, parseStickers } from '../../lib/nostr/tags'
 import {
@@ -384,7 +385,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   if (loading) return <Loading />
 
   if (error || !event) {
-    const fallbackTheme = getThemeCardProps(null)
+    const fallbackTheme = getThemeCardProps(getThemeColors())
     return (
       <div className={`post-view ${isModal ? 'post-view-modal' : ''} ${fallbackTheme.className}`}>
         <p className="post-not-found">{error || 'Post not found'}</p>
