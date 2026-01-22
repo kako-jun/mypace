@@ -44,10 +44,6 @@
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
-  margin: 0 0 1rem;
-}
-
-.post-view .back-button {
   margin: 0 auto 1rem;
 }
 
