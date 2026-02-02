@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { nip19 } from 'nostr-tools'
-import { PostHeader, PostContent, PostStickers } from '../components/post'
+import { PostHeader, PostContent, PostStickers, PostLocation } from '../components/post'
 import { parseEmojiTags, Loading, ErrorMessage } from '../components/ui'
 import { fetchEventById, fetchTimeline, fetchUserProfile, fetchUserEvents } from '../lib/nostr/relay'
+import { fetchViewsAndSuperMentions } from '../lib/api/api'
 import { getEventThemeColors, getThemeCardProps } from '../lib/nostr/events'
-import { parseStickers } from '../lib/nostr/tags'
+import { parseStickers, extractUniqueLocations } from '../lib/nostr/tags'
 import { getDisplayName, getAvatarUrl } from '../lib/utils'
+import { extractSuperMentionPaths } from '../lib/utils/content'
 import '../styles/components/post-card.css'
 import '../styles/components/embed-card.css'
 import type { Event, Profile } from '../types'
@@ -51,6 +53,7 @@ export function EmbedPage() {
 
   const [event, setEvent] = useState<Event | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [wikidataMap, setWikidataMap] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -92,11 +95,19 @@ export function EmbedPage() {
 
         setEvent(eventData)
 
-        // Fetch profile
-        const userProfile = await fetchUserProfile(eventData.pubkey)
+        // Fetch profile and super mention data in parallel
+        const superMentionPaths = extractSuperMentionPaths(eventData.content)
+        const [userProfile, superMentionData] = await Promise.all([
+          fetchUserProfile(eventData.pubkey),
+          superMentionPaths.length > 0
+            ? fetchViewsAndSuperMentions([], superMentionPaths)
+            : Promise.resolve({ views: {}, superMentions: {} }),
+        ])
+
         if (userProfile) {
           setProfile(userProfile)
         }
+        setWikidataMap(superMentionData.superMentions)
       } catch (err) {
         setError('Failed to load post')
         console.error(err)
@@ -154,6 +165,7 @@ export function EmbedPage() {
 
   const themeProps = getThemeCardProps(getEventThemeColors(event))
   const stickers = parseStickers(event.tags)
+  const locations = extractUniqueLocations(event.tags)
 
   return (
     <div className="embed-page">
@@ -182,9 +194,15 @@ export function EmbedPage() {
               truncate
               emojis={parseEmojiTags(event.tags)}
               profiles={profile ? { [event.pubkey]: profile } : {}}
+              wikidataMap={wikidataMap}
               tags={event.tags}
+              enableOgpFallback
             />
           </div>
+
+          {locations.map((loc) => (
+            <PostLocation key={loc.geohash} geohashStr={loc.geohash} name={loc.name} />
+          ))}
 
           <PostStickers stickers={stickers} layer="front" />
         </div>

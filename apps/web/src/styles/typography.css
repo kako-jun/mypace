@@ -62,6 +62,7 @@
   -webkit-text-fill-color: #fff;
   -webkit-text-stroke: 3px #555;
   paint-order: stroke fill;
+  text-shadow: none;
 }
 
 [data-theme="dark"] .author-name {
