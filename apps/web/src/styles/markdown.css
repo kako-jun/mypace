@@ -279,6 +279,7 @@
   font-size: 1.1em;
   font-family: var(--font-sans);
   transition: all 0.15s ease;
+  text-align: left;
 }
 
 .content-super-mention:hover {
@@ -299,6 +300,7 @@
   font-family: var(--font-sans);
   text-decoration: none;
   transition: all 0.15s ease;
+  text-align: left;
 }
 
 .content-super-mention-url:hover {
