@@ -94,7 +94,7 @@ export function PostFormLongMode({
   const [showTeaserPicker, setShowTeaserPicker] = useState(false)
 
   const handleInsertToEditor = (text: string) => {
-    editorRef.current?.insertText(text)
+    editorRef.current?.insertText(text + '\n')
   }
 
   const processFileImport = useCallback(

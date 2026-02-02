@@ -315,7 +315,7 @@ export function PostForm({
   }
 
   const insertImageUrl = (url: string) => {
-    shortTextEditorRef.current?.insertText(url)
+    shortTextEditorRef.current?.insertText(url + '\n')
   }
 
   const handleRemoveImage = (url: string) => {
@@ -601,7 +601,7 @@ export function PostForm({
 
       {showSuperMentionPopup && (
         <SuperMentionPopup
-          onSelect={(text) => shortTextEditorRef.current?.insertText(text)}
+          onSelect={(text) => shortTextEditorRef.current?.insertText(text + '\n')}
           onClose={() => setShowSuperMentionPopup(false)}
         />
       )}
