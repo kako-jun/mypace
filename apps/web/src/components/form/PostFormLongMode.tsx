@@ -49,6 +49,8 @@ interface PostFormLongModeProps {
   onLocationsChange: (locations: { geohash: string; name?: string }[]) => void
   teaserColor: StellaColor | null
   onTeaserColorChange: (color: StellaColor | null) => void
+  sharedImageFile?: File | null
+  onSharedImageProcessed?: () => void
 }
 
 export function PostFormLongMode({
@@ -85,6 +87,8 @@ export function PostFormLongMode({
   onLocationsChange,
   teaserColor,
   onTeaserColorChange,
+  sharedImageFile,
+  onSharedImageProcessed,
 }: PostFormLongModeProps) {
   const longModeFormRef = useRef<HTMLFormElement>(null)
   const editorRef = useRef<LongModeEditorRef>(null)
@@ -202,7 +206,13 @@ export function PostFormLongMode({
           </div>
 
           <div className="post-form-row-2">
-            <ImagePicker onEmbed={handleInsertToEditor} onAddSticker={onAddSticker} onError={onError} />
+            <ImagePicker
+              onEmbed={handleInsertToEditor}
+              onAddSticker={onAddSticker}
+              onError={onError}
+              initialFile={sharedImageFile}
+              onInitialFileProcessed={onSharedImageProcessed}
+            />
             <DrawingPicker onEmbed={handleInsertToEditor} onAddSticker={onAddSticker} />
             <VoicePicker onComplete={handleInsertToEditor} />
             <LocationPicker

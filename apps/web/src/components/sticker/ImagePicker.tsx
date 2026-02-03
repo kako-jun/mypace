@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon, Input, CloseButton, Portal } from '../ui'
 import Button from '../ui/Button'
@@ -19,9 +19,11 @@ interface ImagePickerProps {
   onEmbed: (url: string) => void
   onAddSticker: (sticker: { url: string }) => void
   onError?: (error: string) => void
+  initialFile?: File | null
+  onInitialFileProcessed?: () => void
 }
 
-export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps) {
+export function ImagePicker({ onEmbed, onAddSticker, onError, initialFile, onInitialFileProcessed }: ImagePickerProps) {
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const [selectedUrl, setSelectedUrl] = useState('')
@@ -115,33 +117,44 @@ export function ImagePicker({ onEmbed, onAddSticker, onError }: ImagePickerProps
     setSelectedUrl(url)
   }
 
-  const handleFileSelect = async (file: File) => {
-    if (file.type.startsWith('image/')) {
-      // Skip cropper for animated images to preserve animation
-      const isAnimated = await isAnimatedImage(file)
-      if (isAnimated) {
+  const handleFileSelect = useCallback(
+    async (file: File) => {
+      if (file.type.startsWith('image/')) {
+        // Skip cropper for animated images to preserve animation
+        const isAnimated = await isAnimatedImage(file)
+        if (isAnimated) {
+          const result = await uploadFile(file)
+          if (result.url) {
+            setSelectedUrl(result.url)
+          } else if (result.error && onError) {
+            onError(result.error)
+          }
+        } else {
+          setPendingFile(file)
+        }
+      } else if (file.type.startsWith('video/')) {
+        // Show video editor to convert to animated WebP
+        setPendingVideoFile(file)
+      } else {
+        // Other file types - upload directly
         const result = await uploadFile(file)
         if (result.url) {
           setSelectedUrl(result.url)
         } else if (result.error && onError) {
           onError(result.error)
         }
-      } else {
-        setPendingFile(file)
       }
-    } else if (file.type.startsWith('video/')) {
-      // Show video editor to convert to animated WebP
-      setPendingVideoFile(file)
-    } else {
-      // Other file types - upload directly
-      const result = await uploadFile(file)
-      if (result.url) {
-        setSelectedUrl(result.url)
-      } else if (result.error && onError) {
-        onError(result.error)
-      }
+    },
+    [uploadFile, onError]
+  )
+
+  // Handle initial file from Web Share Target API
+  useEffect(() => {
+    if (initialFile) {
+      handleFileSelect(initialFile)
+      onInitialFileProcessed?.()
     }
-  }
+  }, [initialFile, onInitialFileProcessed, handleFileSelect])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

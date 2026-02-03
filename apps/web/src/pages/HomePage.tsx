@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { PostForm } from '../components/form'
 import { Timeline } from '../components/timeline'
 import { LightBox, triggerLightBox } from '../components/ui'
@@ -7,6 +7,7 @@ import { MyStatsWidget } from '../components/stats/MyStatsWidget'
 import { useCelebration } from '../components/supernova'
 import { setImageClickHandler, clearImageClickHandler } from '../lib/parser'
 import { getDraft, setDraft, getDraftReplyTo, setDraftReplyTo, clearDraft } from '../lib/storage'
+import { consumeShareTargetImage } from '../lib/storage/share-target'
 import { fetchEventById } from '../lib/nostr/relay'
 import { getCurrentPubkey } from '../lib/nostr/events'
 import { getFullContentForEdit } from '../lib/nostr/tags'
@@ -16,8 +17,10 @@ import type { Event } from '../types'
 
 export function HomePage() {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [longMode, setLongMode] = useState(false)
   const [content, setContent] = useState(() => getDraft())
+  const [sharedImageFile, setSharedImageFile] = useState<File | null>(null)
   const [showPreview, setShowPreview] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [replyingTo, setReplyingTo] = useState<Event | null>(null)
@@ -120,6 +123,20 @@ export function HomePage() {
     }
   }, [searchParams])
 
+  // Handle Web Share Target API (shared image from Android)
+  useEffect(() => {
+    const shareImage = searchParams.get('share_image')
+    if (shareImage === 'pending') {
+      consumeShareTargetImage().then((file) => {
+        if (file) {
+          setSharedImageFile(file)
+        }
+      })
+      // Remove parameter from URL
+      navigate('/', { replace: true })
+    }
+  }, [searchParams, navigate])
+
   // Set up image click handler for LightBox
   useEffect(() => {
     setImageClickHandler(triggerLightBox)
@@ -182,6 +199,10 @@ export function HomePage() {
     setContent('')
   }, [])
 
+  const handleSharedImageProcessed = useCallback(() => {
+    setSharedImageFile(null)
+  }, [])
+
   if (longMode) {
     return (
       <>
@@ -198,6 +219,8 @@ export function HomePage() {
           replyingTo={replyingTo}
           onReplyCancel={handleReplyCancel}
           onReplyComplete={handleReplyComplete}
+          sharedImageFile={sharedImageFile}
+          onSharedImageProcessed={handleSharedImageProcessed}
         />
         <MyStatsWidget />
       </>
@@ -219,6 +242,8 @@ export function HomePage() {
         replyingTo={replyingTo}
         onReplyCancel={handleReplyCancel}
         onReplyComplete={handleReplyComplete}
+        sharedImageFile={sharedImageFile}
+        onSharedImageProcessed={handleSharedImageProcessed}
       />
       <div className="container">
         <Timeline onEditStart={handleEditStart} onReplyStart={handleReplyStart} />

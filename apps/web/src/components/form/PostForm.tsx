@@ -51,6 +51,8 @@ interface PostFormProps {
   replyingTo?: Event | null
   onReplyCancel?: () => void
   onReplyComplete?: () => void
+  sharedImageFile?: File | null
+  onSharedImageProcessed?: () => void
 }
 
 export function PostForm({
@@ -66,6 +68,8 @@ export function PostForm({
   replyingTo,
   onReplyCancel,
   onReplyComplete,
+  sharedImageFile,
+  onSharedImageProcessed,
 }: PostFormProps) {
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState('')
@@ -441,6 +445,8 @@ export function PostForm({
         onLocationsChange={setLocations}
         teaserColor={teaserColor}
         onTeaserColorChange={setTeaserColor}
+        sharedImageFile={sharedImageFile}
+        onSharedImageProcessed={onSharedImageProcessed}
       />
     )
   }
@@ -535,7 +541,13 @@ export function PostForm({
       </div>
 
       <div className="post-form-row-2">
-        <ImagePicker onEmbed={insertImageUrl} onAddSticker={handleAddSticker} onError={setError} />
+        <ImagePicker
+          onEmbed={insertImageUrl}
+          onAddSticker={handleAddSticker}
+          onError={setError}
+          initialFile={sharedImageFile}
+          onInitialFileProcessed={onSharedImageProcessed}
+        />
         <DrawingPicker onEmbed={insertImageUrl} onAddSticker={handleAddSticker} />
         <VoicePicker onComplete={insertImageUrl} />
         <LocationPicker

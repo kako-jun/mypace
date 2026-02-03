@@ -44,6 +44,22 @@ export default defineConfig({
             purpose: 'any',
           },
         ],
+        share_target: {
+          action: '/share',
+          method: 'POST',
+          enctype: 'multipart/form-data',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url',
+            files: [
+              {
+                name: 'images',
+                accept: ['image/*'],
+              },
+            ],
+          },
+        },
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,webp,woff2}'],
