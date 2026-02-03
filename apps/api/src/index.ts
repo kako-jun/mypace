@@ -3,6 +3,7 @@ import { cors } from 'hono/cors'
 import type { Bindings } from './types'
 import {
   events,
+  profiles,
   userCount,
   publish,
   ogp,
@@ -46,6 +47,7 @@ app.onError((err, c) => {
 
 // API Routes
 app.route('/api/events', events)
+app.route('/api/profiles', profiles)
 app.route('/api/user', userCount)
 app.route('/api/publish', publish)
 app.route('/api/ogp', ogp)

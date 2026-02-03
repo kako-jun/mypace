@@ -1,4 +1,5 @@
 export { default as events } from './events'
+export { default as profiles } from './profiles'
 export { default as publish } from './publish'
 export { default as ogp } from './ogp'
 export { default as tweet } from './tweet'
