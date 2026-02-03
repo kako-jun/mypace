@@ -381,11 +381,15 @@
 }
 
 .share-menu-x-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
   font-size: 1rem;
   font-weight: bold;
-  color: var(--text-primary);
-  width: 16px;
-  text-align: center;
+  color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 /* ===========================================

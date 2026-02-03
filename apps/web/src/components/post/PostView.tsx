@@ -38,7 +38,6 @@ import {
   formatNumber,
 } from '../../lib/utils'
 import { getThemeColors } from '../../lib/storage'
-import { transformContentForSns, getSnsIntentUrl } from '../../lib/utils/sns-share'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import {
   hasTeaserTag,
@@ -372,24 +371,8 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
       case 'x':
       case 'bluesky':
       case 'threads': {
-        let text: string
-        if (partIndex === undefined || partIndex === -1) {
-          // 全文（分割なし or 編集用）
-          const transformed = transformContentForSns({
-            content: event.content,
-            tags: event.tags,
-            url,
-          })
-          text = transformed.text
-        } else {
-          // 分割パート
-          const { splitContentForSns, formatSplitParts, getCharLimit } = await import('../../lib/utils/sns-share')
-          const parts = splitContentForSns(event.content, event.tags, url, getCharLimit(option), option)
-          const formatted = formatSplitParts(parts, event.tags, url)
-          text = formatted[partIndex]?.text || ''
-        }
-        const intentUrl = getSnsIntentUrl(option, text)
-        window.open(intentUrl, '_blank', 'noopener,noreferrer')
+        const { openSnsShare } = await import('../../lib/utils/sns-share')
+        openSnsShare(option, event.content, event.tags, url, partIndex)
         break
       }
     }

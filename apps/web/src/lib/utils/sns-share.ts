@@ -293,3 +293,35 @@ export function getSnsIntentUrl(sns: 'x' | 'bluesky' | 'threads', text: string):
       return `https://www.threads.net/intent/post?text=${encoded}`
   }
 }
+
+/**
+ * SNS 共有を実行（Intent URL を開く）
+ * @param sns - SNS タイプ
+ * @param content - 投稿内容
+ * @param tags - Nostr タグ
+ * @param url - MY PACE の投稿 URL
+ * @param partIndex - 分割パートのインデックス（undefined: 分割なし、-1: 全文、0以上: パート番号）
+ */
+export function openSnsShare(
+  sns: 'x' | 'bluesky' | 'threads',
+  content: string,
+  tags: string[][],
+  url: string,
+  partIndex?: number
+): void {
+  let text: string
+
+  if (partIndex === undefined || partIndex === -1) {
+    // 全文（分割なし or 編集用）
+    const transformed = transformContentForSns({ content, tags, url })
+    text = transformed.text
+  } else {
+    // 分割パート
+    const parts = splitContentForSns(content, tags, url, getCharLimit(sns), sns)
+    const formatted = formatSplitParts(parts, tags, url)
+    text = formatted[partIndex]?.text || ''
+  }
+
+  const intentUrl = getSnsIntentUrl(sns, text)
+  window.open(intentUrl, '_blank', 'noopener,noreferrer')
+}

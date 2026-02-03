@@ -16,7 +16,7 @@ import {
   navigateToTag,
   formatNumber,
 } from '../../lib/utils'
-import { transformContentForSns, getSnsIntentUrl } from '../../lib/utils/sns-share'
+import { openSnsShare } from '../../lib/utils/sns-share'
 import type { Event } from '../../types'
 import type { ShareOption } from '../post/ShareMenu'
 
@@ -126,20 +126,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
         case 'x':
         case 'bluesky':
         case 'threads': {
-          let text: string
-          if (partIndex === undefined || partIndex === -1) {
-            // 全文（分割なし or 編集用）
-            const transformed = transformContentForSns({ content, tags, url })
-            text = transformed.text
-          } else {
-            // 分割パート
-            const { splitContentForSns, formatSplitParts, getCharLimit } = await import('../../lib/utils/sns-share')
-            const parts = splitContentForSns(content, tags, url, getCharLimit(option), option)
-            const formatted = formatSplitParts(parts, tags, url)
-            text = formatted[partIndex]?.text || ''
-          }
-          const intentUrl = getSnsIntentUrl(option, text)
-          window.open(intentUrl, '_blank', 'noopener,noreferrer')
+          openSnsShare(option, content, tags, url, partIndex)
           break
         }
       }
