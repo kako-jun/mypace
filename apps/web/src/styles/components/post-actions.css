@@ -389,7 +389,7 @@
   font-size: 1rem;
   font-weight: bold;
   color: var(--text-secondary);
-  flex-shrink: 0;
+  flex: none;
 }
 
 /* ===========================================
