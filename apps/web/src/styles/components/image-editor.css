@@ -63,6 +63,61 @@ body.long-mode-active .image-editor-modal {
   font-weight: 600;
 }
 
+/* Rotation slider */
+.image-editor-rotation-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--surface-secondary);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.image-editor-rotation-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  min-width: 2rem;
+  text-align: center;
+}
+
+.image-editor-rotation-slider {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border-light);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.image-editor-rotation-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent-primary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.image-editor-rotation-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--accent-primary);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+
+.image-editor-rotation-value {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 2.5rem;
+  text-align: right;
+}
+
 /* Content area */
 .image-editor-content {
   display: flex;

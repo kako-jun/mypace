@@ -35,6 +35,9 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
   // Processing state
   const [processing, setProcessing] = useState(false)
 
+  // Rotation state (-90 to +90 degrees)
+  const [rotation, setRotation] = useState(0)
+
   // Create object URL for file
   useEffect(() => {
     setImageLoaded(false)
@@ -155,7 +158,14 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
     canvas.width = cropW
     canvas.height = cropH
 
-    // Draw cropped image
+    // Apply rotation and draw cropped image
+    if (rotation !== 0) {
+      const radians = (rotation * Math.PI) / 180
+      ctx.translate(cropW / 2, cropH / 2)
+      ctx.rotate(radians)
+      ctx.translate(-cropW / 2, -cropH / 2)
+    }
+
     ctx.drawImage(image, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
 
     // Draw stickers
@@ -203,11 +213,11 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
       fileType,
       0.95
     )
-  }, [completedCrop, stickers, onComplete])
+  }, [completedCrop, stickers, rotation, onComplete])
 
-  // No stickers and no crop = use original
+  // No stickers, no crop, and no rotation = use original
   const handleConfirmWrapper = useCallback(async () => {
-    if (stickers.length === 0) {
+    if (stickers.length === 0 && rotation === 0) {
       if (!completedCrop) {
         onComplete(file)
         return
@@ -226,7 +236,7 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
       }
     }
     await handleConfirm()
-  }, [stickers.length, completedCrop, file, onComplete, handleConfirm])
+  }, [stickers.length, rotation, completedCrop, file, onComplete, handleConfirm])
 
   return (
     <Portal>
@@ -236,6 +246,22 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
             <h3>Edit Image</h3>
             <CloseButton onClick={onCancel} size={20} />
           </div>
+
+          {imageLoaded && (
+            <div className="image-editor-rotation-row">
+              <span className="image-editor-rotation-label">-90°</span>
+              <input
+                type="range"
+                min="-90"
+                max="90"
+                value={rotation}
+                onChange={(e) => setRotation(Number(e.target.value))}
+                className="image-editor-rotation-slider"
+              />
+              <span className="image-editor-rotation-label">+90°</span>
+              <span className="image-editor-rotation-value">{rotation}°</span>
+            </div>
+          )}
 
           {!imageLoaded && <div className="image-editor-loading">Loading...</div>}
 
@@ -253,6 +279,7 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
                     src={imageSrc}
                     alt="Edit preview"
                     className="image-editor-image"
+                    style={{ transform: rotation !== 0 ? `rotate(${rotation}deg)` : undefined }}
                     onLoad={() => {
                       requestAnimationFrame(() => {
                         setCrop({

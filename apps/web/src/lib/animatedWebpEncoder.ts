@@ -16,7 +16,9 @@ export interface VideoToWebPOptions {
     width: number
     height: number
   }
-  /** Target FPS (default: 10) */
+  /** Rotation in degrees (-90 to 90) */
+  rotation?: number
+  /** Target FPS (default: 24) */
   fps?: number
   /** Max dimension for output (default: 320) */
   maxDimension?: number
@@ -33,7 +35,7 @@ interface WebPAnimationFrame {
  * Extract frames from video and encode to animated WebP
  */
 export async function videoToAnimatedWebP(videoFile: File, options: VideoToWebPOptions): Promise<File | null> {
-  const { startTime, endTime, crop, fps = 10, maxDimension = 320, onProgress } = options
+  const { startTime, endTime, crop, rotation = 0, fps = 24, maxDimension = 320, onProgress } = options
 
   // Validate time range (max 10 seconds)
   const duration = Math.min(endTime - startTime, 10)
@@ -106,8 +108,16 @@ export async function videoToAnimatedWebP(videoFile: File, options: VideoToWebPO
       // Seek to frame
       await seekVideo(video, time)
 
-      // Draw frame to canvas (with crop and scale)
+      // Draw frame to canvas (with crop, scale, and rotation)
+      ctx.save()
+      if (rotation !== 0) {
+        const radians = (rotation * Math.PI) / 180
+        ctx.translate(outputWidth / 2, outputHeight / 2)
+        ctx.rotate(radians)
+        ctx.translate(-outputWidth / 2, -outputHeight / 2)
+      }
       ctx.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight)
+      ctx.restore()
 
       // Get RGBA data
       const imageData = ctx.getImageData(0, 0, outputWidth, outputHeight)

@@ -35,6 +35,9 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
   const [processing, setProcessing] = useState(false)
   const [progress, setProgress] = useState(0)
 
+  // Rotation state (-90 to +90 degrees)
+  const [rotation, setRotation] = useState(0)
+
   // Playback state
   const [playing, setPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -302,6 +305,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
         startTime,
         endTime,
         crop: cropPixels,
+        rotation,
         fps: 24,
         maxDimension: 320,
         onProgress: setProgress,
@@ -338,6 +342,22 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
             <CloseButton onClick={onCancel} size={20} />
           </div>
 
+          {videoLoaded && (
+            <div className="video-editor-rotation-row">
+              <span className="video-editor-rotation-label">-90°</span>
+              <input
+                type="range"
+                min="-90"
+                max="90"
+                value={rotation}
+                onChange={(e) => setRotation(Number(e.target.value))}
+                className="video-editor-rotation-slider"
+              />
+              <span className="video-editor-rotation-label">+90°</span>
+              <span className="video-editor-rotation-value">{rotation}°</span>
+            </div>
+          )}
+
           {!videoLoaded && <div className="video-editor-loading">Loading...</div>}
 
           <div className="video-editor-content" style={{ display: videoLoaded ? 'flex' : 'none' }}>
@@ -354,6 +374,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
                     ref={videoRef}
                     src={videoUrl}
                     className="video-editor-video"
+                    style={{ transform: rotation !== 0 ? `rotate(${rotation}deg)` : undefined }}
                     onLoadedMetadata={handleVideoLoaded}
                     muted
                     playsInline
