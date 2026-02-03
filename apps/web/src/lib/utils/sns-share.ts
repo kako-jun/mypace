@@ -3,6 +3,7 @@ import geohash from 'ngeohash'
 /**
  * SNS共有用のテキスト変換
  * - スーパーメンション @@xxx → #xxx
+ * - Nostr t タグ → #hashtag（コンテンツに未含有のもののみ）
  * - 位置情報 → OSM URL
  */
 
@@ -26,6 +27,30 @@ function geohashToOsmUrl(hash: string): string | null {
   } catch {
     return null
   }
+}
+
+// tags から t タグ（ハッシュタグ）を抽出
+// 変換不要なタグは除外
+const EXCLUDED_TAGS = ['mypace', 'nostr', 'nostrich']
+
+function extractHashtagsFromTags(tags: string[][], content: string): string[] {
+  const hashtags: string[] = []
+  const contentLower = content.toLowerCase()
+
+  for (const tag of tags) {
+    if (tag[0] === 't' && tag[1]) {
+      const tagValue = tag[1]
+      // 除外タグはスキップ
+      if (EXCLUDED_TAGS.includes(tagValue.toLowerCase())) continue
+      // 既にコンテンツ内に #tagValue として存在する場合はスキップ
+      if (contentLower.includes(`#${tagValue.toLowerCase()}`)) continue
+      // 重複チェック
+      if (!hashtags.includes(tagValue)) {
+        hashtags.push(tagValue)
+      }
+    }
+  }
+  return hashtags
 }
 
 // tags から位置情報を抽出
@@ -78,7 +103,13 @@ export function transformContentForSns(options: SnsShareOptions): TransformedCon
     text = `(${partInfo.current}/${partInfo.total})\n${text}`
   }
 
-  // 3. 位置情報を追加
+  // 3. t タグからハッシュタグを追加（コンテンツに含まれていないもののみ）
+  const hashtags = extractHashtagsFromTags(tags, content)
+  if (hashtags.length > 0) {
+    text = text + '\n\n' + hashtags.map((t) => `#${t}`).join(' ')
+  }
+
+  // 4. 位置情報を追加
   const locations = extractLocationsFromTags(tags)
   if (locations.length > 0) {
     const locationTexts = locations
@@ -98,7 +129,7 @@ export function transformContentForSns(options: SnsShareOptions): TransformedCon
     }
   }
 
-  // 4. MY PACE URL を追加
+  // 5. MY PACE URL を追加
   if (includeUrl) {
     text = text + '\n\n' + url
   }
