@@ -187,73 +187,103 @@ export function splitContentForSns(
   charLimit: number,
   sns: 'x' | 'bluesky' | 'threads' = 'x'
 ): string[] {
-  // URL と位置情報の追加分を計算
-  const baseTransformed = transformContentForSns({
-    content: '',
-    tags,
-    url,
-    includeUrl: true,
-  })
-  const baseOverhead = calculateTextLength(baseTransformed.text, sns)
-
-  // パート番号のオーバーヘッド "(99/99)\n" = 9文字程度
-  const partOverhead = 10
-
-  // 実際に使える文字数
-  const effectiveLimit = charLimit - baseOverhead - partOverhead
-
   // 分割が不要な場合
   const fullTransformed = transformContentForSns({ content, tags, url })
   if (calculateTextLength(fullTransformed.text, sns) <= charLimit) {
     return [content]
   }
 
+  // 位置情報のオーバーヘッド（最初のパートのみ）
+  const locationOverhead = calculateTextLength(
+    transformContentForSns({ content: '', tags, url: '', includeUrl: false }).text,
+    sns
+  )
+
+  // URLのオーバーヘッド（最後のパートのみ）
+  const urlOverhead = calculateTextLength('\n\n' + url, sns)
+
+  // パート番号のオーバーヘッド "(99/99)\n" = 9文字程度
+  const partOverhead = 10
+
   // 分割を試みる
   const parts: string[] = []
   let remaining = content
+  let isFirst = true
 
   while (remaining.length > 0) {
-    if (remaining.length <= effectiveLimit) {
+    // 各パートで使える文字数を計算
+    // 最初のパート: 位置情報 + パート番号
+    // 中間パート: パート番号のみ
+    // 最後のパート: URL + パート番号（ただし分割中は最後かわからないので、URLありで計算）
+    const overhead = isFirst ? locationOverhead + partOverhead : partOverhead
+    // 最後のパートになる可能性があるので、URLオーバーヘッドも考慮
+    const effectiveLimit = charLimit - overhead - urlOverhead
+
+    // 残りがeffectiveLimit以下なら終了
+    const remainingLength = calculateTextLength(remaining, sns)
+    if (remainingLength <= effectiveLimit) {
       parts.push(remaining)
       break
     }
 
-    // 区切り位置を探す
-    const cutPoint = findBestCutPoint(remaining, effectiveLimit)
+    // 区切り位置を探す（X向けの場合、URL長を考慮した実効文字数で判定）
+    const cutPoint = findBestCutPointForSns(remaining, effectiveLimit, sns)
     parts.push(remaining.slice(0, cutPoint).trim())
     remaining = remaining.slice(cutPoint).trim()
+    isFirst = false
   }
 
   return parts
 }
 
 /**
- * 最適な区切り位置を探す
- * 優先順位: 空行 → 単一改行 → 句読点 → 強制分割
+ * SNS向けの最適な区切り位置を探す
  */
-function findBestCutPoint(text: string, maxLength: number): number {
-  const searchRange = text.slice(0, maxLength)
+function findBestCutPointForSns(text: string, maxLength: number, sns: 'x' | 'bluesky' | 'threads'): number {
+  // 最大文字数に収まる範囲を探す
+  let searchEnd = text.length
+
+  // X向けの場合、URL長を考慮して実効文字数で探す
+  if (sns === 'x') {
+    // 二分探索で実効文字数がmaxLength以下になる位置を探す
+    let left = 0
+    let right = text.length
+    while (left < right) {
+      const mid = Math.ceil((left + right) / 2)
+      if (calculateXCharLength(text.slice(0, mid)) <= maxLength) {
+        left = mid
+      } else {
+        right = mid - 1
+      }
+    }
+    searchEnd = left
+  } else {
+    searchEnd = Math.min(text.length, maxLength)
+  }
+
+  const searchRange = text.slice(0, searchEnd)
+  const minLength = Math.floor(searchEnd * 0.3)
 
   // 1. 空行で区切る
   const doubleNewline = searchRange.lastIndexOf('\n\n')
-  if (doubleNewline > maxLength * 0.3) {
+  if (doubleNewline > minLength) {
     return doubleNewline + 2
   }
 
   // 2. 単一改行で区切る
   const singleNewline = searchRange.lastIndexOf('\n')
-  if (singleNewline > maxLength * 0.3) {
+  if (singleNewline > minLength) {
     return singleNewline + 1
   }
 
   // 3. 句読点で区切る（。！？.!?）
   const punctuationMatch = searchRange.match(/.*[。！？.!?]/s)
-  if (punctuationMatch && punctuationMatch[0].length > maxLength * 0.3) {
+  if (punctuationMatch && punctuationMatch[0].length > minLength) {
     return punctuationMatch[0].length
   }
 
   // 4. 強制分割（最終手段）
-  return maxLength
+  return searchEnd
 }
 
 /**
