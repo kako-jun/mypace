@@ -3,7 +3,7 @@ import geohash from 'ngeohash'
 /**
  * SNS共有用のテキスト変換
  * - スーパーメンション @@xxx → #xxx
- * - #mypace タグを追加（コンテンツに未含有の場合）
+ * - Nostr t タグ → #hashtag（コンテンツに未含有のもの）
  * - 位置情報 → OSM URL
  */
 
@@ -30,20 +30,20 @@ function geohashToOsmUrl(hash: string): string | null {
 }
 
 // tags から SNS に表示するハッシュタグを抽出
-// mypace タグのみを表示（他の内部タグやスーパーメンション由来のタグは除外）
+// すべての t タグをハッシュタグ化（コンテンツに既存のものは除外）
 function extractHashtagsForSns(tags: string[][], content: string): string[] {
   const hashtags: string[] = []
   const contentLower = content.toLowerCase()
 
   for (const tag of tags) {
     if (tag[0] === 't' && tag[1]) {
-      const tagValue = tag[1].toLowerCase()
-      // mypace タグのみ追加
-      if (tagValue === 'mypace') {
-        // 既にコンテンツ内に #mypace として存在する場合はスキップ
-        if (!contentLower.includes('#mypace')) {
-          hashtags.push('mypace')
-        }
+      const tagValue = tag[1]
+      const tagLower = tagValue.toLowerCase()
+      // 既にコンテンツ内に #tag として存在する場合はスキップ
+      if (contentLower.includes(`#${tagLower}`)) continue
+      // 重複チェック
+      if (!hashtags.some((h) => h.toLowerCase() === tagLower)) {
+        hashtags.push(tagValue)
       }
     }
   }
@@ -100,7 +100,7 @@ export function transformContentForSns(options: SnsShareOptions): TransformedCon
     text = `(${partInfo.current}/${partInfo.total})\n${text}`
   }
 
-  // 3. t タグから #mypace を追加（コンテンツに含まれていない場合のみ）
+  // 3. t タグからハッシュタグを追加（コンテンツに含まれていないもののみ）
   const hashtags = extractHashtagsForSns(tags, content)
   if (hashtags.length > 0) {
     text = text + '\n\n' + hashtags.map((t) => `#${t}`).join(' ')
