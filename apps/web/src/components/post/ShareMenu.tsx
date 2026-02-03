@@ -23,9 +23,9 @@ export default function ShareMenu({ position, content, tags, url, onSelect, onCl
   // 各SNSの分割パーツを計算
   const splitParts = useMemo(() => {
     return {
-      x: splitContentForSns(content, tags, url, getCharLimit('x')),
-      bluesky: splitContentForSns(content, tags, url, getCharLimit('bluesky')),
-      threads: splitContentForSns(content, tags, url, getCharLimit('threads')),
+      x: splitContentForSns(content, tags, url, getCharLimit('x'), 'x'),
+      bluesky: splitContentForSns(content, tags, url, getCharLimit('bluesky'), 'bluesky'),
+      threads: splitContentForSns(content, tags, url, getCharLimit('threads'), 'threads'),
     }
   }, [content, tags, url])
 

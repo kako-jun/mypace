@@ -384,7 +384,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
         } else {
           // 分割パート
           const { splitContentForSns, formatSplitParts, getCharLimit } = await import('../../lib/utils/sns-share')
-          const parts = splitContentForSns(event.content, event.tags, url, getCharLimit(option))
+          const parts = splitContentForSns(event.content, event.tags, url, getCharLimit(option), option)
           const formatted = formatSplitParts(parts, event.tags, url)
           text = formatted[partIndex]?.text || ''
         }

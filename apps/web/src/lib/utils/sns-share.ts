@@ -125,6 +125,12 @@ export const BLUESKY_CHAR_LIMIT = 300
 export const THREADS_CHAR_LIMIT = 500
 
 /**
+ * X (Twitter) の URL 文字数（t.co 短縮後）
+ * https:// の URL は全て 23文字として計算される
+ */
+export const X_URL_LENGTH = 23
+
+/**
  * SNSの文字数制限を取得
  */
 export function getCharLimit(sns: 'x' | 'bluesky' | 'threads'): number {
@@ -139,17 +145,56 @@ export function getCharLimit(sns: 'x' | 'bluesky' | 'threads'): number {
 }
 
 /**
+ * テキスト内の URL を検出する正規表現
+ */
+const URL_REGEX = /https?:\/\/[^\s]+/g
+
+/**
+ * X 用の文字数を計算（URL は 23文字固定）
+ */
+export function calculateXCharLength(text: string): number {
+  // URL を全て 23文字として計算
+  const urls = text.match(URL_REGEX) || []
+  let length = text.length
+
+  for (const url of urls) {
+    // 実際の URL 長を引いて、23文字を加算
+    length = length - url.length + X_URL_LENGTH
+  }
+
+  return length
+}
+
+/**
+ * テキストの文字数を計算（SNS によって URL の扱いが異なる）
+ */
+function calculateTextLength(text: string, sns: 'x' | 'bluesky' | 'threads'): number {
+  if (sns === 'x') {
+    return calculateXCharLength(text)
+  }
+  // Bluesky/Threads は実際の文字数
+  return text.length
+}
+
+/**
  * 長文を分割
  * 優先順位: 空行 → 単一改行 → 句読点 → 強制分割
  */
-export function splitContentForSns(content: string, tags: string[][], url: string, charLimit: number): string[] {
+export function splitContentForSns(
+  content: string,
+  tags: string[][],
+  url: string,
+  charLimit: number,
+  sns: 'x' | 'bluesky' | 'threads' = 'x'
+): string[] {
   // URL と位置情報の追加分を計算
-  const baseOverhead = transformContentForSns({
+  const baseTransformed = transformContentForSns({
     content: '',
     tags,
     url,
     includeUrl: true,
-  }).length
+  })
+  const baseOverhead = calculateTextLength(baseTransformed.text, sns)
 
   // パート番号のオーバーヘッド "(99/99)\n" = 9文字程度
   const partOverhead = 10
@@ -159,7 +204,7 @@ export function splitContentForSns(content: string, tags: string[][], url: strin
 
   // 分割が不要な場合
   const fullTransformed = transformContentForSns({ content, tags, url })
-  if (fullTransformed.length <= charLimit) {
+  if (calculateTextLength(fullTransformed.text, sns) <= charLimit) {
     return [content]
   }
 

@@ -272,7 +272,7 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
           text = transformed.text
         } else {
           const { splitContentForSns, formatSplitParts, getCharLimit } = await import('../../lib/utils/sns-share')
-          const parts = splitContentForSns(content, tags, url, getCharLimit(option))
+          const parts = splitContentForSns(content, tags, url, getCharLimit(option), option)
           const formatted = formatSplitParts(parts, tags, url)
           text = formatted[partIndex]?.text || ''
         }

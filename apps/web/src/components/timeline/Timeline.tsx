@@ -134,7 +134,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
           } else {
             // 分割パート
             const { splitContentForSns, formatSplitParts, getCharLimit } = await import('../../lib/utils/sns-share')
-            const parts = splitContentForSns(content, tags, url, getCharLimit(option))
+            const parts = splitContentForSns(content, tags, url, getCharLimit(option), option)
             const formatted = formatSplitParts(parts, tags, url)
             text = formatted[partIndex]?.text || ''
           }
