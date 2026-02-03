@@ -47,7 +47,7 @@ interface TimelinePostCardProps {
   onRepost: (event: Event) => void
   onPin?: (event: Event) => void
   onUnpin?: () => void
-  onShareOption: (eventId: string, content: string, option: ShareOption) => void
+  onShareOption: (eventId: string, content: string, tags: string[][], option: ShareOption, partIndex?: number) => void
   getDisplayName: (pubkey: string) => string
   getAvatarUrl: (pubkey: string) => string | null
 }
@@ -258,6 +258,9 @@ export default function TimelinePostCard({
                     likingId={likingId}
                     repostingId={repostingId}
                     eventId={event.id}
+                    content={event.content}
+                    tags={event.tags}
+                    url={`${window.location.origin}/post/${event.id}`}
                     copied={copiedId === event.id}
                     myPubkey={myPubkey}
                     getDisplayName={getDisplayName}
@@ -265,7 +268,9 @@ export default function TimelinePostCard({
                     onUnlike={(color) => onUnlike(event, color)}
                     onReply={() => onReply(event)}
                     onRepost={() => onRepost(event)}
-                    onShareOption={(option) => onShareOption(event.id, event.content, option)}
+                    onShareOption={(option, partIndex) =>
+                      onShareOption(event.id, event.content, event.tags, option, partIndex)
+                    }
                     onNavigateToProfile={navigateToUser}
                   />
                 </div>

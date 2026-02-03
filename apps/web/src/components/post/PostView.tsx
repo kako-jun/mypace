@@ -38,6 +38,7 @@ import {
   formatNumber,
 } from '../../lib/utils'
 import { getThemeColors } from '../../lib/storage'
+import { transformContentForSns, getSnsIntentUrl } from '../../lib/utils/sns-share'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import {
   hasTeaserTag,
@@ -337,11 +338,11 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     }
   }
 
-  const handleShareOption = async (option: ShareOption) => {
+  const handleShareOption = async (option: ShareOption, partIndex?: number) => {
     if (!event) return
+    const url = window.location.href
     switch (option) {
       case 'url': {
-        const url = window.location.href
         const result = await shareOrCopy(url)
         if (result.copied) {
           setCopied(true)
@@ -366,6 +367,29 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
       }
       case 'md-open': {
         openRawUrl(eventId)
+        break
+      }
+      case 'x':
+      case 'bluesky':
+      case 'threads': {
+        let text: string
+        if (partIndex === undefined || partIndex === -1) {
+          // 全文（分割なし or 編集用）
+          const transformed = transformContentForSns({
+            content: event.content,
+            tags: event.tags,
+            url,
+          })
+          text = transformed.text
+        } else {
+          // 分割パート
+          const { splitContentForSns, formatSplitParts, getCharLimit } = await import('../../lib/utils/sns-share')
+          const parts = splitContentForSns(event.content, event.tags, url, getCharLimit(option))
+          const formatted = formatSplitParts(parts, event.tags, url)
+          text = formatted[partIndex]?.text || ''
+        }
+        const intentUrl = getSnsIntentUrl(option, text)
+        window.open(intentUrl, '_blank', 'noopener,noreferrer')
         break
       }
     }
@@ -541,6 +565,9 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
               likingId={likingId}
               repostingId={repostingId}
               eventId={event.id}
+              content={event.content}
+              tags={event.tags}
+              url={window.location.href}
               copied={copied}
               myPubkey={myPubkey}
               getDisplayName={(pk) => getProfileDisplayName(pk, replyProfiles[pk])}

@@ -17,6 +17,9 @@ interface PostActionsProps {
   likingId: string | null
   repostingId: string | null
   eventId: string
+  content: string
+  tags: string[][]
+  url: string
   copied: boolean
   myPubkey: string | null
   getDisplayName: (pubkey: string) => string
@@ -24,7 +27,7 @@ interface PostActionsProps {
   onUnlike: (color: StellaColor) => void
   onReply: () => void
   onRepost: () => void
-  onShareOption: (option: ShareOption) => void
+  onShareOption: (option: ShareOption, partIndex?: number) => void
   onNavigateToProfile: (pubkey: string) => void
 }
 
@@ -39,6 +42,9 @@ export default function PostActions({
   likingId,
   repostingId,
   eventId,
+  content,
+  tags,
+  url,
   copied,
   myPubkey,
   getDisplayName,
@@ -232,9 +238,9 @@ export default function PostActions({
   }, [])
 
   const handleShareSelect = useCallback(
-    (option: ShareOption) => {
+    (option: ShareOption, partIndex?: number) => {
       setShowShareMenu(false)
-      onShareOption(option)
+      onShareOption(option, partIndex)
     },
     [onShareOption]
   )
@@ -443,7 +449,14 @@ export default function PostActions({
           {copied ? <Icon name="Check" size={20} /> : <Icon name="Share2" size={20} />}
         </button>
         {showShareMenu && shareMenuPosition && (
-          <ShareMenu position={shareMenuPosition} onSelect={handleShareSelect} onClose={handleShareMenuClose} />
+          <ShareMenu
+            position={shareMenuPosition}
+            content={content}
+            tags={tags}
+            url={url}
+            onSelect={handleShareSelect}
+            onClose={handleShareMenuClose}
+          />
         )}
       </div>
     </>

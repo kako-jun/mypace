@@ -23,6 +23,7 @@ import {
   shareOrCopy,
   verifyNip05,
 } from '../../lib/utils'
+import { transformContentForSns, getSnsIntentUrl } from '../../lib/utils/sns-share'
 import { Button, Loading, BackButton, ErrorMessage } from '../ui'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import {
@@ -226,10 +227,16 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
     }
   }, [profile?.nip05, pubkey])
 
-  const handleShareOption = async (eventId: string, content: string, option: ShareOption) => {
+  const handleShareOption = async (
+    eventId: string,
+    content: string,
+    tags: string[][],
+    option: ShareOption,
+    partIndex?: number
+  ) => {
+    const url = `${window.location.origin}/post/${eventId}`
     switch (option) {
       case 'url': {
-        const url = `${window.location.origin}/post/${eventId}`
         const result = await shareOrCopy(url)
         if (result.copied) {
           setCopiedId(eventId)
@@ -254,6 +261,23 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
       }
       case 'md-open': {
         openRawUrl(eventId)
+        break
+      }
+      case 'x':
+      case 'bluesky':
+      case 'threads': {
+        let text: string
+        if (partIndex === undefined || partIndex === -1) {
+          const transformed = transformContentForSns({ content, tags, url })
+          text = transformed.text
+        } else {
+          const { splitContentForSns, formatSplitParts, getCharLimit } = await import('../../lib/utils/sns-share')
+          const parts = splitContentForSns(content, tags, url, getCharLimit(option))
+          const formatted = formatSplitParts(parts, tags, url)
+          text = formatted[partIndex]?.text || ''
+        }
+        const intentUrl = getSnsIntentUrl(option, text)
+        window.open(intentUrl, '_blank', 'noopener,noreferrer')
         break
       }
     }

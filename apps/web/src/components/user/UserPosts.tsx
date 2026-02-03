@@ -40,7 +40,7 @@ interface UserPostsProps {
   onUnlike: (event: Event, color: StellaColor) => Promise<void>
   onRepost: (event: Event) => Promise<void>
   onDeleteConfirm: (event: Event) => void
-  onShareOption: (eventId: string, content: string, option: ShareOption) => void
+  onShareOption: (eventId: string, content: string, tags: string[][], option: ShareOption, partIndex?: number) => void
   onCopied: (eventId: string) => void
   onPin: (event: Event) => void
   onUnpin: () => void

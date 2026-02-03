@@ -16,6 +16,7 @@ import {
   navigateToTag,
   formatNumber,
 } from '../../lib/utils'
+import { transformContentForSns, getSnsIntentUrl } from '../../lib/utils/sns-share'
 import type { Event } from '../../types'
 import type { ShareOption } from '../post/ShareMenu'
 
@@ -91,38 +92,60 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
 
   const handleReplyClick = useCallback((event: Event) => onReplyStart?.(event), [onReplyStart])
 
-  const handleShareOption = useCallback(async (eventId: string, content: string, option: ShareOption) => {
-    switch (option) {
-      case 'url': {
-        const url = `${window.location.origin}/post/${eventId}`
-        const result = await shareOrCopy(url)
-        if (result.copied) {
+  const handleShareOption = useCallback(
+    async (eventId: string, content: string, tags: string[][], option: ShareOption, partIndex?: number) => {
+      const url = `${window.location.origin}/post/${eventId}`
+      switch (option) {
+        case 'url': {
+          const result = await shareOrCopy(url)
+          if (result.copied) {
+            setCopiedId(eventId)
+            setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+          }
+          break
+        }
+        case 'md-copy': {
+          const copied = await copyToClipboard(content)
+          if (copied) {
+            setCopiedId(eventId)
+            setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+          }
+          break
+        }
+        case 'md-download': {
+          const filename = `post-${eventId.slice(0, 8)}`
+          downloadAsMarkdown(content, filename)
           setCopiedId(eventId)
           setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+          break
         }
-        break
-      }
-      case 'md-copy': {
-        const copied = await copyToClipboard(content)
-        if (copied) {
-          setCopiedId(eventId)
-          setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+        case 'md-open': {
+          openRawUrl(eventId)
+          break
         }
-        break
+        case 'x':
+        case 'bluesky':
+        case 'threads': {
+          let text: string
+          if (partIndex === undefined || partIndex === -1) {
+            // 全文（分割なし or 編集用）
+            const transformed = transformContentForSns({ content, tags, url })
+            text = transformed.text
+          } else {
+            // 分割パート
+            const { splitContentForSns, formatSplitParts, getCharLimit } = await import('../../lib/utils/sns-share')
+            const parts = splitContentForSns(content, tags, url, getCharLimit(option))
+            const formatted = formatSplitParts(parts, tags, url)
+            text = formatted[partIndex]?.text || ''
+          }
+          const intentUrl = getSnsIntentUrl(option, text)
+          window.open(intentUrl, '_blank', 'noopener,noreferrer')
+          break
+        }
       }
-      case 'md-download': {
-        const filename = `post-${eventId.slice(0, 8)}`
-        downloadAsMarkdown(content, filename)
-        setCopiedId(eventId)
-        setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
-        break
-      }
-      case 'md-open': {
-        openRawUrl(eventId)
-        break
-      }
-    }
-  }, [])
+    },
+    []
+  )
 
   const handleDeleteConfirm = useCallback(
     async (event: Event) => {
