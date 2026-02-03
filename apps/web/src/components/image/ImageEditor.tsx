@@ -158,23 +158,23 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
     canvas.width = cropW
     canvas.height = cropH
 
-    // Apply crop first, then rotation
-    // This ensures the cropped region is rotated, not that the rotation affects crop coordinates
+    // Apply rotation first, then crop
+    // User sees rotated image and selects crop area on the rotated view
     if (rotation !== 0) {
-      // Step 1: Draw cropped region to a temporary canvas (no rotation)
+      // Step 1: Draw full image to a temporary canvas with rotation
       const tempCanvas = document.createElement('canvas')
-      tempCanvas.width = cropW
-      tempCanvas.height = cropH
+      tempCanvas.width = image.naturalWidth
+      tempCanvas.height = image.naturalHeight
       const tempCtx = tempCanvas.getContext('2d')
       if (tempCtx) {
-        tempCtx.drawImage(image, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
-
-        // Step 2: Draw temporary canvas to final canvas with rotation
         const radians = (rotation * Math.PI) / 180
-        ctx.translate(cropW / 2, cropH / 2)
-        ctx.rotate(radians)
-        ctx.translate(-cropW / 2, -cropH / 2)
-        ctx.drawImage(tempCanvas, 0, 0)
+        tempCtx.translate(image.naturalWidth / 2, image.naturalHeight / 2)
+        tempCtx.rotate(radians)
+        tempCtx.translate(-image.naturalWidth / 2, -image.naturalHeight / 2)
+        tempCtx.drawImage(image, 0, 0)
+
+        // Step 2: Crop from rotated canvas and draw to final canvas
+        ctx.drawImage(tempCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
       }
     } else {
       ctx.drawImage(image, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
