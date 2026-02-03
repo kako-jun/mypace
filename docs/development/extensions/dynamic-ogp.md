@@ -83,6 +83,24 @@ curl "http://localhost:8788/user/{NPUB}"
 curl "http://localhost:8788/post/{EVENT_ID}"
 ```
 
+## API依存関係
+
+FunctionsはAPIから以下のエンドポイントを呼び出す：
+
+| エンドポイント | 用途 | 実装ファイル |
+|---------------|------|-------------|
+| `GET /api/events/:id` | 投稿データ取得 | `apps/api/src/routes/events.ts` |
+| `GET /api/profiles?pubkeys=...` | プロフィール取得 | `apps/api/src/routes/profiles.ts` |
+
+**注意**: これらのエンドポイントはOGP生成専用。ブラウザはNostrリレーから直接データを取得するため、通常の画面表示では使用しない。
+
+### エラー時の挙動
+
+API呼び出しが失敗した場合、デフォルトOGP（トップページ用）にフォールバック：
+- API 404/500エラー
+- タイムアウト
+- データ不正
+
 ## 関連
 
 - [seo.md](../seo.md) - SEO全体の設計
