@@ -151,6 +151,7 @@ export function ImagePicker({ onEmbed, onAddSticker, onError, initialFile, onIni
   // Handle initial file from Web Share Target API
   useEffect(() => {
     if (initialFile) {
+      setIsOpen(true)
       handleFileSelect(initialFile)
       onInitialFileProcessed?.()
     }
