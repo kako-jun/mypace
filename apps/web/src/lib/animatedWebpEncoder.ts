@@ -109,15 +109,30 @@ export async function videoToAnimatedWebP(videoFile: File, options: VideoToWebPO
       await seekVideo(video, time)
 
       // Draw frame to canvas (with crop, scale, and rotation)
-      ctx.save()
+      // Important: Apply crop FIRST, then rotation
+      // This ensures the cropped region is rotated, not that the rotation affects crop coordinates
       if (rotation !== 0) {
-        const radians = (rotation * Math.PI) / 180
-        ctx.translate(outputWidth / 2, outputHeight / 2)
-        ctx.rotate(radians)
-        ctx.translate(-outputWidth / 2, -outputHeight / 2)
+        // Step 1: Draw cropped region to a temporary canvas (no rotation)
+        const tempCanvas = document.createElement('canvas')
+        tempCanvas.width = outputWidth
+        tempCanvas.height = outputHeight
+        const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true })
+        if (tempCtx) {
+          tempCtx.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight)
+
+          // Step 2: Draw temporary canvas to final canvas with rotation
+          ctx.save()
+          const radians = (rotation * Math.PI) / 180
+          ctx.translate(outputWidth / 2, outputHeight / 2)
+          ctx.rotate(radians)
+          ctx.translate(-outputWidth / 2, -outputHeight / 2)
+          ctx.drawImage(tempCanvas, 0, 0)
+          ctx.restore()
+        }
+      } else {
+        // No rotation - draw directly
+        ctx.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight)
       }
-      ctx.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight)
-      ctx.restore()
 
       // Get RGBA data
       const imageData = ctx.getImageData(0, 0, outputWidth, outputHeight)
