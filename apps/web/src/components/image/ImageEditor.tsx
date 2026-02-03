@@ -158,15 +158,27 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
     canvas.width = cropW
     canvas.height = cropH
 
-    // Apply rotation and draw cropped image
+    // Apply crop first, then rotation
+    // This ensures the cropped region is rotated, not that the rotation affects crop coordinates
     if (rotation !== 0) {
-      const radians = (rotation * Math.PI) / 180
-      ctx.translate(cropW / 2, cropH / 2)
-      ctx.rotate(radians)
-      ctx.translate(-cropW / 2, -cropH / 2)
-    }
+      // Step 1: Draw cropped region to a temporary canvas (no rotation)
+      const tempCanvas = document.createElement('canvas')
+      tempCanvas.width = cropW
+      tempCanvas.height = cropH
+      const tempCtx = tempCanvas.getContext('2d')
+      if (tempCtx) {
+        tempCtx.drawImage(image, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
 
-    ctx.drawImage(image, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
+        // Step 2: Draw temporary canvas to final canvas with rotation
+        const radians = (rotation * Math.PI) / 180
+        ctx.translate(cropW / 2, cropH / 2)
+        ctx.rotate(radians)
+        ctx.translate(-cropW / 2, -cropH / 2)
+        ctx.drawImage(tempCanvas, 0, 0)
+      }
+    } else {
+      ctx.drawImage(image, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
+    }
 
     // Draw stickers
     for (const sticker of stickers) {
