@@ -96,7 +96,7 @@ body.long-mode-active .video-editor-modal {
   appearance: none;
   width: 16px;
   height: 16px;
-  background: var(--accent-primary);
+  background: var(--accent);
   border-radius: 50%;
   cursor: pointer;
   margin-top: -6px;
@@ -105,7 +105,7 @@ body.long-mode-active .video-editor-modal {
 .video-editor-rotation-slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
-  background: var(--accent-primary);
+  background: var(--accent);
   border-radius: 50%;
   border: none;
   cursor: pointer;
