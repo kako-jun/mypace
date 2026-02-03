@@ -62,8 +62,11 @@ Share to SNS → X
 
 | オプション | 説明 |
 |-----------|------|
-| Copy URL | URLをクリップボードにコピー |
+| Copy URL | MY PACE の URL をクリップボードにコピー |
+| Copy Nostr ID | Nostr ID（`note1...`形式）をコピー |
 | Share to Apps | 端末の共有ダイアログを開く（モバイル向け） |
+
+**Copy Nostr ID** でコピーした ID は、他の Nostr クライアント（Damus, Amethyst, Snort など）で直接開くことができます。
 
 > **注意**: Share to Apps は Web Share API 対応環境でのみ動作します。非対応の場合は自動でクリップボードにコピーされます。
 
@@ -78,6 +81,24 @@ Share to SNS → X
 | Download Markdown | `.md` ファイルとしてダウンロード |
 
 > **ヒント**: 長文投稿も完全なテキストで共有できます。
+
+## Nostr クライアント間の相互運用
+
+MY PACE は他の Nostr クライアントとの相互運用をサポートしています。
+
+### MY PACE → 他クライアント
+
+**Share URL → Copy Nostr ID** で `note1...` 形式の ID をコピーし、他の Nostr クライアントに貼り付けて開けます。
+
+### 他クライアント → MY PACE
+
+`nostr:note1...` や `nostr:nevent1...` 形式のリンクをクリックすると、MY PACE で開くことができます（PWA インストール時）。
+
+対応形式:
+- `nostr:note1...` - 投稿 ID
+- `nostr:nevent1...` - 投稿 ID + リレーヒント
+- `nostr:npub1...` - ユーザー ID
+- `nostr:nprofile1...` - ユーザー ID + リレーヒント
 
 ---
 
