@@ -101,7 +101,8 @@ export function transformContentForSns(options: SnsShareOptions): TransformedCon
   }
 
   // 3. t タグからハッシュタグを追加（コンテンツに含まれていないもののみ）
-  const hashtags = extractHashtagsForSns(tags, content)
+  // スーパーメンション変換後の text を渡すことで、@@mention 由来のハッシュタグとの重複もチェック
+  const hashtags = extractHashtagsForSns(tags, text)
   if (hashtags.length > 0) {
     text = text + '\n\n' + hashtags.map((t) => `#${t}`).join(' ')
   }
