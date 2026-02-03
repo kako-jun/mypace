@@ -380,16 +380,9 @@
   margin-left: auto;
 }
 
-.share-menu-option .share-menu-x-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  font-size: 1rem;
-  font-weight: bold;
-  color: var(--text-secondary);
-  flex: none;
+.share-menu-x-icon {
+  fill: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 /* ===========================================
