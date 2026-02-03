@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { CloseButton, Portal, Icon } from '../ui'
+import { CloseButton, Portal, Icon, RotationSlider } from '../ui'
 import Button from '../ui/Button'
 import { videoToAnimatedWebP, getVideoDuration } from '../../lib/animatedWebpEncoder'
 import '../../styles/components/video-editor.css'
@@ -342,21 +342,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
             <CloseButton onClick={onCancel} size={20} />
           </div>
 
-          {videoLoaded && (
-            <div className="video-editor-rotation-row">
-              <span className="video-editor-rotation-label">-90°</span>
-              <input
-                type="range"
-                min="-90"
-                max="90"
-                value={rotation}
-                onChange={(e) => setRotation(Number(e.target.value))}
-                className="video-editor-rotation-slider"
-              />
-              <span className="video-editor-rotation-label">+90°</span>
-              <span className="video-editor-rotation-value">{rotation}°</span>
-            </div>
-          )}
+          {videoLoaded && <RotationSlider value={rotation} onChange={setRotation} />}
 
           {!videoLoaded && <div className="video-editor-loading">Loading...</div>}
 

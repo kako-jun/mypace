@@ -1,0 +1,69 @@
+/* ===========================================
+   Rotation Slider - Shared Component
+   =========================================== */
+
+.rotation-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--surface-secondary);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.rotation-slider-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  min-width: 2rem;
+  text-align: center;
+}
+
+.rotation-slider {
+  flex: 1;
+  height: 16px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.rotation-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--border-light);
+  border-radius: 2px;
+}
+
+.rotation-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -6px;
+}
+
+.rotation-slider::-moz-range-track {
+  height: 4px;
+  background: var(--border-light);
+  border-radius: 2px;
+}
+
+.rotation-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+
+.rotation-slider-value {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 2.5rem;
+  text-align: right;
+}

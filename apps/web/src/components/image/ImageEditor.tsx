@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { CloseButton, Portal } from '../ui'
+import { CloseButton, Portal, RotationSlider } from '../ui'
 import Button from '../ui/Button'
 import { PostStickers } from '../post/PostStickers'
 import { getStickerHistory, type StickerHistoryItem } from '../../lib/api'
@@ -247,21 +247,7 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
             <CloseButton onClick={onCancel} size={20} />
           </div>
 
-          {imageLoaded && (
-            <div className="image-editor-rotation-row">
-              <span className="image-editor-rotation-label">-90°</span>
-              <input
-                type="range"
-                min="-90"
-                max="90"
-                value={rotation}
-                onChange={(e) => setRotation(Number(e.target.value))}
-                className="image-editor-rotation-slider"
-              />
-              <span className="image-editor-rotation-label">+90°</span>
-              <span className="image-editor-rotation-value">{rotation}°</span>
-            </div>
-          )}
+          {imageLoaded && <RotationSlider value={rotation} onChange={setRotation} />}
 
           {!imageLoaded && <div className="image-editor-loading">Loading...</div>}
 
