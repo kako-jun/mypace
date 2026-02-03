@@ -131,6 +131,12 @@ export const THREADS_CHAR_LIMIT = 500
 export const X_URL_LENGTH = 23
 
 /**
+ * Bluesky の URL 文字数
+ * URL は全て 22文字として計算される
+ */
+export const BLUESKY_URL_LENGTH = 22
+
+/**
  * SNSの文字数制限を取得
  */
 export function getCharLimit(sns: 'x' | 'bluesky' | 'threads'): number {
@@ -166,13 +172,32 @@ export function calculateXCharLength(text: string): number {
 }
 
 /**
+ * Bluesky 用の文字数を計算（URL は 22文字固定）
+ */
+export function calculateBlueskyCharLength(text: string): number {
+  // URL を全て 22文字として計算
+  const urls = text.match(URL_REGEX) || []
+  let length = text.length
+
+  for (const url of urls) {
+    // 実際の URL 長を引いて、22文字を加算
+    length = length - url.length + BLUESKY_URL_LENGTH
+  }
+
+  return length
+}
+
+/**
  * テキストの文字数を計算（SNS によって URL の扱いが異なる）
  */
 function calculateTextLength(text: string, sns: 'x' | 'bluesky' | 'threads'): number {
   if (sns === 'x') {
     return calculateXCharLength(text)
   }
-  // Bluesky/Threads は実際の文字数
+  if (sns === 'bluesky') {
+    return calculateBlueskyCharLength(text)
+  }
+  // Threads は実際の文字数
   return text.length
 }
 
@@ -243,14 +268,14 @@ function findBestCutPointForSns(text: string, maxLength: number, sns: 'x' | 'blu
   // 最大文字数に収まる範囲を探す
   let searchEnd = text.length
 
-  // X向けの場合、URL長を考慮して実効文字数で探す
-  if (sns === 'x') {
+  // X/Bluesky向けの場合、URL長を考慮して実効文字数で探す
+  if (sns === 'x' || sns === 'bluesky') {
     // 二分探索で実効文字数がmaxLength以下になる位置を探す
     let left = 0
     let right = text.length
     while (left < right) {
       const mid = Math.ceil((left + right) / 2)
-      if (calculateXCharLength(text.slice(0, mid)) <= maxLength) {
+      if (calculateTextLength(text.slice(0, mid), sns) <= maxLength) {
         left = mid
       } else {
         right = mid - 1
