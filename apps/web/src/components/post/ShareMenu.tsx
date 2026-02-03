@@ -13,11 +13,12 @@ interface ShareMenuProps {
   content: string
   tags: string[][]
   url: string
+  isMyPost: boolean
   onSelect: (option: ShareOption, partIndex?: number) => void
   onClose: (e?: React.MouseEvent) => void
 }
 
-export default function ShareMenu({ position, content, tags, url, onSelect, onClose }: ShareMenuProps) {
+export default function ShareMenu({ position, content, tags, url, isMyPost, onSelect, onClose }: ShareMenuProps) {
   const [subMenu, setSubMenu] = useState<SubMenu>(null)
 
   // 各SNSの分割パーツを計算
@@ -68,11 +69,13 @@ export default function ShareMenu({ position, content, tags, url, onSelect, onCl
         <CloseButton onClick={() => onClose()} size={16} />
       </div>
       <div className="share-menu-options">
-        <button className="share-menu-option" onClick={handleShowSubMenu('sns')}>
-          <Icon name="Send" size={16} />
-          <span>Share to SNS</span>
-          <Icon name="ChevronRight" size={16} className="share-menu-arrow" />
-        </button>
+        {isMyPost && (
+          <button className="share-menu-option" onClick={handleShowSubMenu('sns')}>
+            <Icon name="Send" size={16} />
+            <span>Share to SNS</span>
+            <Icon name="ChevronRight" size={16} className="share-menu-arrow" />
+          </button>
+        )}
         <button className="share-menu-option" onClick={handleShowSubMenu('url')}>
           <Icon name="Link" size={16} />
           <span>Share URL</span>
