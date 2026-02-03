@@ -99,6 +99,7 @@ body.long-mode-active .image-editor-modal {
   background: var(--accent-primary);
   border-radius: 50%;
   cursor: pointer;
+  margin-top: -6px;
 }
 
 .image-editor-rotation-slider::-moz-range-thumb {
