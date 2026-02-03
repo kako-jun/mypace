@@ -108,29 +108,27 @@ export async function videoToAnimatedWebP(videoFile: File, options: VideoToWebPO
       // Seek to frame
       await seekVideo(video, time)
 
-      // Draw frame to canvas (with crop, scale, and rotation)
-      // Important: Apply crop FIRST, then rotation
-      // This ensures the cropped region is rotated, not that the rotation affects crop coordinates
+      // Draw frame to canvas (with rotation and crop)
+      // Important: Apply rotation FIRST, then crop
+      // User sees rotated video and selects crop area on the rotated view
       if (rotation !== 0) {
-        // Step 1: Draw cropped region to a temporary canvas (no rotation)
+        // Step 1: Draw full video frame to a temporary canvas with rotation
         const tempCanvas = document.createElement('canvas')
-        tempCanvas.width = outputWidth
-        tempCanvas.height = outputHeight
+        tempCanvas.width = video.videoWidth
+        tempCanvas.height = video.videoHeight
         const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true })
         if (tempCtx) {
-          tempCtx.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight)
-
-          // Step 2: Draw temporary canvas to final canvas with rotation
-          ctx.save()
           const radians = (rotation * Math.PI) / 180
-          ctx.translate(outputWidth / 2, outputHeight / 2)
-          ctx.rotate(radians)
-          ctx.translate(-outputWidth / 2, -outputHeight / 2)
-          ctx.drawImage(tempCanvas, 0, 0)
-          ctx.restore()
+          tempCtx.translate(video.videoWidth / 2, video.videoHeight / 2)
+          tempCtx.rotate(radians)
+          tempCtx.translate(-video.videoWidth / 2, -video.videoHeight / 2)
+          tempCtx.drawImage(video, 0, 0)
+
+          // Step 2: Crop from rotated canvas and draw to final canvas
+          ctx.drawImage(tempCanvas, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight)
         }
       } else {
-        // No rotation - draw directly
+        // No rotation - draw directly with crop
         ctx.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight)
       }
 
