@@ -3,10 +3,10 @@ import { createPortal } from 'react-dom'
 import { Icon, CloseButton } from '../ui'
 import { splitContentForSns, getCharLimit } from '../../lib/utils/sns-share'
 
-export type ShareOption = 'url' | 'md-copy' | 'md-download' | 'md-open' | 'x' | 'bluesky' | 'threads'
+export type ShareOption = 'url-copy' | 'url-share' | 'md-copy' | 'md-download' | 'md-open' | 'x' | 'bluesky' | 'threads'
 export type SnsType = 'x' | 'bluesky' | 'threads'
 
-type SubMenu = 'content' | 'sns' | SnsType | null
+type SubMenu = 'content' | 'sns' | 'url' | SnsType | null
 
 interface ShareMenuProps {
   position: { top: number; left: number }
@@ -73,9 +73,10 @@ export default function ShareMenu({ position, content, tags, url, onSelect, onCl
           <span>Share to SNS</span>
           <Icon name="ChevronRight" size={16} className="share-menu-arrow" />
         </button>
-        <button className="share-menu-option" onClick={handleSelect('url')}>
+        <button className="share-menu-option" onClick={handleShowSubMenu('url')}>
           <Icon name="Link" size={16} />
           <span>Share URL</span>
+          <Icon name="ChevronRight" size={16} className="share-menu-arrow" />
         </button>
         <button className="share-menu-option" onClick={handleShowSubMenu('content')}>
           <Icon name="FileText" size={16} />
@@ -154,6 +155,28 @@ export default function ShareMenu({ position, content, tags, url, onSelect, onCl
     )
   }
 
+  const renderUrlMenu = () => (
+    <>
+      <div className="share-menu-header">
+        <button className="share-menu-back" onClick={handleBack}>
+          <Icon name="ChevronLeft" size={16} />
+        </button>
+        <span className="share-menu-title">URL</span>
+        <CloseButton onClick={() => onClose()} size={16} />
+      </div>
+      <div className="share-menu-options">
+        <button className="share-menu-option" onClick={handleSelect('url-copy')}>
+          <Icon name="Clipboard" size={16} />
+          <span>Copy URL</span>
+        </button>
+        <button className="share-menu-option" onClick={handleSelect('url-share')}>
+          <Icon name="Share2" size={16} />
+          <span>Share to Apps</span>
+        </button>
+      </div>
+    </>
+  )
+
   const renderContentMenu = () => (
     <>
       <div className="share-menu-header">
@@ -193,6 +216,7 @@ export default function ShareMenu({ position, content, tags, url, onSelect, onCl
         {subMenu === 'x' && renderSnsSplitMenu('x')}
         {subMenu === 'bluesky' && renderSnsSplitMenu('bluesky')}
         {subMenu === 'threads' && renderSnsSplitMenu('threads')}
+        {subMenu === 'url' && renderUrlMenu()}
         {subMenu === 'content' && renderContentMenu()}
       </div>
     </>,

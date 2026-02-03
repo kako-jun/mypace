@@ -341,7 +341,15 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     if (!event) return
     const url = window.location.href
     switch (option) {
-      case 'url': {
+      case 'url-copy': {
+        const success = await copyToClipboard(url)
+        if (success) {
+          setCopied(true)
+          setTimeout(() => setCopied(false), TIMEOUTS.COPY_FEEDBACK)
+        }
+        break
+      }
+      case 'url-share': {
         const result = await shareOrCopy(url)
         if (result.copied) {
           setCopied(true)

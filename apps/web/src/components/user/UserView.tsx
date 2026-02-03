@@ -236,7 +236,15 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
   ) => {
     const url = `${window.location.origin}/post/${eventId}`
     switch (option) {
-      case 'url': {
+      case 'url-copy': {
+        const copied = await copyToClipboard(url)
+        if (copied) {
+          setCopiedId(eventId)
+          setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+        }
+        break
+      }
+      case 'url-share': {
         const result = await shareOrCopy(url)
         if (result.copied) {
           setCopiedId(eventId)
