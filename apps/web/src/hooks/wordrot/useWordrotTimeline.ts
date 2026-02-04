@@ -134,10 +134,16 @@ export function useWordrotTimeline() {
    */
   const collect = useCallback(
     async (word: string, eventId?: string): Promise<boolean> => {
-      if (!pubkey) return false
+      console.log('[useWordrotTimeline] Collect called:', { word, eventId: eventId?.slice(0, 8), hasPubkey: !!pubkey })
+      if (!pubkey) {
+        console.log('[useWordrotTimeline] No pubkey, returning false')
+        return false
+      }
 
       try {
+        console.log('[useWordrotTimeline] Calling collectWord API...')
         const result = await collectWord(pubkey, word, eventId)
+        console.log('[useWordrotTimeline] collectWord result:', result)
 
         if (result.word) {
           // Update collected words set

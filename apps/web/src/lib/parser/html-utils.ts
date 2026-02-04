@@ -164,9 +164,14 @@ export function processWordHighlights(html: string, words: string[], collectedWo
       const word = words.find((w) => w.toLowerCase() === match.toLowerCase()) || match
       const isCollected = collectedWords?.has(word) || false
       const collectedClass = isCollected ? ' collected' : ''
-      const title = isCollected ? `${word} (collected)` : `Collect: ${word}`
 
-      return `<button class="wordrot-highlight${collectedClass}" data-word="${escapeHtml(word)}" title="${title}">${match}</button>`
+      if (isCollected) {
+        // Already collected - show as non-clickable span
+        return `<span class="wordrot-highlight${collectedClass}" data-word="${escapeHtml(word)}" title="${word} (collected)">${match}</span>`
+      } else {
+        // Not collected - show as clickable button
+        return `<button class="wordrot-highlight${collectedClass}" data-word="${escapeHtml(word)}" title="Collect: ${word}">${match}</button>`
+      }
     })
   })
 

@@ -115,6 +115,25 @@ export function PostContent({
       <PostEmbeds content={displayContent} ogpMap={ogpMap} enableOgpFallback={enableOgpFallback} />
 
       {/* Wordrot character images for collected words */}
+      {(() => {
+        console.log('[PostContent] Wordrot images check:', {
+          hasWords: !!wordrotWords,
+          wordsCount: wordrotWords?.length,
+          hasImages: !!wordrotImages,
+          hasCollected: !!wordrotCollected,
+          collectedSize: wordrotCollected?.size,
+        })
+        if (wordrotWords && wordrotWords.length > 0 && wordrotImages && wordrotCollected) {
+          const matchingWords = wordrotWords.filter((word) => {
+            const isCollected = wordrotCollected.has(word)
+            const hasImage = !!wordrotImages[word]
+            console.log(`[PostContent] Word "${word}": collected=${isCollected}, hasImage=${hasImage}`)
+            return isCollected && hasImage
+          })
+          console.log('[PostContent] Matching words for images:', matchingWords.length)
+        }
+        return null
+      })()}
       {wordrotWords && wordrotWords.length > 0 && wordrotImages && wordrotCollected && (
         <div className="wordrot-images-section">
           {wordrotWords

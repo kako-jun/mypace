@@ -260,7 +260,10 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
               wordrotWords={wordrotGetWords?.(event.id)}
               wordrotCollected={wordrotCollected}
               wordrotImages={wordrotImages}
-              onWordCollect={wordrotCollect}
+              onWordCollect={(word, eventId) => {
+                console.log('[Timeline] Word collect clicked:', word, 'for event:', eventId.slice(0, 8))
+                wordrotCollect?.(word, eventId)
+              }}
             />
           </Fragment>
         )

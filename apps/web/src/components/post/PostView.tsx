@@ -68,6 +68,8 @@ import {
 } from './index'
 import { parseEmojiTags, Loading, TextButton, BackButton, SuccessMessage, Icon } from '../ui'
 import { useDeleteConfirm, usePostViewData } from '../../hooks'
+import { collectWord } from '../../lib/api/api'
+import { useWordCelebration } from '../wordrot/WordCollectCelebration'
 import type { Profile, LoadableProfile, ReactionData } from '../../types'
 import type { ShareOption } from './ShareMenu'
 
@@ -123,6 +125,9 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     parentProfile,
     setReactions,
     setReposts,
+    wordrotWords,
+    wordrotCollected,
+    wordrotImages,
   } = usePostViewData(eventId)
 
   // Stella debounce refs
@@ -258,6 +263,33 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
       stellaDebounceTimer.current = setTimeout(() => flushStella(), 500)
     },
     [event, myPubkey, setReactions, flushStella]
+  )
+
+  // Wordrot collection
+  const { celebrate } = useWordCelebration()
+  const handleWordCollect = useCallback(
+    async (word: string) => {
+      if (!myPubkey || !eventId) return
+      console.log('[PostView] Collecting word:', word)
+      try {
+        const result = await collectWord(myPubkey, word, eventId)
+        if (result.word) {
+          console.log('[PostView] Word collected successfully:', result)
+          // Trigger celebration
+          if (celebrate) {
+            celebrate({
+              word: result.word,
+              isNew: result.isNew,
+              isFirstEver: result.isFirstEver,
+              count: result.count,
+            })
+          }
+        }
+      } catch (err) {
+        console.error('[PostView] Failed to collect word:', err)
+      }
+    },
+    [myPubkey, eventId, celebrate]
   )
 
   // Remove stella of a specific color
@@ -517,6 +549,10 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
                 wikidataMap={wikidataMap}
                 enableOgpFallback={true}
                 tags={event.tags}
+                wordrotWords={wordrotWords}
+                wordrotCollected={wordrotCollected}
+                wordrotImages={wordrotImages}
+                onWordClick={handleWordCollect}
               />
               {/* Locked teaser message */}
               {hasTeaser && hasColorRequirement && !isUnlocked && (

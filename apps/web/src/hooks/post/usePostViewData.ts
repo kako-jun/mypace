@@ -7,7 +7,7 @@ import {
   parseRepostEvent,
 } from '../../lib/nostr/relay'
 import { KIND_REPOST } from '../../lib/nostr/constants'
-import { fetchViewsAndSuperMentions, recordImpressions } from '../../lib/api/api'
+import { fetchViewsAndSuperMentions, recordImpressions, extractNouns, fetchWordrotInventory } from '../../lib/api/api'
 import { getCurrentPubkey, EMPTY_STELLA_COUNTS } from '../../lib/nostr/events'
 import { getCachedPost, getCachedProfile, getCachedPostMetadata, getErrorMessage } from '../../lib/utils'
 import { extractSuperMentionPaths } from '../../lib/utils/content'
@@ -30,6 +30,10 @@ interface PostViewData {
   parentProfile: LoadableProfile
   setReactions: React.Dispatch<React.SetStateAction<ReactionData>>
   setReposts: React.Dispatch<React.SetStateAction<{ count: number; myRepost: boolean }>>
+  // Wordrot data
+  wordrotWords: string[]
+  wordrotCollected: Set<string>
+  wordrotImages: Record<string, string | null>
 }
 
 const initialReactions: ReactionData = {
@@ -53,6 +57,11 @@ export function usePostViewData(eventId: string): PostViewData {
   const [replyProfiles, setReplyProfiles] = useState<{ [pubkey: string]: LoadableProfile }>({})
   const [parentEvent, setParentEvent] = useState<Event | null>(null)
   const [parentProfile, setParentProfile] = useState<LoadableProfile>(undefined)
+
+  // Wordrot state
+  const [wordrotWords, setWordrotWords] = useState<string[]>([])
+  const [wordrotCollected, setWordrotCollected] = useState<Set<string>>(new Set())
+  const [wordrotImages, setWordrotImages] = useState<Record<string, string | null>>({})
 
   const loadPost = useCallback(async () => {
     setError('')
@@ -104,6 +113,33 @@ export function usePostViewData(eventId: string): PostViewData {
       }
 
       if (!eventData) return
+
+      // Fetch Wordrot data for this post
+      if (pubkey && eventData.content) {
+        try {
+          // Extract words from this post
+          const extractionResult = await extractNouns(eventId, eventData.content)
+          if (extractionResult.words.length > 0) {
+            setWordrotWords(extractionResult.words)
+
+            // Fetch user's inventory to know which words are collected
+            const inventory = await fetchWordrotInventory(pubkey)
+            const collected = new Set<string>(inventory.words.map((w) => w.word.text))
+            setWordrotCollected(collected)
+
+            // Build image cache from inventory
+            const images: Record<string, string | null> = {}
+            for (const item of inventory.words) {
+              if (item.word.image_url) {
+                images[item.word.text] = item.word.image_url
+              }
+            }
+            setWordrotImages(images)
+          }
+        } catch (err) {
+          console.error('[usePostViewData] Failed to fetch Wordrot data:', err)
+        }
+      }
 
       // Skip API fetch if we already have cached metadata from timeline
       // This avoids unnecessary network requests and keeps the UI consistent
@@ -245,5 +281,8 @@ export function usePostViewData(eventId: string): PostViewData {
     parentProfile,
     setReactions,
     setReposts,
+    wordrotWords,
+    wordrotCollected,
+    wordrotImages,
   }
 }

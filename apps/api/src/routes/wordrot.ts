@@ -45,6 +45,11 @@ const EXTRACT_NOUNS_PROMPT = `あなたは日本語テキストから名詞を�
 - 助数詞（個、人、回、本）
 - 形式名詞（ため、わけ、はず）
 - 記号やURL、ハッシュタグ
+- 動詞・動詞の活用形（寝る、食べた、行こう、なろう、しよう）
+- 形容詞・形容動詞（美しい、きれいだ、楽しかった）
+- 副詞（ゆっくり、とても、すぐに）
+- 助動詞（だ、です、ます、たい、らしい）
+- 活用の痕跡がある語（〜た、〜ない、〜よう、〜そう）
 
 【重要：最小単位に分割】
 複合語は最小の意味単位に分割してください。
@@ -435,14 +440,8 @@ wordrot.post('/collect', async (c) => {
 
   const isNew = !existingUserWord
 
-  if (existingUserWord) {
-    await db
-      .prepare(
-        `UPDATE wordrot_user_words SET count = count + 1, last_collected_at = ? WHERE pubkey = ? AND word_id = ?`
-      )
-      .bind(now, pubkey, wordRecord.id)
-      .run()
-  } else {
+  if (!existingUserWord) {
+    // First time collecting this word - add to inventory
     await db
       .prepare(
         `INSERT INTO wordrot_user_words (pubkey, word_id, count, first_collected_at, last_collected_at, source)
@@ -451,6 +450,7 @@ wordrot.post('/collect', async (c) => {
       .bind(pubkey, wordRecord.id, now, now)
       .run()
   }
+  // If already exists, do nothing - Wordrot is binary (have/not have)
 
   // Refresh word record to get latest data
   wordRecord = await db.prepare(`SELECT * FROM wordrot_words WHERE id = ?`).bind(wordRecord.id).first<WordrotWord>()
@@ -459,7 +459,7 @@ wordrot.post('/collect', async (c) => {
     word: wordRecord,
     isNew,
     isFirstEver,
-    count: (existingUserWord?.count || 0) + 1,
+    count: 1, // Always return 1 since it's binary
   })
 })
 
