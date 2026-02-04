@@ -52,33 +52,37 @@ Shared Article Quoteでは：
 
 ### 記者に引用投稿を依頼する方法
 
-**TODO: 以下のどれにするか決める**
+2つの導線がある。
 
-#### 案1: 専用ボタン（投稿エディタ内）
+#### 1. 外部からのIntent URL
 
-投稿エディタにURLを貼ると「記者に引用させる」ボタンが出現。
-
-```
-┌─────────────────────────────────────────┐
-│ https://shonenjumpplus.com/episode/xxx  │
-│                                         │
-│ [📰 記者に引用させる]  [そのまま投稿]    │
-└─────────────────────────────────────────┘
-```
-
-#### 案2: 外部からのIntent URL
-
-外部サイトからのリンク経由で引用投稿を作成。
+外部サイト（ジャンプ＋など）からのリンク経由で引用投稿を作成。
 
 ```
-https://mypace.llll-ll.com/intent/quote?url=記事URL
+https://mypace.llll-ll.com/intent/npc/reporter?url=記事URL
 ```
 
 → アクセスすると引用投稿が作られ、投稿詳細ページにリダイレクト
 
-#### 案3: 既存OGPカードにボタン追加
+```html
+<!-- 外部サイトのシェアボタン例 -->
+<a href="https://mypace.llll-ll.com/intent/npc/reporter?url=https://shonenjumpplus.com/episode/xxx">
+  MY PACEで感想を見る
+</a>
+```
 
-タイムライン上のOGPカードに「記者に引用させる」ボタンを追加。
+#### 2. OGPカードにボタン追加
+
+タイムライン上や投稿詳細のOGPカードに「📰 記者に引用させる」ボタンを追加。
+
+```
+┌─────────────────────────────────────────┐
+│ [OGP画像]                               │
+│ 記事タイトル                            │
+│ shonenjumpplus.com                      │
+│                          [📰 引用させる] │ ← このボタン
+└─────────────────────────────────────────┘
+```
 
 ---
 
@@ -88,14 +92,14 @@ https://mypace.llll-ll.com/intent/quote?url=記事URL
 
 ## API仕様
 
-### GET /api/quote
+### GET /api/npc/reporter
 
 URLに対応する引用投稿を検索。
 
 #### リクエスト
 
 ```
-GET /api/quote?url=https://example.com/article
+GET /api/npc/reporter?url=https://example.com/article
 ```
 
 #### レスポンス
@@ -126,14 +130,14 @@ GET /api/quote?url=https://example.com/article
 }
 ```
 
-### POST /api/quote
+### POST /api/npc/reporter
 
 新しい引用投稿を作成。
 
 #### リクエスト
 
 ```typescript
-POST /api/quote
+POST /api/npc/reporter
 Content-Type: application/json
 
 {
@@ -248,7 +252,7 @@ function hashUrl(url: string): string {
 ### アーキテクチャ
 
 ```
-┌─────────────┐     POST /api/quote      ┌──────────────────────────────────┐
+┌─────────────┐     POST /api/npc/reporter      ┌──────────────────────────────────┐
 │ フロント    │ ───────────────────────→ │ Cloudflare Workers (API)         │
 │ エンド      │     { url: "..." }       │                                  │
 └─────────────┘                          │ 1. OGP取得                       │
@@ -334,7 +338,7 @@ export type Bindings = {
 ### 署名フロー
 
 ```typescript
-// apps/api/src/routes/quote.ts
+// apps/api/src/routes/npc/reporter.ts
 import { Hono } from 'hono'
 import { finalizeEvent, getPublicKey } from 'nostr-tools/pure'
 import { hexToBytes } from '@noble/hashes/utils'
@@ -342,7 +346,7 @@ import type { Bindings } from '../types'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
-app.post('/quote', async (c) => {
+app.post('/npc/reporter', async (c) => {
   const { url } = await c.req.json<{ url: string }>()
 
   // 1. 環境変数から秘密鍵を取得し、公開鍵を導出
@@ -494,7 +498,7 @@ LIMIT 20
 
 | ファイル | 役割 |
 |---------|------|
-| `apps/api/src/routes/quote.ts` | 引用API実装 |
+| `apps/api/src/routes/npc/reporter.ts` | 記者API実装 |
 | フロントエンド | TODO: ユーザー操作の案が決まり次第 |
 
 ## 関連
