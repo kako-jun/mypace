@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
 import { getCurrentTimestamp } from '../utils'
+import { finalizeEvent, nip19 } from 'nostr-tools'
 
 const wordrot = new Hono<{ Bindings: Bindings }>()
 
@@ -206,7 +207,9 @@ async function synthesizeWords(
 // Helper: Generate image using Workers AI Stable Diffusion
 async function generateImage(ai: Bindings['AI'], word: string): Promise<ArrayBuffer | null> {
   try {
+    console.log(`[generateImage] Starting image generation for word: ${word}`)
     const prompt = IMAGE_PROMPT_TEMPLATE.replace('{word}', word)
+    console.log(`[generateImage] Using prompt: ${prompt.substring(0, 50)}...`)
 
     // Use any to avoid strict type checking on model names
     const response = await (ai as any).run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
@@ -214,31 +217,66 @@ async function generateImage(ai: Bindings['AI'], word: string): Promise<ArrayBuf
       num_steps: 20,
     })
 
+    console.log(
+      `[generateImage] Response type: ${typeof response}, instanceof ArrayBuffer: ${response instanceof ArrayBuffer}, instanceof Uint8Array: ${response instanceof Uint8Array}`
+    )
+
     if (response instanceof ArrayBuffer || response instanceof Uint8Array) {
-      return response instanceof ArrayBuffer ? response : (response.buffer as ArrayBuffer)
+      const buffer = response instanceof ArrayBuffer ? response : (response.buffer as ArrayBuffer)
+      console.log(`[generateImage] Generated image buffer size: ${buffer.byteLength} bytes`)
+      return buffer
     }
 
+    console.error(`[generateImage] Invalid response type for word: ${word}`)
     return null
   } catch (e) {
-    console.error('Image generation error:', e)
+    console.error(`[generateImage] Error generating image for word "${word}":`, e)
     return null
   }
 }
 
-// Helper: Upload to nostr.build
-async function uploadToNostrBuild(imageData: ArrayBuffer): Promise<string | null> {
+// Helper: Upload to nostr.build using NIP-98 authentication
+async function uploadToNostrBuild(imageData: ArrayBuffer, nsec: string): Promise<string | null> {
   try {
+    console.log(`[uploadToNostrBuild] Uploading image, size: ${imageData.byteLength} bytes`)
+
+    // Decode nsec to get secret key
+    const { data: secretKey } = nip19.decode(nsec)
+
+    // Create NIP-98 auth event
+    const authEvent = {
+      kind: 27235,
+      created_at: Math.floor(Date.now() / 1000),
+      tags: [
+        ['u', 'https://nostr.build/api/v2/upload/files'],
+        ['method', 'POST'],
+      ],
+      content: '',
+      pubkey: '', // Will be filled by finalizeEvent
+    }
+
+    // Sign the event
+    const signedEvent = finalizeEvent(authEvent, secretKey as Uint8Array)
+
+    // Base64 encode the event
+    const authBase64 = btoa(JSON.stringify(signedEvent))
+
     const blob = new Blob([imageData], { type: 'image/png' })
     const formData = new FormData()
     formData.append('file', blob, 'word.png')
 
     const response = await fetch('https://nostr.build/api/v2/upload/files', {
       method: 'POST',
+      headers: {
+        Authorization: `Nostr ${authBase64}`,
+      },
       body: formData,
     })
 
+    console.log(`[uploadToNostrBuild] Response status: ${response.status}`)
+
     if (!response.ok) {
-      console.error('nostr.build upload failed:', response.status)
+      console.error('[uploadToNostrBuild] Upload failed:', response.status)
       return null
     }
 
@@ -246,6 +284,7 @@ async function uploadToNostrBuild(imageData: ArrayBuffer): Promise<string | null
       status: string
       data?: Array<{ url: string }>
     }
+    console.log(`[uploadToNostrBuild] Upload result:`, result)
 
     if (result.status === 'success' && result.data?.[0]?.url) {
       return result.data[0].url
@@ -423,7 +462,12 @@ wordrot.post('/collect', async (c) => {
     }
 
     // Queue image generation (async, don't wait)
-    generateWordImage(ai, db, wordRecord.id, word).catch(console.error)
+    const nsec = c.env.NOSTR_NSEC
+    if (nsec) {
+      generateWordImage(ai, db, nsec, wordRecord.id, word).catch(console.error)
+    } else {
+      console.error('[collect] NOSTR_NSEC not configured')
+    }
   } else {
     // Increment discovery count
     await db
@@ -467,6 +511,7 @@ wordrot.post('/collect', async (c) => {
 async function generateWordImage(
   ai: Bindings['AI'],
   db: Bindings['DB'],
+  nsec: string,
   wordId: number,
   wordText: string
 ): Promise<void> {
@@ -483,7 +528,7 @@ async function generateWordImage(
     }
 
     // Upload to nostr.build
-    const imageUrl = await uploadToNostrBuild(imageData)
+    const imageUrl = await uploadToNostrBuild(imageData, nsec)
 
     if (!imageUrl) {
       await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
@@ -496,7 +541,7 @@ async function generateWordImage(
       .bind(imageUrl, wordId)
       .run()
   } catch (e) {
-    console.error('generateWordImage error:', e)
+    console.error(`[generateWordImage] Error for word "${wordText}" (ID: ${wordId}):`, e)
     await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
   }
 }
@@ -611,7 +656,10 @@ wordrot.post('/synthesize', async (c) => {
 
       if (resultWord) {
         // Queue image generation
-        generateWordImage(ai, db, resultWord.id, resultText).catch(console.error)
+        const nsec = c.env.NOSTR_NSEC
+        if (nsec) {
+          generateWordImage(ai, db, nsec, resultWord.id, resultText).catch(console.error)
+        }
       }
     } else {
       // Word exists, increment synthesis count
@@ -838,7 +886,10 @@ wordrot.post('/retry-image/:wordId', async (c) => {
   }
 
   // Queue regeneration
-  generateWordImage(ai, db, word.id, word.text).catch(console.error)
+  const nsec = c.env.NOSTR_NSEC
+  if (nsec) {
+    generateWordImage(ai, db, nsec, word.id, word.text).catch(console.error)
+  }
 
   return c.json({ success: true, message: 'Image generation queued' })
 })

@@ -10,6 +10,8 @@ export type Bindings = {
   VAPID_PUBLIC_KEY?: string
   VAPID_PRIVATE_KEY?: string
   VAPID_SUBJECT?: string // mailto:xxx or https://xxx
+  // Nostr key for nostr.build image uploads
+  NOSTR_NSEC?: string
 }
 
 // Notification types

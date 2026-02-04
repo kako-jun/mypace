@@ -1,4 +1,5 @@
 /* Word highlight styling for wordrot collection */
+/* Uses link color (#4a9) for consistency */
 
 .wordrot-highlight {
   /* Reset button styles */
@@ -8,66 +9,41 @@
   font: inherit;
   color: inherit;
 
-  /* Highlight styling */
-  background: linear-gradient(
-    135deg,
-    rgba(139, 92, 246, 0.15) 0%,
-    rgba(99, 102, 241, 0.15) 100%
-  );
-  border-radius: 3px;
-  padding: 0 2px;
-  margin: 0 1px;
-
-  /* Subtle underline */
-  text-decoration: underline;
-  text-decoration-color: rgba(139, 92, 246, 0.4);
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 2px;
+  /* Box border styling - link color for all sides when clickable */
+  border: 1px solid #4a9;
+  border-bottom-width: 3px; /* Thicker bottom border to indicate clickable */
+  border-radius: 4px;
+  padding: 1px 4px;
+  margin: 0 2px;
 
   /* Transition */
   transition: all 0.15s ease;
 }
 
 .wordrot-highlight:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(139, 92, 246, 0.3) 0%,
-    rgba(99, 102, 241, 0.3) 100%
-  );
-  text-decoration-color: rgba(139, 92, 246, 0.8);
+  background-color: rgba(74, 170, 153, 0.1);
 }
 
 .wordrot-highlight:active {
-  background: linear-gradient(
-    135deg,
-    rgba(139, 92, 246, 0.4) 0%,
-    rgba(99, 102, 241, 0.4) 100%
-  );
   transform: scale(0.98);
 }
 
 /* Already collected state */
 .wordrot-highlight.collected {
-  background: linear-gradient(
-    135deg,
-    rgba(34, 197, 94, 0.15) 0%,
-    rgba(74, 222, 128, 0.15) 100%
-  );
-  text-decoration-color: rgba(34, 197, 94, 0.4);
+  cursor: default;
+  border: 1px solid currentColor; /* Normal text color border */
+  border-bottom-width: 1px;
+  opacity: 0.7;
 }
 
 .wordrot-highlight.collected:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(34, 197, 94, 0.25) 0%,
-    rgba(74, 222, 128, 0.25) 100%
-  );
-  text-decoration-color: rgba(34, 197, 94, 0.7);
+  background-color: rgba(74, 170, 153, 0.05);
 }
 
 /* Glow animation for first discovery */
 @keyframes wordrot-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 4px rgba(139, 92, 246, 0.3);
   }
   50% {
@@ -81,27 +57,15 @@
 
 /* Light theme adjustments */
 .light-text .wordrot-highlight {
-  background: linear-gradient(
-    135deg,
-    rgba(139, 92, 246, 0.25) 0%,
-    rgba(99, 102, 241, 0.25) 100%
-  );
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%);
 }
 
 .light-text .wordrot-highlight:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(139, 92, 246, 0.4) 0%,
-    rgba(99, 102, 241, 0.4) 100%
-  );
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(99, 102, 241, 0.4) 100%);
 }
 
 .light-text .wordrot-highlight.collected {
-  background: linear-gradient(
-    135deg,
-    rgba(34, 197, 94, 0.25) 0%,
-    rgba(74, 222, 128, 0.25) 100%
-  );
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(74, 222, 128, 0.25) 100%);
 }
 
 /* Collect section (word tags below post content) */
