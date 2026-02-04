@@ -12,7 +12,7 @@
   /* Box border styling - link color for all sides, uniform thickness */
   border: 1px solid #4a9;
   border-radius: 4px;
-  padding: 0.5px 4px;
+  padding: 0 4px;
   margin: 0 2px;
 
   /* Transition */
@@ -32,7 +32,7 @@
   cursor: default;
   border: 1px solid currentColor;
   opacity: 0.7;
-  padding: 0.5px 4px;
+  padding: 0 4px;
 }
 
 /* Glow animation for first discovery */
