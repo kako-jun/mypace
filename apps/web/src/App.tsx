@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Routes, Route, useLocation, useNavigate, type Location } from 'react-router-dom'
 import { Layout } from './components/layout'
+import { InstallBanner } from './components/pwa'
 import { HomePage } from './pages/HomePage'
 import { PostPage } from './pages/PostPage'
 import { UserPage } from './pages/UserPage'
@@ -39,6 +40,7 @@ export default function App() {
 
   return (
     <CelebrationProvider>
+      <InstallBanner />
       <Routes location={backgroundLocation || location}>
         {/* Embed page - no Layout */}
         <Route path="/embed/:noteId" element={<EmbedPage />} />

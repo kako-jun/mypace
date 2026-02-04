@@ -1,0 +1,92 @@
+/* PWA Install Banner - mypace style (no border-radius, black border) */
+.install-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface-primary);
+  border-bottom: 2px solid #333;
+  padding: 12px 16px;
+  z-index: 3000;
+  animation: install-banner-slide-down 0.3s ease-out;
+}
+
+@keyframes install-banner-slide-down {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.install-banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.install-banner-icon {
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.install-banner-message {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.install-banner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.install-banner-btn {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.install-banner-btn.install {
+  background: var(--theme-primary, #FFCB3D);
+  color: #333;
+  border: 2px solid #333;
+}
+
+.install-banner-btn.install:hover {
+  opacity: 0.9;
+}
+
+.install-banner-btn.dismiss {
+  background: transparent;
+  color: var(--text-primary);
+  border: 2px solid #333;
+}
+
+.install-banner-btn.dismiss:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .install-banner-content {
+    gap: 8px;
+  }
+
+  .install-banner-message {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85rem;
+  }
+
+  .install-banner-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+}
