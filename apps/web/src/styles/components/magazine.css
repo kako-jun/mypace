@@ -300,6 +300,47 @@
   gap: 12px;
 }
 
+/* Magazine Share Dropdown */
+.magazine-share-wrapper {
+  position: relative;
+}
+
+.magazine-share-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  min-width: 160px;
+  background: var(--surface-primary);
+  border: 2px solid #333;
+  z-index: 100;
+}
+
+.magazine-share-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.magazine-share-option:hover {
+  background: var(--surface-hover);
+}
+
+.magazine-share-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 4px 0;
+}
+
 .magazine-view-posts {
   max-width: 600px;
   margin-left: auto;

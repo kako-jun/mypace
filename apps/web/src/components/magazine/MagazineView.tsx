@@ -4,6 +4,7 @@ import { nip19 } from 'nostr-tools'
 import { fetchMagazineBySlug, fetchEventsByIds, fetchUserProfile, publishEvent } from '../../lib/nostr/relay'
 import { createMagazineEvent, formatTimestamp, type MagazineInput } from '../../lib/nostr/events'
 import { getDisplayName, navigateToHome, navigateTo, navigateToPost, copyToClipboard } from '../../lib/utils'
+import { getSnsIntentUrl } from '../../lib/utils/sns-share'
 import { BackButton, Loading, Icon, Button, Avatar } from '../ui'
 import { MagazineEditor } from './MagazineEditor'
 import type { Magazine, Event, Profile } from '../../types'
@@ -32,6 +33,7 @@ export function MagazineView() {
   const [showEditor, setShowEditor] = useState(false)
   const [myPubkey, setMyPubkey] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [showShareMenu, setShowShareMenu] = useState(false)
 
   const loadMagazine = useCallback(async () => {
     if (!pubkey || !slug) return
@@ -61,6 +63,33 @@ export function MagazineView() {
   useEffect(() => {
     loadMagazine()
   }, [loadMagazine])
+
+  // Record view when magazine is loaded
+  useEffect(() => {
+    if (!magazine || !pubkey || !slug) return
+
+    const recordView = async () => {
+      try {
+        const viewerPubkey = await import('../../lib/nostr/events')
+          .then(({ getCurrentPubkey }) => getCurrentPubkey())
+          .catch(() => null)
+
+        await fetch(`${import.meta.env.VITE_API_URL || ''}/api/magazine/views`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pubkey,
+            slug,
+            viewerPubkey: viewerPubkey || '',
+          }),
+        })
+      } catch {
+        // Silently fail - view recording is not critical
+      }
+    }
+
+    recordView()
+  }, [magazine, pubkey, slug])
 
   useEffect(() => {
     // Get current user pubkey
@@ -133,13 +162,36 @@ export function MagazineView() {
     }
   }
 
-  const handleShare = async () => {
-    const url = `${window.location.origin}/user/${npub}/magazine/${slug}`
-    const success = await copyToClipboard(url)
+  const shareUrl = `${window.location.origin}/user/${npub}/magazine/${slug}`
+
+  const handleCopyUrl = async () => {
+    const success = await copyToClipboard(shareUrl)
     if (success) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
+    setShowShareMenu(false)
+  }
+
+  const handleWebShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: magazine?.title || 'Magazine',
+          url: shareUrl,
+        })
+      } catch {
+        // User cancelled or error
+      }
+    }
+    setShowShareMenu(false)
+  }
+
+  const handleSnsShare = (sns: 'x' | 'bluesky' | 'threads') => {
+    const text = `📚 ${magazine?.title || 'Magazine'} by @${getDisplayName(authorProfile, pubkey)}\n${shareUrl}`
+    const intentUrl = getSnsIntentUrl(sns, text)
+    window.open(intentUrl, '_blank', 'noopener,noreferrer')
+    setShowShareMenu(false)
   }
 
   if (loading) {
@@ -195,9 +247,36 @@ export function MagazineView() {
         {magazine.description && <p className="magazine-view-description">{magazine.description}</p>}
 
         <div className="magazine-view-actions">
-          <Button size="sm" variant="secondary" onClick={handleShare}>
-            <Icon name={copied ? 'Check' : 'Share2'} size={14} /> {copied ? 'Copied!' : 'Share'}
-          </Button>
+          <div className="magazine-share-wrapper">
+            <Button size="sm" variant="secondary" onClick={() => setShowShareMenu(!showShareMenu)}>
+              <Icon name={copied ? 'Check' : 'Share2'} size={14} /> {copied ? 'Copied!' : 'Share'}
+            </Button>
+            {showShareMenu && (
+              <div className="magazine-share-menu">
+                <button className="magazine-share-option" onClick={handleCopyUrl}>
+                  <Icon name="Link" size={14} /> Copy URL
+                </button>
+                {typeof navigator !== 'undefined' && 'share' in navigator && (
+                  <button className="magazine-share-option" onClick={handleWebShare}>
+                    <Icon name="Share2" size={14} /> Share to Apps
+                  </button>
+                )}
+                <div className="magazine-share-divider" />
+                <button className="magazine-share-option" onClick={() => handleSnsShare('x')}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  X
+                </button>
+                <button className="magazine-share-option" onClick={() => handleSnsShare('bluesky')}>
+                  <Icon name="Cloud" size={14} /> Bluesky
+                </button>
+                <button className="magazine-share-option" onClick={() => handleSnsShare('threads')}>
+                  <Icon name="AtSign" size={14} /> Threads
+                </button>
+              </div>
+            )}
+          </div>
           {isOwner && (
             <Button size="sm" variant="secondary" onClick={() => setShowEditor(true)}>
               <Icon name="Edit2" size={14} /> Edit
