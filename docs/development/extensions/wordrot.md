@@ -318,8 +318,7 @@ GET /api/wordrot/inventory/:pubkey
   "words": [
     { "id": "...", "text": "マリオ", "imageUrl": "..." },
     { "id": "...", "text": "ルイージ", "imageUrl": "..." }
-  ],
-  "count": 8
+  ]
 }
 ```
 
@@ -393,7 +392,7 @@ GET /api/wordrot/inventory/:pubkey
 │ └─────────────────────────────────────────────────┘ │
 │                                                     │
 │ ┌─────────────────────────────────────────────────┐ │
-│ │ Word Collection (8 words)                       │ │
+│ │ Word Collection                                  │ │
 │ │                                                 │ │
 │ │ [img] [img] [img] [img] [img] [img]            │ │
 │ │ マリオ ルイージ  スター  キノコ  ...            │ │
