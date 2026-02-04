@@ -7,7 +7,12 @@ export const MYPACE_URL = 'https://mypace.llll-ll.com'
 export const KIND_NOTE = 1
 export const KIND_REPOST = 6
 export const KIND_LONG_FORM = 30023
+export const KIND_MAGAZINE = 30001 // NIP-51 Public Sets (used for magazines)
 export const KIND_SINOV_NPC = 42000 // Sinov NPC posts (hidden from other clients)
+
+// Magazine constants
+export const MAGAZINE_TAG = 'mypace-magazine'
+export const MAX_MAGAZINE_POSTS = 100
 
 // タイムライン/検索用リレー（#t + NIP-50 search対応）
 // relay.nostr.bandは全機能対応だが502エラーのため除外（復旧後に追加検討）

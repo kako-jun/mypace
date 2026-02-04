@@ -455,6 +455,7 @@ export default function PostActions({
             tags={tags}
             url={url}
             isMyPost={isMyPost}
+            eventId={eventId}
             onSelect={handleShareSelect}
             onClose={handleShareMenuClose}
           />

@@ -183,6 +183,42 @@ CREATE TABLE IF NOT EXISTS user_supernovas (
 CREATE INDEX IF NOT EXISTS idx_user_supernovas_pubkey ON user_supernovas(pubkey);
 CREATE INDEX IF NOT EXISTS idx_user_supernovas_supernova ON user_supernovas(supernova_id);
 
+-- Magazine views table
+CREATE TABLE IF NOT EXISTS magazine_views (
+  magazine_key TEXT PRIMARY KEY,        -- "pubkey:slug" composite key
+  pubkey TEXT NOT NULL,                 -- Magazine owner pubkey
+  slug TEXT NOT NULL,                   -- Magazine slug
+  view_count INTEGER DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_magazine_views_pubkey ON magazine_views(pubkey);
+
+-- Magazine view users table (unique viewers)
+CREATE TABLE IF NOT EXISTS magazine_view_users (
+  magazine_key TEXT NOT NULL,
+  viewer_pubkey TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (magazine_key, viewer_pubkey)
+);
+
+CREATE INDEX IF NOT EXISTS idx_magazine_view_users_magazine ON magazine_view_users(magazine_key);
+
+-- Magazine OGP cache table
+CREATE TABLE IF NOT EXISTS magazine_ogp_cache (
+  cache_key TEXT PRIMARY KEY,           -- "magazine:pubkey:slug"
+  title TEXT,
+  description TEXT,
+  image TEXT,
+  author TEXT,
+  post_count INTEGER DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_magazine_ogp_cache_expires ON magazine_ogp_cache(expires_at);
+
 -- Initial Supernova definitions (seed data)
 -- These will be inserted via API POST /api/supernovas/seed
 -- See apps/api/src/routes/supernovas.ts for full definitions

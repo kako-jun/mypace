@@ -1,12 +1,16 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon, CloseButton } from '../ui'
 import { splitContentForSns, getCharLimit } from '../../lib/utils/sns-share'
+import { fetchUserMagazines, publishEvent } from '../../lib/nostr/relay'
+import { createMagazineEvent, getCurrentPubkey, type MagazineInput } from '../../lib/nostr/events'
+import { MagazineEditor } from '../magazine'
+import type { Magazine } from '../../types'
 
 export type ShareOption = 'url-copy' | 'url-share' | 'md-copy' | 'md-download' | 'md-open' | 'x' | 'bluesky' | 'threads'
 export type SnsType = 'x' | 'bluesky' | 'threads'
 
-type SubMenu = 'content' | 'sns' | 'url' | SnsType | null
+type SubMenu = 'content' | 'sns' | 'url' | 'magazine' | SnsType | null
 
 interface ShareMenuProps {
   position: { top: number; left: number }
@@ -14,12 +18,26 @@ interface ShareMenuProps {
   tags: string[][]
   url: string
   isMyPost: boolean
+  eventId?: string
   onSelect: (option: ShareOption, partIndex?: number) => void
   onClose: (e?: React.MouseEvent) => void
 }
 
-export default function ShareMenu({ position, content, tags, url, isMyPost, onSelect, onClose }: ShareMenuProps) {
+export default function ShareMenu({
+  position,
+  content,
+  tags,
+  url,
+  isMyPost,
+  eventId,
+  onSelect,
+  onClose,
+}: ShareMenuProps) {
   const [subMenu, setSubMenu] = useState<SubMenu>(null)
+  const [magazines, setMagazines] = useState<Magazine[]>([])
+  const [magazinesLoading, setMagazinesLoading] = useState(false)
+  const [updatingMagazine, setUpdatingMagazine] = useState<string | null>(null)
+  const [showMagazineEditor, setShowMagazineEditor] = useState(false)
 
   // 各SNSの分割パーツを計算
   const splitParts = useMemo(() => {
@@ -29,6 +47,73 @@ export default function ShareMenu({ position, content, tags, url, isMyPost, onSe
       threads: splitContentForSns(content, tags, url, getCharLimit('threads'), 'threads'),
     }
   }, [content, tags, url])
+
+  const loadMagazines = useCallback(async () => {
+    if (!isMyPost || !eventId) return
+    setMagazinesLoading(true)
+    try {
+      const pubkey = await getCurrentPubkey()
+      const result = await fetchUserMagazines(pubkey)
+      setMagazines(result)
+    } catch (err) {
+      console.error('Failed to load magazines:', err)
+    } finally {
+      setMagazinesLoading(false)
+    }
+  }, [isMyPost, eventId])
+
+  useEffect(() => {
+    if (subMenu === 'magazine') {
+      loadMagazines()
+    }
+  }, [subMenu, loadMagazines])
+
+  const handleToggleMagazine = async (magazine: Magazine) => {
+    if (!eventId) return
+    setUpdatingMagazine(magazine.id)
+
+    try {
+      const isInMagazine = magazine.eventIds.includes(eventId)
+      const newEventIds = isInMagazine
+        ? magazine.eventIds.filter((id) => id !== eventId)
+        : [...magazine.eventIds, eventId]
+
+      const event = await createMagazineEvent({
+        slug: magazine.slug,
+        title: magazine.title,
+        description: magazine.description,
+        image: magazine.image,
+        eventIds: newEventIds,
+      })
+      await publishEvent(event)
+
+      // Update local state
+      setMagazines((prev) =>
+        prev.map((m) => (m.id === magazine.id ? { ...m, eventIds: newEventIds, id: event.id } : m))
+      )
+    } catch (err) {
+      console.error('Failed to update magazine:', err)
+    } finally {
+      setUpdatingMagazine(null)
+    }
+  }
+
+  const handleCreateMagazine = async (input: MagazineInput) => {
+    try {
+      // Add current post to the new magazine
+      const inputWithPost: MagazineInput = {
+        ...input,
+        eventIds: eventId ? [eventId] : [],
+      }
+      const event = await createMagazineEvent(inputWithPost)
+      await publishEvent(event)
+      setShowMagazineEditor(false)
+      // Reload magazines to show the new one
+      await loadMagazines()
+    } catch (err) {
+      console.error('Failed to create magazine:', err)
+    }
+  }
 
   const handleSelect = (option: ShareOption, partIndex?: number) => (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -86,6 +171,16 @@ export default function ShareMenu({ position, content, tags, url, isMyPost, onSe
           <span>Share Content</span>
           <Icon name="ChevronRight" size={16} className="share-menu-arrow" />
         </button>
+        {isMyPost && eventId && (
+          <>
+            <div className="share-menu-divider" />
+            <button className="share-menu-option" onClick={handleShowSubMenu('magazine')}>
+              <Icon name="BookOpen" size={16} />
+              <span>Add to Magazine</span>
+              <Icon name="ChevronRight" size={16} className="share-menu-arrow" />
+            </button>
+          </>
+        )}
       </div>
     </>
   )
@@ -206,23 +301,88 @@ export default function ShareMenu({ position, content, tags, url, isMyPost, onSe
     </>
   )
 
-  return createPortal(
+  const renderMagazineMenu = () => (
     <>
-      <div className="share-menu-overlay" onClick={onClose} />
-      <div
-        className="share-menu"
-        style={{ top: position.top, left: position.left }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {subMenu === null && renderMainMenu()}
-        {subMenu === 'sns' && renderSnsMenu()}
-        {subMenu === 'x' && renderSnsSplitMenu('x')}
-        {subMenu === 'bluesky' && renderSnsSplitMenu('bluesky')}
-        {subMenu === 'threads' && renderSnsSplitMenu('threads')}
-        {subMenu === 'url' && renderUrlMenu()}
-        {subMenu === 'content' && renderContentMenu()}
+      <div className="share-menu-header">
+        <button className="share-menu-back" onClick={handleBack}>
+          <Icon name="ChevronLeft" size={16} />
+        </button>
+        <span className="share-menu-title">Magazine</span>
+        <CloseButton onClick={() => onClose()} size={16} />
       </div>
-    </>,
-    document.body
+      <div className="share-menu-options">
+        {magazinesLoading ? (
+          <div className="share-menu-loading">Loading...</div>
+        ) : (
+          <>
+            {magazines.length > 0 && (
+              <div className="magazine-select-list">
+                {magazines.map((magazine) => {
+                  const isInMagazine = eventId ? magazine.eventIds.includes(eventId) : false
+                  const isUpdating = updatingMagazine === magazine.id
+                  return (
+                    <button
+                      key={magazine.id}
+                      className={`magazine-select-item ${isInMagazine ? 'selected' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleToggleMagazine(magazine)
+                      }}
+                      disabled={isUpdating}
+                    >
+                      <div className={`magazine-select-checkbox ${isInMagazine ? 'checked' : ''}`}>
+                        {isInMagazine && <Icon name="Check" size={12} />}
+                      </div>
+                      <span className="magazine-select-name">{magazine.title || 'Untitled'}</span>
+                      <span className="magazine-select-count">{magazine.eventIds.length}</span>
+                      {isUpdating && <Icon name="Loader" size={14} />}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            {magazines.length > 0 && <div className="share-menu-divider" />}
+            <button
+              className="share-menu-option"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowMagazineEditor(true)
+              }}
+            >
+              <Icon name="Plus" size={16} />
+              <span>Create New Magazine</span>
+            </button>
+          </>
+        )}
+      </div>
+    </>
+  )
+
+  return (
+    <>
+      {createPortal(
+        <>
+          <div className="share-menu-overlay" onClick={onClose} />
+          <div
+            className="share-menu"
+            style={{ top: position.top, left: position.left }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {subMenu === null && renderMainMenu()}
+            {subMenu === 'sns' && renderSnsMenu()}
+            {subMenu === 'x' && renderSnsSplitMenu('x')}
+            {subMenu === 'bluesky' && renderSnsSplitMenu('bluesky')}
+            {subMenu === 'threads' && renderSnsSplitMenu('threads')}
+            {subMenu === 'url' && renderUrlMenu()}
+            {subMenu === 'content' && renderContentMenu()}
+            {subMenu === 'magazine' && renderMagazineMenu()}
+          </div>
+        </>,
+        document.body
+      )}
+      {showMagazineEditor && (
+        <MagazineEditor onSave={handleCreateMagazine} onClose={() => setShowMagazineEditor(false)} />
+      )}
+    </>
   )
 }
