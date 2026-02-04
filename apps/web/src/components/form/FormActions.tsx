@@ -11,6 +11,7 @@ interface FormActionsProps {
   editingEvent?: { id: string } | null
   replyingTo?: { id: string } | null
   onCancel?: () => void
+  disabled?: boolean
 }
 
 export function FormActions({
@@ -21,6 +22,7 @@ export function FormActions({
   editingEvent,
   replyingTo,
   onCancel,
+  disabled,
 }: FormActionsProps) {
   const isSpecialMode = editingEvent || replyingTo
   const normalizedLength = useMemo(() => normalizeContent(content).length, [content])
@@ -57,7 +59,7 @@ export function FormActions({
             Cancel
           </button>
         )}
-        <button type="submit" className="post-button" disabled={posting || !content.trim()}>
+        <button type="submit" className="post-button" disabled={posting || !content.trim() || disabled}>
           {getButtonText()}
         </button>
       </div>

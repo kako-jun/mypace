@@ -5,7 +5,7 @@ import {
   getPublicKeyFromSecret,
   exportNsec,
   exportNpub,
-  hasNip07,
+  isNip07Enabled,
   getNip07PublicKey,
 } from '../../lib/nostr/keys'
 import '../../styles/components/settings.css'
@@ -53,6 +53,16 @@ export function Settings() {
     }
   }, [open])
 
+  // Listen for open-settings event
+  useEffect(() => {
+    const handleOpenSettings = () => {
+      setOpen(true)
+      setActiveTab('account')
+    }
+    window.addEventListener('open-settings', handleOpenSettings)
+    return () => window.removeEventListener('open-settings', handleOpenSettings)
+  }, [])
+
   // Load theme on mount (not just when settings panel opens)
   useEffect(() => {
     const storedColors = getUIThemeColors()
@@ -84,7 +94,7 @@ export function Settings() {
         } catch {}
       }
 
-      if (hasNip07()) {
+      if (isNip07Enabled()) {
         const pubkey = await getNip07PublicKey()
         if (pubkey) {
           setUsingNip07(true)
