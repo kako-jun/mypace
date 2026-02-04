@@ -383,7 +383,7 @@ const filter = {
 │ エンド      │     { url: "..." }       │                                  │
 └─────────────┘                          │ 1. リレーで既存引用を検索        │
                                          │ 2. なければOGP取得               │
-                                         │ 3. REPORTER_SECRET_KEY で署名    │
+                                         │ 3. REPORTER_NSEC で署名          │
                                          │ 4. Nostrリレーに公開             │
                                          └──────────────────────────────────┘
 ```
@@ -394,8 +394,8 @@ const filter = {
 
 ```bash
 # Cloudflare Workers secrets として設定（wrangler.tomlには書かない）
-wrangler secret put REPORTER_SECRET_KEY
-# → hex形式の秘密鍵を入力（64文字）
+wrangler secret put REPORTER_NSEC
+# → nsec形式（bech32）の秘密鍵を入力
 ```
 
 公開鍵は秘密鍵から導出できるため、環境変数は秘密鍵のみで十分。
@@ -410,7 +410,7 @@ export type Bindings = {
   // ... 既存の環境変数 ...
 
   // NPC Reporter account for Shared Article Quote
-  REPORTER_SECRET_KEY?: string  // hex形式（64文字）
+  REPORTER_NSEC?: string  // nsec形式（bech32）
 }
 ```
 

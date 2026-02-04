@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { finalizeEvent, getPublicKey } from 'nostr-tools/pure'
-import { hexToBytes } from 'nostr-tools/utils'
+import { nip19 } from 'nostr-tools'
 import type { Bindings } from '../../types'
 import { getCurrentTimestamp, normalizeUrl, isValidUrl } from '../../utils'
 import { TIMEOUT_MS_FETCH, GENERAL_RELAYS, TIMEOUT_MS_RELAY, MYPACE_TAG } from '../../constants'
@@ -197,12 +197,13 @@ reporter.get('/', async (c) => {
   }
 
   // Check if reporter is configured
-  const sk = c.env.REPORTER_SECRET_KEY
-  if (!sk) {
+  const nsec = c.env.REPORTER_NSEC
+  if (!nsec) {
     return c.json({ error: 'reporter_not_configured', message: 'Reporter account is not configured' }, 500)
   }
 
-  const pk = getPublicKey(hexToBytes(sk))
+  const { data: sk } = nip19.decode(nsec)
+  const pk = getPublicKey(sk as Uint8Array)
   const normalized = normalizeUrl(url)
 
   try {
@@ -238,12 +239,13 @@ reporter.post('/', async (c) => {
   }
 
   // Check if reporter is configured
-  const sk = c.env.REPORTER_SECRET_KEY
-  if (!sk) {
+  const nsec = c.env.REPORTER_NSEC
+  if (!nsec) {
     return c.json({ error: 'reporter_not_configured', message: 'Reporter account is not configured' }, 500)
   }
 
-  const pk = getPublicKey(hexToBytes(sk))
+  const { data: sk } = nip19.decode(nsec)
+  const pk = getPublicKey(sk as Uint8Array)
   const normalized = normalizeUrl(url)
   const now = getCurrentTimestamp()
 
@@ -290,7 +292,7 @@ reporter.post('/', async (c) => {
       content,
     }
 
-    const signedEvent = finalizeEvent(eventTemplate, hexToBytes(sk))
+    const signedEvent = finalizeEvent(eventTemplate, sk as Uint8Array)
 
     // Publish to relays
     const published = await publishToRelays(signedEvent)

@@ -11,9 +11,9 @@ export type Bindings = {
   VAPID_PRIVATE_KEY?: string
   VAPID_SUBJECT?: string // mailto:xxx or https://xxx
   // Nostr key for nostr.build image uploads
-  NOSTR_NSEC?: string
+  NOSTR_BUILD_NSEC?: string
   // NPC Reporter account for Shared Article Quote
-  REPORTER_SECRET_KEY?: string // hex format (64 chars)
+  REPORTER_NSEC?: string
 }
 
 // Notification types
