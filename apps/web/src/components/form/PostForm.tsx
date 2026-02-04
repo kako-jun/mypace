@@ -8,7 +8,7 @@ import {
   STELLA_COLORS,
   type StellaColor,
 } from '../../lib/nostr/events'
-import { exportNpub } from '../../lib/nostr/keys'
+import { exportNpub, isNip07Missing } from '../../lib/nostr/keys'
 import '../../styles/components/post-form.css'
 import { navigateToUser } from '../../lib/utils'
 import type { ThemeColors, EmojiTag, Sticker, Event, StickerQuadrant, StickerLayer, Profile } from '../../types'
@@ -408,6 +408,8 @@ export function PostForm({
     )
   }
 
+  const nip07Missing = isNip07Missing()
+
   // Long mode
   if (longMode) {
     return (
@@ -468,9 +470,17 @@ export function PostForm({
   // Short mode: full
   return (
     <form
-      className={`post-form ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
+      className={`post-form ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''} ${nip07Missing ? 'nip07-missing' : ''}`}
       onSubmit={handleSubmit}
     >
+      {nip07Missing && (
+        <div className="nip07-missing-banner">
+          ⚠️ NIP-07 extension missing. Please reinstall or{' '}
+          <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('open-settings'))}>
+            import your key
+          </button>
+        </div>
+      )}
       {editingEvent &&
         (() => {
           // Check if the event being edited is a reply (has e tag with root/reply marker)

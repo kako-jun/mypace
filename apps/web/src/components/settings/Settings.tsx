@@ -53,6 +53,16 @@ export function Settings() {
     }
   }, [open])
 
+  // Listen for open-settings event
+  useEffect(() => {
+    const handleOpenSettings = () => {
+      setOpen(true)
+      setActiveTab('account')
+    }
+    window.addEventListener('open-settings', handleOpenSettings)
+    return () => window.removeEventListener('open-settings', handleOpenSettings)
+  }, [])
+
   // Load theme on mount (not just when settings panel opens)
   useEffect(() => {
     const storedColors = getUIThemeColors()

@@ -1134,3 +1134,28 @@ body.long-mode-active .teaser-picker-backdrop {
   background: var(--surface-secondary);
   color: var(--text-primary);
 }
+
+/* NIP-07 Missing Warning Banner */
+.nip07-missing-banner {
+  background: rgba(244, 67, 54, 0.15);
+  border: 1px solid #f44336;
+  color: #f44336;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.nip07-missing-banner button {
+  background: none;
+  border: none;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+}
+
+.nip07-missing-banner button:hover {
+  color: #d32f2f;
+}
