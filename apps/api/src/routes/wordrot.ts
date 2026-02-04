@@ -259,8 +259,8 @@ wordrot.post('/extract-batch', async (c) => {
   }
 
   // Limit batch size
-  if (posts.length > 20) {
-    return c.json({ error: 'Maximum 20 posts per batch' }, 400)
+  if (posts.length > 50) {
+    return c.json({ error: 'Maximum 50 posts per batch' }, 400)
   }
 
   const db = c.env.DB
