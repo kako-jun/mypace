@@ -422,28 +422,26 @@ Workers AI (LLaMA 3.1 8B) を使用。
 
 Workers AI (Stable Diffusion XL) を使用。
 
-#### プロンプト設計
+#### プロンプト
 
-単語の種類によってプロンプトを調整:
+すべての単語をキャラクター化する（抽象概念でも無理やりキャラにするのが面白い）。
 
 ```
-# キャラクター系（人物、キャラ名など）
-A cute chibi pixel art character of "{word}",
-2-head-tall proportions, simple solid color background,
-game sprite style, facing forward, centered, 128x128
-
-# オブジェクト系（物、道具など）
-A cute pixel art icon of "{word}",
-simple design, solid color background,
-game item style, centered, 128x128
-
-# 抽象概念系（今日、明日、天気など）
-A cute pixel art symbol representing "{word}",
-simple metaphorical design, solid color background,
-game icon style, centered, 128x128
+{word} as a cute chibi character,
+2-head-tall proportions, pixel art style,
+simple pastel background, game sprite,
+facing forward, full body, centered
 ```
 
-> 実装時: LLMで単語を「character/object/abstract」に分類してからプロンプト選択。
+**指定のポイント**:
+- `chibi`: 2頭身のデフォルメキャラ
+- `pixel art style`: ドット絵風
+- `pastel background`: 淡い背景色
+- `game sprite`: ゲームのキャラっぽく
+- `full body, centered`: 全身、中央配置
+
+> プロンプトは英語。Stable Diffusionは英語プロンプトの方が品質が高い。
+> 日本語の単語もそのまま渡す（例: `マリオ as a cute chibi character...`）。
 
 #### アップロード
 
