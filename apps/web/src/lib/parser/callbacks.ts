@@ -57,3 +57,25 @@ export function clearInternalLinkClickHandler() {
 export function getInternalLinkClickHandler() {
   return onInternalLinkClick
 }
+
+// Callback for wordrot word clicks
+let onWordrotClick: ((word: string) => void) | null = null
+let wordrotCollected: Set<string> | null = null
+
+export function setWordrotClickHandler(handler: (word: string) => void, collected?: Set<string>) {
+  onWordrotClick = handler
+  wordrotCollected = collected || null
+}
+
+export function clearWordrotClickHandler() {
+  onWordrotClick = null
+  wordrotCollected = null
+}
+
+export function getWordrotClickHandler() {
+  return onWordrotClick
+}
+
+export function getWordrotCollected() {
+  return wordrotCollected
+}

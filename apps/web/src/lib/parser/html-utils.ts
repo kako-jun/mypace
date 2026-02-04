@@ -76,3 +76,57 @@ export function removeMediaLinks(html: string): string {
   html = html.replace(/<a[^>]*>(\s*<div class="content-video-wrapper">.*?<\/div>\s*)<\/a>/gi, '$1')
   return html
 }
+
+// Process wordrot word highlights (inline highlighting of collectible words)
+export function processWordHighlights(html: string, words: string[], collectedWords?: Set<string>): string {
+  if (!words || words.length === 0) return html
+
+  // Sort words by length descending to match longer words first
+  const sortedWords = [...words].sort((a, b) => b.length - a.length)
+
+  // Escape special regex characters
+  const escapedWords = sortedWords.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+
+  // Create pattern that matches any of the words
+  const pattern = escapedWords.join('|')
+  const regex = new RegExp(`(${pattern})`, 'gi')
+
+  // Split HTML into tag and text segments
+  const segments: Array<{ type: 'tag' | 'text'; content: string }> = []
+  let lastIndex = 0
+  const tagRegex = /<[^>]+>/g
+  let tagMatch
+
+  while ((tagMatch = tagRegex.exec(html)) !== null) {
+    // Text before the tag
+    if (tagMatch.index > lastIndex) {
+      segments.push({ type: 'text', content: html.slice(lastIndex, tagMatch.index) })
+    }
+    // The tag itself
+    segments.push({ type: 'tag', content: tagMatch[0] })
+    lastIndex = tagRegex.lastIndex
+  }
+
+  // Remaining text after last tag
+  if (lastIndex < html.length) {
+    segments.push({ type: 'text', content: html.slice(lastIndex) })
+  }
+
+  // Process only text segments
+  const result = segments.map((segment) => {
+    if (segment.type === 'tag') return segment.content
+
+    // Replace words in text content
+    return segment.content.replace(regex, (match) => {
+      // Find the original word (case-insensitive lookup)
+      const word = words.find((w) => w.toLowerCase() === match.toLowerCase()) || match
+      const isCollected = collectedWords?.has(word) || false
+      const collectedClass = isCollected ? ' collected' : ''
+      const title = isCollected ? `${word} (collected)` : `Collect: ${word}`
+
+      return `<button class="wordrot-highlight${collectedClass}" data-word="${escapeHtml(word)}" title="${title}">${match}</button>`
+    })
+  })
+
+  return result.join('')
+}

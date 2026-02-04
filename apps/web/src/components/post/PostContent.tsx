@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { renderContent } from '../../lib/parser'
+import { setWordrotClickHandler, clearWordrotClickHandler } from '../../lib/parser/callbacks'
 import { PostEmbeds } from '../embed'
 import { TextButton, Icon } from '../ui'
 import { LIMITS } from '../../lib/constants'
@@ -39,6 +41,16 @@ export function PostContent({
   wordrotCollected,
   onWordClick,
 }: PostContentProps) {
+  // Set up wordrot click handler
+  useEffect(() => {
+    if (onWordClick) {
+      setWordrotClickHandler(onWordClick, wordrotCollected)
+    }
+    return () => {
+      clearWordrotClickHandler()
+    }
+  }, [onWordClick, wordrotCollected])
+
   // If event has teaser tag, content is already properly sized (280 chars + READ MORE link)
   // So we skip GUI truncation for long posts with teaser
   const hasTeaser = tags ? checkTeaserTag({ tags } as Event) : false
@@ -66,14 +78,21 @@ export function PostContent({
     <>
       {shouldTruncate ? (
         <>
-          {renderContent(content.slice(0, LIMITS.PREVIEW_TRUNCATE_LENGTH), emojis, profiles, wikidataMap)}
+          {renderContent(
+            content.slice(0, LIMITS.PREVIEW_TRUNCATE_LENGTH),
+            emojis,
+            profiles,
+            wikidataMap,
+            wordrotWords,
+            wordrotCollected
+          )}
           <TextButton variant="primary" className="read-more-btn" onClick={onReadMore}>
             … READ MORE
           </TextButton>
         </>
       ) : (
         <>
-          {renderContent(displayContent, emojis, profiles, wikidataMap)}
+          {renderContent(displayContent, emojis, profiles, wikidataMap, wordrotWords, wordrotCollected)}
           {hasTeaser && truncate && (
             <TextButton variant="primary" className="read-more-btn teaser-read-more" onClick={onReadMore}>
               … READ MORE
@@ -92,28 +111,6 @@ export function PostContent({
         </>
       )}
       <PostEmbeds content={displayContent} ogpMap={ogpMap} enableOgpFallback={enableOgpFallback} />
-
-      {/* Wordrot collectible words */}
-      {wordrotWords && wordrotWords.length > 0 && onWordClick && (
-        <div className="wordrot-collect-section">
-          {wordrotWords.map((word) => {
-            const isCollected = wordrotCollected?.has(word)
-            return (
-              <button
-                key={word}
-                className={`wordrot-highlight ${isCollected ? 'collected' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onWordClick(word)
-                }}
-                title={isCollected ? `${word} (collected)` : `Collect: ${word}`}
-              >
-                {word}
-              </button>
-            )
-          })}
-        </div>
-      )}
     </>
   )
 }
