@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { extractNounsBatch, collectWord, fetchWordrotInventory } from '../../lib/api/api'
 import { getCurrentPubkey } from '../../lib/nostr/events'
 import { useWordCelebration } from '../../components/wordrot/WordCollectCelebration'
@@ -150,22 +150,26 @@ export function useWordrotTimeline() {
     [collectedWords]
   )
 
-  return {
-    // Cache access
-    getWords,
-    hasWords,
-    wordsCache,
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  return useMemo(
+    () => ({
+      // Cache access
+      getWords,
+      hasWords,
+      wordsCache,
 
-    // Extraction
-    extractWords,
-    isExtracting,
+      // Extraction
+      extractWords,
+      isExtracting,
 
-    // Collection
-    collect,
-    collectedWords,
-    isCollected,
+      // Collection
+      collect,
+      collectedWords,
+      isCollected,
 
-    // User state
-    isLoggedIn: !!pubkey,
-  }
+      // User state
+      isLoggedIn: !!pubkey,
+    }),
+    [getWords, hasWords, wordsCache, extractWords, isExtracting, collect, collectedWords, isCollected, pubkey]
+  )
 }
