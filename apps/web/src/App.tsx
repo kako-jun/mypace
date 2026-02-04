@@ -12,6 +12,7 @@ import { EmbedPage } from './pages/EmbedPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PostModal } from './components/post'
 import { CelebrationProvider } from './components/supernova'
+import { InstallPrompt } from './components/pwa'
 import { initializeNavigation, applyThemeColors, getUIThemeColors } from './lib/utils'
 
 export default function App() {
@@ -39,6 +40,7 @@ export default function App() {
 
   return (
     <CelebrationProvider>
+      <InstallPrompt />
       <Routes location={backgroundLocation || location}>
         {/* Embed page - no Layout */}
         <Route path="/embed/:noteId" element={<EmbedPage />} />

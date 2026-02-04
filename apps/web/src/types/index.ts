@@ -165,3 +165,13 @@ export interface Magazine {
 export interface MagazineWithPosts extends Magazine {
   posts: Event[] // Fetched post events
 }
+
+// PWA Install Prompt Event (Chrome/Edge specific)
+export interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[]
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed'
+    platform: string
+  }>
+  prompt(): Promise<void>
+}
