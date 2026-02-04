@@ -35,6 +35,9 @@ export interface MypaceStorage {
     draft: string
     draftReplyTo: string
   }
+  pwa: {
+    installDismissedAt: number | null
+  }
 }
 
 export const DEFAULT_SEARCH_FILTERS: SearchFilters = {
@@ -70,6 +73,9 @@ const DEFAULT_STORAGE: MypaceStorage = {
     vimMode: false,
     draft: '',
     draftReplyTo: '',
+  },
+  pwa: {
+    installDismissedAt: null,
   },
 }
 
@@ -128,6 +134,7 @@ function readStorage(): MypaceStorage {
         auth: { ...DEFAULT_STORAGE.auth, ...parsed.auth },
         cache: { ...DEFAULT_STORAGE.cache, ...parsed.cache },
         editor: { ...DEFAULT_STORAGE.editor, ...parsed.editor },
+        pwa: { ...DEFAULT_STORAGE.pwa, ...parsed.pwa },
       }
     }
   } catch {
@@ -300,6 +307,16 @@ export function clearDraft(): void {
   updateStorage('editor', (e) => ({ ...e, draft: '', draftReplyTo: '' }))
 }
 
+// ============ PWA ============
+
+export function getPWAInstallDismissedAt(): number | null {
+  return readStorage().pwa.installDismissedAt
+}
+
+export function setPWAInstallDismissedAt(timestamp: number | null): void {
+  updateStorage('pwa', (p) => ({ ...p, installDismissedAt: timestamp }))
+}
+
 // ============ Export/Import ============
 
 export interface ExportableSettings {
@@ -380,6 +397,9 @@ export function migrateFromLegacy(): void {
       vimMode: oldVimMode === 'true',
       draft: oldDraft,
       draftReplyTo: oldDraftReplyTo,
+    },
+    pwa: {
+      installDismissedAt: null,
     },
   }
 

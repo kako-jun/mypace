@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { getPWAInstallDismissedAt, setPWAInstallDismissedAt } from '../../lib/storage'
 
 /**
  * BeforeInstallPromptEvent - Browser event for PWA installation
@@ -19,16 +20,14 @@ interface UsePWAInstallReturn {
   dismiss: () => void
 }
 
-const STORAGE_KEY = 'pwa-install-dismissed'
 const DISMISS_DURATION_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 
 export function usePWAInstall(): UsePWAInstallReturn {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isInstalled, setIsInstalled] = useState(false)
   const [isDismissed, setIsDismissed] = useState(() => {
-    const dismissed = localStorage.getItem(STORAGE_KEY)
-    if (!dismissed) return false
-    const dismissedAt = parseInt(dismissed, 10)
+    const dismissedAt = getPWAInstallDismissedAt()
+    if (!dismissedAt) return false
     return Date.now() - dismissedAt < DISMISS_DURATION_MS
   })
 
@@ -76,7 +75,7 @@ export function usePWAInstall(): UsePWAInstallReturn {
 
   const dismiss = useCallback(() => {
     setIsDismissed(true)
-    localStorage.setItem(STORAGE_KEY, Date.now().toString())
+    setPWAInstallDismissedAt(Date.now())
   }, [])
 
   return {
