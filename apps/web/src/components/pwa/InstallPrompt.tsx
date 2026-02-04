@@ -21,15 +21,15 @@ export function InstallPrompt() {
         </div>
         <div className="install-prompt-text">
           <p className="install-prompt-title">MY PACE</p>
-          <p className="install-prompt-description">ホーム画面に追加してアプリとして使えます</p>
+          <p className="install-prompt-description">Add to home screen for app-like experience</p>
         </div>
       </div>
       <div className="install-prompt-actions">
         <button type="button" className="install-prompt-dismiss" onClick={dismiss}>
-          あとで
+          Later
         </button>
         <button type="button" className="install-prompt-install" onClick={handleInstall}>
-          追加
+          Install
         </button>
       </div>
     </div>
