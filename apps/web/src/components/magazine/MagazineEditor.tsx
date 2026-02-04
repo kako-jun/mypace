@@ -11,12 +11,22 @@ interface MagazineEditorProps {
 }
 
 function generateSlug(title: string): string {
-  return title
+  // Try to generate from title (for English titles)
+  const fromTitle = title
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .slice(0, 50)
+
+  // If title produces a valid slug, use it
+  if (fromTitle.length >= 3) {
+    return fromTitle
+  }
+
+  // Otherwise generate a random ID (for non-ASCII titles like Japanese)
+  const randomId = Math.random().toString(36).slice(2, 10)
+  return `magazine-${randomId}`
 }
 
 export function MagazineEditor({ magazine, onSave, onClose }: MagazineEditorProps) {
