@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { nip19 } from 'nostr-tools'
 import { fetchMagazineBySlug, fetchEventsByIds, fetchUserProfile, publishEvent } from '../../lib/nostr/relay'
 import { createMagazineEvent, formatTimestamp, type MagazineInput } from '../../lib/nostr/events'
-import { getDisplayName, navigateToHome, navigateTo, navigateToPost } from '../../lib/utils'
+import { getDisplayName, navigateToHome, navigateTo, navigateToPost, copyToClipboard } from '../../lib/utils'
 import { BackButton, Loading, Icon, Button, Avatar } from '../ui'
 import { MagazineEditor } from './MagazineEditor'
 import type { Magazine, Event, Profile } from '../../types'
@@ -31,6 +31,7 @@ export function MagazineView() {
   const [loading, setLoading] = useState(true)
   const [showEditor, setShowEditor] = useState(false)
   const [myPubkey, setMyPubkey] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   const loadMagazine = useCallback(async () => {
     if (!pubkey || !slug) return
@@ -132,6 +133,15 @@ export function MagazineView() {
     }
   }
 
+  const handleShare = async () => {
+    const url = `${window.location.origin}/user/${npub}/magazine/${slug}`
+    const success = await copyToClipboard(url)
+    if (success) {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   if (loading) {
     return <Loading />
   }
@@ -185,6 +195,9 @@ export function MagazineView() {
         {magazine.description && <p className="magazine-view-description">{magazine.description}</p>}
 
         <div className="magazine-view-actions">
+          <Button size="sm" variant="secondary" onClick={handleShare}>
+            <Icon name={copied ? 'Check' : 'Share2'} size={14} /> {copied ? 'Copied!' : 'Share'}
+          </Button>
           {isOwner && (
             <Button size="sm" variant="secondary" onClick={() => setShowEditor(true)}>
               <Icon name="Edit2" size={14} /> Edit

@@ -35,6 +35,10 @@ export const PAGINATION_MAX_LIMIT = 100
 export const KIND_NOTE = 1
 export const KIND_LONG_FORM = 30023
 export const KIND_SINOV_NPC = 42000 // Sinov NPC posts (hidden from other clients)
+export const KIND_MAGAZINE = 30001 // NIP-51 Public Sets (used for magazines)
+
+// Magazine
+export const MAGAZINE_TAG = 'mypace-magazine'
 
 // 全リレーリスト（環境変数RELAY_COUNTで使用数を制御）
 export const ALL_RELAYS = [
@@ -44,6 +48,9 @@ export const ALL_RELAYS = [
   'wss://nostr.wine',
   'wss://relay.snort.social',
 ]
+
+// General relays for non-timeline queries
+export const GENERAL_RELAYS = ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.band']
 
 export const CACHE_CLEANUP_PROBABILITY = 0.01 // 1%の確率でOGPキャッシュクリーンアップ
 

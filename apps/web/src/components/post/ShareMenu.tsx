@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom'
 import { Icon, CloseButton } from '../ui'
 import { splitContentForSns, getCharLimit } from '../../lib/utils/sns-share'
 import { fetchUserMagazines, publishEvent } from '../../lib/nostr/relay'
-import { createMagazineEvent, getCurrentPubkey } from '../../lib/nostr/events'
+import { createMagazineEvent, getCurrentPubkey, type MagazineInput } from '../../lib/nostr/events'
+import { MagazineEditor } from '../magazine'
 import type { Magazine } from '../../types'
 
 export type ShareOption = 'url-copy' | 'url-share' | 'md-copy' | 'md-download' | 'md-open' | 'x' | 'bluesky' | 'threads'
@@ -36,6 +37,7 @@ export default function ShareMenu({
   const [magazines, setMagazines] = useState<Magazine[]>([])
   const [magazinesLoading, setMagazinesLoading] = useState(false)
   const [updatingMagazine, setUpdatingMagazine] = useState<string | null>(null)
+  const [showMagazineEditor, setShowMagazineEditor] = useState(false)
 
   // 各SNSの分割パーツを計算
   const splitParts = useMemo(() => {
@@ -93,6 +95,23 @@ export default function ShareMenu({
       console.error('Failed to update magazine:', err)
     } finally {
       setUpdatingMagazine(null)
+    }
+  }
+
+  const handleCreateMagazine = async (input: MagazineInput) => {
+    try {
+      // Add current post to the new magazine
+      const inputWithPost: MagazineInput = {
+        ...input,
+        eventIds: eventId ? [eventId] : [],
+      }
+      const event = await createMagazineEvent(inputWithPost)
+      await publishEvent(event)
+      setShowMagazineEditor(false)
+      // Reload magazines to show the new one
+      await loadMagazines()
+    } catch (err) {
+      console.error('Failed to create magazine:', err)
     }
   }
 
@@ -294,56 +313,76 @@ export default function ShareMenu({
       <div className="share-menu-options">
         {magazinesLoading ? (
           <div className="share-menu-loading">Loading...</div>
-        ) : magazines.length === 0 ? (
-          <div className="share-menu-empty">No magazines yet. Create one from your profile page.</div>
         ) : (
-          <div className="magazine-select-list">
-            {magazines.map((magazine) => {
-              const isInMagazine = eventId ? magazine.eventIds.includes(eventId) : false
-              const isUpdating = updatingMagazine === magazine.id
-              return (
-                <button
-                  key={magazine.id}
-                  className={`magazine-select-item ${isInMagazine ? 'selected' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleToggleMagazine(magazine)
-                  }}
-                  disabled={isUpdating}
-                >
-                  <div className={`magazine-select-checkbox ${isInMagazine ? 'checked' : ''}`}>
-                    {isInMagazine && <Icon name="Check" size={12} />}
-                  </div>
-                  <span className="magazine-select-name">{magazine.title || 'Untitled'}</span>
-                  <span className="magazine-select-count">{magazine.eventIds.length}</span>
-                  {isUpdating && <Icon name="Loader" size={14} />}
-                </button>
-              )
-            })}
-          </div>
+          <>
+            {magazines.length > 0 && (
+              <div className="magazine-select-list">
+                {magazines.map((magazine) => {
+                  const isInMagazine = eventId ? magazine.eventIds.includes(eventId) : false
+                  const isUpdating = updatingMagazine === magazine.id
+                  return (
+                    <button
+                      key={magazine.id}
+                      className={`magazine-select-item ${isInMagazine ? 'selected' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleToggleMagazine(magazine)
+                      }}
+                      disabled={isUpdating}
+                    >
+                      <div className={`magazine-select-checkbox ${isInMagazine ? 'checked' : ''}`}>
+                        {isInMagazine && <Icon name="Check" size={12} />}
+                      </div>
+                      <span className="magazine-select-name">{magazine.title || 'Untitled'}</span>
+                      <span className="magazine-select-count">{magazine.eventIds.length}</span>
+                      {isUpdating && <Icon name="Loader" size={14} />}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            {magazines.length > 0 && <div className="share-menu-divider" />}
+            <button
+              className="share-menu-option"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowMagazineEditor(true)
+              }}
+            >
+              <Icon name="Plus" size={16} />
+              <span>Create New Magazine</span>
+            </button>
+          </>
         )}
       </div>
     </>
   )
 
-  return createPortal(
+  return (
     <>
-      <div className="share-menu-overlay" onClick={onClose} />
-      <div
-        className="share-menu"
-        style={{ top: position.top, left: position.left }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {subMenu === null && renderMainMenu()}
-        {subMenu === 'sns' && renderSnsMenu()}
-        {subMenu === 'x' && renderSnsSplitMenu('x')}
-        {subMenu === 'bluesky' && renderSnsSplitMenu('bluesky')}
-        {subMenu === 'threads' && renderSnsSplitMenu('threads')}
-        {subMenu === 'url' && renderUrlMenu()}
-        {subMenu === 'content' && renderContentMenu()}
-        {subMenu === 'magazine' && renderMagazineMenu()}
-      </div>
-    </>,
-    document.body
+      {createPortal(
+        <>
+          <div className="share-menu-overlay" onClick={onClose} />
+          <div
+            className="share-menu"
+            style={{ top: position.top, left: position.left }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {subMenu === null && renderMainMenu()}
+            {subMenu === 'sns' && renderSnsMenu()}
+            {subMenu === 'x' && renderSnsSplitMenu('x')}
+            {subMenu === 'bluesky' && renderSnsSplitMenu('bluesky')}
+            {subMenu === 'threads' && renderSnsSplitMenu('threads')}
+            {subMenu === 'url' && renderUrlMenu()}
+            {subMenu === 'content' && renderContentMenu()}
+            {subMenu === 'magazine' && renderMagazineMenu()}
+          </div>
+        </>,
+        document.body
+      )}
+      {showMagazineEditor && (
+        <MagazineEditor onSave={handleCreateMagazine} onClose={() => setShowMagazineEditor(false)} />
+      )}
+    </>
   )
 }
