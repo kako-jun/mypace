@@ -27,8 +27,8 @@
   padding: 1px 4px 0 4px; /* Top: 1px, Bottom: 0, Sides: 4px */
   margin: 0 2px;
 
-  /* Ensure consistent positioning */
-  vertical-align: text-bottom;
+  /* Ensure consistent positioning with surrounding text */
+  vertical-align: baseline;
 }
 
 .wordrot-highlight:hover {
@@ -51,8 +51,7 @@
   display: inline;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-  vertical-align: text-bottom;
-  line-height: normal;
+  vertical-align: baseline;
 }
 
 /* Glow animation for first discovery */
