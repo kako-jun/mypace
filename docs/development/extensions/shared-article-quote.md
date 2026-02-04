@@ -46,26 +46,39 @@ Shared Article Quoteでは：
 |------|------|
 | 記者アカウント | MY PACEが管理する共通のシステムアカウント。記事引用専用 |
 | 引用投稿 | 記者アカウントが作成する、記事URL+メタデータを含むkind:1投稿 |
-| URLハッシュ | 引用投稿のユニーク性を保証するためのURL正規化ハッシュ |
 
 ## ユーザー操作
 
 4つの導線がある。
 
-### 1. NPCボタン（常設UI）
+### 1. PostFormのモード切替（常設UI）
 
-画面の左上または左下に「NPC」ボタンを常設。投稿欄とは独立したUI。
+投稿フォームの上部に `Post` / `NPC` タブを常設。
 
 ```
-┌─────────────────────────────────────────────────┐
-│ [NPC]                           MY PACE         │
-│                                                 │
-│ ... タイムライン ...                            │
-│                                                 │
-└─────────────────────────────────────────────────┘
+┌────────────────────────────────────────────┐
+│ [Post ●] [NPC]                             │ ← モード切替タブ
+│                                            │
+│ [avatar] 投稿内容を入力...                   │
+│                                            │
+└────────────────────────────────────────────┘
 ```
 
-クリックするとNPC選択画面が開く：
+- **Post** タブ: 通常の投稿モード
+- **NPC** タブ: クリックでNPC選択モーダルを開く
+
+**編集・リプライ時はNPCタブが無効化される**（排他）:
+
+```
+┌────────────────────────────────────────────┐
+│ [Post ●] [NPC]  ← NPCはグレーアウト         │
+│ Reply → @username                          │
+│                                            │
+│ [avatar] リプライ内容...                     │
+└────────────────────────────────────────────┘
+```
+
+NPCタブをクリックするとNPC選択画面が開く：
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -172,7 +185,7 @@ POST /share (Service Worker)
 
 ### GET /api/npc/reporter
 
-URLに対応する引用投稿を検索。
+URLに対応する引用投稿をリレーから検索。
 
 #### リクエスト
 
@@ -197,8 +210,7 @@ GET /api/npc/reporter?url=https://example.com/article
   "metadata": {
     "title": "記事タイトル",
     "description": "記事の説明",
-    "image": "https://example.com/ogp.jpg",
-    "replyCount": 15  // 感想リプライ数
+    "image": "https://example.com/ogp.jpg"
   }
 }
 
@@ -210,7 +222,7 @@ GET /api/npc/reporter?url=https://example.com/article
 
 ### POST /api/npc/reporter
 
-新しい引用投稿を作成。
+新しい引用投稿を作成。既存の引用がある場合はそれを返す。
 
 #### リクエスト
 
@@ -226,11 +238,27 @@ Content-Type: application/json
 #### レスポンス
 
 ```typescript
+// 新規作成成功
 {
-  "success": true,
+  "created": true,
   "event": {
     "id": "abc123...",
     // ... 作成された引用投稿のイベント
+  },
+  "metadata": {
+    "title": "記事タイトル",
+    "description": "記事の説明",
+    "image": "https://example.com/ogp.jpg"
+  }
+}
+
+// 既存の引用が見つかった場合
+{
+  "found": true,
+  "message": "Quote already exists for this article",
+  "event": {
+    "id": "abc123...",
+    // ... 既存の引用投稿のイベント
   },
   "metadata": {
     "title": "記事タイトル",
@@ -244,13 +272,16 @@ Content-Type: application/json
 
 ```typescript
 // OGP取得失敗
-{ "error": "ogp_fetch_failed", "message": "Failed to fetch OGP data" }
+{ "error": "ogp_fetch_failed", "message": "Failed to fetch OGP data or no title found" }
 
 // 不正なURL
-{ "error": "invalid_url", "message": "URL is not valid" }
+{ "error": "invalid_url", "message": "URL is required and must be valid" }
 
-// 既に存在（競合）
-{ "error": "already_exists", "eventId": "abc123..." }
+// リレー公開失敗
+{ "error": "publish_failed", "message": "Failed to publish to relays" }
+
+// 記者未設定
+{ "error": "reporter_not_configured", "message": "Reporter account is not configured" }
 ```
 
 ## データ構造
@@ -266,14 +297,13 @@ Content-Type: application/json
     ['t', 'mypace'],
     ['t', 'mypace-quote'],        // 引用投稿識別タグ
     ['client', 'mypace'],
-    ['r', 'https://example.com/article'],  // 記事URL（NIP-25準拠）
-    ['url-hash', 'sha256-hash'],  // URL正規化ハッシュ（検索用）
+    ['r', 'https://example.com/article'],  // 正規化済みURL（NIP-25準拠）
     // OGPメタデータ
     ['ogp:title', '記事タイトル'],
     ['ogp:description', '記事の説明...'],
     ['ogp:image', 'https://example.com/ogp.jpg']
   ],
-  content: "📰 記事タイトル\n\nhttps://example.com/article",
+  content: "📰 記事タイトル\n\nShare your thoughts in the replies!\n\nhttps://example.com/article",
   id: "...",
   sig: "..."
 }
@@ -285,13 +315,12 @@ Content-Type: application/json
 |------|------|
 | `t:mypace` | MY PACEフィルタ用 |
 | `t:mypace-quote` | 引用投稿の識別 |
-| `r` | 記事URL（NIP-25準拠、他クライアント互換） |
-| `url-hash` | URL正規化ハッシュ（重複防止・検索用） |
+| `r` | 正規化済みURL（NIP-25準拠、他クライアント互換、検索用） |
 | `ogp:*` | OGPメタデータ（タイムライン表示用） |
 
 ### URL正規化
 
-同じ記事への重複引用を防ぐため、URLを正規化してハッシュ化：
+同じ記事への重複引用を防ぐため、URLを正規化：
 
 ```typescript
 function normalizeUrl(url: string): string {
@@ -301,9 +330,9 @@ function normalizeUrl(url: string): string {
   // 2. トレイリングスラッシュ除去
   parsed.pathname = parsed.pathname.replace(/\/+$/, '')
   // 3. 不要なクエリパラメータ除去（utm_*, ref, etc.）
-  const keepParams = ['id', 'episode', 'chapter', 'p', 'page']
+  const keepParams = ['id', 'episode', 'chapter', 'p', 'page', 'v']
   for (const key of [...parsed.searchParams.keys()]) {
-    if (!keepParams.includes(key) && !key.startsWith('v')) {
+    if (!keepParams.some(k => key === k || key.startsWith(k + '_'))) {
       parsed.searchParams.delete(key)
     }
   }
@@ -311,12 +340,31 @@ function normalizeUrl(url: string): string {
   parsed.hash = ''
   return parsed.toString()
 }
+```
 
-function hashUrl(url: string): string {
-  const normalized = normalizeUrl(url)
-  return sha256(normalized)
+正規化済みURLは `r` タグに保存され、リレーへの問い合わせ時に使用される。
+
+## 重複検出
+
+D1キャッシュは使用せず、**リレーに直接問い合わせ**て既存の引用投稿を検索する。
+
+```typescript
+// リレーへのクエリ
+const filter = {
+  authors: [reporterPubkey],
+  kinds: [1],
+  '#r': [normalizedUrl],   // 正規化URLで検索
+  '#t': ['mypace-quote'],  // 引用投稿タグで絞り込み
+  limit: 1
 }
 ```
+
+**メリット**:
+- D1ストレージ不要（肥大化の心配なし）
+- リレーが唯一の情報源（一貫性）
+
+**デメリット**:
+- リレー応答に依存（タイムアウトの可能性）
 
 ## 記者アカウント
 
@@ -333,47 +381,14 @@ function hashUrl(url: string): string {
 ┌─────────────┐     POST /api/npc/reporter      ┌──────────────────────────────────┐
 │ フロント    │ ───────────────────────→ │ Cloudflare Workers (API)         │
 │ エンド      │     { url: "..." }       │                                  │
-└─────────────┘                          │ 1. OGP取得                       │
-                                         │ 2. REPORTER_SECRET_KEY で署名    │
-                                         │ 3. Nostrリレーに公開             │
+└─────────────┘                          │ 1. リレーで既存引用を検索        │
+                                         │ 2. なければOGP取得               │
+                                         │ 3. REPORTER_SECRET_KEY で署名    │
+                                         │ 4. Nostrリレーに公開             │
                                          └──────────────────────────────────┘
 ```
 
 フロントエンドはURLを送るだけ。署名はすべてサーバー側で行う。
-
-### 鍵の生成
-
-```bash
-# 1. 新しいNostr鍵ペアを生成（nostr-toolsを使用）
-npx tsx apps/api/scripts/generate-reporter-keys.ts
-
-# 出力例:
-# Secret Key (hex): 0123456789abcdef...
-# Public Key (hex): fedcba9876543210...
-# nsec: nsec1...
-# npub: npub1...
-```
-
-生成スクリプト例:
-
-```typescript
-// apps/api/scripts/generate-reporter-keys.ts
-import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
-import { nsecEncode, npubEncode } from 'nostr-tools/nip19'
-import { bytesToHex } from '@noble/hashes/utils'
-
-const sk = generateSecretKey()
-const pk = getPublicKey(sk)
-
-console.log('Secret Key (hex):', bytesToHex(sk))
-console.log('Public Key (hex):', pk)
-console.log('nsec:', nsecEncode(sk))
-console.log('npub:', npubEncode(pk))
-console.log('')
-console.log('Set as Cloudflare Workers secrets:')
-console.log('  wrangler secret put REPORTER_SECRET_KEY')
-console.log('  (paste the hex secret key)')
-```
 
 ### 環境変数設定
 
@@ -394,111 +409,9 @@ export type Bindings = {
   AI: Ai
   // ... 既存の環境変数 ...
 
-  // Reporter account for Shared Article Quote
+  // NPC Reporter account for Shared Article Quote
   REPORTER_SECRET_KEY?: string  // hex形式（64文字）
 }
-```
-
-### 鍵管理の図
-
-```
-┌─────────────────────────────────────────┐
-│ Cloudflare Workers                      │
-│                                         │
-│ 環境変数（wrangler secret）:            │
-│   REPORTER_SECRET_KEY = "0123..."      │ ← hex形式（64文字）
-│                                         │
-│ 公開鍵は getPublicKey(sk) で導出        │
-│ ※ シークレットはWrangler secretsで管理  │
-└─────────────────────────────────────────┘
-```
-
-### 署名フロー
-
-```typescript
-// apps/api/src/routes/npc/reporter.ts
-import { Hono } from 'hono'
-import { finalizeEvent, getPublicKey } from 'nostr-tools/pure'
-import { hexToBytes } from '@noble/hashes/utils'
-import type { Bindings } from '../types'
-
-const app = new Hono<{ Bindings: Bindings }>()
-
-app.post('/npc/reporter', async (c) => {
-  const { url } = await c.req.json<{ url: string }>()
-
-  // 1. 環境変数から秘密鍵を取得し、公開鍵を導出
-  const sk = c.env.REPORTER_SECRET_KEY
-  if (!sk) {
-    return c.json({ error: 'reporter_not_configured' }, 500)
-  }
-  const pk = getPublicKey(hexToBytes(sk))
-
-  // 2. 既存の引用投稿を確認（D1キャッシュ）
-  const existing = await findExistingQuote(c.env.DB, url)
-  if (existing) {
-    return c.json({ found: true, event: existing })
-  }
-
-  // 3. OGP情報を取得
-  const ogp = await fetchOGP(url)
-
-  // 4. 記者アカウントで署名
-  const event = {
-    kind: 1,
-    pubkey: pk,
-    created_at: Math.floor(Date.now() / 1000),
-    tags: [
-      ['t', 'mypace'],
-      ['t', 'mypace-quote'],
-      ['client', 'mypace'],
-      ['r', url],
-      ['url-hash', hashUrl(url)],
-      ['ogp:title', ogp.title],
-      ['ogp:description', ogp.description || ''],
-      ['ogp:image', ogp.image || '']
-    ],
-    content: `📰 ${ogp.title}\n\n${url}`
-  }
-
-  const signedEvent = finalizeEvent(event, hexToBytes(sk))
-
-  // 5. Nostrリレーに公開
-  await publishToRelays(signedEvent)
-
-  // 6. D1にキャッシュ保存
-  await saveQuoteToCache(c.env.DB, url, signedEvent, ogp)
-
-  return c.json({ success: true, event: signedEvent })
-})
-```
-
-**ポイント:**
-- 秘密鍵はサーバー側の環境変数にのみ存在
-- フロントエンドはURLを送るだけで、署名には関与しない
-- VAPID鍵と同様に `wrangler secret` で安全に管理
-
-## D1データベース（キャッシュ）
-
-APIレスポンス高速化のため、D1に引用投稿をキャッシュ。
-
-### スキーマ
-
-```sql
-CREATE TABLE article_quotes (
-  url_hash TEXT PRIMARY KEY,      -- URL正規化ハッシュ
-  url TEXT NOT NULL,              -- 元URL
-  event_id TEXT NOT NULL,         -- NostrイベントID
-  event_json TEXT NOT NULL,       -- イベントJSON（キャッシュ）
-  ogp_title TEXT,
-  ogp_description TEXT,
-  ogp_image TEXT,
-  reply_count INTEGER DEFAULT 0,  -- 感想リプライ数（定期更新）
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
-);
-
-CREATE INDEX idx_quotes_event_id ON article_quotes(event_id);
 ```
 
 ## セキュリティ考慮
@@ -506,31 +419,13 @@ CREATE INDEX idx_quotes_event_id ON article_quotes(event_id);
 ### URL検証
 
 ```typescript
-const ALLOWED_URL_PATTERNS = [
-  /^https:\/\/(www\.)?shonenjumpplus\.com\//,
-  /^https:\/\/(www\.)?comic-zenon\.com\//,
-  /^https:\/\/(www\.)?youtube\.com\//,
-  /^https:\/\/youtu\.be\//,
-  // ... 許可リスト方式 or
-  // 全URL許可（スパム対策は別途）
-]
-
-function isAllowedUrl(url: string): boolean {
-  // オプション1: 許可リスト方式
-  // return ALLOWED_URL_PATTERNS.some(p => p.test(url))
-
-  // オプション2: 全URL許可（レート制限で対策）
-  return isValidHttpUrl(url)
-}
-```
-
-### レート制限
-
-```typescript
-// 同一IPからの引用作成を制限
-const RATE_LIMIT = {
-  window: 60 * 60 * 1000,  // 1時間
-  maxRequests: 10          // 10件まで
+function isValidUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
 }
 ```
 
@@ -538,7 +433,6 @@ const RATE_LIMIT = {
 
 - 秘密鍵はCloudflare Workers環境変数で管理
 - コードにハードコードしない
-- 鍵のローテーション手順を文書化
 
 ## 将来の拡張
 
@@ -552,32 +446,30 @@ tags: [
 ]
 ```
 
-### 2. 人気記事ランキング
-
-```sql
--- リプライ数でソート
-SELECT * FROM article_quotes
-ORDER BY reply_count DESC
-LIMIT 20
-```
-
-### 3. 記事フィード
+### 2. 記事フィード
 
 `mypace-quote` タグでフィルタして、引用投稿だけのタイムラインを表示。
 
-### 4. 記者アカウントの複数化
+### 3. 記者アカウントの複数化
 
 ジャンル別の記者アカウント:
 - `📰 MY PACE 漫画`
 - `📰 MY PACE 動画`
 - `📰 MY PACE ニュース`
 
-## 関連ファイル（実装時）
+## 関連ファイル
 
 | ファイル | 役割 |
 |---------|------|
 | `apps/api/src/routes/npc/reporter.ts` | 記者API実装 |
-| フロントエンド | TODO: ユーザー操作の案が決まり次第 |
+| `apps/api/src/routes/npc/index.ts` | NPCルートエクスポート |
+| `apps/api/src/utils.ts` | URL正規化・バリデーション |
+| `apps/web/src/components/npc/NPCModal.tsx` | NPC選択・URL入力モーダル |
+| `apps/web/src/components/npc/ShareChoiceModal.tsx` | Android共有選択画面 |
+| `apps/web/src/components/form/PostForm.tsx` | Post/NPCモード切替タブ |
+| `apps/web/src/pages/ReporterIntentPage.tsx` | Intent URL処理ページ |
+| `apps/web/src/lib/api/api.ts` | フロントエンドAPIクライアント |
+| `apps/web/src/sw.ts` | Service Worker（共有URL検出） |
 
 ## 関連
 
