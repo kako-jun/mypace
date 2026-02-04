@@ -97,19 +97,29 @@ export function useWordrotTimeline() {
       setIsExtracting(true)
 
       try {
-        // Batch extract
-        const result = await extractNounsBatch(uncachedPosts)
+        // API limits to 50 posts per batch, so split into chunks
+        const BATCH_SIZE = 50
+        for (let i = 0; i < uncachedPosts.length; i += BATCH_SIZE) {
+          const chunk = uncachedPosts.slice(i, i + BATCH_SIZE)
+          console.log(
+            `[Wordrot] Extracting batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(uncachedPosts.length / BATCH_SIZE)} (${chunk.length} posts)`
+          )
 
-        // Update cache
-        setWordsCache((prev) => {
-          const updated = { ...prev }
-          for (const [eventId, data] of Object.entries(result.results)) {
-            updated[eventId] = data.words
-          }
-          return updated
-        })
-      } catch {
-        // Error extracting - silently fail
+          const result = await extractNounsBatch(chunk)
+          console.log('[Wordrot] Extracted words:', result)
+
+          // Update cache
+          setWordsCache((prev) => {
+            const updated = { ...prev }
+            for (const [eventId, data] of Object.entries(result.results)) {
+              updated[eventId] = data.words
+              console.log(`[Wordrot] Cached ${data.words.length} words for event ${eventId.slice(0, 8)}`)
+            }
+            return updated
+          })
+        }
+      } catch (err) {
+        console.error('[Wordrot] Failed to extract words:', err)
       } finally {
         // Clear pending
         uncachedPosts.forEach((p) => pendingExtraction.current.delete(p.eventId))
