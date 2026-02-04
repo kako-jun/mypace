@@ -567,6 +567,90 @@ CREATE INDEX idx_quotes_event_id ON article_quotes(event_id);
 2. **POST時**: リレーに公開 → D1にキャッシュ保存
 3. **リプライ数**: Cronジョブで定期更新（1時間ごと）
 
+### キャッシュミス時のリレー検索
+
+D1にキャッシュがない場合、Nostrリレーから引用投稿を検索する：
+
+```typescript
+async function findQuoteFromRelay(url: string, reporterPubkey: string): Promise<Event | null> {
+  const urlHash = hashUrl(url)
+
+  // 方法1: url-hashタグで検索（推奨）
+  const filter = {
+    kinds: [1],
+    authors: [reporterPubkey],
+    '#url-hash': [urlHash],
+    limit: 1
+  }
+
+  // 方法2: authorsのみで検索し、クライアント側でフィルタ
+  // （リレーが#url-hashをサポートしない場合のフォールバック）
+  const fallbackFilter = {
+    kinds: [1],
+    authors: [reporterPubkey],
+    '#t': ['mypace-quote'],
+    limit: 100
+  }
+
+  const events = await fetchFromRelays(filter)
+  return events[0] || null
+}
+```
+
+**注意**: リレー検索でヒットした場合は、D1にキャッシュを書き戻す。
+
+### 競合制御（Race Condition）
+
+同時に複数ユーザーが同じURLを引用しようとした場合の対策：
+
+```sql
+-- INSERT OR IGNORE で重複を防止
+INSERT OR IGNORE INTO article_quotes (url_hash, url, event_id, ...)
+VALUES (?, ?, ?, ...);
+```
+
+```typescript
+app.post('/quote', async (c) => {
+  const { url } = await c.req.json<{ url: string }>()
+  const urlHash = hashUrl(url)
+
+  // 1. まずD1に存在確認
+  const existing = await findExistingQuote(c.env.DB, urlHash)
+  if (existing) {
+    return c.json({ found: true, event: existing })
+  }
+
+  // 2. リレーにも確認（他インスタンスが作成済みの可能性）
+  const fromRelay = await findQuoteFromRelay(url, reporterPubkey)
+  if (fromRelay) {
+    // D1にキャッシュして返却
+    await saveQuoteToCache(c.env.DB, url, fromRelay, extractOGP(fromRelay))
+    return c.json({ found: true, event: fromRelay })
+  }
+
+  // 3. 新規作成
+  const signedEvent = await createAndPublishQuote(url, c.env)
+
+  // 4. D1に保存（INSERT OR IGNORE で競合を無視）
+  try {
+    await saveQuoteToCache(c.env.DB, url, signedEvent, ogp)
+  } catch (e) {
+    // 競合が発生した場合、既存のものを返す
+    const raceWinner = await findExistingQuote(c.env.DB, urlHash)
+    if (raceWinner) {
+      return c.json({ found: true, event: raceWinner })
+    }
+  }
+
+  return c.json({ success: true, event: signedEvent })
+})
+```
+
+**ポイント:**
+- D1の`INSERT OR IGNORE`で重複挿入を防止
+- リレーへの公開は冪等ではないが、同じURLに対して複数の引用投稿が作られても、D1キャッシュが正となる
+- 最悪ケースでも「少し余分な引用投稿がリレーに残る」だけで、ユーザー体験には影響しない
+
 ## UI/UX設計
 
 ### 引用Intentページ
