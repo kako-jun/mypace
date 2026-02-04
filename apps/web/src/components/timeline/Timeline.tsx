@@ -1,4 +1,4 @@
-import { useState, useCallback, Fragment, useEffect, memo } from 'react'
+import { useState, useCallback, Fragment, useEffect, useRef, useMemo, memo } from 'react'
 import { TIMEOUTS, CUSTOM_EVENTS } from '../../lib/constants'
 import '../../styles/components/timeline.css'
 import '../../styles/components/timeline-search.css'
@@ -50,6 +50,12 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
 
   // Wordrot context for word extraction and collection
   const wordrot = useWordrotContext()
+
+  // Memoize wordrot values to prevent unnecessary re-renders of post cards
+  const wordrotCollected = useMemo(() => wordrot?.collectedWords, [wordrot?.collectedWords])
+  const wordrotImages = useMemo(() => wordrot?.wordImages, [wordrot?.wordImages])
+  const wordrotCollect = useMemo(() => wordrot?.collect, [wordrot?.collect])
+  const wordrotGetWords = useMemo(() => wordrot?.getWords, [wordrot?.getWords])
 
   const {
     items,
@@ -168,21 +174,25 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
   }, [handleInternalLinkClick])
 
   // Extract words for visible posts (wordrot)
+  // Use refs to avoid dependency on wordrot object which changes frequently
+  const wordrotRef = useRef(wordrot)
+  wordrotRef.current = wordrot
+
   useEffect(() => {
-    if (!wordrot || items.length === 0) return
+    if (!wordrotRef.current || items.length === 0) return
 
     // Filter posts that haven't been extracted yet
     const postsToExtract = items
-      .filter((item) => !wordrot.hasWords(item.event.id))
+      .filter((item) => !wordrotRef.current!.hasWords(item.event.id))
       .map((item) => ({
         eventId: item.event.id,
         content: item.event.content,
       }))
 
     if (postsToExtract.length > 0) {
-      wordrot.extractWords(postsToExtract)
+      wordrotRef.current.extractWords(postsToExtract)
     }
-  }, [wordrot, items])
+  }, [items])
 
   if (loading && events.length === 0) return <Loading />
 
@@ -243,10 +253,10 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
               onShareOption={handleShareOption}
               getDisplayName={getDisplayName}
               getAvatarUrl={getAvatarUrl}
-              wordrotWords={wordrot?.getWords(event.id)}
-              wordrotCollected={wordrot?.collectedWords}
-              wordrotImages={wordrot?.wordImages}
-              onWordCollect={wordrot?.collect}
+              wordrotWords={wordrotGetWords?.(event.id)}
+              wordrotCollected={wordrotCollected}
+              wordrotImages={wordrotImages}
+              onWordCollect={wordrotCollect}
             />
           </Fragment>
         )

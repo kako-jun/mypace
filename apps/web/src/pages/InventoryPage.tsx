@@ -347,7 +347,7 @@ export function InventoryPage() {
 
       <div className={`inventory-header ${textClass}`}>
         <h2>Inventory</h2>
-        <p>Your Color Stella balance, Supernovas, and Word Collection.</p>
+        <p>Your Color Stella balance, Supernovas, and Wordrot Collection.</p>
       </div>
 
       {/* Tab Navigation */}
@@ -596,13 +596,12 @@ export function InventoryPage() {
               {/* Word Collection */}
               <div className="inventory-words-section">
                 <h3>
-                  <Icon name="BookOpen" size={20} /> Word Collection ({wordrotUniqueCount} types, {wordrotTotalCount}{' '}
-                  total)
+                  <Icon name="FlaskConical" size={20} /> Wordrot ({wordrotUniqueCount} types, {wordrotTotalCount} total)
                 </h3>
 
                 {wordrotInventory.length === 0 ? (
                   <div className="inventory-words-empty">
-                    <Icon name="Sparkles" size={32} />
+                    <Icon name="FlaskConical" size={32} />
                     <p>No words collected yet.</p>
                     <p className="inventory-words-hint">Click on highlighted words in posts to collect them!</p>
                   </div>

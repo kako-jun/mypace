@@ -137,7 +137,6 @@
   margin-bottom: 0.75rem;
 }
 
-
 .inventory-connect-button {
   padding: 0.75rem 1.5rem;
   border: 2px solid #000;
@@ -169,7 +168,9 @@
   font-size: 0.85rem;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .inventory-disconnect-button:hover {
@@ -595,7 +596,7 @@
   }
 
   .inventory-tab span {
-    display: none;
+    display: inline;
   }
 
   .inventory-words-grid {
@@ -603,4 +604,3 @@
     gap: 0.5rem;
   }
 }
-

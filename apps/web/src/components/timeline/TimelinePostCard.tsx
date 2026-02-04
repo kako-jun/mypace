@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { Icon, parseEmojiTags } from '../ui'
 import '../../styles/components/post-card.css'
 import { getEventThemeColors, getThemeCardProps, EMPTY_STELLA_COUNTS } from '../../lib/nostr/events'
@@ -57,7 +57,7 @@ interface TimelinePostCardProps {
   onWordCollect?: (word: string, eventId: string) => void
 }
 
-export default function TimelinePostCard({
+export default memo(function TimelinePostCard({
   event,
   originalEvent,
   repostedBy,
@@ -321,4 +321,4 @@ export default function TimelinePostCard({
       </article>
     </div>
   )
-}
+})
