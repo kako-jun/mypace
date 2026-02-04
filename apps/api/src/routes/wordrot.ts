@@ -94,15 +94,49 @@ vibrant colors,
 centered composition,
 no text or labels`
 
+// Helper: Clean content before noun extraction
+// Removes URLs, code blocks, hashtags, mentions - elements that shouldn't be word sources
+function cleanContentForExtraction(content: string): string {
+  let cleaned = content
+
+  // Remove code blocks (```...```)
+  cleaned = cleaned.replace(/```[\s\S]*?```/g, '')
+
+  // Remove inline code (`...`)
+  cleaned = cleaned.replace(/`[^`]+`/g, '')
+
+  // Remove URLs
+  cleaned = cleaned.replace(/https?:\/\/[^\s]+/g, '')
+
+  // Remove nostr: mentions (npub, note, nevent, nprofile, naddr)
+  cleaned = cleaned.replace(/nostr:[a-z0-9]+/gi, '')
+
+  // Remove hashtags
+  cleaned = cleaned.replace(/#[\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+/g, '')
+
+  // Clean up extra whitespace
+  cleaned = cleaned.replace(/\s+/g, ' ').trim()
+
+  return cleaned
+}
+
 // Helper: Extract nouns using Workers AI
 async function extractNouns(ai: Bindings['AI'], content: string): Promise<string[]> {
   try {
+    // Clean content before extraction
+    const cleanedContent = cleanContentForExtraction(content)
+
+    // Skip if nothing left after cleaning
+    if (!cleanedContent || cleanedContent.length < 2) {
+      return []
+    }
+
     // Use any to avoid strict type checking on model names
     const response = await (ai as any).run('@cf/meta/llama-3.1-8b-instruct', {
       messages: [
         {
           role: 'user',
-          content: EXTRACT_NOUNS_PROMPT + `"${content}"`,
+          content: EXTRACT_NOUNS_PROMPT + `"${cleanedContent}"`,
         },
       ],
       max_tokens: 500,
