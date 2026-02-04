@@ -340,11 +340,10 @@ console.log('  (paste the hex secret key)')
 ```bash
 # Cloudflare Workers secrets として設定（wrangler.tomlには書かない）
 wrangler secret put REPORTER_SECRET_KEY
-# → hex形式の秘密鍵を入力
-
-wrangler secret put REPORTER_PUBLIC_KEY
-# → hex形式の公開鍵を入力
+# → hex形式の秘密鍵を入力（64文字）
 ```
+
+公開鍵は秘密鍵から導出できるため、環境変数は秘密鍵のみで十分。
 
 ### types.ts への追加
 
@@ -356,8 +355,7 @@ export type Bindings = {
   // ... 既存の環境変数 ...
 
   // Reporter account for Shared Article Quote
-  REPORTER_SECRET_KEY?: string  // hex形式
-  REPORTER_PUBLIC_KEY?: string  // hex形式
+  REPORTER_SECRET_KEY?: string  // hex形式（64文字）
 }
 ```
 
@@ -369,8 +367,8 @@ export type Bindings = {
 │                                         │
 │ 環境変数（wrangler secret）:            │
 │   REPORTER_SECRET_KEY = "0123..."      │ ← hex形式（64文字）
-│   REPORTER_PUBLIC_KEY = "fedc..."      │ ← hex形式（64文字）
 │                                         │
+│ 公開鍵は getPublicKey(sk) で導出        │
 │ ※ シークレットはWrangler secretsで管理  │
 └─────────────────────────────────────────┘
 ```
@@ -389,13 +387,12 @@ const app = new Hono<{ Bindings: Bindings }>()
 app.post('/quote', async (c) => {
   const { url } = await c.req.json<{ url: string }>()
 
-  // 1. 環境変数から記者アカウントの鍵を取得
+  // 1. 環境変数から秘密鍵を取得し、公開鍵を導出
   const sk = c.env.REPORTER_SECRET_KEY
-  const pk = c.env.REPORTER_PUBLIC_KEY
-
-  if (!sk || !pk) {
+  if (!sk) {
     return c.json({ error: 'reporter_not_configured' }, 500)
   }
+  const pk = getPublicKey(hexToBytes(sk))
 
   // 2. 既存の引用投稿を確認（D1キャッシュ）
   const existing = await findExistingQuote(c.env.DB, url)
