@@ -14,7 +14,6 @@ import TeaserPicker from './TeaserPicker'
 import { getDisplayName } from '../../lib/utils'
 import { LIMITS } from '../../lib/constants'
 import { STELLA_COLORS, type StellaColor } from '../../lib/nostr/events'
-import { isNip07Missing } from '../../lib/nostr/keys'
 
 interface PostFormLongModeProps {
   content: string
@@ -133,8 +132,6 @@ export function PostFormLongMode({
     [processFileImport]
   )
 
-  const nip07Missing = isNip07Missing()
-
   return (
     <div className={`long-mode-container ${showPreview ? 'with-preview' : 'no-preview'}`}>
       <TextButton variant="primary" className="long-mode-exit-button" onClick={onLongModeToggle}>
@@ -144,17 +141,9 @@ export function PostFormLongMode({
       <div className="long-mode-editor-pane">
         <form
           ref={longModeFormRef}
-          className={`post-form long-mode ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''} ${nip07Missing ? 'nip07-missing' : ''}`}
+          className={`post-form long-mode ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
           onSubmit={onSubmit}
         >
-          {nip07Missing && (
-            <div className="nip07-missing-banner">
-              Warning: NIP-07 extension missing. Please reinstall or{' '}
-              <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('open-settings'))}>
-                import your key
-              </button>
-            </div>
-          )}
           {editingEvent &&
             (() => {
               // Check if the event being edited is a reply (has e tag with root/reply marker)

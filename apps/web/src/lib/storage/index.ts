@@ -371,6 +371,7 @@ export function migrateFromLegacy(): void {
     },
     auth: {
       sk: oldSk,
+      useNip07: false,
     },
     cache: {
       profile: oldProfile ? JSON.parse(oldProfile) : null,

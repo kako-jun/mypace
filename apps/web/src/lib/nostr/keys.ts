@@ -1,5 +1,12 @@
 import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
-import { getSecretKey, setSecretKey, clearSecretKey as clearStoredSecretKey, getUseNip07, setUseNip07 } from '../storage'
+import {
+  getSecretKey,
+  setSecretKey,
+  clearSecretKey as clearStoredSecretKey,
+  getUseNip07,
+  setUseNip07,
+  clearCachedProfile,
+} from '../storage'
 
 declare global {
   interface Window {
@@ -49,9 +56,11 @@ export function getOrCreateSecretKey(): Uint8Array {
     throw new Error('Cannot access localStorage on server')
   }
 
-  // Prevent accidental key generation when NIP-07 was enabled but extension is missing
+  // When NIP-07 was enabled but extension is now missing, reset to fresh state
+  // This treats the user as a first-time user, showing ProfileSetup screen
   if (isNip07Missing()) {
-    throw new Error('NIP-07 extension is missing. Please reinstall the extension or import your secret key.')
+    disableNip07()
+    clearCachedProfile()
   }
 
   const stored = getSecretKey()
