@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Icon } from '../ui'
 import { MagazineCard } from './MagazineCard'
 import { MagazineEditor } from './MagazineEditor'
@@ -15,9 +16,19 @@ interface MagazineSectionProps {
 }
 
 export function MagazineSection({ pubkey, isOwnProfile }: MagazineSectionProps) {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [magazines, setMagazines] = useState<Magazine[]>([])
   const [loading, setLoading] = useState(true)
   const [showEditor, setShowEditor] = useState(false)
+
+  // Handle createMagazine query parameter
+  useEffect(() => {
+    if (isOwnProfile && searchParams.get('createMagazine') === 'true') {
+      setShowEditor(true)
+      searchParams.delete('createMagazine')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [isOwnProfile, searchParams, setSearchParams])
 
   const loadMagazines = useCallback(async () => {
     setLoading(true)
