@@ -561,95 +561,101 @@ CREATE TABLE article_quotes (
 CREATE INDEX idx_quotes_event_id ON article_quotes(event_id);
 ```
 
-### キャッシュ戦略
+### 全体フロー（シーケンス図）
 
-1. **GET時**: D1を先に検索 → ヒットしたらそのまま返却 → ミスならリレー検索
-2. **POST時**: リレーに公開 → D1にキャッシュ保存
-3. **リプライ数**: Cronジョブで定期更新（1時間ごと）
-
-### キャッシュミス時のリレー検索
-
-D1にキャッシュがない場合、Nostrリレーから引用投稿を検索する：
-
-```typescript
-async function findQuoteFromRelay(url: string, reporterPubkey: string): Promise<Event | null> {
-  const urlHash = hashUrl(url)
-
-  // 方法1: url-hashタグで検索（推奨）
-  const filter = {
-    kinds: [1],
-    authors: [reporterPubkey],
-    '#url-hash': [urlHash],
-    limit: 1
-  }
-
-  // 方法2: authorsのみで検索し、クライアント側でフィルタ
-  // （リレーが#url-hashをサポートしない場合のフォールバック）
-  const fallbackFilter = {
-    kinds: [1],
-    authors: [reporterPubkey],
-    '#t': ['mypace-quote'],
-    limit: 100
-  }
-
-  const events = await fetchFromRelays(filter)
-  return events[0] || null
-}
+```
+ユーザーA                フロントエンド              API                    D1              Nostrリレー
+   │                        │                      │                      │                   │
+   │ 1. /intent/quote?url=X │                      │                      │                   │
+   │───────────────────────→│                      │                      │                   │
+   │                        │ 2. POST /api/quote   │                      │                   │
+   │                        │     { url: X }       │                      │                   │
+   │                        │─────────────────────→│                      │                   │
+   │                        │                      │ 3. SELECT by url_hash│                   │
+   │                        │                      │─────────────────────→│                   │
+   │                        │                      │      (見つからない)   │                   │
+   │                        │                      │←─────────────────────│                   │
+   │                        │                      │                      │                   │
+   │                        │                      │ 4. 記者アカウントで署名                    │
+   │                        │                      │─────────────────────────────────────────→│
+   │                        │                      │                      │  5. イベント公開  │
+   │                        │                      │←─────────────────────────────────────────│
+   │                        │                      │                      │                   │
+   │                        │                      │ 6. INSERT キャッシュ │                   │
+   │                        │                      │─────────────────────→│                   │
+   │                        │                      │←─────────────────────│                   │
+   │                        │                      │                      │                   │
+   │                        │ 7. 引用投稿を返却    │                      │                   │
+   │                        │←─────────────────────│                      │                   │
+   │                        │                      │                      │                   │
+   │ 8. リプライフォーム表示│                      │                      │                   │
+   │←───────────────────────│                      │                      │                   │
+   │                        │                      │                      │                   │
+   │ 9. 感想を入力して投稿  │                      │                      │                   │
+   │───────────────────────→│ (通常のリプライ投稿) │                      │                   │
 ```
 
-**注意**: リレー検索でヒットした場合は、D1にキャッシュを書き戻す。
+### 2人目以降のユーザー（同じURLを引用）
 
-### 競合制御（Race Condition）
-
-同時に複数ユーザーが同じURLを引用しようとした場合の対策：
-
-```sql
--- INSERT OR IGNORE で重複を防止
-INSERT OR IGNORE INTO article_quotes (url_hash, url, event_id, ...)
-VALUES (?, ?, ?, ...);
 ```
-
-```typescript
-app.post('/quote', async (c) => {
-  const { url } = await c.req.json<{ url: string }>()
-  const urlHash = hashUrl(url)
-
-  // 1. まずD1に存在確認
-  const existing = await findExistingQuote(c.env.DB, urlHash)
-  if (existing) {
-    return c.json({ found: true, event: existing })
-  }
-
-  // 2. リレーにも確認（他インスタンスが作成済みの可能性）
-  const fromRelay = await findQuoteFromRelay(url, reporterPubkey)
-  if (fromRelay) {
-    // D1にキャッシュして返却
-    await saveQuoteToCache(c.env.DB, url, fromRelay, extractOGP(fromRelay))
-    return c.json({ found: true, event: fromRelay })
-  }
-
-  // 3. 新規作成
-  const signedEvent = await createAndPublishQuote(url, c.env)
-
-  // 4. D1に保存（INSERT OR IGNORE で競合を無視）
-  try {
-    await saveQuoteToCache(c.env.DB, url, signedEvent, ogp)
-  } catch (e) {
-    // 競合が発生した場合、既存のものを返す
-    const raceWinner = await findExistingQuote(c.env.DB, urlHash)
-    if (raceWinner) {
-      return c.json({ found: true, event: raceWinner })
-    }
-  }
-
-  return c.json({ success: true, event: signedEvent })
-})
+ユーザーB                フロントエンド              API                    D1
+   │                        │                      │                      │
+   │ 1. /intent/quote?url=X │                      │                      │
+   │───────────────────────→│                      │                      │
+   │                        │ 2. POST /api/quote   │                      │
+   │                        │     { url: X }       │                      │
+   │                        │─────────────────────→│                      │
+   │                        │                      │ 3. SELECT by url_hash│
+   │                        │                      │─────────────────────→│
+   │                        │                      │      (見つかった！)   │
+   │                        │                      │←─────────────────────│
+   │                        │                      │                      │
+   │                        │ 4. 既存の引用投稿を返却                      │
+   │                        │←─────────────────────│                      │
+   │                        │                      │                      │
+   │ 5. リプライフォーム表示│                      │                      │
+   │←───────────────────────│                      │                      │
+   │                        │                      │                      │
+   │ 6. 感想を入力して投稿  │                      │                      │
+   │───────────────────────→│ (既存の引用投稿へのリプライ)                 │
 ```
 
 **ポイント:**
-- D1の`INSERT OR IGNORE`で重複挿入を防止
-- リレーへの公開は冪等ではないが、同じURLに対して複数の引用投稿が作られても、D1キャッシュが正となる
-- 最悪ケースでも「少し余分な引用投稿がリレーに残る」だけで、ユーザー体験には影響しない
+- 1人目: D1に無い → 記者アカウントで新規作成 → D1にキャッシュ
+- 2人目以降: D1にある → そのまま返却（新規作成しない）
+- 全員が同じ引用投稿にリプライするので、感想がスレッドに集約される
+
+### 同時アクセス時の競合制御
+
+2人が全く同時に同じURLを引用しようとした場合：
+
+```
+ユーザーA                 ユーザーB                  API                    D1
+   │                        │                      │                      │
+   │ POST /api/quote url=X  │                      │                      │
+   │───────────────────────────────────────────────→│                      │
+   │                        │ POST /api/quote url=X│                      │
+   │                        │─────────────────────→│                      │
+   │                        │                      │                      │
+   │                        │                      │ A: SELECT → 無い     │
+   │                        │                      │ B: SELECT → 無い     │
+   │                        │                      │                      │
+   │                        │                      │ A: 署名して公開      │
+   │                        │                      │ B: 署名して公開 (重複)│
+   │                        │                      │                      │
+   │                        │                      │ A: INSERT → 成功     │
+   │                        │                      │ B: INSERT OR IGNORE  │
+   │                        │                      │    → 無視される      │
+   │                        │                      │                      │
+   │                        │                      │ B: SELECT → Aのを取得│
+   │←─────────(Aの投稿)─────────────────────────────│                      │
+   │                        │←────(Aの投稿)────────│                      │
+```
+
+**結果:**
+- リレーには2つの引用投稿が残るが、D1にはAのものだけが保存される
+- BにもAの引用投稿が返されるので、両者とも同じスレッドにリプライする
+- ユーザー体験には影響なし
 
 ## UI/UX設計
 
