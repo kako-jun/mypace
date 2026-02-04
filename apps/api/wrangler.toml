@@ -21,6 +21,10 @@ VAPID_SUBJECT = "https://mypace.llll-ll.com"  # Web Push送信者識別子
 # wrangler secret put VAPID_PUBLIC_KEY
 # wrangler secret put VAPID_PRIVATE_KEY
 
+# Workers AI binding for Word Alchemy
+[ai]
+binding = "AI"
+
 [observability.logs]
 enabled = true
 invocation_logs = true
