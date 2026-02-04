@@ -23,6 +23,7 @@ import {
   supernovas,
   magazine,
   wordrot,
+  reporter,
 } from './routes'
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -67,6 +68,7 @@ app.route('/api/stella-balance', stellaBalance)
 app.route('/api/supernovas', supernovas)
 app.route('/api/magazine', magazine)
 app.route('/api/wordrot', wordrot)
+app.route('/api/npc/reporter', reporter)
 
 // Well-known
 app.route('/.well-known', wellKnown)

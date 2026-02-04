@@ -698,3 +698,79 @@ export async function fetchWordrotLeaderboard(): Promise<{
     return { topDiscoverers: [], popularWords: [], recentWords: [] }
   }
 }
+
+// ==================== NPC REPORTER ====================
+
+export interface ReporterQuote {
+  event: Event
+  metadata: {
+    title: string | null
+    description: string | null
+    image: string | null
+    replyCount?: number
+  }
+}
+
+// Check if quote already exists for URL
+export async function getReporterQuote(url: string): Promise<{ found: boolean; quote?: ReporterQuote }> {
+  try {
+    const res = await fetch(`${API_BASE}/api/npc/reporter?url=${encodeURIComponent(url)}`)
+    if (!res.ok) return { found: false }
+    const data = await res.json()
+    if (data.found) {
+      return {
+        found: true,
+        quote: {
+          event: data.event,
+          metadata: data.metadata,
+        },
+      }
+    }
+    return { found: false }
+  } catch {
+    return { found: false }
+  }
+}
+
+// Create new quote post via reporter NPC
+export async function createReporterQuote(url: string): Promise<{
+  success: boolean
+  quote?: ReporterQuote
+  error?: string
+  eventId?: string
+}> {
+  try {
+    const res = await fetch(`${API_BASE}/api/npc/reporter`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    })
+    const data = await res.json()
+
+    if (data.success) {
+      return {
+        success: true,
+        quote: {
+          event: data.event,
+          metadata: data.metadata,
+        },
+      }
+    }
+
+    // Already exists case
+    if (data.error === 'already_exists') {
+      return {
+        success: true,
+        eventId: data.eventId,
+        quote: {
+          event: data.event,
+          metadata: data.metadata,
+        },
+      }
+    }
+
+    return { success: false, error: data.error || 'Unknown error' }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Network error' }
+  }
+}

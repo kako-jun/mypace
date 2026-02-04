@@ -4,6 +4,7 @@ import { Icon } from '../ui/Icon'
 import { Settings } from '../settings'
 import { FilterPanel } from '../filter'
 import { NotificationPanel } from '../notification'
+import { NPCModal } from '../npc'
 import { loadFiltersFromStorage, getMutedPubkeys } from '../../lib/utils'
 import { CUSTOM_EVENTS } from '../../lib/constants'
 import { getStoredThemeColors, isDarkColor } from '../../lib/nostr/theme'
@@ -14,6 +15,7 @@ export function Layout() {
   const navigate = useNavigate()
   const [showFilterPanel, setShowFilterPanel] = useState(false)
   const [showNotificationPanel, setShowNotificationPanel] = useState(false)
+  const [showNPCModal, setShowNPCModal] = useState(false)
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false)
   const [headerCornerClass, setHeaderCornerClass] = useState('')
   const [starAnimationPhase, setStarAnimationPhase] = useState<'initial' | 'normal'>('initial')
@@ -142,6 +144,9 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
       <header className="header">
+        <button className="npc-button" onClick={() => setShowNPCModal(true)} aria-label="NPC">
+          NPC
+        </button>
         <a href="/" className="logo" onClick={handleLogoClick}>
           <img src="/static/logo-text.webp" alt="MY PACE" className="logo-img" />
           <img
@@ -190,6 +195,7 @@ export function Layout() {
       <main className="main-content">
         <Outlet />
       </main>
+      <NPCModal isOpen={showNPCModal} onClose={() => setShowNPCModal(false)} />
     </div>
   )
 }

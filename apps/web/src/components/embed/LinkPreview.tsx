@@ -1,18 +1,27 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Icon, ExternalLink } from '../ui'
-import { fetchOgpByUrls } from '../../lib/api'
+import { fetchOgpByUrls, createReporterQuote } from '../../lib/api'
 import type { OgpData } from '../../types'
 
 interface LinkPreviewProps {
   url: string
   ogpData?: OgpData // Pre-fetched OGP data from batch API
   enableFallback?: boolean // Enable fetching if ogpData not provided (for direct page access)
+  showQuoteButton?: boolean // Show "Quote" button for reporter NPC
 }
 
-export default function LinkPreview({ url, ogpData, enableFallback = false }: LinkPreviewProps) {
+export default function LinkPreview({
+  url,
+  ogpData,
+  enableFallback = false,
+  showQuoteButton = false,
+}: LinkPreviewProps) {
+  const navigate = useNavigate()
   const [ogp, setOgp] = useState<OgpData | undefined>(ogpData)
   const [loading, setLoading] = useState(!ogpData && enableFallback)
   const [imageError, setImageError] = useState(false)
+  const [quoting, setQuoting] = useState(false)
 
   // Fetch OGP only if enableFallback is true (e.g., direct access to detail page)
   useEffect(() => {
@@ -46,6 +55,23 @@ export default function LinkPreview({ url, ogpData, enableFallback = false }: Li
     displayDomain = new URL(url).hostname
   } catch {
     displayDomain = url
+  }
+
+  // Handle quote button click
+  const handleQuoteClick = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (quoting) return
+
+    setQuoting(true)
+    try {
+      const result = await createReporterQuote(url)
+      if (result.success && result.quote) {
+        navigate(`/post/${result.quote.event.id}`)
+      }
+    } finally {
+      setQuoting(false)
+    }
   }
 
   // Loading state
@@ -84,6 +110,11 @@ export default function LinkPreview({ url, ogpData, enableFallback = false }: Li
           <Icon name="Link" size={12} />
           {ogp.siteName || displayDomain}
         </span>
+        {showQuoteButton && (
+          <button className="embed-link-quote-btn" onClick={handleQuoteClick} disabled={quoting}>
+            📰 {quoting ? '...' : '引用させる'}
+          </button>
+        )}
       </div>
     </ExternalLink>
   )

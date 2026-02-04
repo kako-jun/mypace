@@ -11,6 +11,7 @@ import { UploadHistoryPage } from './pages/UploadHistoryPage'
 import { InventoryPage } from './pages/InventoryPage'
 import { EmbedPage } from './pages/EmbedPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { ReporterIntentPage } from './pages/ReporterIntentPage'
 import { PostModal } from './components/post'
 import { CelebrationProvider } from './components/supernova'
 import { WordCelebrationProvider, WordrotProvider } from './components/wordrot'
@@ -51,6 +52,7 @@ export default function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/intent/post" element={<HomePage />} />
+              <Route path="/intent/npc/reporter" element={<ReporterIntentPage />} />
               <Route path="/post/:id" element={<PostPage />} />
               <Route path="/user/:pubkey" element={<UserPage />} />
               <Route path="/user/:npub/magazine/:slug" element={<MagazinePage />} />
