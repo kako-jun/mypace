@@ -125,6 +125,7 @@ CREATE TABLE IF NOT EXISTS wordrot_words (
   id TEXT PRIMARY KEY,           -- UUID
   text TEXT NOT NULL UNIQUE,     -- 単語テキスト（正規化済み）
   image_url TEXT,                -- 生成された画像URL
+  image_hash TEXT,               -- SHA-256 hash (NIP-96削除用)
   image_status TEXT DEFAULT 'pending',  -- pending/generating/done/failed
   discovered_by TEXT,            -- 最初に登録したユーザーのpubkey
   discovered_at INTEGER NOT NULL,
@@ -421,15 +422,51 @@ Workers AI (LLaMA 3.1 8B) を使用。
 
 Workers AI (Stable Diffusion XL) を使用。
 
-プロンプト例:
+#### プロンプト設計
+
+単語の種類によってプロンプトを調整:
 
 ```
-A cute chibi pixel art character representing "{word}",
-2-head-tall proportions, simple background,
-game sprite style, square format
+# キャラクター系（人物、キャラ名など）
+A cute chibi pixel art character of "{word}",
+2-head-tall proportions, simple solid color background,
+game sprite style, facing forward, centered, 128x128
+
+# オブジェクト系（物、道具など）
+A cute pixel art icon of "{word}",
+simple design, solid color background,
+game item style, centered, 128x128
+
+# 抽象概念系（今日、明日、天気など）
+A cute pixel art symbol representing "{word}",
+simple metaphorical design, solid color background,
+game icon style, centered, 128x128
 ```
 
-生成後、nostr.build APIでアップロード。
+> 実装時: LLMで単語を「character/object/abstract」に分類してからプロンプト選択。
+
+#### アップロード
+
+[NIP-96](https://github.com/nostr-protocol/nips/blob/master/96.md)準拠でnostr.buildにアップロード。
+
+**認証**:
+- アプリ専用のnsec（環境変数 `WORDROT_NSEC`）を使用
+- NIP-98でAuthorization headerを生成
+- ユーザーのnsecは使用しない（サーバーサイドで処理するため）
+
+**削除用情報の保持**:
+- アップロード成功時、`image_hash`（SHA-256）を`wordrot_words`テーブルに保存
+- 失敗時やリトライ時に古い画像を削除可能
+
+```sql
+-- wordrot_words テーブルに追加
+image_hash TEXT,  -- SHA-256 hash for NIP-96 delete
+```
+
+**エラーハンドリング**:
+1. 生成失敗 → `image_status = 'failed'`、リトライキューへ
+2. アップロード失敗 → 生成済み画像は破棄、リトライキューへ
+3. 成功 → `image_url`と`image_hash`を保存、`image_status = 'done'`
 
 ## 今後の拡張候補
 
