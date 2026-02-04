@@ -8,7 +8,7 @@
 
 Shared Article Quoteでは：
 - **記者アカウント**が記事を代表して引用投稿
-- ユーザーはその引用投稿への**リプライ**として感想を投稿
+- ユーザーはその引用投稿への**リプライ**として感想を投稿（既存のリプライ機能）
 - 同じ記事への感想が**1つのスレッド**に集約される
 
 はてなブックマークの「ファーストブクマ」や、スレッド掲示板のように、誰でも記事を引用させ、感想スレッドの起点を作れる。
@@ -46,87 +46,45 @@ Shared Article Quoteでは：
 |------|------|
 | 記者アカウント | MY PACEが管理する共通のシステムアカウント。記事引用専用 |
 | 引用投稿 | 記者アカウントが作成する、記事URL+メタデータを含むkind:1投稿 |
-| 感想リプライ | ユーザーが引用投稿に対して投稿するリプライ |
 | URLハッシュ | 引用投稿のユニーク性を保証するためのURL正規化ハッシュ |
 
-## Intent URL
+## ユーザー操作
 
-### 引用Intent
+### 記者に引用投稿を依頼する方法
+
+**TODO: 以下のどれにするか決める**
+
+#### 案1: 専用ボタン（投稿エディタ内）
+
+投稿エディタにURLを貼ると「記者に引用させる」ボタンが出現。
+
+```
+┌─────────────────────────────────────────┐
+│ https://shonenjumpplus.com/episode/xxx  │
+│                                         │
+│ [📰 記者に引用させる]  [そのまま投稿]    │
+└─────────────────────────────────────────┘
+```
+
+#### 案2: 外部からのIntent URL
+
+外部サイトからのリンク経由で引用投稿を作成。
 
 ```
 https://mypace.llll-ll.com/intent/quote?url=記事URL
 ```
 
-#### パラメータ
+→ アクセスすると引用投稿が作られ、投稿詳細ページにリダイレクト
 
-| パラメータ | 必須 | 説明 |
-|-----------|------|------|
-| `url` | ○ | 引用する記事のURL（URLエンコード必須） |
-| `comment` | - | 感想の初期テキスト（任意） |
+#### 案3: 既存OGPカードにボタン追加
 
-### 使用例
+タイムライン上のOGPカードに「記者に引用させる」ボタンを追加。
 
-```html
-<!-- 外部サイトのシェアボタン -->
-<a href="https://mypace.llll-ll.com/intent/quote?url=https://shonenjumpplus.com/episode/xxx">
-  MY PACEで感想を書く
-</a>
-```
+---
 
-```javascript
-// JavaScript（動的）
-function shareToMypaceQuote(comment = '') {
-  const params = new URLSearchParams({
-    url: location.href,
-    ...(comment && { comment })
-  })
-  window.open(`https://mypace.llll-ll.com/intent/quote?${params}`, '_blank')
-}
-```
-
-## 動作フロー
-
-### 1. 新規引用（記事が未登録の場合）
-
-```
-ユーザー: /intent/quote?url=https://example.com/article にアクセス
-    │
-    ▼
-フロントエンド: GET /api/quote?url=... で既存の引用投稿を検索
-    │
-    ▼ 見つからない
-    │
-フロントエンド: POST /api/quote { url } で引用投稿の作成をリクエスト
-    │
-    ▼
-API:
-  1. URLからOGP情報を取得（タイトル、説明、画像）
-  2. 記者アカウントで引用投稿を作成・署名
-  3. Nostrリレーに公開
-  4. 引用投稿のイベントIDを返却
-    │
-    ▼
-フロントエンド: リプライフォームを表示（引用投稿への返信として）
-    │
-    ▼
-ユーザー: 感想を入力して投稿
-```
-
-### 2. 既存引用への追加（記事が登録済みの場合）
-
-```
-ユーザー: /intent/quote?url=https://example.com/article にアクセス
-    │
-    ▼
-フロントエンド: GET /api/quote?url=... で既存の引用投稿を検索
-    │
-    ▼ 見つかった
-    │
-フロントエンド: 既存の引用投稿を取得
-    │
-    ▼
-フロントエンド: リプライフォームを表示（既存の引用投稿への返信として）
-```
+**決まっていること:**
+- 引用投稿を作成するのはAPIの仕事
+- リプライはユーザーが既存機能で手動で行う
 
 ## API仕様
 
@@ -438,106 +396,6 @@ app.post('/quote', async (c) => {
 - フロントエンドはURLを送るだけで、署名には関与しない
 - VAPID鍵と同様に `wrangler secret` で安全に管理
 
-## フロントエンド実装
-
-### ルーティング
-
-```typescript
-// App.tsx
-<Route path="/intent/quote" element={<QuoteIntentPage />} />
-```
-
-### QuoteIntentPage
-
-```typescript
-// pages/QuoteIntentPage.tsx
-export function QuoteIntentPage() {
-  const [searchParams] = useSearchParams()
-  const url = searchParams.get('url')
-  const initialComment = searchParams.get('comment') || ''
-
-  const [quoteEvent, setQuoteEvent] = useState<Event | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!url) {
-      setError('URLが指定されていません')
-      setLoading(false)
-      return
-    }
-
-    fetchOrCreateQuote(url)
-      .then(setQuoteEvent)
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [url])
-
-  if (loading) return <LoadingSpinner />
-  if (error) return <ErrorMessage message={error} />
-
-  // 引用投稿が取得できたら、リプライフォームを表示
-  return (
-    <QuoteReplyView
-      quoteEvent={quoteEvent}
-      initialContent={initialComment}
-    />
-  )
-}
-```
-
-### QuoteReplyView
-
-```typescript
-// components/quote/QuoteReplyView.tsx
-export function QuoteReplyView({ quoteEvent, initialContent }: Props) {
-  return (
-    <div className="quote-reply-view">
-      {/* 引用投稿のプレビュー */}
-      <QuotePreviewCard event={quoteEvent} />
-
-      {/* 既存の感想リプライ一覧 */}
-      <QuoteReplies quoteEventId={quoteEvent.id} />
-
-      {/* リプライフォーム */}
-      <PostForm
-        replyTo={quoteEvent}
-        initialContent={initialContent}
-        placeholder="この記事への感想を書く..."
-      />
-    </div>
-  )
-}
-```
-
-### QuotePreviewCard
-
-```typescript
-// components/quote/QuotePreviewCard.tsx
-export function QuotePreviewCard({ event }: { event: Event }) {
-  const ogp = extractOGPFromTags(event.tags)
-  const url = event.tags.find(t => t[0] === 'r')?.[1]
-
-  return (
-    <div className="quote-preview-card">
-      <div className="quote-reporter">
-        <ReporterAvatar />
-        <span>📰 MY PACE Reporter</span>
-      </div>
-
-      <a href={url} target="_blank" rel="noopener noreferrer">
-        {ogp.image && <img src={ogp.image} alt="" className="ogp-image" />}
-        <div className="ogp-content">
-          <h3>{ogp.title}</h3>
-          {ogp.description && <p>{ogp.description}</p>}
-          <span className="ogp-url">{new URL(url).hostname}</span>
-        </div>
-      </a>
-    </div>
-  )
-}
-```
-
 ## D1データベース（キャッシュ）
 
 APIレスポンス高速化のため、D1に引用投稿をキャッシュ。
@@ -559,159 +417,6 @@ CREATE TABLE article_quotes (
 );
 
 CREATE INDEX idx_quotes_event_id ON article_quotes(event_id);
-```
-
-### 全体フロー（シーケンス図）
-
-```
-ユーザーA                フロントエンド              API                    D1              Nostrリレー
-   │                        │                      │                      │                   │
-   │ 1. /intent/quote?url=X │                      │                      │                   │
-   │───────────────────────→│                      │                      │                   │
-   │                        │ 2. POST /api/quote   │                      │                   │
-   │                        │     { url: X }       │                      │                   │
-   │                        │─────────────────────→│                      │                   │
-   │                        │                      │ 3. SELECT by url_hash│                   │
-   │                        │                      │─────────────────────→│                   │
-   │                        │                      │      (見つからない)   │                   │
-   │                        │                      │←─────────────────────│                   │
-   │                        │                      │                      │                   │
-   │                        │                      │ 4. 記者アカウントで署名                    │
-   │                        │                      │─────────────────────────────────────────→│
-   │                        │                      │                      │  5. イベント公開  │
-   │                        │                      │←─────────────────────────────────────────│
-   │                        │                      │                      │                   │
-   │                        │                      │ 6. INSERT キャッシュ │                   │
-   │                        │                      │─────────────────────→│                   │
-   │                        │                      │←─────────────────────│                   │
-   │                        │                      │                      │                   │
-   │                        │ 7. 引用投稿を返却    │                      │                   │
-   │                        │←─────────────────────│                      │                   │
-   │                        │                      │                      │                   │
-   │ 8. リプライフォーム表示│                      │                      │                   │
-   │←───────────────────────│                      │                      │                   │
-   │                        │                      │                      │                   │
-   │ 9. 感想を入力して投稿  │                      │                      │                   │
-   │───────────────────────→│ (通常のリプライ投稿) │                      │                   │
-```
-
-### 2人目以降のユーザー（同じURLを引用）
-
-```
-ユーザーB                フロントエンド              API                    D1
-   │                        │                      │                      │
-   │ 1. /intent/quote?url=X │                      │                      │
-   │───────────────────────→│                      │                      │
-   │                        │ 2. POST /api/quote   │                      │
-   │                        │     { url: X }       │                      │
-   │                        │─────────────────────→│                      │
-   │                        │                      │ 3. SELECT by url_hash│
-   │                        │                      │─────────────────────→│
-   │                        │                      │      (見つかった！)   │
-   │                        │                      │←─────────────────────│
-   │                        │                      │                      │
-   │                        │ 4. 既存の引用投稿を返却                      │
-   │                        │←─────────────────────│                      │
-   │                        │                      │                      │
-   │ 5. リプライフォーム表示│                      │                      │
-   │←───────────────────────│                      │                      │
-   │                        │                      │                      │
-   │ 6. 感想を入力して投稿  │                      │                      │
-   │───────────────────────→│ (既存の引用投稿へのリプライ)                 │
-```
-
-**ポイント:**
-- 1人目: D1に無い → 記者アカウントで新規作成 → D1にキャッシュ
-- 2人目以降: D1にある → そのまま返却（新規作成しない）
-- 全員が同じ引用投稿にリプライするので、感想がスレッドに集約される
-
-### 同時アクセス時の競合制御
-
-2人が全く同時に同じURLを引用しようとした場合：
-
-```
-ユーザーA                 ユーザーB                  API                    D1
-   │                        │                      │                      │
-   │ POST /api/quote url=X  │                      │                      │
-   │───────────────────────────────────────────────→│                      │
-   │                        │ POST /api/quote url=X│                      │
-   │                        │─────────────────────→│                      │
-   │                        │                      │                      │
-   │                        │                      │ A: SELECT → 無い     │
-   │                        │                      │ B: SELECT → 無い     │
-   │                        │                      │                      │
-   │                        │                      │ A: 署名して公開      │
-   │                        │                      │ B: 署名して公開 (重複)│
-   │                        │                      │                      │
-   │                        │                      │ A: INSERT → 成功     │
-   │                        │                      │ B: INSERT OR IGNORE  │
-   │                        │                      │    → 無視される      │
-   │                        │                      │                      │
-   │                        │                      │ B: SELECT → Aのを取得│
-   │←─────────(Aの投稿)─────────────────────────────│                      │
-   │                        │←────(Aの投稿)────────│                      │
-```
-
-**結果:**
-- リレーには2つの引用投稿が残るが、D1にはAのものだけが保存される
-- BにもAの引用投稿が返されるので、両者とも同じスレッドにリプライする
-- ユーザー体験には影響なし
-
-## UI/UX設計
-
-### 引用Intentページ
-
-```
-┌─────────────────────────────────────────────────┐
-│ MY PACE                              [×] 閉じる │
-├─────────────────────────────────────────────────┤
-│                                                 │
-│ ┌─────────────────────────────────────────────┐ │
-│ │ 📰 MY PACE Reporter                         │ │
-│ │                                             │ │
-│ │ ┌─────────────────────────────────────────┐ │ │
-│ │ │ [OGP画像]                               │ │ │
-│ │ │ 記事タイトル                            │ │ │
-│ │ │ 記事の説明文...                         │ │ │
-│ │ │ shonenjumpplus.com                      │ │ │
-│ │ └─────────────────────────────────────────┘ │ │
-│ └─────────────────────────────────────────────┘ │
-│                                                 │
-│ 💬 みんなの感想 (15件)                          │
-│ ┌─────────────────────────────────────────────┐ │
-│ │ [アバター] ユーザーA · 3時間前              │ │
-│ │ 面白かった！主人公の成長が良い              │ │
-│ └─────────────────────────────────────────────┘ │
-│ ┌─────────────────────────────────────────────┐ │
-│ │ [アバター] ユーザーB · 2時間前              │ │
-│ │ 絵がきれいで読みやすい                      │ │
-│ └─────────────────────────────────────────────┘ │
-│                                                 │
-│ ┌─────────────────────────────────────────────┐ │
-│ │ この記事への感想を書く...                   │ │
-│ │                                             │ │
-│ │                                             │ │
-│ │                              [投稿] ボタン  │ │
-│ └─────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────┘
-```
-
-### タイムラインでの表示
-
-引用投稿への感想リプライは、タイムラインで以下のように表示：
-
-```
-┌─────────────────────────────────────────────────┐
-│ [ユーザーアバター] ユーザー名 · 時刻            │
-│                                                 │
-│ 面白かった！主人公の成長が良い                  │
-│                                                 │
-│ 📰 返信先: 記事タイトル                         │ ← クリックで引用投稿へ
-│ ┌─────────────────────────────────────────────┐ │
-│ │ [OGP画像小] 記事タイトル                    │ │
-│ │ shonenjumpplus.com                          │ │
-│ └─────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────┘
 ```
 
 ## セキュリティ考慮
@@ -785,15 +490,12 @@ LIMIT 20
 - `📰 MY PACE 動画`
 - `📰 MY PACE ニュース`
 
-## 関連ファイル
+## 関連ファイル（実装時）
 
 | ファイル | 役割 |
 |---------|------|
 | `apps/api/src/routes/quote.ts` | 引用API実装 |
-| `apps/web/src/pages/QuoteIntentPage.tsx` | Intent処理ページ |
-| `apps/web/src/components/quote/QuotePreviewCard.tsx` | 引用プレビューカード |
-| `apps/web/src/components/quote/QuoteReplies.tsx` | 感想リプライ一覧 |
-| `apps/web/src/lib/api/quote.ts` | APIクライアント |
+| フロントエンド | TODO: ユーザー操作の案が決まり次第 |
 
 ## 関連
 
