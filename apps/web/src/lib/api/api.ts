@@ -579,6 +579,28 @@ export async function extractNouns(eventId: string, content: string): Promise<{ 
   }
 }
 
+// Extract nouns from multiple posts (batch)
+export interface BatchExtractionResult {
+  results: Record<string, { words: string[]; cached: boolean }>
+  stats: { total: number; cached: number; extracted: number }
+}
+
+export async function extractNounsBatch(
+  posts: Array<{ eventId: string; content: string }>
+): Promise<BatchExtractionResult> {
+  try {
+    const res = await fetch(`${API_BASE}/api/wordrot/extract-batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ posts }),
+    })
+    if (!res.ok) return { results: {}, stats: { total: 0, cached: 0, extracted: 0 } }
+    return res.json()
+  } catch {
+    return { results: {}, stats: { total: 0, cached: 0, extracted: 0 } }
+  }
+}
+
 // Collect a word from a post
 export async function collectWord(
   pubkey: string,

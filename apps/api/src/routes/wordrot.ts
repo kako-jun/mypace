@@ -249,6 +249,93 @@ wordrot.post('/extract', async (c) => {
   return c.json({ words, cached: false })
 })
 
+// POST /api/wordrot/extract-batch - Extract nouns from multiple posts
+wordrot.post('/extract-batch', async (c) => {
+  const body = await c.req.json<{ posts: Array<{ eventId: string; content: string }> }>()
+  const { posts } = body
+
+  if (!posts || !Array.isArray(posts) || posts.length === 0) {
+    return c.json({ error: 'posts array is required' }, 400)
+  }
+
+  // Limit batch size
+  if (posts.length > 20) {
+    return c.json({ error: 'Maximum 20 posts per batch' }, 400)
+  }
+
+  const db = c.env.DB
+  const now = getCurrentTimestamp()
+
+  // Check cache for all events
+  const eventIds = posts.map((p) => p.eventId)
+  const placeholders = eventIds.map(() => '?').join(',')
+  const cachedResults = await db
+    .prepare(`SELECT event_id, words_json FROM wordrot_event_words WHERE event_id IN (${placeholders})`)
+    .bind(...eventIds)
+    .all<{ event_id: string; words_json: string }>()
+
+  const cachedMap = new Map<string, string[]>()
+  for (const row of cachedResults.results || []) {
+    cachedMap.set(row.event_id, JSON.parse(row.words_json))
+  }
+
+  // Find posts that need extraction
+  const uncachedPosts = posts.filter((p) => !cachedMap.has(p.eventId))
+
+  // Extract words for uncached posts
+  const extractedMap = new Map<string, string[]>()
+
+  if (uncachedPosts.length > 0) {
+    // Process in parallel with concurrency limit
+    const CONCURRENCY = 3
+    for (let i = 0; i < uncachedPosts.length; i += CONCURRENCY) {
+      const batch = uncachedPosts.slice(i, i + CONCURRENCY)
+      const results = await Promise.all(
+        batch.map(async (post) => {
+          const words = await extractNouns(c.env.AI, post.content)
+          return { eventId: post.eventId, words }
+        })
+      )
+
+      for (const { eventId, words } of results) {
+        extractedMap.set(eventId, words)
+      }
+    }
+
+    // Cache all extracted results
+    for (const [eventId, words] of extractedMap) {
+      await db
+        .prepare(
+          `INSERT OR REPLACE INTO wordrot_event_words (event_id, words_json, analyzed_at)
+           VALUES (?, ?, ?)`
+        )
+        .bind(eventId, JSON.stringify(words), now)
+        .run()
+    }
+  }
+
+  // Build response
+  const results: Record<string, { words: string[]; cached: boolean }> = {}
+  for (const post of posts) {
+    if (cachedMap.has(post.eventId)) {
+      results[post.eventId] = { words: cachedMap.get(post.eventId)!, cached: true }
+    } else if (extractedMap.has(post.eventId)) {
+      results[post.eventId] = { words: extractedMap.get(post.eventId)!, cached: false }
+    } else {
+      results[post.eventId] = { words: [], cached: false }
+    }
+  }
+
+  return c.json({
+    results,
+    stats: {
+      total: posts.length,
+      cached: cachedMap.size,
+      extracted: extractedMap.size,
+    },
+  })
+})
+
 // POST /api/wordrot/collect - Collect a word
 wordrot.post('/collect', async (c) => {
   const body = await c.req.json<{ pubkey: string; word: string; eventId?: string }>()

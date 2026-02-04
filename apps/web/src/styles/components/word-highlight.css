@@ -1,0 +1,105 @@
+/* Word highlight styling for wordrot collection */
+
+.wordrot-highlight {
+  /* Reset button styles */
+  all: unset;
+  cursor: pointer;
+  display: inline;
+  font: inherit;
+  color: inherit;
+
+  /* Highlight styling */
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.15) 0%,
+    rgba(99, 102, 241, 0.15) 100%
+  );
+  border-radius: 3px;
+  padding: 0 2px;
+  margin: 0 1px;
+
+  /* Subtle underline */
+  text-decoration: underline;
+  text-decoration-color: rgba(139, 92, 246, 0.4);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+
+  /* Transition */
+  transition: all 0.15s ease;
+}
+
+.wordrot-highlight:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.3) 0%,
+    rgba(99, 102, 241, 0.3) 100%
+  );
+  text-decoration-color: rgba(139, 92, 246, 0.8);
+}
+
+.wordrot-highlight:active {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.4) 0%,
+    rgba(99, 102, 241, 0.4) 100%
+  );
+  transform: scale(0.98);
+}
+
+/* Already collected state */
+.wordrot-highlight.collected {
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.15) 0%,
+    rgba(74, 222, 128, 0.15) 100%
+  );
+  text-decoration-color: rgba(34, 197, 94, 0.4);
+}
+
+.wordrot-highlight.collected:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.25) 0%,
+    rgba(74, 222, 128, 0.25) 100%
+  );
+  text-decoration-color: rgba(34, 197, 94, 0.7);
+}
+
+/* Glow animation for first discovery */
+@keyframes wordrot-glow {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(139, 92, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
+  }
+}
+
+.wordrot-highlight.new-discovery {
+  animation: wordrot-glow 1.5s ease-in-out infinite;
+}
+
+/* Light theme adjustments */
+.light-text .wordrot-highlight {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.25) 0%,
+    rgba(99, 102, 241, 0.25) 100%
+  );
+}
+
+.light-text .wordrot-highlight:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.4) 0%,
+    rgba(99, 102, 241, 0.4) 100%
+  );
+}
+
+.light-text .wordrot-highlight.collected {
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.25) 0%,
+    rgba(74, 222, 128, 0.25) 100%
+  );
+}
