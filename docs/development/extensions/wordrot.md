@@ -47,31 +47,32 @@
 ### タイムライン表示時
 
 ```
-1. タイムライン読み込み（50件）
+1. タイムライン読み込み（最大50件）
    ↓
 2. 投稿を画面に表示（この時点ではハイライトなし）
    ↓
-3. 並行して: POST /api/wordrot/batch
-   - eventIds: 表示中の50件のID
-   - contents: 各投稿の本文
-   - pubkey: 閲覧ユーザー
+3. 並行して:
+   a. POST /api/wordrot/extract-batch
+      - posts: [{ eventId, content }, ...]
+   b. GET /api/wordrot/inventory/:pubkey
+      - ユーザーの収集済み単語を取得
    ↓
-4. API側処理:
+4. extract-batch API側処理:
    - wordrot_event_words テーブルをチェック
    - キャッシュ済み → 即座に返す
-   - 未抽出 → LLMで名詞抽出（同期）
-   - ユーザーのインベントリも取得
+   - 未抽出 → LLMで名詞抽出（並列3件ずつ）
+   - 結果をキャッシュに保存
    ↓
 5. レスポンス:
    {
-     words: { eventId1: ["単語A", "単語B"], ... },
-     collected: ["単語A", ...]  // ユーザーが既に持っている
+     results: { eventId1: { words: [...], cached: true/false }, ... },
+     stats: { total, cached, extracted }
    }
    ↓
-6. State更新 → 全投稿のハイライトが一斉に表示
+6. State更新 → 投稿下部に収集可能な単語を表示
 ```
 
-**重要**: ハイライトは段階的に増えない。全件揃ってから一斉表示。
+**注意**: 単語は投稿の下にタグとして表示。収集済みは緑、未収集は紫。
 
 ### 単語収集時
 
@@ -183,23 +184,22 @@ CREATE TABLE IF NOT EXISTS wordrot_image_queue (
 
 ## API仕様（Phase 1）
 
-### バッチ単語取得
+### バッチ単語抽出
 
-タイムライン表示時に呼び出す。
+タイムライン表示時に呼び出す。最大50件まで。
 
 ```
-POST /api/wordrot/batch
+POST /api/wordrot/extract-batch
 ```
 
 リクエスト:
 
 ```json
 {
-  "events": [
+  "posts": [
     { "eventId": "abc123", "content": "今日マリオカートで..." },
     { "eventId": "def456", "content": "ルイージ最高！" }
-  ],
-  "pubkey": "user_pubkey_here"
+  ]
 }
 ```
 
@@ -207,18 +207,19 @@ POST /api/wordrot/batch
 
 ```json
 {
-  "words": {
-    "abc123": ["今日", "マリオ", "カート"],
-    "def456": ["ルイージ"]
+  "results": {
+    "abc123": { "words": ["今日", "マリオ", "カート"], "cached": false },
+    "def456": { "words": ["ルイージ"], "cached": true }
   },
-  "collected": ["マリオ"],
-  "wordImages": {
-    "マリオ": "https://nostr.build/xxx.png",
-    "カート": "https://nostr.build/yyy.png",
-    "ルイージ": "https://nostr.build/zzz.png"
+  "stats": {
+    "total": 2,
+    "cached": 1,
+    "extracted": 1
   }
 }
 ```
+
+**注意**: ユーザーの収集済み単語は別途インベントリAPIで取得する。
 
 ### 単語収集
 
@@ -241,15 +242,26 @@ POST /api/wordrot/collect
 ```json
 {
   "word": {
-    "id": "word_uuid",
+    "id": 123,
     "text": "ルイージ",
-    "imageUrl": "https://nostr.build/yyy.png"
+    "image_url": "https://nostr.build/yyy.png",
+    "image_status": "done",
+    "discovered_by": "pubkey...",
+    "discovered_at": 1234567890,
+    "discovery_count": 5,
+    "synthesis_count": 0
   },
-  "isFirstEver": false
+  "isNew": true,
+  "isFirstEver": false,
+  "count": 1
 }
 ```
 
-**注意**: 収集済みの単語はUI側でクリック不可にするため、重複リクエストは発生しない。
+- `isNew`: このユーザーにとって初めての収集か
+- `isFirstEver`: 全ユーザーで初の発見か（発見者になる）
+- `count`: このユーザーの収集数
+
+**注意**: 収集済みの単語もクリック可能（重複収集でcount増加）。
 
 ### 単語合成【Phase 2】
 

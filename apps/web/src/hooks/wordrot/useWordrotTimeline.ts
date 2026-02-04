@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { extractNounsBatch, collectWord, fetchWordrotInventory } from '../../lib/api/api'
 import { getCurrentPubkey } from '../../lib/nostr/events'
-import { useWordCelebration, type WordCollectResult } from '../../components/wordrot/WordCollectCelebration'
+import { useWordCelebration } from '../../components/wordrot/WordCollectCelebration'
 
 interface PostData {
   eventId: string
@@ -25,14 +25,8 @@ export function useWordrotTimeline() {
   // Track pending extraction requests to avoid duplicates
   const pendingExtraction = useRef<Set<string>>(new Set())
 
-  // Get celebration context
-  let celebrate: ((result: WordCollectResult) => void) | null = null
-  try {
-    const celebrationContext = useWordCelebration()
-    celebrate = celebrationContext.celebrate
-  } catch {
-    // Context not available - celebration won't show
-  }
+  // Get celebration context (always available since WordrotProvider is inside WordCelebrationProvider)
+  const { celebrate } = useWordCelebration()
 
   // Load current user's pubkey and collected words on mount
   useEffect(() => {
