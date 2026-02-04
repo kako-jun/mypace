@@ -35,6 +35,11 @@
   border-color: #3d9;
 }
 
+/* Button element specific styles */
+button.wordrot-highlight {
+  cursor: pointer;
+}
+
 .wordrot-highlight:active {
   position: relative;
   top: 1px;
@@ -52,6 +57,7 @@
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
   vertical-align: baseline;
+  color: inherit;
 }
 
 /* Glow animation for first discovery */
