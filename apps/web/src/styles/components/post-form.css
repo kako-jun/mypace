@@ -72,6 +72,42 @@
   max-width: 200px;
 }
 
+/* Post mode selector (Post / NPC toggle) */
+.post-mode-selector {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  width: fit-content;
+}
+
+.post-mode-tab {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.post-mode-tab:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.post-mode-tab.active {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+.post-mode-tab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* Long mode */
 .post-form.long-mode {
   position: static;
