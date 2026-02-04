@@ -287,33 +287,126 @@ function hashUrl(url: string): string {
 - 記事引用投稿のみを行う（感想は書かない）
 - プロフィール名: `📰 MY PACE Reporter` など
 
-### 鍵管理
+### アーキテクチャ
+
+```
+┌─────────────┐     POST /api/quote      ┌──────────────────────────────────┐
+│ フロント    │ ───────────────────────→ │ Cloudflare Workers (API)         │
+│ エンド      │     { url: "..." }       │                                  │
+└─────────────┘                          │ 1. OGP取得                       │
+                                         │ 2. REPORTER_SECRET_KEY で署名    │
+                                         │ 3. Nostrリレーに公開             │
+                                         └──────────────────────────────────┘
+```
+
+フロントエンドはURLを送るだけ。署名はすべてサーバー側で行う。
+
+### 鍵の生成
+
+```bash
+# 1. 新しいNostr鍵ペアを生成（nostr-toolsを使用）
+npx tsx apps/api/scripts/generate-reporter-keys.ts
+
+# 出力例:
+# Secret Key (hex): 0123456789abcdef...
+# Public Key (hex): fedcba9876543210...
+# nsec: nsec1...
+# npub: npub1...
+```
+
+生成スクリプト例:
+
+```typescript
+// apps/api/scripts/generate-reporter-keys.ts
+import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
+import { nsecEncode, npubEncode } from 'nostr-tools/nip19'
+import { bytesToHex } from '@noble/hashes/utils'
+
+const sk = generateSecretKey()
+const pk = getPublicKey(sk)
+
+console.log('Secret Key (hex):', bytesToHex(sk))
+console.log('Public Key (hex):', pk)
+console.log('nsec:', nsecEncode(sk))
+console.log('npub:', npubEncode(pk))
+console.log('')
+console.log('Set as Cloudflare Workers secrets:')
+console.log('  wrangler secret put REPORTER_SECRET_KEY')
+console.log('  (paste the hex secret key)')
+```
+
+### 環境変数設定
+
+```bash
+# Cloudflare Workers secrets として設定（wrangler.tomlには書かない）
+wrangler secret put REPORTER_SECRET_KEY
+# → hex形式の秘密鍵を入力
+
+wrangler secret put REPORTER_PUBLIC_KEY
+# → hex形式の公開鍵を入力
+```
+
+### types.ts への追加
+
+```typescript
+// apps/api/src/types.ts
+export type Bindings = {
+  DB: D1Database
+  AI: Ai
+  // ... 既存の環境変数 ...
+
+  // Reporter account for Shared Article Quote
+  REPORTER_SECRET_KEY?: string  // hex形式
+  REPORTER_PUBLIC_KEY?: string  // hex形式
+}
+```
+
+### 鍵管理の図
 
 ```
 ┌─────────────────────────────────────────┐
 │ Cloudflare Workers                      │
 │                                         │
-│ 環境変数:                               │
-│   REPORTER_SECRET_KEY = "nsec1..."     │
-│   REPORTER_PUBLIC_KEY = "npub1..."     │
+│ 環境変数（wrangler secret）:            │
+│   REPORTER_SECRET_KEY = "0123..."      │ ← hex形式（64文字）
+│   REPORTER_PUBLIC_KEY = "fedc..."      │ ← hex形式（64文字）
 │                                         │
 │ ※ シークレットはWrangler secretsで管理  │
 └─────────────────────────────────────────┘
 ```
 
-```bash
-# 環境変数の設定
-wrangler secret put REPORTER_SECRET_KEY
-```
-
 ### 署名フロー
 
 ```typescript
-// api/src/routes/quote.ts
-async function createQuoteEvent(url: string, ogp: OGPData, env: Env) {
-  const sk = env.REPORTER_SECRET_KEY
-  const pk = getPublicKey(hexToBytes(sk))
+// apps/api/src/routes/quote.ts
+import { Hono } from 'hono'
+import { finalizeEvent, getPublicKey } from 'nostr-tools/pure'
+import { hexToBytes } from '@noble/hashes/utils'
+import type { Bindings } from '../types'
 
+const app = new Hono<{ Bindings: Bindings }>()
+
+app.post('/quote', async (c) => {
+  const { url } = await c.req.json<{ url: string }>()
+
+  // 1. 環境変数から記者アカウントの鍵を取得
+  const sk = c.env.REPORTER_SECRET_KEY
+  const pk = c.env.REPORTER_PUBLIC_KEY
+
+  if (!sk || !pk) {
+    return c.json({ error: 'reporter_not_configured' }, 500)
+  }
+
+  // 2. 既存の引用投稿を確認（D1キャッシュ）
+  const existing = await findExistingQuote(c.env.DB, url)
+  if (existing) {
+    return c.json({ found: true, event: existing })
+  }
+
+  // 3. OGP情報を取得
+  const ogp = await fetchOGP(url)
+
+  // 4. 記者アカウントで署名
   const event = {
     kind: 1,
     pubkey: pk,
@@ -332,10 +425,21 @@ async function createQuoteEvent(url: string, ogp: OGPData, env: Env) {
   }
 
   const signedEvent = finalizeEvent(event, hexToBytes(sk))
+
+  // 5. Nostrリレーに公開
   await publishToRelays(signedEvent)
-  return signedEvent
-}
+
+  // 6. D1にキャッシュ保存
+  await saveQuoteToCache(c.env.DB, url, signedEvent, ogp)
+
+  return c.json({ success: true, event: signedEvent })
+})
 ```
+
+**ポイント:**
+- 秘密鍵はサーバー側の環境変数にのみ存在
+- フロントエンドはURLを送るだけで、署名には関与しない
+- VAPID鍵と同様に `wrangler secret` で安全に管理
 
 ## フロントエンド実装
 
