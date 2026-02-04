@@ -3,15 +3,15 @@
 
 /* Reset ALL button/element styles first, then apply consistent styling */
 .wordrot-highlight {
-  /* Complete reset */
+  /* Complete reset - inherit all from parent */
   appearance: none;
-  background: none;
+  background: transparent;
   border: none;
   padding: 0;
   margin: 0;
   font: inherit;
   color: inherit;
-  line-height: normal;
+  line-height: inherit;
   text-align: center;
   text-decoration: none;
   white-space: nowrap;
