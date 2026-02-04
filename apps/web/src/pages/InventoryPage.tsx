@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BackButton, Icon, Loading } from '../components/ui'
 import { useCelebration } from '../components/supernova'
-import { WordCard, SynthesisPanel } from '../components/alchemy'
-import { useWordAlchemy } from '../hooks/alchemy'
+import { WordCard } from '../components/wordrot'
+// SynthesisPanel is Phase 2
+// import { SynthesisPanel } from '../components/wordrot'
+import { useWordrot } from '../hooks/wordrot'
 import { getThemeCardProps, STELLA_COLORS } from '../lib/nostr/events'
 import { getThemeColors } from '../lib/storage'
 import { getCurrentPubkey } from '../lib/nostr/events'
@@ -26,7 +28,7 @@ import '../styles/pages/inventory.css'
 // Stella color order for display (yellow excluded - infinite use)
 const STELLA_COLOR_ORDER = ['green', 'red', 'blue', 'purple'] as const
 
-type TabType = 'stella' | 'alchemy'
+type TabType = 'stella' | 'wordrot'
 
 export function InventoryPage() {
   const navigate = useNavigate()
@@ -50,14 +52,15 @@ export function InventoryPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Word Alchemy state
+  // Wordrot state
   const {
-    inventory: alchemyInventory,
-    totalCount: alchemyTotalCount,
-    uniqueCount: alchemyUniqueCount,
-    isLoadingInventory: alchemyLoading,
-    loadInventory: loadAlchemyInventory,
-  } = useWordAlchemy()
+    inventory: wordrotInventory,
+    totalCount: wordrotTotalCount,
+    uniqueCount: wordrotUniqueCount,
+    isLoadingInventory: wordrotLoading,
+    // loadInventory is used in Phase 2 SynthesisPanel
+    loadInventory: _loadWordrotInventory,
+  } = useWordrot()
 
   useEffect(() => {
     const loadData = async () => {
@@ -357,12 +360,12 @@ export function InventoryPage() {
           <span>Stella</span>
         </button>
         <button
-          className={`inventory-tab ${activeTab === 'alchemy' ? 'active' : ''}`}
-          onClick={() => setActiveTab('alchemy')}
+          className={`inventory-tab ${activeTab === 'wordrot' ? 'active' : ''}`}
+          onClick={() => setActiveTab('wordrot')}
         >
           <Icon name="FlaskConical" size={16} />
-          <span>Alchemy</span>
-          {alchemyUniqueCount > 0 && <span className="inventory-tab-badge">{alchemyUniqueCount}</span>}
+          <span>Wordrot</span>
+          {wordrotUniqueCount > 0 && <span className="inventory-tab-badge">{wordrotUniqueCount}</span>}
         </button>
       </div>
 
@@ -572,32 +575,32 @@ export function InventoryPage() {
         </>
       )}
 
-      {/* Alchemy Tab Content */}
-      {activeTab === 'alchemy' && (
-        <div className="inventory-alchemy-tab">
-          {alchemyLoading ? (
+      {/* Wordrot Tab Content */}
+      {activeTab === 'wordrot' && (
+        <div className="inventory-wordrot-tab">
+          {wordrotLoading ? (
             <div className="inventory-loading">
               <Loading />
             </div>
           ) : (
             <>
-              {/* Synthesis Panel */}
-              <SynthesisPanel
-                inventory={alchemyInventory}
+              {/* Synthesis Panel - Phase 2 */}
+              {/* <SynthesisPanel
+                inventory={wordrotInventory}
                 onSynthesisComplete={() => {
                   // Refresh inventory after synthesis
-                  loadAlchemyInventory()
+                  _loadWordrotInventory()
                 }}
-              />
+              /> */}
 
               {/* Word Collection */}
               <div className="inventory-words-section">
                 <h3>
-                  <Icon name="BookOpen" size={20} /> Word Collection ({alchemyUniqueCount} types, {alchemyTotalCount}{' '}
+                  <Icon name="BookOpen" size={20} /> Word Collection ({wordrotUniqueCount} types, {wordrotTotalCount}{' '}
                   total)
                 </h3>
 
-                {alchemyInventory.length === 0 ? (
+                {wordrotInventory.length === 0 ? (
                   <div className="inventory-words-empty">
                     <Icon name="Sparkles" size={32} />
                     <p>No words collected yet.</p>
@@ -605,7 +608,7 @@ export function InventoryPage() {
                   </div>
                 ) : (
                   <div className="inventory-words-grid">
-                    {alchemyInventory.map((item) => (
+                    {wordrotInventory.map((item) => (
                       <WordCard key={item.word.id} word={item.word} count={item.count} />
                     ))}
                   </div>

@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../ui'
-import type { AlchemyWord } from '../../lib/api'
+import type { WordrotWord } from '../../lib/api'
 import '../../styles/components/word-collect-celebration.css'
 
 // Context for managing celebration queue
 export interface WordCollectResult {
-  word: AlchemyWord
+  word: WordrotWord
   isNew: boolean
   isFirstEver: boolean
   count: number
@@ -159,7 +159,7 @@ function WordCollectCelebrationModal({ result, isVisible, onClose }: WordCollect
         <p className="word-count">{count === 1 ? 'Added to collection!' : `x${count} in collection`}</p>
 
         {/* Inventory link */}
-        <Link to="/inventory?tab=alchemy" className="word-inventory-link" onClick={onClose}>
+        <Link to="/inventory?tab=wordrot" className="word-inventory-link" onClick={onClose}>
           View in Inventory
         </Link>
 
@@ -178,7 +178,7 @@ export function WordCard({
   selected,
   size = 'normal',
 }: {
-  word: AlchemyWord
+  word: WordrotWord
   count?: number
   onClick?: () => void
   selected?: boolean

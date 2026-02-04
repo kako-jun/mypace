@@ -529,9 +529,9 @@
   text-align: center;
 }
 
-/* ===================== Alchemy Tab ===================== */
+/* ===================== Wordrot Tab ===================== */
 
-.inventory-alchemy-tab {
+.inventory-wordrot-tab {
   display: flex;
   flex-direction: column;
   gap: 1rem;

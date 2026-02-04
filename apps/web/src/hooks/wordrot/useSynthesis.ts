@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react'
-import { synthesizeWords, type AlchemyWord } from '../../lib/api/api'
+import { synthesizeWords, type WordrotWord } from '../../lib/api/api'
 import { getStoredSecretKey, getPublicKeyFromSecret } from '../../lib/nostr/keys'
 
 export interface SynthesisResult {
-  result: AlchemyWord
+  result: WordrotWord
   isNewSynthesis: boolean
   isNewWord: boolean
   formula: string

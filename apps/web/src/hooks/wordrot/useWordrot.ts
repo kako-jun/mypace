@@ -2,16 +2,16 @@ import { useState, useCallback, useEffect } from 'react'
 import {
   extractNouns,
   collectWord,
-  fetchAlchemyInventory,
-  type AlchemyWord,
-  type UserAlchemyWord,
+  fetchWordrotInventory,
+  type WordrotWord,
+  type UserWordrotWord,
 } from '../../lib/api/api'
 import { getStoredSecretKey, getPublicKeyFromSecret } from '../../lib/nostr/keys'
 
 // Cache for extracted words per event
 const extractedWordsCache = new Map<string, string[]>()
 
-export interface UseWordAlchemyReturn {
+export interface UseWordrotReturn {
   // Extraction
   extractWords: (eventId: string, content: string) => Promise<string[]>
   getExtractedWords: (eventId: string) => string[] | undefined
@@ -21,7 +21,7 @@ export interface UseWordAlchemyReturn {
   isCollecting: boolean
 
   // Inventory
-  inventory: UserAlchemyWord[]
+  inventory: UserWordrotWord[]
   totalCount: number
   uniqueCount: number
   loadInventory: () => Promise<void>
@@ -33,16 +33,16 @@ export interface UseWordAlchemyReturn {
 }
 
 export interface CollectResult {
-  word: AlchemyWord
+  word: WordrotWord
   isNew: boolean
   isFirstEver: boolean
   count: number
 }
 
-export function useWordAlchemy(): UseWordAlchemyReturn {
+export function useWordrot(): UseWordrotReturn {
   const [pubkey, setPubkey] = useState<string | null>(null)
   const [isCollecting, setIsCollecting] = useState(false)
-  const [inventory, setInventory] = useState<UserAlchemyWord[]>([])
+  const [inventory, setInventory] = useState<UserWordrotWord[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [uniqueCount, setUniqueCount] = useState(0)
   const [isLoadingInventory, setIsLoadingInventory] = useState(false)
@@ -83,7 +83,7 @@ export function useWordAlchemy(): UseWordAlchemyReturn {
 
     setIsLoadingInventory(true)
     try {
-      const result = await fetchAlchemyInventory(pubkey)
+      const result = await fetchWordrotInventory(pubkey)
       setInventory(result.words)
       setTotalCount(result.totalCount)
       setUniqueCount(result.uniqueCount)

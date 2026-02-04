@@ -2,10 +2,10 @@ import { Hono } from 'hono'
 import type { Bindings } from '../types'
 import { getCurrentTimestamp } from '../utils'
 
-const alchemy = new Hono<{ Bindings: Bindings }>()
+const wordrot = new Hono<{ Bindings: Bindings }>()
 
 // Types
-interface AlchemyWord {
+interface WordrotWord {
   id: number
   text: string
   image_url: string | null
@@ -17,7 +17,7 @@ interface AlchemyWord {
 }
 
 interface UserWord {
-  word: AlchemyWord
+  word: WordrotWord
   count: number
   first_collected_at: number
   last_collected_at: number
@@ -212,8 +212,8 @@ async function uploadToNostrBuild(imageData: ArrayBuffer): Promise<string | null
   }
 }
 
-// POST /api/alchemy/extract - Extract nouns from post content
-alchemy.post('/extract', async (c) => {
+// POST /api/wordrot/extract - Extract nouns from post content
+wordrot.post('/extract', async (c) => {
   const body = await c.req.json<{ eventId: string; content: string }>()
   const { eventId, content } = body
 
@@ -226,7 +226,7 @@ alchemy.post('/extract', async (c) => {
 
   // Check cache first
   const cached = await db
-    .prepare(`SELECT words_json FROM alchemy_event_words WHERE event_id = ?`)
+    .prepare(`SELECT words_json FROM wordrot_event_words WHERE event_id = ?`)
     .bind(eventId)
     .first<{ words_json: string }>()
 
@@ -240,7 +240,7 @@ alchemy.post('/extract', async (c) => {
   // Cache result
   await db
     .prepare(
-      `INSERT OR REPLACE INTO alchemy_event_words (event_id, words_json, analyzed_at)
+      `INSERT OR REPLACE INTO wordrot_event_words (event_id, words_json, analyzed_at)
        VALUES (?, ?, ?)`
     )
     .bind(eventId, JSON.stringify(words), now)
@@ -249,8 +249,8 @@ alchemy.post('/extract', async (c) => {
   return c.json({ words, cached: false })
 })
 
-// POST /api/alchemy/collect - Collect a word
-alchemy.post('/collect', async (c) => {
+// POST /api/wordrot/collect - Collect a word
+wordrot.post('/collect', async (c) => {
   const body = await c.req.json<{ pubkey: string; word: string; eventId?: string }>()
   const { pubkey, word } = body
 
@@ -267,7 +267,7 @@ alchemy.post('/collect', async (c) => {
   const now = getCurrentTimestamp()
 
   // Get or create word
-  let wordRecord = await db.prepare(`SELECT * FROM alchemy_words WHERE text = ?`).bind(word).first<AlchemyWord>()
+  let wordRecord = await db.prepare(`SELECT * FROM wordrot_words WHERE text = ?`).bind(word).first<WordrotWord>()
 
   let isFirstEver = false
 
@@ -277,13 +277,13 @@ alchemy.post('/collect', async (c) => {
 
     await db
       .prepare(
-        `INSERT INTO alchemy_words (text, image_status, discovered_by, discovered_at, created_at)
+        `INSERT INTO wordrot_words (text, image_status, discovered_by, discovered_at, created_at)
          VALUES (?, 'pending', ?, ?, ?)`
       )
       .bind(word, pubkey, now, now)
       .run()
 
-    wordRecord = await db.prepare(`SELECT * FROM alchemy_words WHERE text = ?`).bind(word).first<AlchemyWord>()
+    wordRecord = await db.prepare(`SELECT * FROM wordrot_words WHERE text = ?`).bind(word).first<WordrotWord>()
 
     if (!wordRecord) {
       return c.json({ error: 'Failed to create word' }, 500)
@@ -294,14 +294,14 @@ alchemy.post('/collect', async (c) => {
   } else {
     // Increment discovery count
     await db
-      .prepare(`UPDATE alchemy_words SET discovery_count = discovery_count + 1 WHERE id = ?`)
+      .prepare(`UPDATE wordrot_words SET discovery_count = discovery_count + 1 WHERE id = ?`)
       .bind(wordRecord.id)
       .run()
   }
 
   // Add to user's collection
   const existingUserWord = await db
-    .prepare(`SELECT count FROM alchemy_user_words WHERE pubkey = ? AND word_id = ?`)
+    .prepare(`SELECT count FROM wordrot_user_words WHERE pubkey = ? AND word_id = ?`)
     .bind(pubkey, wordRecord.id)
     .first<{ count: number }>()
 
@@ -310,14 +310,14 @@ alchemy.post('/collect', async (c) => {
   if (existingUserWord) {
     await db
       .prepare(
-        `UPDATE alchemy_user_words SET count = count + 1, last_collected_at = ? WHERE pubkey = ? AND word_id = ?`
+        `UPDATE wordrot_user_words SET count = count + 1, last_collected_at = ? WHERE pubkey = ? AND word_id = ?`
       )
       .bind(now, pubkey, wordRecord.id)
       .run()
   } else {
     await db
       .prepare(
-        `INSERT INTO alchemy_user_words (pubkey, word_id, count, first_collected_at, last_collected_at, source)
+        `INSERT INTO wordrot_user_words (pubkey, word_id, count, first_collected_at, last_collected_at, source)
          VALUES (?, ?, 1, ?, ?, 'harvest')`
       )
       .bind(pubkey, wordRecord.id, now, now)
@@ -325,7 +325,7 @@ alchemy.post('/collect', async (c) => {
   }
 
   // Refresh word record to get latest data
-  wordRecord = await db.prepare(`SELECT * FROM alchemy_words WHERE id = ?`).bind(wordRecord.id).first<AlchemyWord>()
+  wordRecord = await db.prepare(`SELECT * FROM wordrot_words WHERE id = ?`).bind(wordRecord.id).first<WordrotWord>()
 
   return c.json({
     word: wordRecord,
@@ -344,13 +344,13 @@ async function generateWordImage(
 ): Promise<void> {
   try {
     // Mark as generating
-    await db.prepare(`UPDATE alchemy_words SET image_status = 'generating' WHERE id = ?`).bind(wordId).run()
+    await db.prepare(`UPDATE wordrot_words SET image_status = 'generating' WHERE id = ?`).bind(wordId).run()
 
     // Generate image
     const imageData = await generateImage(ai, wordText)
 
     if (!imageData) {
-      await db.prepare(`UPDATE alchemy_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
+      await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
       return
     }
 
@@ -358,23 +358,23 @@ async function generateWordImage(
     const imageUrl = await uploadToNostrBuild(imageData)
 
     if (!imageUrl) {
-      await db.prepare(`UPDATE alchemy_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
+      await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
       return
     }
 
     // Update word with image URL
     await db
-      .prepare(`UPDATE alchemy_words SET image_url = ?, image_status = 'done' WHERE id = ?`)
+      .prepare(`UPDATE wordrot_words SET image_url = ?, image_status = 'done' WHERE id = ?`)
       .bind(imageUrl, wordId)
       .run()
   } catch (e) {
     console.error('generateWordImage error:', e)
-    await db.prepare(`UPDATE alchemy_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
+    await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
   }
 }
 
-// POST /api/alchemy/synthesize - Synthesize words
-alchemy.post('/synthesize', async (c) => {
+// POST /api/wordrot/synthesize - Synthesize words
+wordrot.post('/synthesize', async (c) => {
   const body = await c.req.json<{
     pubkey: string
     wordA: string
@@ -398,9 +398,9 @@ alchemy.post('/synthesize', async (c) => {
 
   // Get word IDs
   const [wordARecord, wordBRecord, wordCRecord] = await Promise.all([
-    db.prepare(`SELECT * FROM alchemy_words WHERE text = ?`).bind(wordA).first<AlchemyWord>(),
-    db.prepare(`SELECT * FROM alchemy_words WHERE text = ?`).bind(wordB).first<AlchemyWord>(),
-    db.prepare(`SELECT * FROM alchemy_words WHERE text = ?`).bind(wordC).first<AlchemyWord>(),
+    db.prepare(`SELECT * FROM wordrot_words WHERE text = ?`).bind(wordA).first<WordrotWord>(),
+    db.prepare(`SELECT * FROM wordrot_words WHERE text = ?`).bind(wordB).first<WordrotWord>(),
+    db.prepare(`SELECT * FROM wordrot_words WHERE text = ?`).bind(wordC).first<WordrotWord>(),
   ])
 
   if (!wordARecord || !wordBRecord || !wordCRecord) {
@@ -410,15 +410,15 @@ alchemy.post('/synthesize', async (c) => {
   // Check if user owns all three words
   const [userA, userB, userC] = await Promise.all([
     db
-      .prepare(`SELECT count FROM alchemy_user_words WHERE pubkey = ? AND word_id = ?`)
+      .prepare(`SELECT count FROM wordrot_user_words WHERE pubkey = ? AND word_id = ?`)
       .bind(pubkey, wordARecord.id)
       .first<{ count: number }>(),
     db
-      .prepare(`SELECT count FROM alchemy_user_words WHERE pubkey = ? AND word_id = ?`)
+      .prepare(`SELECT count FROM wordrot_user_words WHERE pubkey = ? AND word_id = ?`)
       .bind(pubkey, wordBRecord.id)
       .first<{ count: number }>(),
     db
-      .prepare(`SELECT count FROM alchemy_user_words WHERE pubkey = ? AND word_id = ?`)
+      .prepare(`SELECT count FROM wordrot_user_words WHERE pubkey = ? AND word_id = ?`)
       .bind(pubkey, wordCRecord.id)
       .first<{ count: number }>(),
   ])
@@ -430,14 +430,14 @@ alchemy.post('/synthesize', async (c) => {
   // Check if synthesis already exists
   const existingSynthesis = await db
     .prepare(
-      `SELECT s.*, w.text as result_text FROM alchemy_syntheses s
-       JOIN alchemy_words w ON s.result_word_id = w.id
+      `SELECT s.*, w.text as result_text FROM wordrot_syntheses s
+       JOIN wordrot_words w ON s.result_word_id = w.id
        WHERE word_a_id = ? AND word_b_id = ? AND word_c_id = ?`
     )
     .bind(wordARecord.id, wordBRecord.id, wordCRecord.id)
     .first<{ result_word_id: number; result_text: string; use_count: number }>()
 
-  let resultWord: AlchemyWord | null = null
+  let resultWord: WordrotWord | null = null
   let isNewSynthesis = false
   let isNewWord = false
 
@@ -445,15 +445,15 @@ alchemy.post('/synthesize', async (c) => {
     // Use cached result
     await db
       .prepare(
-        `UPDATE alchemy_syntheses SET use_count = use_count + 1 WHERE word_a_id = ? AND word_b_id = ? AND word_c_id = ?`
+        `UPDATE wordrot_syntheses SET use_count = use_count + 1 WHERE word_a_id = ? AND word_b_id = ? AND word_c_id = ?`
       )
       .bind(wordARecord.id, wordBRecord.id, wordCRecord.id)
       .run()
 
     resultWord = await db
-      .prepare(`SELECT * FROM alchemy_words WHERE id = ?`)
+      .prepare(`SELECT * FROM wordrot_words WHERE id = ?`)
       .bind(existingSynthesis.result_word_id)
-      .first<AlchemyWord>()
+      .first<WordrotWord>()
   } else {
     // Perform synthesis with AI
     const resultText = await synthesizeWords(ai, wordA, wordB, wordC)
@@ -465,7 +465,7 @@ alchemy.post('/synthesize', async (c) => {
     isNewSynthesis = true
 
     // Get or create result word
-    resultWord = await db.prepare(`SELECT * FROM alchemy_words WHERE text = ?`).bind(resultText).first<AlchemyWord>()
+    resultWord = await db.prepare(`SELECT * FROM wordrot_words WHERE text = ?`).bind(resultText).first<WordrotWord>()
 
     if (!resultWord) {
       // Brand new word from synthesis
@@ -473,13 +473,13 @@ alchemy.post('/synthesize', async (c) => {
 
       await db
         .prepare(
-          `INSERT INTO alchemy_words (text, image_status, discovered_by, discovered_at, synthesis_count, created_at)
+          `INSERT INTO wordrot_words (text, image_status, discovered_by, discovered_at, synthesis_count, created_at)
            VALUES (?, 'pending', ?, ?, 1, ?)`
         )
         .bind(resultText, pubkey, now, now)
         .run()
 
-      resultWord = await db.prepare(`SELECT * FROM alchemy_words WHERE text = ?`).bind(resultText).first<AlchemyWord>()
+      resultWord = await db.prepare(`SELECT * FROM wordrot_words WHERE text = ?`).bind(resultText).first<WordrotWord>()
 
       if (resultWord) {
         // Queue image generation
@@ -488,7 +488,7 @@ alchemy.post('/synthesize', async (c) => {
     } else {
       // Word exists, increment synthesis count
       await db
-        .prepare(`UPDATE alchemy_words SET synthesis_count = synthesis_count + 1 WHERE id = ?`)
+        .prepare(`UPDATE wordrot_words SET synthesis_count = synthesis_count + 1 WHERE id = ?`)
         .bind(resultWord.id)
         .run()
     }
@@ -497,7 +497,7 @@ alchemy.post('/synthesize', async (c) => {
       // Record synthesis
       await db
         .prepare(
-          `INSERT INTO alchemy_syntheses (word_a_id, word_b_id, word_c_id, result_word_id, discovered_by, discovered_at)
+          `INSERT INTO wordrot_syntheses (word_a_id, word_b_id, word_c_id, result_word_id, discovered_by, discovered_at)
            VALUES (?, ?, ?, ?, ?, ?)`
         )
         .bind(wordARecord.id, wordBRecord.id, wordCRecord.id, resultWord.id, pubkey, now)
@@ -511,21 +511,21 @@ alchemy.post('/synthesize', async (c) => {
 
   // Add result to user's collection
   const existingUserWord = await db
-    .prepare(`SELECT count FROM alchemy_user_words WHERE pubkey = ? AND word_id = ?`)
+    .prepare(`SELECT count FROM wordrot_user_words WHERE pubkey = ? AND word_id = ?`)
     .bind(pubkey, resultWord.id)
     .first<{ count: number }>()
 
   if (existingUserWord) {
     await db
       .prepare(
-        `UPDATE alchemy_user_words SET count = count + 1, last_collected_at = ? WHERE pubkey = ? AND word_id = ?`
+        `UPDATE wordrot_user_words SET count = count + 1, last_collected_at = ? WHERE pubkey = ? AND word_id = ?`
       )
       .bind(now, pubkey, resultWord.id)
       .run()
   } else {
     await db
       .prepare(
-        `INSERT INTO alchemy_user_words (pubkey, word_id, count, first_collected_at, last_collected_at, source)
+        `INSERT INTO wordrot_user_words (pubkey, word_id, count, first_collected_at, last_collected_at, source)
          VALUES (?, ?, 1, ?, ?, 'synthesis')`
       )
       .bind(pubkey, resultWord.id, now, now)
@@ -540,8 +540,8 @@ alchemy.post('/synthesize', async (c) => {
   })
 })
 
-// GET /api/alchemy/inventory/:pubkey - Get user's word collection
-alchemy.get('/inventory/:pubkey', async (c) => {
+// GET /api/wordrot/inventory/:pubkey - Get user's word collection
+wordrot.get('/inventory/:pubkey', async (c) => {
   const pubkey = c.req.param('pubkey')
 
   if (!pubkey || pubkey.length !== 64) {
@@ -556,13 +556,13 @@ alchemy.get('/inventory/:pubkey', async (c) => {
          w.id, w.text, w.image_url, w.image_status, w.discovered_by, w.discovered_at,
          w.discovery_count, w.synthesis_count,
          uw.count, uw.first_collected_at, uw.last_collected_at, uw.source
-       FROM alchemy_user_words uw
-       JOIN alchemy_words w ON uw.word_id = w.id
+       FROM wordrot_user_words uw
+       JOIN wordrot_words w ON uw.word_id = w.id
        WHERE uw.pubkey = ?
        ORDER BY uw.last_collected_at DESC`
     )
     .bind(pubkey)
-    .all<AlchemyWord & { count: number; first_collected_at: number; last_collected_at: number; source: string }>()
+    .all<WordrotWord & { count: number; first_collected_at: number; last_collected_at: number; source: string }>()
 
   const words: UserWord[] = (result.results || []).map((row) => ({
     word: {
@@ -590,8 +590,8 @@ alchemy.get('/inventory/:pubkey', async (c) => {
   })
 })
 
-// GET /api/alchemy/word/:text - Get word details
-alchemy.get('/word/:text', async (c) => {
+// GET /api/wordrot/word/:text - Get word details
+wordrot.get('/word/:text', async (c) => {
   const text = decodeURIComponent(c.req.param('text'))
 
   if (!text) {
@@ -600,7 +600,7 @@ alchemy.get('/word/:text', async (c) => {
 
   const db = c.env.DB
 
-  const word = await db.prepare(`SELECT * FROM alchemy_words WHERE text = ?`).bind(text).first<AlchemyWord>()
+  const word = await db.prepare(`SELECT * FROM wordrot_words WHERE text = ?`).bind(text).first<WordrotWord>()
 
   if (!word) {
     return c.json({ error: 'Word not found' }, 404)
@@ -610,10 +610,10 @@ alchemy.get('/word/:text', async (c) => {
   const asResult = await db
     .prepare(
       `SELECT wa.text as word_a, wb.text as word_b, wc.text as word_c, s.use_count
-       FROM alchemy_syntheses s
-       JOIN alchemy_words wa ON s.word_a_id = wa.id
-       JOIN alchemy_words wb ON s.word_b_id = wb.id
-       JOIN alchemy_words wc ON s.word_c_id = wc.id
+       FROM wordrot_syntheses s
+       JOIN wordrot_words wa ON s.word_a_id = wa.id
+       JOIN wordrot_words wb ON s.word_b_id = wb.id
+       JOIN wordrot_words wc ON s.word_c_id = wc.id
        WHERE s.result_word_id = ?
        ORDER BY s.use_count DESC
        LIMIT 10`
@@ -625,11 +625,11 @@ alchemy.get('/word/:text', async (c) => {
   const asInput = await db
     .prepare(
       `SELECT wa.text as word_a, wb.text as word_b, wc.text as word_c, wr.text as result, s.use_count
-       FROM alchemy_syntheses s
-       JOIN alchemy_words wa ON s.word_a_id = wa.id
-       JOIN alchemy_words wb ON s.word_b_id = wb.id
-       JOIN alchemy_words wc ON s.word_c_id = wc.id
-       JOIN alchemy_words wr ON s.result_word_id = wr.id
+       FROM wordrot_syntheses s
+       JOIN wordrot_words wa ON s.word_a_id = wa.id
+       JOIN wordrot_words wb ON s.word_b_id = wb.id
+       JOIN wordrot_words wc ON s.word_c_id = wc.id
+       JOIN wordrot_words wr ON s.result_word_id = wr.id
        WHERE s.word_a_id = ? OR s.word_b_id = ? OR s.word_c_id = ?
        ORDER BY s.use_count DESC
        LIMIT 10`
@@ -644,15 +644,15 @@ alchemy.get('/word/:text', async (c) => {
   })
 })
 
-// GET /api/alchemy/leaderboard - Get discovery leaderboard
-alchemy.get('/leaderboard', async (c) => {
+// GET /api/wordrot/leaderboard - Get discovery leaderboard
+wordrot.get('/leaderboard', async (c) => {
   const db = c.env.DB
 
   // Top discoverers
   const discoverers = await db
     .prepare(
       `SELECT discovered_by as pubkey, COUNT(*) as count
-       FROM alchemy_words
+       FROM wordrot_words
        WHERE discovered_by IS NOT NULL
        GROUP BY discovered_by
        ORDER BY count DESC
@@ -664,7 +664,7 @@ alchemy.get('/leaderboard', async (c) => {
   const popularWords = await db
     .prepare(
       `SELECT text, image_url, discovery_count, synthesis_count
-       FROM alchemy_words
+       FROM wordrot_words
        ORDER BY discovery_count DESC
        LIMIT 20`
     )
@@ -674,7 +674,7 @@ alchemy.get('/leaderboard', async (c) => {
   const recentWords = await db
     .prepare(
       `SELECT text, image_url, discovered_by, discovered_at
-       FROM alchemy_words
+       FROM wordrot_words
        WHERE image_status = 'done'
        ORDER BY discovered_at DESC
        LIMIT 20`
@@ -688,8 +688,8 @@ alchemy.get('/leaderboard', async (c) => {
   })
 })
 
-// POST /api/alchemy/retry-image/:wordId - Retry image generation for a word
-alchemy.post('/retry-image/:wordId', async (c) => {
+// POST /api/wordrot/retry-image/:wordId - Retry image generation for a word
+wordrot.post('/retry-image/:wordId', async (c) => {
   const wordId = parseInt(c.req.param('wordId'), 10)
 
   if (isNaN(wordId)) {
@@ -699,7 +699,7 @@ alchemy.post('/retry-image/:wordId', async (c) => {
   const db = c.env.DB
   const ai = c.env.AI
 
-  const word = await db.prepare(`SELECT * FROM alchemy_words WHERE id = ?`).bind(wordId).first<AlchemyWord>()
+  const word = await db.prepare(`SELECT * FROM wordrot_words WHERE id = ?`).bind(wordId).first<WordrotWord>()
 
   if (!word) {
     return c.json({ error: 'Word not found' }, 404)
@@ -715,4 +715,4 @@ alchemy.post('/retry-image/:wordId', async (c) => {
   return c.json({ success: true, message: 'Image generation queued' })
 })
 
-export default alchemy
+export default wordrot

@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Icon, Button } from '../ui'
 import { WordCard } from './WordCollectCelebration'
-import { useSynthesis, type SynthesisResult } from '../../hooks/alchemy'
-import type { UserAlchemyWord, AlchemyWord } from '../../lib/api'
+import { useSynthesis, type SynthesisResult } from '../../hooks/wordrot'
+import type { UserWordrotWord, WordrotWord } from '../../lib/api'
 import '../../styles/components/synthesis-panel.css'
 
 interface SynthesisPanelProps {
-  inventory: UserAlchemyWord[]
+  inventory: UserWordrotWord[]
   onSynthesisComplete?: (result: SynthesisResult) => void
 }
 
@@ -30,7 +30,7 @@ export function SynthesisPanel({ inventory, onSynthesisComplete }: SynthesisPane
   const [activeSlot, setActiveSlot] = useState<'A' | 'B' | 'C' | null>(null)
 
   // Get word object from text
-  const getWordByText = (text: string | null): AlchemyWord | null => {
+  const getWordByText = (text: string | null): WordrotWord | null => {
     if (!text) return null
     const item = inventory.find((w) => w.word.text === text)
     return item?.word || null
@@ -50,7 +50,7 @@ export function SynthesisPanel({ inventory, onSynthesisComplete }: SynthesisPane
   }
 
   // Handle word selection from inventory
-  const handleWordSelect = (word: AlchemyWord) => {
+  const handleWordSelect = (word: WordrotWord) => {
     if (!activeSlot) return
 
     switch (activeSlot) {

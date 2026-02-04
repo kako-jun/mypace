@@ -3,7 +3,7 @@ import type { Ai } from '@cloudflare/workers-types'
 
 export type Bindings = {
   DB: D1Database
-  AI: Ai // Workers AI binding for Word Alchemy
+  AI: Ai // Workers AI binding for Wordrot
   DISABLE_CACHE?: string // '1' to disable OGP cache
   RELAY_COUNT?: string // リレー数（0=リレー接続しない、デフォルト=ALL_RELAYS.length）
   // VAPID keys for Web Push

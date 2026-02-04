@@ -535,9 +535,9 @@ export async function checkSupernovas(
   }
 }
 
-// ==================== WORD ALCHEMY ====================
+// ==================== WORDROT ====================
 
-export interface AlchemyWord {
+export interface WordrotWord {
   id: number
   text: string
   image_url: string | null
@@ -548,15 +548,15 @@ export interface AlchemyWord {
   synthesis_count: number
 }
 
-export interface UserAlchemyWord {
-  word: AlchemyWord
+export interface UserWordrotWord {
+  word: WordrotWord
   count: number
   first_collected_at: number
   last_collected_at: number
   source: 'harvest' | 'synthesis'
 }
 
-export interface AlchemySynthesis {
+export interface WordrotSynthesis {
   word_a: string
   word_b: string
   word_c: string
@@ -567,7 +567,7 @@ export interface AlchemySynthesis {
 // Extract nouns from post content
 export async function extractNouns(eventId: string, content: string): Promise<{ words: string[]; cached: boolean }> {
   try {
-    const res = await fetch(`${API_BASE}/api/alchemy/extract`, {
+    const res = await fetch(`${API_BASE}/api/wordrot/extract`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ eventId, content }),
@@ -585,13 +585,13 @@ export async function collectWord(
   word: string,
   eventId?: string
 ): Promise<{
-  word: AlchemyWord | null
+  word: WordrotWord | null
   isNew: boolean
   isFirstEver: boolean
   count: number
 }> {
   try {
-    const res = await fetch(`${API_BASE}/api/alchemy/collect`, {
+    const res = await fetch(`${API_BASE}/api/wordrot/collect`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pubkey, word, eventId }),
@@ -610,14 +610,14 @@ export async function synthesizeWords(
   wordB: string,
   wordC: string
 ): Promise<{
-  result: AlchemyWord | null
+  result: WordrotWord | null
   isNewSynthesis: boolean
   isNewWord: boolean
   formula: string
   error?: string
 }> {
   try {
-    const res = await fetch(`${API_BASE}/api/alchemy/synthesize`, {
+    const res = await fetch(`${API_BASE}/api/wordrot/synthesize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pubkey, wordA, wordB, wordC }),
@@ -633,13 +633,13 @@ export async function synthesizeWords(
 }
 
 // Get user's word inventory
-export async function fetchAlchemyInventory(pubkey: string): Promise<{
-  words: UserAlchemyWord[]
+export async function fetchWordrotInventory(pubkey: string): Promise<{
+  words: UserWordrotWord[]
   totalCount: number
   uniqueCount: number
 }> {
   try {
-    const res = await fetch(`${API_BASE}/api/alchemy/inventory/${pubkey}`)
+    const res = await fetch(`${API_BASE}/api/wordrot/inventory/${pubkey}`)
     if (!res.ok) return { words: [], totalCount: 0, uniqueCount: 0 }
     return res.json()
   } catch {
@@ -649,12 +649,12 @@ export async function fetchAlchemyInventory(pubkey: string): Promise<{
 
 // Get word details
 export async function fetchWordDetails(text: string): Promise<{
-  word: AlchemyWord | null
-  synthesesAsResult: AlchemySynthesis[]
-  synthesesAsInput: AlchemySynthesis[]
+  word: WordrotWord | null
+  synthesesAsResult: WordrotSynthesis[]
+  synthesesAsInput: WordrotSynthesis[]
 }> {
   try {
-    const res = await fetch(`${API_BASE}/api/alchemy/word/${encodeURIComponent(text)}`)
+    const res = await fetch(`${API_BASE}/api/wordrot/word/${encodeURIComponent(text)}`)
     if (!res.ok) return { word: null, synthesesAsResult: [], synthesesAsInput: [] }
     return res.json()
   } catch {
@@ -663,13 +663,13 @@ export async function fetchWordDetails(text: string): Promise<{
 }
 
 // Get leaderboard
-export async function fetchAlchemyLeaderboard(): Promise<{
+export async function fetchWordrotLeaderboard(): Promise<{
   topDiscoverers: Array<{ pubkey: string; count: number }>
   popularWords: Array<{ text: string; image_url: string | null; discovery_count: number; synthesis_count: number }>
   recentWords: Array<{ text: string; image_url: string | null; discovered_by: string | null; discovered_at: number }>
 }> {
   try {
-    const res = await fetch(`${API_BASE}/api/alchemy/leaderboard`)
+    const res = await fetch(`${API_BASE}/api/wordrot/leaderboard`)
     if (!res.ok) return { topDiscoverers: [], popularWords: [], recentWords: [] }
     return res.json()
   } catch {
