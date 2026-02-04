@@ -27,6 +27,7 @@ MY PACEはNostrプロトコルの拡張性を活用し、独自機能を実装�
 | 機能 | ドキュメント | 概要 |
 |------|-------------|------|
 | Supernova | [supernova.md](./supernova.md) | 条件達成でステラを獲得する実績システム |
+| Wordrot | [wordrot.md](./wordrot.md) | 投稿から名詞を収集しWord2Vec的に合成 |
 
 ### Nostr標準機能の実装
 
