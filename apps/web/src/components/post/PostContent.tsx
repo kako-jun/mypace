@@ -1,10 +1,13 @@
+import { useEffect } from 'react'
 import { renderContent } from '../../lib/parser'
+import { setWordrotClickHandler, clearWordrotClickHandler } from '../../lib/parser/callbacks'
 import { PostEmbeds } from '../embed'
 import { TextButton, Icon } from '../ui'
 import { LIMITS } from '../../lib/constants'
 import { hasTeaserTag as checkTeaserTag, removeReadMoreLink, getTeaserColor } from '../../lib/nostr/tags'
 import { STELLA_COLORS } from '../../lib/nostr/events'
 import type { EmojiTag, ProfileMap, Event, OgpData } from '../../types'
+import '../../styles/components/word-highlight.css'
 
 interface PostContentProps {
   content: string
@@ -17,6 +20,11 @@ interface PostContentProps {
   enableOgpFallback?: boolean // Enable OGP fetching for direct page access
   onReadMore?: () => void
   tags?: string[][] // Event tags for fold detection
+  // Wordrot props
+  wordrotWords?: string[]
+  wordrotCollected?: Set<string>
+  wordrotImages?: Record<string, string | null> // word -> image URL
+  onWordClick?: (word: string) => void
 }
 
 export function PostContent({
@@ -30,7 +38,21 @@ export function PostContent({
   enableOgpFallback = false,
   onReadMore,
   tags,
+  wordrotWords,
+  wordrotCollected,
+  wordrotImages,
+  onWordClick,
 }: PostContentProps) {
+  // Set up wordrot click handler
+  useEffect(() => {
+    if (onWordClick) {
+      setWordrotClickHandler(onWordClick, wordrotCollected)
+    }
+    return () => {
+      clearWordrotClickHandler()
+    }
+  }, [onWordClick, wordrotCollected])
+
   // If event has teaser tag, content is already properly sized (280 chars + READ MORE link)
   // So we skip GUI truncation for long posts with teaser
   const hasTeaser = tags ? checkTeaserTag({ tags } as Event) : false
@@ -58,14 +80,21 @@ export function PostContent({
     <>
       {shouldTruncate ? (
         <>
-          {renderContent(content.slice(0, LIMITS.PREVIEW_TRUNCATE_LENGTH), emojis, profiles, wikidataMap)}
+          {renderContent(
+            content.slice(0, LIMITS.PREVIEW_TRUNCATE_LENGTH),
+            emojis,
+            profiles,
+            wikidataMap,
+            wordrotWords,
+            wordrotCollected
+          )}
           <TextButton variant="primary" className="read-more-btn" onClick={onReadMore}>
             … READ MORE
           </TextButton>
         </>
       ) : (
         <>
-          {renderContent(displayContent, emojis, profiles, wikidataMap)}
+          {renderContent(displayContent, emojis, profiles, wikidataMap, wordrotWords, wordrotCollected)}
           {hasTeaser && truncate && (
             <TextButton variant="primary" className="read-more-btn teaser-read-more" onClick={onReadMore}>
               … READ MORE
@@ -84,6 +113,27 @@ export function PostContent({
         </>
       )}
       <PostEmbeds content={displayContent} ogpMap={ogpMap} enableOgpFallback={enableOgpFallback} />
+
+      {/* Wordrot character images for collected words */}
+      {wordrotWords && wordrotWords.length > 0 && wordrotImages && wordrotCollected && (
+        <div className="wordrot-images-section">
+          {wordrotWords
+            .filter((word) => wordrotCollected.has(word) && wordrotImages[word])
+            .map((word) => (
+              <button
+                key={word}
+                className="wordrot-image-button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onWordClick?.(word)
+                }}
+                title={word}
+              >
+                <img src={wordrotImages[word]!} alt={word} className="wordrot-image" />
+              </button>
+            ))}
+        </div>
+      )}
     </>
   )
 }

@@ -13,6 +13,7 @@ import { EmbedPage } from './pages/EmbedPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PostModal } from './components/post'
 import { CelebrationProvider } from './components/supernova'
+import { WordCelebrationProvider, WordrotProvider } from './components/wordrot'
 import { initializeNavigation, applyThemeColors, getUIThemeColors } from './lib/utils'
 
 export default function App() {
@@ -40,30 +41,34 @@ export default function App() {
 
   return (
     <CelebrationProvider>
-      <InstallBanner />
-      <Routes location={backgroundLocation || location}>
-        {/* Embed page - no Layout */}
-        <Route path="/embed/:noteId" element={<EmbedPage />} />
+      <WordCelebrationProvider>
+        <WordrotProvider>
+          <InstallBanner />
+          <Routes location={backgroundLocation || location}>
+            {/* Embed page - no Layout */}
+            <Route path="/embed/:noteId" element={<EmbedPage />} />
 
-        <Route element={<Layout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/intent/post" element={<HomePage />} />
-          <Route path="/post/:id" element={<PostPage />} />
-          <Route path="/user/:pubkey" element={<UserPage />} />
-          <Route path="/user/:npub/magazine/:slug" element={<MagazinePage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/upload-history" element={<UploadHistoryPage />} />
-          <Route path="/inventory" element={<InventoryPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
-      </Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/intent/post" element={<HomePage />} />
+              <Route path="/post/:id" element={<PostPage />} />
+              <Route path="/user/:pubkey" element={<UserPage />} />
+              <Route path="/user/:npub/magazine/:slug" element={<MagazinePage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/upload-history" element={<UploadHistoryPage />} />
+              <Route path="/inventory" element={<InventoryPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+          </Routes>
 
-      {/* Render modal when there's a background location */}
-      {backgroundLocation && (
-        <Routes location={location}>
-          <Route path="/post/:id" element={<PostModal />} />
-        </Routes>
-      )}
+          {/* Render modal when there's a background location */}
+          {backgroundLocation && (
+            <Routes location={location}>
+              <Route path="/post/:id" element={<PostModal />} />
+            </Routes>
+          )}
+        </WordrotProvider>
+      </WordCelebrationProvider>
     </CelebrationProvider>
   )
 }

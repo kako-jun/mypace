@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BackButton, Icon, Loading } from '../components/ui'
 import { useCelebration } from '../components/supernova'
+import { WordCard } from '../components/wordrot'
+// SynthesisPanel is Phase 2
+// import { SynthesisPanel } from '../components/wordrot'
+import { useWordrot } from '../hooks/wordrot'
 import { getThemeCardProps, STELLA_COLORS } from '../lib/nostr/events'
 import { getThemeColors } from '../lib/storage'
 import { getCurrentPubkey } from '../lib/nostr/events'
@@ -24,11 +28,20 @@ import '../styles/pages/inventory.css'
 // Stella color order for display (yellow excluded - infinite use)
 const STELLA_COLOR_ORDER = ['green', 'red', 'blue', 'purple'] as const
 
+type TabType = 'stella' | 'wordrot'
+
 export function InventoryPage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const themeProps = getThemeCardProps(getThemeColors())
   const textClass = themeProps.className.includes('light-text') ? 'light-text' : 'dark-text'
   const { celebrate } = useCelebration()
+
+  // Tab state from URL
+  const activeTab = (searchParams.get('tab') as TabType) || 'stella'
+  const setActiveTab = (tab: TabType) => {
+    setSearchParams(tab === 'stella' ? {} : { tab })
+  }
 
   const [_pubkey, setPubkey] = useState<string | null>(null)
   const [balance, setBalance] = useState<StellaBalance | null>(null)
@@ -38,6 +51,16 @@ export function InventoryPage() {
   const [userFullStats, setUserFullStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Wordrot state
+  const {
+    inventory: wordrotInventory,
+    totalCount: wordrotTotalCount,
+    uniqueCount: wordrotUniqueCount,
+    isLoadingInventory: wordrotLoading,
+    // loadInventory is used in Phase 2 SynthesisPanel
+    loadInventory: _loadWordrotInventory,
+  } = useWordrot()
 
   useEffect(() => {
     const loadData = async () => {
@@ -324,205 +347,276 @@ export function InventoryPage() {
 
       <div className={`inventory-header ${textClass}`}>
         <h2>Inventory</h2>
-        <p>Your Color Stella balance and unlocked Supernovas.</p>
+        <p>Your Color Stella balance, Supernovas, and Word Collection.</p>
       </div>
 
-      {loading ? (
-        <div className="inventory-loading">
-          <Loading />
-        </div>
-      ) : error ? (
-        <div className="inventory-error">{error}</div>
-      ) : (
+      {/* Tab Navigation */}
+      <div className="inventory-tabs">
+        <button
+          className={`inventory-tab ${activeTab === 'stella' ? 'active' : ''}`}
+          onClick={() => setActiveTab('stella')}
+        >
+          <Icon name="Star" size={16} />
+          <span>Stella</span>
+        </button>
+        <button
+          className={`inventory-tab ${activeTab === 'wordrot' ? 'active' : ''}`}
+          onClick={() => setActiveTab('wordrot')}
+        >
+          <Icon name="FlaskConical" size={16} />
+          <span>Wordrot</span>
+          {wordrotUniqueCount > 0 && <span className="inventory-tab-badge">{wordrotUniqueCount}</span>}
+        </button>
+      </div>
+
+      {/* Stella Tab Content */}
+      {activeTab === 'stella' && (
         <>
-          {/* Stella Balance Section */}
-          <div className="inventory-balance-section">
-            <div className="inventory-balance-header">
-              <span className="inventory-balance-label">Color Stella Balance</span>
+          {loading ? (
+            <div className="inventory-loading">
+              <Loading />
             </div>
+          ) : error ? (
+            <div className="inventory-error">{error}</div>
+          ) : (
+            <>
+              {/* Stella Balance Section */}
+              <div className="inventory-balance-section">
+                <div className="inventory-balance-header">
+                  <span className="inventory-balance-label">Color Stella Balance</span>
+                </div>
 
-            <div className="inventory-stella-list">
-              {STELLA_COLOR_ORDER.map((colorName) => {
-                const colorInfo = STELLA_COLORS[colorName]
-                const count = balance?.[colorName] || 0
-                return (
-                  <div key={colorName} className="inventory-stella-item">
-                    <span className="inventory-stella-icon">
-                      <Icon name="Star" size={20} fill={colorInfo.hex} />
-                    </span>
-                    <span className="inventory-stella-label">{colorInfo.label}</span>
-                    <span className="inventory-stella-count">×{count.toLocaleString()}</span>
-                  </div>
-                )
-              })}
-            </div>
-
-            {getTotalBalance() === 0 && <p className="inventory-balance-hint">Earn stella by unlocking Supernovas!</p>}
-          </div>
-
-          {/* Supernovas Section */}
-          <div className="inventory-supernovas-section">
-            <h3>
-              <Icon name="Sparkles" size={20} /> Supernovas ({supernovas.length}/{allSupernovas.length})
-            </h3>
-
-            {pendingSupernovas.length === 0 && supernovas.length === 0 ? (
-              <p className="inventory-supernova-empty">No supernovas yet. Keep posting!</p>
-            ) : (
-              <div className="inventory-supernova-list">
-                {/* Pending supernovas */}
-                {pendingSupernovas.map((supernova) => {
-                  const progress = getProgress(supernova)
-                  const hasReward =
-                    supernova.reward_green > 0 ||
-                    supernova.reward_red > 0 ||
-                    supernova.reward_blue > 0 ||
-                    supernova.reward_purple > 0
-                  return (
-                    <div key={supernova.id} className="inventory-supernova-item pending">
-                      <div className="inventory-supernova-icon">
-                        <Icon name="Sparkles" size={24} fill="#999" />
-                      </div>
-                      <div className="inventory-supernova-info">
-                        <span className="inventory-supernova-name">{supernova.name}</span>
-                        {supernova.description !== supernova.name && (
-                          <span className="inventory-supernova-desc">{supernova.description}</span>
-                        )}
-                        {progress && (
-                          <div className="inventory-supernova-progress">
-                            <div className="inventory-progress-bar">
-                              <div
-                                className="inventory-progress-fill"
-                                style={{
-                                  width: `${Math.min(100, (progress.current / progress.target) * 100)}%`,
-                                  backgroundColor:
-                                    STELLA_COLORS[supernova.supernova_color as keyof typeof STELLA_COLORS]?.hex ||
-                                    '#ffd700',
-                                }}
-                              />
-                            </div>
-                            <span className="inventory-progress-text">
-                              {formatNumber(progress.current)} / {formatNumber(progress.target)}
-                            </span>
-                          </div>
-                        )}
-                        {hasReward && (
-                          <div className="inventory-supernova-reward-inline">
-                            {supernova.reward_green > 0 && (
-                              <span>
-                                <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+
-                                {formatNumber(supernova.reward_green)}
-                              </span>
-                            )}
-                            {supernova.reward_red > 0 && (
-                              <span>
-                                <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+
-                                {formatNumber(supernova.reward_red)}
-                              </span>
-                            )}
-                            {supernova.reward_blue > 0 && (
-                              <span>
-                                <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+
-                                {formatNumber(supernova.reward_blue)}
-                              </span>
-                            )}
-                            {supernova.reward_purple > 0 && (
-                              <span>
-                                <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+
-                                {formatNumber(supernova.reward_purple)}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-                {/* Completed supernovas - sorted by unlock date (newest first, oldest at bottom) */}
-                {/* When timestamps are equal, higher tier (later in series array) comes first */}
-                {[...supernovas]
-                  .sort((a, b) => {
-                    // Primary sort: by unlock date (newest first)
-                    if (a.unlocked_at !== b.unlocked_at) {
-                      return b.unlocked_at - a.unlocked_at
-                    }
-                    // Secondary sort: use series array index (higher index = higher tier = first)
-                    const getTierIndex = (id: string): number => {
-                      for (const [series, thresholds] of Object.entries(SERIES_THRESHOLDS)) {
-                        for (let i = 0; i < thresholds.length; i++) {
-                          if (getSeriesId(series, thresholds[i]) === id) {
-                            return i
-                          }
-                        }
-                      }
-                      return -1
-                    }
-                    return getTierIndex(b.id) - getTierIndex(a.id)
-                  })
-                  .map((supernova) => {
-                    const hasReward =
-                      supernova.reward_green > 0 ||
-                      supernova.reward_red > 0 ||
-                      supernova.reward_blue > 0 ||
-                      supernova.reward_purple > 0
+                <div className="inventory-stella-list">
+                  {STELLA_COLOR_ORDER.map((colorName) => {
+                    const colorInfo = STELLA_COLORS[colorName]
+                    const count = balance?.[colorName] || 0
                     return (
-                      <div key={supernova.id} className="inventory-supernova-item completed">
-                        <div className="inventory-supernova-icon">
-                          <Icon
-                            name="Sparkles"
-                            size={24}
-                            fill={
-                              STELLA_COLORS[supernova.supernova_color as keyof typeof STELLA_COLORS]?.hex || '#ffd700'
-                            }
-                          />
-                        </div>
-                        <div className="inventory-supernova-info">
-                          <span className="inventory-supernova-name">
-                            <Icon name="Check" size={14} className="inventory-check-icon" />
-                            {supernova.name}
-                          </span>
-                          {supernova.description !== supernova.name && (
-                            <span className="inventory-supernova-desc">{supernova.description}</span>
-                          )}
-                          <span className="inventory-supernova-date">
-                            {new Date(supernova.unlocked_at * 1000).toLocaleDateString()}
-                          </span>
-                          {hasReward && (
-                            <div className="inventory-supernova-reward-inline">
-                              {supernova.reward_green > 0 && (
-                                <span>
-                                  <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+
-                                  {formatNumber(supernova.reward_green)}
-                                </span>
-                              )}
-                              {supernova.reward_red > 0 && (
-                                <span>
-                                  <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+
-                                  {formatNumber(supernova.reward_red)}
-                                </span>
-                              )}
-                              {supernova.reward_blue > 0 && (
-                                <span>
-                                  <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+
-                                  {formatNumber(supernova.reward_blue)}
-                                </span>
-                              )}
-                              {supernova.reward_purple > 0 && (
-                                <span>
-                                  <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+
-                                  {formatNumber(supernova.reward_purple)}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                      <div key={colorName} className="inventory-stella-item">
+                        <span className="inventory-stella-icon">
+                          <Icon name="Star" size={20} fill={colorInfo.hex} />
+                        </span>
+                        <span className="inventory-stella-label">{colorInfo.label}</span>
+                        <span className="inventory-stella-count">×{count.toLocaleString()}</span>
                       </div>
                     )
                   })}
+                </div>
+
+                {getTotalBalance() === 0 && (
+                  <p className="inventory-balance-hint">Earn stella by unlocking Supernovas!</p>
+                )}
               </div>
-            )}
-          </div>
+
+              {/* Supernovas Section */}
+              <div className="inventory-supernovas-section">
+                <h3>
+                  <Icon name="Sparkles" size={20} /> Supernovas ({supernovas.length}/{allSupernovas.length})
+                </h3>
+
+                {pendingSupernovas.length === 0 && supernovas.length === 0 ? (
+                  <p className="inventory-supernova-empty">No supernovas yet. Keep posting!</p>
+                ) : (
+                  <div className="inventory-supernova-list">
+                    {/* Pending supernovas */}
+                    {pendingSupernovas.map((supernova) => {
+                      const progress = getProgress(supernova)
+                      const hasReward =
+                        supernova.reward_green > 0 ||
+                        supernova.reward_red > 0 ||
+                        supernova.reward_blue > 0 ||
+                        supernova.reward_purple > 0
+                      return (
+                        <div key={supernova.id} className="inventory-supernova-item pending">
+                          <div className="inventory-supernova-icon">
+                            <Icon name="Sparkles" size={24} fill="#999" />
+                          </div>
+                          <div className="inventory-supernova-info">
+                            <span className="inventory-supernova-name">{supernova.name}</span>
+                            {supernova.description !== supernova.name && (
+                              <span className="inventory-supernova-desc">{supernova.description}</span>
+                            )}
+                            {progress && (
+                              <div className="inventory-supernova-progress">
+                                <div className="inventory-progress-bar">
+                                  <div
+                                    className="inventory-progress-fill"
+                                    style={{
+                                      width: `${Math.min(100, (progress.current / progress.target) * 100)}%`,
+                                      backgroundColor:
+                                        STELLA_COLORS[supernova.supernova_color as keyof typeof STELLA_COLORS]?.hex ||
+                                        '#ffd700',
+                                    }}
+                                  />
+                                </div>
+                                <span className="inventory-progress-text">
+                                  {formatNumber(progress.current)} / {formatNumber(progress.target)}
+                                </span>
+                              </div>
+                            )}
+                            {hasReward && (
+                              <div className="inventory-supernova-reward-inline">
+                                {supernova.reward_green > 0 && (
+                                  <span>
+                                    <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+
+                                    {formatNumber(supernova.reward_green)}
+                                  </span>
+                                )}
+                                {supernova.reward_red > 0 && (
+                                  <span>
+                                    <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+
+                                    {formatNumber(supernova.reward_red)}
+                                  </span>
+                                )}
+                                {supernova.reward_blue > 0 && (
+                                  <span>
+                                    <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+
+                                    {formatNumber(supernova.reward_blue)}
+                                  </span>
+                                )}
+                                {supernova.reward_purple > 0 && (
+                                  <span>
+                                    <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+
+                                    {formatNumber(supernova.reward_purple)}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                    {/* Completed supernovas - sorted by unlock date (newest first, oldest at bottom) */}
+                    {/* When timestamps are equal, higher tier (later in series array) comes first */}
+                    {[...supernovas]
+                      .sort((a, b) => {
+                        // Primary sort: by unlock date (newest first)
+                        if (a.unlocked_at !== b.unlocked_at) {
+                          return b.unlocked_at - a.unlocked_at
+                        }
+                        // Secondary sort: use series array index (higher index = higher tier = first)
+                        const getTierIndex = (id: string): number => {
+                          for (const [series, thresholds] of Object.entries(SERIES_THRESHOLDS)) {
+                            for (let i = 0; i < thresholds.length; i++) {
+                              if (getSeriesId(series, thresholds[i]) === id) {
+                                return i
+                              }
+                            }
+                          }
+                          return -1
+                        }
+                        return getTierIndex(b.id) - getTierIndex(a.id)
+                      })
+                      .map((supernova) => {
+                        const hasReward =
+                          supernova.reward_green > 0 ||
+                          supernova.reward_red > 0 ||
+                          supernova.reward_blue > 0 ||
+                          supernova.reward_purple > 0
+                        return (
+                          <div key={supernova.id} className="inventory-supernova-item completed">
+                            <div className="inventory-supernova-icon">
+                              <Icon
+                                name="Sparkles"
+                                size={24}
+                                fill={
+                                  STELLA_COLORS[supernova.supernova_color as keyof typeof STELLA_COLORS]?.hex ||
+                                  '#ffd700'
+                                }
+                              />
+                            </div>
+                            <div className="inventory-supernova-info">
+                              <span className="inventory-supernova-name">
+                                <Icon name="Check" size={14} className="inventory-check-icon" />
+                                {supernova.name}
+                              </span>
+                              {supernova.description !== supernova.name && (
+                                <span className="inventory-supernova-desc">{supernova.description}</span>
+                              )}
+                              <span className="inventory-supernova-date">
+                                {new Date(supernova.unlocked_at * 1000).toLocaleDateString()}
+                              </span>
+                              {hasReward && (
+                                <div className="inventory-supernova-reward-inline">
+                                  {supernova.reward_green > 0 && (
+                                    <span>
+                                      <Icon name="Star" size={14} fill={STELLA_COLORS.green.hex} />+
+                                      {formatNumber(supernova.reward_green)}
+                                    </span>
+                                  )}
+                                  {supernova.reward_red > 0 && (
+                                    <span>
+                                      <Icon name="Star" size={14} fill={STELLA_COLORS.red.hex} />+
+                                      {formatNumber(supernova.reward_red)}
+                                    </span>
+                                  )}
+                                  {supernova.reward_blue > 0 && (
+                                    <span>
+                                      <Icon name="Star" size={14} fill={STELLA_COLORS.blue.hex} />+
+                                      {formatNumber(supernova.reward_blue)}
+                                    </span>
+                                  )}
+                                  {supernova.reward_purple > 0 && (
+                                    <span>
+                                      <Icon name="Star" size={14} fill={STELLA_COLORS.purple.hex} />+
+                                      {formatNumber(supernova.reward_purple)}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </>
+      )}
+
+      {/* Wordrot Tab Content */}
+      {activeTab === 'wordrot' && (
+        <div className="inventory-wordrot-tab">
+          {wordrotLoading ? (
+            <div className="inventory-loading">
+              <Loading />
+            </div>
+          ) : (
+            <>
+              {/* Synthesis Panel - Phase 2 */}
+              {/* <SynthesisPanel
+                inventory={wordrotInventory}
+                onSynthesisComplete={() => {
+                  // Refresh inventory after synthesis
+                  _loadWordrotInventory()
+                }}
+              /> */}
+
+              {/* Word Collection */}
+              <div className="inventory-words-section">
+                <h3>
+                  <Icon name="BookOpen" size={20} /> Word Collection ({wordrotUniqueCount} types, {wordrotTotalCount}{' '}
+                  total)
+                </h3>
+
+                {wordrotInventory.length === 0 ? (
+                  <div className="inventory-words-empty">
+                    <Icon name="Sparkles" size={32} />
+                    <p>No words collected yet.</p>
+                    <p className="inventory-words-hint">Click on highlighted words in posts to collect them!</p>
+                  </div>
+                ) : (
+                  <div className="inventory-words-grid">
+                    {wordrotInventory.map((item) => (
+                      <WordCard key={item.word.id} word={item.word} count={item.count} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       )}
     </div>
   )

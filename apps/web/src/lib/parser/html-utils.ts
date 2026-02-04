@@ -76,3 +76,93 @@ export function removeMediaLinks(html: string): string {
   html = html.replace(/<a[^>]*>(\s*<div class="content-video-wrapper">.*?<\/div>\s*)<\/a>/gi, '$1')
   return html
 }
+
+// Process wordrot word highlights (inline highlighting of collectible words)
+// Only highlights words in plain text, not in code, links, hashtags, mentions, etc.
+export function processWordHighlights(html: string, words: string[], collectedWords?: Set<string>): string {
+  if (!words || words.length === 0) return html
+
+  // Sort words by length descending to match longer words first
+  const sortedWords = [...words].sort((a, b) => b.length - a.length)
+
+  // Escape special regex characters
+  const escapedWords = sortedWords.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+
+  // Create pattern that matches any of the words
+  const pattern = escapedWords.join('|')
+  const regex = new RegExp(`(${pattern})`, 'gi')
+
+  // Elements whose content should NOT be highlighted
+  // These already have their own styling
+  const skipElements = new Set([
+    'a', // links
+    'code', // inline code
+    'pre', // code blocks
+    'button', // existing buttons (hashtags, mentions, etc.)
+    'img', // images
+    'audio', // audio
+    'video', // video
+  ])
+
+  // Split HTML into tag and text segments, tracking element depth
+  const segments: Array<{ type: 'tag' | 'text'; content: string; skip: boolean }> = []
+  let lastIndex = 0
+  const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g
+  let tagMatch
+
+  // Track which skip elements we're inside
+  const skipStack: string[] = []
+
+  while ((tagMatch = tagRegex.exec(html)) !== null) {
+    const isClosing = tagMatch[0].startsWith('</')
+    const tagName = tagMatch[1].toLowerCase()
+
+    // Text before the tag
+    if (tagMatch.index > lastIndex) {
+      const shouldSkip = skipStack.length > 0
+      segments.push({ type: 'text', content: html.slice(lastIndex, tagMatch.index), skip: shouldSkip })
+    }
+
+    // Update skip stack
+    if (skipElements.has(tagName)) {
+      if (isClosing) {
+        // Pop from stack if closing a skip element
+        const lastIndex = skipStack.lastIndexOf(tagName)
+        if (lastIndex !== -1) {
+          skipStack.splice(lastIndex, 1)
+        }
+      } else if (!tagMatch[0].endsWith('/>')) {
+        // Push to stack if opening a skip element (not self-closing)
+        skipStack.push(tagName)
+      }
+    }
+
+    // The tag itself (always skip processing tags themselves)
+    segments.push({ type: 'tag', content: tagMatch[0], skip: true })
+    lastIndex = tagRegex.lastIndex
+  }
+
+  // Remaining text after last tag
+  if (lastIndex < html.length) {
+    const shouldSkip = skipStack.length > 0
+    segments.push({ type: 'text', content: html.slice(lastIndex), skip: shouldSkip })
+  }
+
+  // Process only text segments that aren't inside skip elements
+  const result = segments.map((segment) => {
+    if (segment.type === 'tag' || segment.skip) return segment.content
+
+    // Replace words in text content
+    return segment.content.replace(regex, (match) => {
+      // Find the original word (case-insensitive lookup)
+      const word = words.find((w) => w.toLowerCase() === match.toLowerCase()) || match
+      const isCollected = collectedWords?.has(word) || false
+      const collectedClass = isCollected ? ' collected' : ''
+      const title = isCollected ? `${word} (collected)` : `Collect: ${word}`
+
+      return `<button class="wordrot-highlight${collectedClass}" data-word="${escapeHtml(word)}" title="${title}">${match}</button>`
+    })
+  })
+
+  return result.join('')
+}

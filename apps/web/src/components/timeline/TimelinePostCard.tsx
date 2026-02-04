@@ -50,6 +50,11 @@ interface TimelinePostCardProps {
   onShareOption: (eventId: string, content: string, tags: string[][], option: ShareOption, partIndex?: number) => void
   getDisplayName: (pubkey: string) => string
   getAvatarUrl: (pubkey: string) => string | null
+  // Wordrot props
+  wordrotWords?: string[]
+  wordrotCollected?: Set<string>
+  wordrotImages?: Record<string, string | null>
+  onWordCollect?: (word: string, eventId: string) => void
 }
 
 export default function TimelinePostCard({
@@ -81,6 +86,10 @@ export default function TimelinePostCard({
   onShareOption,
   getDisplayName,
   getAvatarUrl,
+  wordrotWords,
+  wordrotCollected,
+  wordrotImages,
+  onWordCollect,
 }: TimelinePostCardProps) {
   const [expandedThread, setExpandedThread] = useState(false)
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
@@ -241,6 +250,10 @@ export default function TimelinePostCard({
                   ogpMap={ogpMap}
                   onReadMore={() => navigateToPostModal(event.id)}
                   tags={event.tags}
+                  wordrotWords={wordrotWords}
+                  wordrotCollected={wordrotCollected}
+                  wordrotImages={wordrotImages}
+                  onWordClick={onWordCollect ? (word) => onWordCollect(word, event.id) : undefined}
                 />
               </div>
 

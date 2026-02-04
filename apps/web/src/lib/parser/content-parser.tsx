@@ -9,6 +9,7 @@ import {
   getImageClickHandler,
   getSuperMentionClickHandler,
   getInternalLinkClickHandler,
+  getWordrotClickHandler,
 } from './callbacks'
 import {
   escapeHtml,
@@ -18,6 +19,7 @@ import {
   removeImageLinks,
   processAudioUrls,
   removeMediaLinks,
+  processWordHighlights,
 } from './html-utils'
 import { extractAlignments, restoreAlignments } from './alignment'
 import { processFontSyntax } from './font-syntax'
@@ -67,7 +69,9 @@ export function renderContent(
   content: string,
   emojis: EmojiTag[] = [],
   profiles: ProfileMap = {},
-  wikidataMap: Record<string, string> = {}
+  wikidataMap: Record<string, string> = {},
+  wordrotWords?: string[],
+  wordrotCollected?: Set<string>
 ) {
   // 1. Extract code blocks FIRST (protect from all processing)
   const { text: textWithCodePlaceholders, codeBlocks } = extractCodeBlocks(content)
@@ -99,7 +103,12 @@ export function renderContent(
   html = processLinks(html)
   html = processCustomEmojis(html, emojis)
 
-  // 8. Restore code blocks LAST (content was protected from all processing)
+  // 8. Process wordrot word highlights (before restoring code blocks)
+  if (wordrotWords && wordrotWords.length > 0) {
+    html = processWordHighlights(html, wordrotWords, wordrotCollected)
+  }
+
+  // 9. Restore code blocks LAST (content was protected from all processing)
   html = restoreCodeBlocks(html, codeBlocks)
 
   const contentRef = useRef<HTMLDivElement>(null)
@@ -150,6 +159,7 @@ export function renderContent(
     const superMentionHandler = getSuperMentionClickHandler()
     const imageHandler = getImageClickHandler()
     const internalLinkHandler = getInternalLinkClickHandler()
+    const wordrotHandler = getWordrotClickHandler()
 
     if (target.classList.contains('content-hashtag')) {
       const tag = target.getAttribute('data-tag')
@@ -185,6 +195,15 @@ export function renderContent(
       const href = link?.getAttribute('href')
       if (href && internalLinkHandler) {
         internalLinkHandler(href)
+      }
+    }
+    // Handle wordrot word clicks
+    if (target.classList.contains('wordrot-highlight')) {
+      e.preventDefault()
+      e.stopPropagation()
+      const word = target.getAttribute('data-word')
+      if (word && wordrotHandler) {
+        wordrotHandler(word)
       }
     }
   }

@@ -6,6 +6,7 @@ import { setHashtagClickHandler, setSuperMentionClickHandler, setInternalLinkCli
 import { TimelinePostCard, TimelineActionButton, TimelineSearch } from './index'
 import { Loading, Button, ErrorMessage, SuccessMessage } from '../ui'
 import { useTimeline } from '../../hooks'
+import { useWordrotContext } from '../wordrot'
 import {
   copyToClipboard,
   downloadAsMarkdown,
@@ -46,6 +47,9 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
     setSearchQuery(filters.q)
     setSearchTags(filters.tags)
   }, [])
+
+  // Wordrot context for word extraction and collection
+  const wordrot = useWordrotContext()
 
   const {
     items,
@@ -163,6 +167,23 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
     setInternalLinkClickHandler(handleInternalLinkClick)
   }, [handleInternalLinkClick])
 
+  // Extract words for visible posts (wordrot)
+  useEffect(() => {
+    if (!wordrot || items.length === 0) return
+
+    // Filter posts that haven't been extracted yet
+    const postsToExtract = items
+      .filter((item) => !wordrot.hasWords(item.event.id))
+      .map((item) => ({
+        eventId: item.event.id,
+        content: item.event.content,
+      }))
+
+    if (postsToExtract.length > 0) {
+      wordrot.extractWords(postsToExtract)
+    }
+  }, [wordrot, items])
+
   if (loading && events.length === 0) return <Loading />
 
   if (error) {
@@ -222,6 +243,10 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
               onShareOption={handleShareOption}
               getDisplayName={getDisplayName}
               getAvatarUrl={getAvatarUrl}
+              wordrotWords={wordrot?.getWords(event.id)}
+              wordrotCollected={wordrot?.collectedWords}
+              wordrotImages={wordrot?.wordImages}
+              onWordCollect={wordrot?.collect}
             />
           </Fragment>
         )
