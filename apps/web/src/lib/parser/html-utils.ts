@@ -78,6 +78,7 @@ export function removeMediaLinks(html: string): string {
 }
 
 // Process wordrot word highlights (inline highlighting of collectible words)
+// Only highlights words in plain text, not in code, links, hashtags, mentions, etc.
 export function processWordHighlights(html: string, words: string[], collectedWords?: Set<string>): string {
   if (!words || words.length === 0) return html
 
@@ -91,30 +92,65 @@ export function processWordHighlights(html: string, words: string[], collectedWo
   const pattern = escapedWords.join('|')
   const regex = new RegExp(`(${pattern})`, 'gi')
 
-  // Split HTML into tag and text segments
-  const segments: Array<{ type: 'tag' | 'text'; content: string }> = []
+  // Elements whose content should NOT be highlighted
+  // These already have their own styling
+  const skipElements = new Set([
+    'a', // links
+    'code', // inline code
+    'pre', // code blocks
+    'button', // existing buttons (hashtags, mentions, etc.)
+    'img', // images
+    'audio', // audio
+    'video', // video
+  ])
+
+  // Split HTML into tag and text segments, tracking element depth
+  const segments: Array<{ type: 'tag' | 'text'; content: string; skip: boolean }> = []
   let lastIndex = 0
-  const tagRegex = /<[^>]+>/g
+  const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g
   let tagMatch
 
+  // Track which skip elements we're inside
+  const skipStack: string[] = []
+
   while ((tagMatch = tagRegex.exec(html)) !== null) {
+    const isClosing = tagMatch[0].startsWith('</')
+    const tagName = tagMatch[1].toLowerCase()
+
     // Text before the tag
     if (tagMatch.index > lastIndex) {
-      segments.push({ type: 'text', content: html.slice(lastIndex, tagMatch.index) })
+      const shouldSkip = skipStack.length > 0
+      segments.push({ type: 'text', content: html.slice(lastIndex, tagMatch.index), skip: shouldSkip })
     }
-    // The tag itself
-    segments.push({ type: 'tag', content: tagMatch[0] })
+
+    // Update skip stack
+    if (skipElements.has(tagName)) {
+      if (isClosing) {
+        // Pop from stack if closing a skip element
+        const lastIndex = skipStack.lastIndexOf(tagName)
+        if (lastIndex !== -1) {
+          skipStack.splice(lastIndex, 1)
+        }
+      } else if (!tagMatch[0].endsWith('/>')) {
+        // Push to stack if opening a skip element (not self-closing)
+        skipStack.push(tagName)
+      }
+    }
+
+    // The tag itself (always skip processing tags themselves)
+    segments.push({ type: 'tag', content: tagMatch[0], skip: true })
     lastIndex = tagRegex.lastIndex
   }
 
   // Remaining text after last tag
   if (lastIndex < html.length) {
-    segments.push({ type: 'text', content: html.slice(lastIndex) })
+    const shouldSkip = skipStack.length > 0
+    segments.push({ type: 'text', content: html.slice(lastIndex), skip: shouldSkip })
   }
 
-  // Process only text segments
+  // Process only text segments that aren't inside skip elements
   const result = segments.map((segment) => {
-    if (segment.type === 'tag') return segment.content
+    if (segment.type === 'tag' || segment.skip) return segment.content
 
     // Replace words in text content
     return segment.content.replace(regex, (match) => {
