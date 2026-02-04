@@ -5,15 +5,17 @@
   /* Reset button styles */
   all: unset;
   cursor: pointer;
-  display: inline;
+  display: inline-block;
   font: inherit;
   color: inherit;
+  vertical-align: middle;
 
   /* Box border styling - link color for all sides, uniform thickness */
   border: 1px solid #4a9;
   border-radius: 4px;
-  padding: 0 4px;
+  padding: 2px 4px;
   margin: 0 2px;
+  line-height: 1;
 
   /* Transition */
   transition: all 0.15s ease;
@@ -30,9 +32,12 @@
 /* Already collected state */
 .wordrot-highlight.collected {
   cursor: default;
+  display: inline-block;
   border: 1px solid currentColor; /* Normal text color border */
   opacity: 0.7;
-  padding: 0 4px;
+  padding: 2px 4px;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .wordrot-highlight.collected:hover {
