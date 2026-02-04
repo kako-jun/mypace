@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '../ui'
 import { createReporterQuote } from '../../lib/api'
-import '../../styles/components/npc.css'
 
 interface NPCModalProps {
   isOpen: boolean
