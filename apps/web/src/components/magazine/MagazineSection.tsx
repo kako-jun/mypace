@@ -92,7 +92,7 @@ export function MagazineSection({ pubkey, isOwnProfile }: MagazineSectionProps) 
             {isOwnProfile && (
               <button className="magazine-add-btn" onClick={() => setShowEditor(true)} type="button">
                 <Icon name="Plus" size={20} />
-                <span>Add</span>
+                <span>Create</span>
               </button>
             )}
             {!isOwnProfile && magazines.length === 0 && <div className="magazine-empty">No magazines</div>}

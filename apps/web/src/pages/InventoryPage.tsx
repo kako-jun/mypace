@@ -602,8 +602,8 @@ export function InventoryPage() {
                 {wordrotInventory.length === 0 ? (
                   <div className="inventory-words-empty">
                     <Icon name="FlaskConical" size={32} />
-                    <p>No words collected yet.</p>
-                    <p className="inventory-words-hint">Click on highlighted words in posts to collect them!</p>
+                    <p>No Wordrots collected yet.</p>
+                    <p className="inventory-words-hint">Click on highlighted Wordrots in posts to collect them!</p>
                   </div>
                 ) : (
                   <div className="inventory-words-grid">

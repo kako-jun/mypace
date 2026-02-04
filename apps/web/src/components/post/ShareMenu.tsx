@@ -340,7 +340,7 @@ export default function ShareMenu({
               }}
             >
               <Icon name="Plus" size={16} />
-              <span>Create New Magazine</span>
+              <span>Create Magazine</span>
             </button>
           </>
         )}

@@ -109,13 +109,12 @@ export function MagazineEditor({ magazine, onSave, onClose }: MagazineEditorProp
         <div className="magazine-editor-content">
           <div className="magazine-editor-field">
             <label>Title</label>
-            <Input value={title} onChange={handleTitleChange} placeholder="Magazine title" maxLength={100} />
+            <Input value={title} onChange={handleTitleChange} placeholder="My Favorite Posts" maxLength={100} />
           </div>
 
           <div className="magazine-editor-field">
             <label>Slug</label>
-            <Input value={slug} onChange={handleSlugChange} placeholder="url-identifier" maxLength={50} />
-            <span className="magazine-editor-hint">Used in URL: /magazine/{slug || '...'}</span>
+            <Input value={slug} onChange={handleSlugChange} placeholder="my-favorite-posts" maxLength={50} />
           </div>
 
           <div className="magazine-editor-field">
@@ -154,7 +153,7 @@ export function MagazineEditor({ magazine, onSave, onClose }: MagazineEditorProp
               ) : (
                 <div className="magazine-thumbnail-placeholder">
                   <Icon name="Image" size={24} />
-                  <span>{uploading ? 'Uploading...' : 'Click or drop image'}</span>
+                  <span>{uploading ? 'Uploading...' : 'Drop image here'}</span>
                 </div>
               )}
               <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
