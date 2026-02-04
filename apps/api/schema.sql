@@ -301,23 +301,3 @@ CREATE TABLE IF NOT EXISTS wordrot_image_queue (
 
 CREATE INDEX IF NOT EXISTS idx_wordrot_image_queue_status ON wordrot_image_queue(status);
 
--- =====================================================
--- NPC Reporter (Shared Article Quote) tables
--- =====================================================
-
--- Article quotes cache (for reporter NPC)
-CREATE TABLE IF NOT EXISTS article_quotes (
-  url_hash TEXT PRIMARY KEY,              -- SHA-256 hash of normalized URL
-  url TEXT NOT NULL,                      -- Original URL
-  event_id TEXT NOT NULL,                 -- Nostr event ID
-  event_json TEXT NOT NULL,               -- Event JSON (cache)
-  ogp_title TEXT,
-  ogp_description TEXT,
-  ogp_image TEXT,
-  reply_count INTEGER DEFAULT 0,          -- Reply count (updated periodically)
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_article_quotes_event_id ON article_quotes(event_id);
-CREATE INDEX IF NOT EXISTS idx_article_quotes_created_at ON article_quotes(created_at DESC);

@@ -55,19 +55,6 @@ export function normalizeUrl(url: string): string {
 }
 
 /**
- * Generate SHA-256 hash of normalized URL (async, using Web Crypto API)
- */
-export async function hashUrl(url: string): Promise<string> {
-  const normalized = normalizeUrl(url)
-  const data = new TextEncoder().encode(normalized)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  const hashArray = new Uint8Array(hashBuffer)
-  return Array.from(hashArray)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
-/**
  * Validate URL (http/https only)
  */
 export function isValidUrl(url: string): boolean {

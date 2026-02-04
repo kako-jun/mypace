@@ -707,7 +707,6 @@ export interface ReporterQuote {
     title: string | null
     description: string | null
     image: string | null
-    replyCount?: number
   }
 }
 
@@ -737,7 +736,7 @@ export async function createReporterQuote(url: string): Promise<{
   success: boolean
   quote?: ReporterQuote
   error?: string
-  eventId?: string
+  isExisting?: boolean
 }> {
   try {
     const res = await fetch(`${API_BASE}/api/npc/reporter`, {
@@ -747,9 +746,11 @@ export async function createReporterQuote(url: string): Promise<{
     })
     const data = await res.json()
 
-    if (data.success) {
+    // New quote created
+    if (data.created) {
       return {
         success: true,
+        isExisting: false,
         quote: {
           event: data.event,
           metadata: data.metadata,
@@ -757,11 +758,11 @@ export async function createReporterQuote(url: string): Promise<{
       }
     }
 
-    // Already exists case
-    if (data.error === 'already_exists') {
+    // Existing quote found
+    if (data.found) {
       return {
         success: true,
-        eventId: data.eventId,
+        isExisting: true,
         quote: {
           event: data.event,
           metadata: data.metadata,
@@ -769,7 +770,7 @@ export async function createReporterQuote(url: string): Promise<{
       }
     }
 
-    return { success: false, error: data.error || 'Unknown error' }
+    return { success: false, error: data.message || data.error || 'Unknown error' }
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Network error' }
   }

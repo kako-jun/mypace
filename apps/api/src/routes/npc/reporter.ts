@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { finalizeEvent, getPublicKey } from 'nostr-tools/pure'
 import { hexToBytes } from 'nostr-tools/utils'
 import type { Bindings } from '../../types'
-import { getCurrentTimestamp, hashUrl, isValidUrl } from '../../utils'
+import { getCurrentTimestamp, normalizeUrl, isValidUrl } from '../../utils'
 import { TIMEOUT_MS_FETCH, GENERAL_RELAYS, TIMEOUT_MS_RELAY, MYPACE_TAG } from '../../constants'
 
 const reporter = new Hono<{ Bindings: Bindings }>()
@@ -15,6 +15,17 @@ interface OgpData {
   title?: string
   description?: string
   image?: string
+}
+
+// Nostr event interface
+interface NostrEvent {
+  id: string
+  pubkey: string
+  created_at: number
+  kind: number
+  tags: string[][]
+  content: string
+  sig: string
 }
 
 // Extract OGP from HTML
@@ -65,16 +76,60 @@ async function fetchOgp(url: string): Promise<OgpData | null> {
   }
 }
 
+// Query relays for existing quote by reporter pubkey and URL
+async function findExistingQuote(reporterPubkey: string, normalizedUrl: string): Promise<NostrEvent | null> {
+  const relay = GENERAL_RELAYS[0] // Use first relay for queries
+
+  try {
+    const ws = new WebSocket(relay)
+
+    return new Promise<NostrEvent | null>((resolve) => {
+      const events: NostrEvent[] = []
+      const timeout = setTimeout(() => {
+        ws.close()
+        resolve(events.length > 0 ? events[0] : null)
+      }, TIMEOUT_MS_RELAY)
+
+      ws.addEventListener('open', () => {
+        // Query for reporter's posts with the 'r' tag matching the URL
+        const filter = {
+          authors: [reporterPubkey],
+          kinds: [1],
+          '#r': [normalizedUrl],
+          '#t': [QUOTE_TAG],
+          limit: 1,
+        }
+        ws.send(JSON.stringify(['REQ', 'quote-search', filter]))
+      })
+
+      ws.addEventListener('message', (msg) => {
+        try {
+          const data = JSON.parse(msg.data as string)
+          if (data[0] === 'EVENT' && data[1] === 'quote-search') {
+            events.push(data[2] as NostrEvent)
+          } else if (data[0] === 'EOSE' && data[1] === 'quote-search') {
+            clearTimeout(timeout)
+            ws.close()
+            resolve(events.length > 0 ? events[0] : null)
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      })
+
+      ws.addEventListener('error', () => {
+        clearTimeout(timeout)
+        ws.close()
+        resolve(null)
+      })
+    })
+  } catch {
+    return null
+  }
+}
+
 // Publish event to relays
-async function publishToRelays(event: {
-  id: string
-  pubkey: string
-  created_at: number
-  kind: number
-  tags: string[][]
-  content: string
-  sig: string
-}): Promise<boolean> {
+async function publishToRelays(event: NostrEvent): Promise<boolean> {
   const relays = GENERAL_RELAYS.slice(0, 2) // Use first 2 relays
 
   const publishPromises = relays.map(async (relay) => {
@@ -119,6 +174,20 @@ async function publishToRelays(event: {
   return results.some((r) => r)
 }
 
+// Extract OGP metadata from event tags
+function extractOgpFromEvent(event: NostrEvent): OgpData {
+  const getTagValue = (name: string): string | undefined => {
+    const tag = event.tags.find((t) => t[0] === name)
+    return tag?.[1]
+  }
+
+  return {
+    title: getTagValue('ogp:title'),
+    description: getTagValue('ogp:description'),
+    image: getTagValue('ogp:image'),
+  }
+}
+
 // GET /api/npc/reporter - Find existing quote for URL
 reporter.get('/', async (c) => {
   const url = c.req.query('url')
@@ -127,32 +196,27 @@ reporter.get('/', async (c) => {
     return c.json({ error: 'invalid_url', message: 'URL is required and must be valid' }, 400)
   }
 
-  const db = c.env.DB
-  const urlHash = await hashUrl(url)
+  // Check if reporter is configured
+  const sk = c.env.REPORTER_SECRET_KEY
+  if (!sk) {
+    return c.json({ error: 'reporter_not_configured', message: 'Reporter account is not configured' }, 500)
+  }
+
+  const pk = getPublicKey(hexToBytes(sk))
+  const normalized = normalizeUrl(url)
 
   try {
-    const existing = await db
-      .prepare(
-        'SELECT event_json, ogp_title, ogp_description, ogp_image, reply_count FROM article_quotes WHERE url_hash = ?'
-      )
-      .bind(urlHash)
-      .first<{
-        event_json: string
-        ogp_title: string | null
-        ogp_description: string | null
-        ogp_image: string | null
-        reply_count: number
-      }>()
+    const existingEvent = await findExistingQuote(pk, normalized)
 
-    if (existing) {
+    if (existingEvent) {
+      const ogp = extractOgpFromEvent(existingEvent)
       return c.json({
         found: true,
-        event: JSON.parse(existing.event_json),
+        event: existingEvent,
         metadata: {
-          title: existing.ogp_title,
-          description: existing.ogp_description,
-          image: existing.ogp_image,
-          replyCount: existing.reply_count,
+          title: ogp.title || null,
+          description: ogp.description || null,
+          image: ogp.image || null,
         },
       })
     }
@@ -160,7 +224,7 @@ reporter.get('/', async (c) => {
     return c.json({ found: false })
   } catch (e) {
     console.error('Reporter GET error:', e)
-    return c.json({ error: 'internal_error', message: 'Failed to query database' }, 500)
+    return c.json({ error: 'internal_error', message: 'Failed to query relays' }, 500)
   }
 })
 
@@ -179,39 +243,26 @@ reporter.post('/', async (c) => {
     return c.json({ error: 'reporter_not_configured', message: 'Reporter account is not configured' }, 500)
   }
 
-  const db = c.env.DB
-  const urlHash = await hashUrl(url)
+  const pk = getPublicKey(hexToBytes(sk))
+  const normalized = normalizeUrl(url)
   const now = getCurrentTimestamp()
 
   try {
-    // Check if already exists
-    const existing = await db
-      .prepare(
-        'SELECT event_id, event_json, ogp_title, ogp_description, ogp_image FROM article_quotes WHERE url_hash = ?'
-      )
-      .bind(urlHash)
-      .first<{
-        event_id: string
-        event_json: string
-        ogp_title: string | null
-        ogp_description: string | null
-        ogp_image: string | null
-      }>()
+    // Check if already exists on relays
+    const existingEvent = await findExistingQuote(pk, normalized)
 
-    if (existing) {
-      return c.json(
-        {
-          error: 'already_exists',
-          eventId: existing.event_id,
-          event: JSON.parse(existing.event_json),
-          metadata: {
-            title: existing.ogp_title,
-            description: existing.ogp_description,
-            image: existing.ogp_image,
-          },
+    if (existingEvent) {
+      const ogp = extractOgpFromEvent(existingEvent)
+      return c.json({
+        found: true,
+        message: 'Quote already exists for this article',
+        event: existingEvent,
+        metadata: {
+          title: ogp.title || null,
+          description: ogp.description || null,
+          image: ogp.image || null,
         },
-        409
-      )
+      })
     }
 
     // Fetch OGP
@@ -221,8 +272,7 @@ reporter.post('/', async (c) => {
     }
 
     // Create event
-    const pk = getPublicKey(hexToBytes(sk))
-    const content = `📰 ${ogp.title}\n\nこの記事について感想をリプライしよう！\n\n${url}`
+    const content = `📰 ${ogp.title}\n\nShare your thoughts in the replies!\n\n${url}`
 
     const eventTemplate = {
       kind: 1,
@@ -232,8 +282,7 @@ reporter.post('/', async (c) => {
         ['t', MYPACE_TAG],
         ['t', QUOTE_TAG],
         ['client', 'mypace'],
-        ['r', url],
-        ['url-hash', urlHash],
+        ['r', normalized],
         ['ogp:title', ogp.title],
         ['ogp:description', ogp.description || ''],
         ['ogp:image', ogp.image || ''],
@@ -246,36 +295,16 @@ reporter.post('/', async (c) => {
     // Publish to relays
     const published = await publishToRelays(signedEvent)
     if (!published) {
-      console.error('Failed to publish to any relay')
-      // Continue anyway - save to D1 for retry later
+      return c.json({ error: 'publish_failed', message: 'Failed to publish to relays' }, 500)
     }
 
-    // Save to D1
-    await db
-      .prepare(
-        `INSERT INTO article_quotes (url_hash, url, event_id, event_json, ogp_title, ogp_description, ogp_image, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      )
-      .bind(
-        urlHash,
-        url,
-        signedEvent.id,
-        JSON.stringify(signedEvent),
-        ogp.title,
-        ogp.description || null,
-        ogp.image || null,
-        now,
-        now
-      )
-      .run()
-
     return c.json({
-      success: true,
+      created: true,
       event: signedEvent,
       metadata: {
         title: ogp.title,
-        description: ogp.description,
-        image: ogp.image,
+        description: ogp.description || null,
+        image: ogp.image || null,
       },
     })
   } catch (e) {
