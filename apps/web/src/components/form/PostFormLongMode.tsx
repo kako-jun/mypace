@@ -149,7 +149,7 @@ export function PostFormLongMode({
         >
           {nip07Missing && (
             <div className="nip07-missing-banner">
-              ⚠️ NIP-07 extension missing. Please reinstall or{' '}
+              Warning: NIP-07 extension missing. Please reinstall or{' '}
               <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('open-settings'))}>
                 import your key
               </button>

@@ -119,7 +119,7 @@ export default function KeysSection({
 
       {/* Warning when NIP-07 was enabled but extension is missing */}
       {nip07Missing && (
-        <SettingsSection title="⚠️ Extension Missing" variant="danger">
+        <SettingsSection title="Extension Missing" variant="danger">
           <p className="hint">
             NIP-07 extension was enabled but is no longer detected. Please reinstall the extension or import your
             secret key below.
@@ -162,7 +162,7 @@ export default function KeysSection({
             </label>
             {usingNip07 && (
               <div className="auth-method-content">
-                <p className="hint connected">✓ Connected: {npub}</p>
+                <p className="hint connected">Connected: {npub}</p>
               </div>
             )}
           </div>
