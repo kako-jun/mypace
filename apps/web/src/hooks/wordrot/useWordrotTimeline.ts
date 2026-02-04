@@ -12,6 +12,10 @@ interface WordsCache {
   [eventId: string]: string[]
 }
 
+interface WordImageCache {
+  [word: string]: string | null // word text -> image URL or null
+}
+
 /**
  * Hook for managing wordrot functionality on the timeline
  * Handles batch extraction, caching, and collection
@@ -19,6 +23,7 @@ interface WordsCache {
 export function useWordrotTimeline() {
   const [wordsCache, setWordsCache] = useState<WordsCache>({})
   const [collectedWords, setCollectedWords] = useState<Set<string>>(new Set())
+  const [wordImages, setWordImages] = useState<WordImageCache>({})
   const [isExtracting, setIsExtracting] = useState(false)
   const [pubkey, setPubkey] = useState<string | null>(null)
 
@@ -39,6 +44,15 @@ export function useWordrotTimeline() {
         const inventory = await fetchWordrotInventory(pk)
         const collected = new Set<string>(inventory.words.map((w) => w.word.text))
         setCollectedWords(collected)
+
+        // Build image cache from inventory
+        const images: WordImageCache = {}
+        for (const item of inventory.words) {
+          if (item.word.image_url) {
+            images[item.word.text] = item.word.image_url
+          }
+        }
+        setWordImages(images)
       } catch {
         // User not logged in or error - silently fail
       }
@@ -119,6 +133,12 @@ export function useWordrotTimeline() {
           // Update collected words set
           setCollectedWords((prev) => new Set([...prev, word]))
 
+          // Update image cache if word has an image
+          const imageUrl = result.word.image_url
+          if (imageUrl) {
+            setWordImages((prev) => ({ ...prev, [word]: imageUrl }))
+          }
+
           // Trigger celebration
           if (celebrate) {
             celebrate({
@@ -150,6 +170,16 @@ export function useWordrotTimeline() {
     [collectedWords]
   )
 
+  /**
+   * Get image URL for a word (if available)
+   */
+  const getWordImage = useCallback(
+    (word: string): string | null => {
+      return wordImages[word] || null
+    },
+    [wordImages]
+  )
+
   // Memoize context value to prevent unnecessary re-renders of consumers
   return useMemo(
     () => ({
@@ -167,9 +197,25 @@ export function useWordrotTimeline() {
       collectedWords,
       isCollected,
 
+      // Images
+      wordImages,
+      getWordImage,
+
       // User state
       isLoggedIn: !!pubkey,
     }),
-    [getWords, hasWords, wordsCache, extractWords, isExtracting, collect, collectedWords, isCollected, pubkey]
+    [
+      getWords,
+      hasWords,
+      wordsCache,
+      extractWords,
+      isExtracting,
+      collect,
+      collectedWords,
+      isCollected,
+      wordImages,
+      getWordImage,
+      pubkey,
+    ]
   )
 }

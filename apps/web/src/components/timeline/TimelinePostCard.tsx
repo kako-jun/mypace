@@ -53,6 +53,7 @@ interface TimelinePostCardProps {
   // Wordrot props
   wordrotWords?: string[]
   wordrotCollected?: Set<string>
+  wordrotImages?: Record<string, string | null>
   onWordCollect?: (word: string, eventId: string) => void
 }
 
@@ -87,6 +88,7 @@ export default function TimelinePostCard({
   getAvatarUrl,
   wordrotWords,
   wordrotCollected,
+  wordrotImages,
   onWordCollect,
 }: TimelinePostCardProps) {
   const [expandedThread, setExpandedThread] = useState(false)
@@ -250,6 +252,7 @@ export default function TimelinePostCard({
                   tags={event.tags}
                   wordrotWords={wordrotWords}
                   wordrotCollected={wordrotCollected}
+                  wordrotImages={wordrotImages}
                   onWordClick={onWordCollect ? (word) => onWordCollect(word, event.id) : undefined}
                 />
               </div>

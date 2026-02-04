@@ -23,6 +23,7 @@ interface PostContentProps {
   // Wordrot props
   wordrotWords?: string[]
   wordrotCollected?: Set<string>
+  wordrotImages?: Record<string, string | null> // word -> image URL
   onWordClick?: (word: string) => void
 }
 
@@ -39,6 +40,7 @@ export function PostContent({
   tags,
   wordrotWords,
   wordrotCollected,
+  wordrotImages,
   onWordClick,
 }: PostContentProps) {
   // Set up wordrot click handler
@@ -111,6 +113,27 @@ export function PostContent({
         </>
       )}
       <PostEmbeds content={displayContent} ogpMap={ogpMap} enableOgpFallback={enableOgpFallback} />
+
+      {/* Wordrot character images for collected words */}
+      {wordrotWords && wordrotWords.length > 0 && wordrotImages && wordrotCollected && (
+        <div className="wordrot-images-section">
+          {wordrotWords
+            .filter((word) => wordrotCollected.has(word) && wordrotImages[word])
+            .map((word) => (
+              <button
+                key={word}
+                className="wordrot-image-button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onWordClick?.(word)
+                }}
+                title={word}
+              >
+                <img src={wordrotImages[word]!} alt={word} className="wordrot-image" />
+              </button>
+            ))}
+        </div>
+      )}
     </>
   )
 }

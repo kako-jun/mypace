@@ -245,6 +245,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
               getAvatarUrl={getAvatarUrl}
               wordrotWords={wordrot?.getWords(event.id)}
               wordrotCollected={wordrot?.collectedWords}
+              wordrotImages={wordrot?.wordImages}
               onWordCollect={wordrot?.collect}
             />
           </Fragment>
