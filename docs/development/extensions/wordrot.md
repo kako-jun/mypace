@@ -3,38 +3,46 @@
 投稿から名詞を収集し、Word2Vecのようなベクトル演算で新しい単語を合成する機能。
 「言葉が腐る」= brainrot的な美学で、変な結果も楽しむコレクション要素。
 
+## フェーズ
+
+| フェーズ | 内容 | 状態 |
+|---------|------|------|
+| Phase 1 | 単語収集（タイムラインハイライト、クリック収集、インベントリ） | 実装対象 |
+| Phase 2 | 単語合成（A + B = ? または A - B + C = ?） | 後日 |
+
 ## 背景
 
 - Word2Vecの有名な例: 「王様 - 男 + 女 = 女王」
 - ゲーム的な例: 「ファイアマリオ - マリオ + ルイージ = ファイアルイージ」
 - タイムライン上の投稿から名詞を見つけてクリックで収集
-- 収集した単語を使って A - B + C = ? の合成を楽しむ
+- 収集した単語を使って合成を楽しむ（Phase 2）
 - 単語ごとにAI生成のキャラクター画像が付く（ドット絵/2頭身）
 
 ## コンセプト
 
-### 収集の楽しさ
+### 収集の楽しさ（Phase 1）
 
 - タイムラインを眺めているだけで「お、この単語まだ持ってない」と気づく
 - クリックして収集 → ゲットした感覚
 - 同じ単語は1回のみ収集可能（重複なし）
 - レアな単語、変な単語を見つける喜び
 
-### 合成の楽しさ
+### 合成の楽しさ（Phase 2）
 
-- 3つの単語を組み合わせて新しい単語を生み出す
+- 単語を組み合わせて新しい単語を生み出す
+- 足し算のみ（A + B = ?）または引き算も（A - B + C = ?）は後日検討
 - 結果はLLMが意味的に計算（ベクトル演算的な動作）
 - 変な結果が出ても「brainrot」として楽しむ
 - 新しい単語を最初に生み出した人は「発見者」
 
-### 画像生成
+### 画像生成（Phase 1）
 
 - 単語が初めてシステムに登録されたとき、AI画像を生成
 - 統一フォーマット: 正方形、ドット絵または2頭身キャラ
 - 変な絵でも「味がある」として受け入れる美学
 - 画像はnostr.buildにアップロードして永続化
 
-## データフロー
+## データフロー（Phase 1）
 
 ### タイムライン表示時
 
@@ -89,32 +97,24 @@
 5. 収集演出（モーダル表示）
 ```
 
-### 単語合成時
+### 単語合成時（Phase 2）
+
+> Phase 2で実装予定。足し算のみ（A + B = ?）にするか、引き算も含める（A - B + C = ?）かは後日検討。
 
 ```
-1. ユーザーがスロットA, B, Cに単語をセット
-   例: A=ファイアマリオ, B=マリオ, C=ルイージ
+1. ユーザーがスロットに単語をセット
    ↓
 2. POST /api/wordrot/synthesize
-   - pubkey: ユーザー
-   - slotA, slotB, slotC: 単語テキスト
    ↓
 3. API側処理:
-   - LLMに「A - B + C = ?」を計算させる
+   - LLMに演算を計算させる
    - 結果の単語がDBになければ作成
    - wordrot_syntheses に合成記録
-   - 新規単語なら画像生成をキュー
    ↓
-4. レスポンス:
-   {
-     result: { id, text, imageUrl, ... },
-     formula: "ファイアマリオ - マリオ + ルイージ = ファイアルイージ",
-     isNewWord: true/false,      // 単語自体が新規
-     isNewSynthesis: true/false  // この組み合わせが新規
-   }
+4. レスポンス: 結果の単語
 ```
 
-## DBスキーマ
+## DBスキーマ（Phase 1）
 
 ### wordrot_words（単語マスター）
 
@@ -162,25 +162,9 @@ CREATE TABLE IF NOT EXISTS wordrot_event_words (
 );
 ```
 
-### wordrot_syntheses（合成記録）
+### wordrot_syntheses（合成記録）【Phase 2】
 
-過去の合成履歴。同じ組み合わせは同じ結果を返す。
-
-```sql
-CREATE TABLE IF NOT EXISTS wordrot_syntheses (
-  id TEXT PRIMARY KEY,           -- UUID
-  slot_a TEXT NOT NULL,          -- 単語Aのテキスト
-  slot_b TEXT NOT NULL,          -- 単語Bのテキスト
-  slot_c TEXT NOT NULL,          -- 単語Cのテキスト
-  result_word_id TEXT NOT NULL,  -- 結果の単語ID
-  created_by TEXT NOT NULL,      -- 最初に合成したユーザー
-  created_at INTEGER NOT NULL,
-  UNIQUE(slot_a, slot_b, slot_c)
-);
-
-CREATE INDEX IF NOT EXISTS idx_wordrot_syntheses_combo
-  ON wordrot_syntheses(slot_a, slot_b, slot_c);
-```
+> Phase 2で実装予定。スキーマは合成仕様確定後に決定。
 
 ### wordrot_image_queue（画像生成キュー）
 
@@ -196,7 +180,7 @@ CREATE TABLE IF NOT EXISTS wordrot_image_queue (
 );
 ```
 
-## API仕様
+## API仕様（Phase 1）
 
 ### バッチ単語取得
 
@@ -266,45 +250,9 @@ POST /api/wordrot/collect
 
 **注意**: 収集済みの単語はUI側でクリック不可にするため、重複リクエストは発生しない。
 
-### 単語合成
+### 単語合成【Phase 2】
 
-```
-POST /api/wordrot/synthesize
-```
-
-リクエスト:
-
-```json
-{
-  "pubkey": "user_pubkey_here",
-  "slotA": "ファイアマリオ",
-  "slotB": "マリオ",
-  "slotC": "ルイージ"
-}
-```
-
-レスポンス:
-
-```json
-{
-  "result": {
-    "id": "result_word_uuid",
-    "text": "ファイアルイージ",
-    "imageUrl": "https://nostr.build/zzz.png"
-  },
-  "formula": "ファイアマリオ - マリオ + ルイージ = ファイアルイージ",
-  "isNewWord": true,
-  "isNewSynthesis": true
-}
-```
-
-エラー時:
-
-```json
-{
-  "error": "Synthesis failed: could not compute result"
-}
-```
+> Phase 2で実装予定。API仕様は合成方式確定後に決定。
 
 ### インベントリ取得
 
@@ -323,7 +271,7 @@ GET /api/wordrot/inventory/:pubkey
 }
 ```
 
-## UI仕様
+## UI仕様（Phase 1）
 
 ### タイムライン上のハイライト表示
 
@@ -383,23 +331,18 @@ GET /api/wordrot/inventory/:pubkey
 │ [Star] Stella    [FlaskConical] Wordrot             │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
-│ ┌─────────────────────────────────────────────────┐ │
-│ │ Word Synthesis                                  │ │
-│ │ Combine words: A - B + C = ?                    │ │
-│ │                                                 │ │
-│ │  [Slot A]  -  [Slot B]  +  [Slot C]  =  [???]  │ │
-│ │                                                 │ │
-│ │           [Clear]  [Synthesize]                 │ │
-│ └─────────────────────────────────────────────────┘ │
+│ Word Collection                                     │
 │                                                     │
-│ ┌─────────────────────────────────────────────────┐ │
-│ │ Word Collection                                  │ │
-│ │                                                 │ │
-│ │ [img] [img] [img] [img] [img] [img]            │ │
-│ │ マリオ ルイージ  スター  キノコ  ...            │ │
-│ └─────────────────────────────────────────────────┘ │
+│ [img] [img] [img] [img] [img] [img]                │
+│ マリオ ルイージ  スター  キノコ  ...                │
+│                                                     │
+│ [img] [img] [img] [img] [img] [img]                │
+│ カート  ファイア  ...                               │
+│                                                     │
 └─────────────────────────────────────────────────────┘
 ```
+
+> 合成UIはPhase 2で追加予定。
 
 ### ワードカード
 
@@ -415,8 +358,8 @@ GET /api/wordrot/inventory/:pubkey
 
 **状態による表示**:
 - 通常: 黒枠、白背景
-- 選択中（合成スロット用）: 紫枠、薄紫背景
 - ホバー: 影が付く
+- 選択中（Phase 2 合成スロット用）: 紫枠、薄紫背景
 
 ## アクセシビリティ
 
@@ -441,7 +384,7 @@ GET /api/wordrot/inventory/:pubkey
 
 ## LLM処理
 
-### 名詞抽出
+### 名詞抽出（Phase 1）
 
 Workers AI (LLaMA 3.1 8B) を使用。
 
@@ -470,22 +413,11 @@ Workers AI (LLaMA 3.1 8B) を使用。
 出力: ["今日", "マリオ", "カート", "ルイージ", "スター"]
 ```
 
-### 単語合成
+### 単語合成【Phase 2】
 
-プロンプト例:
+> Phase 2で実装予定。
 
-```
-Word2Vecのようなベクトル演算を意味的に行ってください。
-
-計算: ファイアマリオ - マリオ + ルイージ = ?
-
-「ファイアマリオ」から「マリオ」の要素を引き、「ルイージ」の要素を足すと
-どのような概念になるか、1つの単語または短いフレーズで答えてください。
-
-回答:
-```
-
-### 画像生成
+### 画像生成（Phase 1）
 
 Workers AI (Stable Diffusion XL) を使用。
 
@@ -509,23 +441,30 @@ game sprite style, square format
 
 ## ファイル構成
 
+### Phase 1
+
 ```
 apps/api/src/routes/wordrot.ts       # APIエンドポイント
 apps/web/src/hooks/wordrot/
   ├── index.ts
-  ├── useWordrot.ts                  # 収集・インベントリ
-  └── useSynthesis.ts                # 合成
+  └── useWordrot.ts                  # 収集・インベントリ
 apps/web/src/components/wordrot/
   ├── index.ts
   ├── WordCard.tsx                   # 単語カード
   ├── WordHighlight.tsx              # 本文内ハイライト
-  ├── CollectCelebration.tsx         # 収集演出モーダル
-  └── SynthesisPanel.tsx             # 合成UI
+  └── CollectCelebration.tsx         # 収集演出モーダル
 apps/web/src/styles/components/
   ├── word-card.css
   ├── word-highlight.css
-  ├── collect-celebration.css
-  └── synthesis-panel.css
+  └── collect-celebration.css
+```
+
+### Phase 2（後日追加）
+
+```
+apps/web/src/hooks/wordrot/useSynthesis.ts
+apps/web/src/components/wordrot/SynthesisPanel.tsx
+apps/web/src/styles/components/synthesis-panel.css
 ```
 
 [← 拡張仕様一覧に戻る](./index.md)
