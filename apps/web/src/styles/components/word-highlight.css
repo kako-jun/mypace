@@ -1,43 +1,28 @@
 /* Word highlight styling for wordrot collection */
-/* Uses link color (#4a9) for consistency */
 
-/* Reset ALL button/element styles first, then apply consistent styling */
 .wordrot-highlight {
-  /* Complete reset - inherit all from parent */
-  appearance: none;
-  background: transparent;
-  border: none;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  color: inherit;
-  line-height: inherit;
-  text-align: center;
-  text-decoration: none;
-  white-space: nowrap;
-
-  /* Now apply consistent styling */
-  display: inline;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-
-  /* Border with uniform vertical padding */
+  display: inline-block;
   border: 1px solid #4a9;
   border-radius: 3px;
-  padding: 2px 4px; /* Top and Bottom: 2px, Sides: 4px */
+  padding: 2px 4px;
   margin: 0 2px;
-
-  /* Ensure consistent positioning with surrounding text */
   vertical-align: baseline;
+  line-height: 1;
+  font-size: inherit;
+  color: inherit;
+  background: transparent;
 }
 
 .wordrot-highlight:hover {
   border-color: #3d9;
 }
 
-/* Button element specific styles */
 button.wordrot-highlight {
   cursor: pointer;
+}
+
+span.wordrot-highlight {
+  cursor: default;
 }
 
 .wordrot-highlight:active {
@@ -45,19 +30,10 @@ button.wordrot-highlight {
   top: 1px;
 }
 
-/* Already collected state - EXACT same styling */
+/* Already collected state */
 .wordrot-highlight.collected {
-  cursor: default;
-  border: 1px solid currentColor;
-  border-radius: 3px;
-  padding: 2px 4px;
-  margin: 0 2px;
+  border-color: currentColor;
   opacity: 0.6;
-  display: inline;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-  vertical-align: baseline;
-  color: inherit;
 }
 
 /* Glow animation for first discovery */
@@ -96,7 +72,7 @@ button.wordrot-highlight {
 
 .wordrot-collect-section .wordrot-highlight {
   font-size: 0.85rem;
-  padding: 2px 6px 1px 6px;
+  padding: 2px 6px;
   border-radius: 3px;
 }
 
