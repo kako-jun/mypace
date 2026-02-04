@@ -124,7 +124,7 @@ export function usePostViewData(eventId: string): PostViewData {
 
             // Fetch user's inventory to know which words are collected
             const inventory = await fetchWordrotInventory(pubkey)
-            const collected = new Set<string>(inventory.words.map((w) => w.word.text))
+            const collected = new Set<string>(inventory.words.map((w) => w.word.text.toLowerCase()))
             setWordrotCollected(collected)
 
             // Build image cache from inventory

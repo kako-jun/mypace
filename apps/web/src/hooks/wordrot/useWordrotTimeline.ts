@@ -42,7 +42,7 @@ export function useWordrotTimeline() {
 
         // Load user's inventory to know which words are already collected
         const inventory = await fetchWordrotInventory(pk)
-        const collected = new Set<string>(inventory.words.map((w) => w.word.text))
+        const collected = new Set<string>(inventory.words.map((w) => w.word.text.toLowerCase()))
         setCollectedWords(collected)
 
         // Build image cache from inventory
@@ -146,8 +146,8 @@ export function useWordrotTimeline() {
         console.log('[useWordrotTimeline] collectWord result:', result)
 
         if (result.word) {
-          // Update collected words set
-          setCollectedWords((prev) => new Set([...prev, word]))
+          // Update collected words set (lowercase for case-insensitive comparison)
+          setCollectedWords((prev) => new Set([...prev, word.toLowerCase()]))
 
           // Update image cache if word has an image
           const imageUrl = result.word.image_url

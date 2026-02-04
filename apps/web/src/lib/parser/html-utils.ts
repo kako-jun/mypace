@@ -162,7 +162,8 @@ export function processWordHighlights(html: string, words: string[], collectedWo
     return segment.content.replace(regex, (match) => {
       // Find the original word (case-insensitive lookup)
       const word = words.find((w) => w.toLowerCase() === match.toLowerCase()) || match
-      const isCollected = collectedWords?.has(word) || false
+      // Case-insensitive collected check (compare lowercase)
+      const isCollected = collectedWords?.has(word.toLowerCase()) || false
       const collectedClass = isCollected ? ' collected' : ''
 
       if (isCollected) {

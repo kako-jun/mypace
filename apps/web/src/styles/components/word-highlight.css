@@ -9,9 +9,8 @@
   font: inherit;
   color: inherit;
 
-  /* Box border styling - link color for all sides when clickable */
+  /* Box border styling - link color for all sides, uniform thickness */
   border: 1px solid #4a9;
-  border-bottom-width: 3px; /* Thicker bottom border to indicate clickable */
   border-radius: 4px;
   padding: 1px 4px;
   margin: 0 2px;
