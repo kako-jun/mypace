@@ -10,8 +10,8 @@ export type Bindings = {
   VAPID_PUBLIC_KEY?: string
   VAPID_PRIVATE_KEY?: string
   VAPID_SUBJECT?: string // mailto:xxx or https://xxx
-  // Nostr key for nostr.build image uploads
-  NOSTR_BUILD_NSEC?: string
+  // NPC Uploader account for nostr.build image uploads
+  UPLOADER_NSEC?: string
   // NPC Reporter account for Shared Article Quote
   REPORTER_NSEC?: string
 }
