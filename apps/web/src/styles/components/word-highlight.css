@@ -1,21 +1,26 @@
 /* Word highlight styling for wordrot collection */
 /* Uses link color (#4a9) for consistency */
 
-.wordrot-highlight {
-  /* Reset button styles */
-  all: unset;
-  cursor: pointer;
-  display: inline;
+/* Base styles for both button and span */
+.wordrot-highlight,
+.wordrot-highlight.collected {
+  display: inline-block;
+  vertical-align: baseline;
   font: inherit;
   color: inherit;
+  line-height: inherit;
+  text-decoration: none;
+  background: transparent;
+  box-sizing: border-box;
+}
 
-  /* Box border styling - link color for all sides, uniform thickness */
+/* Clickable state (button element) */
+.wordrot-highlight {
+  cursor: pointer;
   border: 1px solid #4a9;
   border-radius: 4px;
   padding: 0 4px;
   margin: 0 2px;
-
-  /* Transition */
   transition: all 0.15s ease;
 }
 
@@ -27,12 +32,14 @@
   transform: scale(0.98);
 }
 
-/* Already collected state */
+/* Collected state (span element) */
 .wordrot-highlight.collected {
   cursor: default;
   border: 1px solid currentColor;
-  opacity: 0.7;
+  border-radius: 4px;
   padding: 0 4px;
+  margin: 0 2px;
+  opacity: 0.7;
 }
 
 /* Glow animation for first discovery */
