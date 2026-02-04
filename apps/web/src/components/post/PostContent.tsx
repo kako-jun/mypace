@@ -5,6 +5,7 @@ import { LIMITS } from '../../lib/constants'
 import { hasTeaserTag as checkTeaserTag, removeReadMoreLink, getTeaserColor } from '../../lib/nostr/tags'
 import { STELLA_COLORS } from '../../lib/nostr/events'
 import type { EmojiTag, ProfileMap, Event, OgpData } from '../../types'
+import '../../styles/components/word-highlight.css'
 
 interface PostContentProps {
   content: string
@@ -17,6 +18,10 @@ interface PostContentProps {
   enableOgpFallback?: boolean // Enable OGP fetching for direct page access
   onReadMore?: () => void
   tags?: string[][] // Event tags for fold detection
+  // Wordrot props
+  wordrotWords?: string[]
+  wordrotCollected?: Set<string>
+  onWordClick?: (word: string) => void
 }
 
 export function PostContent({
@@ -30,6 +35,9 @@ export function PostContent({
   enableOgpFallback = false,
   onReadMore,
   tags,
+  wordrotWords,
+  wordrotCollected,
+  onWordClick,
 }: PostContentProps) {
   // If event has teaser tag, content is already properly sized (280 chars + READ MORE link)
   // So we skip GUI truncation for long posts with teaser
@@ -84,6 +92,28 @@ export function PostContent({
         </>
       )}
       <PostEmbeds content={displayContent} ogpMap={ogpMap} enableOgpFallback={enableOgpFallback} />
+
+      {/* Wordrot collectible words */}
+      {wordrotWords && wordrotWords.length > 0 && onWordClick && (
+        <div className="wordrot-collect-section">
+          {wordrotWords.map((word) => {
+            const isCollected = wordrotCollected?.has(word)
+            return (
+              <button
+                key={word}
+                className={`wordrot-highlight ${isCollected ? 'collected' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onWordClick(word)
+                }}
+                title={isCollected ? `${word} (collected)` : `Collect: ${word}`}
+              >
+                {word}
+              </button>
+            )
+          })}
+        </div>
+      )}
     </>
   )
 }

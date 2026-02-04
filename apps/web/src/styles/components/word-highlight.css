@@ -103,3 +103,19 @@
     rgba(74, 222, 128, 0.25) 100%
   );
 }
+
+/* Collect section (word tags below post content) */
+.wordrot-collect-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.wordrot-collect-section .wordrot-highlight {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
