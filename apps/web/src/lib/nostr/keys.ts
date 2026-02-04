@@ -19,6 +19,11 @@ export function isNip07Enabled(): boolean {
   return hasNip07() && getUseNip07()
 }
 
+// Check if NIP-07 was enabled but extension is now missing
+export function isNip07Missing(): boolean {
+  return !hasNip07() && getUseNip07()
+}
+
 // Enable NIP-07 mode (clears stored secret key)
 export function enableNip07(): void {
   clearStoredSecretKey()
@@ -42,6 +47,11 @@ export async function getNip07PublicKey(): Promise<string | null> {
 export function getOrCreateSecretKey(): Uint8Array {
   if (typeof window === 'undefined') {
     throw new Error('Cannot access localStorage on server')
+  }
+
+  // Prevent accidental key generation when NIP-07 was enabled but extension is missing
+  if (isNip07Missing()) {
+    throw new Error('NIP-07 extension is missing. Please reinstall the extension or import your secret key.')
   }
 
   const stored = getSecretKey()

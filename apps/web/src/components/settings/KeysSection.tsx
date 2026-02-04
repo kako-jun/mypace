@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { importNsec, saveSecretKey, clearSecretKey, hasNip07, enableNip07, disableNip07 } from '../../lib/nostr/keys'
+import { importNsec, saveSecretKey, clearSecretKey, hasNip07, enableNip07, disableNip07, isNip07Missing } from '../../lib/nostr/keys'
 import { Button, Input, ErrorMessage, SettingsSection } from '../ui'
 import { copyToClipboard, removeLocalProfile } from '../../lib/utils'
 import { resetThemeColors } from '../../lib/storage'
@@ -27,6 +27,7 @@ export default function KeysSection({
   const [error, setError] = useState('')
 
   const nip07Available = hasNip07()
+  const nip07Missing = isNip07Missing()
 
   const handleCopy = async () => {
     if (await copyToClipboard(nsec)) {
@@ -115,6 +116,16 @@ export default function KeysSection({
         )}
         {usingNip07 && <p className="hint">Using NIP-07 extension (secret key managed by extension)</p>}
       </SettingsSection>
+
+      {/* Warning when NIP-07 was enabled but extension is missing */}
+      {nip07Missing && (
+        <SettingsSection title="⚠️ Extension Missing" variant="danger">
+          <p className="hint">
+            NIP-07 extension was enabled but is no longer detected. Please reinstall the extension or import your
+            secret key below.
+          </p>
+        </SettingsSection>
+      )}
 
       {/* Authentication Method - only show when NIP-07 extension is available */}
       {nip07Available ? (
