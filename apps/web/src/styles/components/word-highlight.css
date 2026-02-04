@@ -21,10 +21,10 @@
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 
-  /* Border with minimal vertical padding */
+  /* Border with uniform vertical padding */
   border: 1px solid #4a9;
   border-radius: 3px;
-  padding: 1px 4px 0 4px; /* Top: 1px, Bottom: 0, Sides: 4px */
+  padding: 2px 4px; /* Top and Bottom: 2px, Sides: 4px */
   margin: 0 2px;
 
   /* Ensure consistent positioning with surrounding text */
@@ -45,7 +45,7 @@
   cursor: default;
   border: 1px solid currentColor;
   border-radius: 3px;
-  padding: 1px 4px 0 4px;
+  padding: 2px 4px;
   margin: 0 2px;
   opacity: 0.6;
   display: inline;
