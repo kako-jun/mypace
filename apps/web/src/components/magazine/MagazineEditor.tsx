@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Icon, CloseButton, Button, Input, Textarea, Portal } from '../ui'
+import { useImageUpload, useDragDrop } from '../../hooks'
 import type { MagazineInput } from '../../lib/nostr/events'
 import type { Magazine } from '../../types'
 import '../../styles/components/magazine.css'
@@ -36,6 +37,32 @@ export function MagazineEditor({ magazine, onSave, onClose }: MagazineEditorProp
   const [image, setImage] = useState(magazine?.image ?? '')
   const [saving, setSaving] = useState(false)
   const [slugEdited, setSlugEdited] = useState(!!magazine?.slug)
+  const [uploadError, setUploadError] = useState('')
+
+  // Image upload
+  const { uploading, uploadFile } = useImageUpload()
+
+  const processImageUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please drop an image file')
+      return
+    }
+    setUploadError('')
+    const result = await uploadFile(file)
+    if (result.url) {
+      setImage(result.url)
+    } else if (result.error) {
+      setUploadError(result.error)
+    }
+  }
+
+  const { dragging, handlers } = useDragDrop(processImageUpload)
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) await processImageUpload(file)
+    e.target.value = ''
+  }
 
   const handleTitleChange = (value: string) => {
     setTitle(value)
@@ -103,13 +130,36 @@ export function MagazineEditor({ magazine, onSave, onClose }: MagazineEditorProp
           </div>
 
           <div className="magazine-editor-field">
-            <label>Thumbnail URL</label>
-            <Input type="url" value={image} onChange={setImage} placeholder="https://..." />
-            {image && (
-              <div className="magazine-editor-preview">
-                <img src={image} alt="Preview" onError={(e) => (e.currentTarget.style.display = 'none')} />
-              </div>
-            )}
+            <label>Thumbnail</label>
+            <label
+              className={`magazine-thumbnail-upload ${dragging ? 'dragging' : ''} ${image ? 'has-image' : ''}`}
+              onDragOver={handlers.onDragOver}
+              onDragLeave={handlers.onDragLeave}
+              onDrop={handlers.onDrop}
+            >
+              {image ? (
+                <>
+                  <img src={image} alt="Thumbnail" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                  <button
+                    type="button"
+                    className="magazine-thumbnail-remove"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setImage('')
+                    }}
+                  >
+                    <Icon name="X" size={16} />
+                  </button>
+                </>
+              ) : (
+                <div className="magazine-thumbnail-placeholder">
+                  <Icon name="Image" size={24} />
+                  <span>{uploading ? 'Uploading...' : 'Click or drop image'}</span>
+                </div>
+              )}
+              <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+            </label>
+            {uploadError && <span className="magazine-editor-error">{uploadError}</span>}
           </div>
         </div>
 
