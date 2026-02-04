@@ -123,6 +123,19 @@ async function saveShareTargetImage(file: File): Promise<void> {
   })
 }
 
+// Check if text contains a URL
+function containsUrl(text: string | null): boolean {
+  if (!text) return false
+  return /https?:\/\/[^\s]+/i.test(text)
+}
+
+// Extract first URL from text
+function extractUrl(text: string | null): string | null {
+  if (!text) return null
+  const match = text.match(/https?:\/\/[^\s]+/i)
+  return match ? match[0] : null
+}
+
 async function handleShareTarget(request: Request): Promise<Response> {
   const formData = await request.formData()
   const files = formData.getAll('images') as File[]
@@ -136,8 +149,17 @@ async function handleShareTarget(request: Request): Promise<Response> {
     return Response.redirect('/?share_image=pending', 303)
   }
 
-  // Text only: redirect to existing intent/post endpoint
+  // Check if there's a URL in the shared content
   const shareText = [title, text, url].filter(Boolean).join(' ')
+  const extractedUrl = url || extractUrl(text)
+
+  if (extractedUrl && containsUrl(shareText)) {
+    // URL found: show choice screen
+    const redirectUrl = `/?share_choice=pending&shared_url=${encodeURIComponent(extractedUrl)}&shared_text=${encodeURIComponent(shareText)}`
+    return Response.redirect(redirectUrl, 303)
+  }
+
+  // Text only (no URL): redirect to existing intent/post endpoint
   if (shareText) {
     const redirectUrl = `/intent/post?text=${encodeURIComponent(shareText)}`
     return Response.redirect(redirectUrl, 303)

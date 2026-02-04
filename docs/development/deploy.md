@@ -84,6 +84,8 @@ VAPID_SUBJECT = "https://mypace.llll-ll.com"  # Web Push送信者識別子
 |------|------|
 | `VAPID_PUBLIC_KEY` | Web Push用VAPID公開鍵 |
 | `VAPID_PRIVATE_KEY` | Web Push用VAPID秘密鍵 |
+| `UPLOADER_NSEC` | NPC Uploader用秘密鍵（nsec形式、Wordrot画像アップロード用） |
+| `REPORTER_NSEC` | NPC Reporter用秘密鍵（nsec形式、共有記事引用用） |
 
 ### Frontend (apps/web)
 

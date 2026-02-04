@@ -5,6 +5,7 @@ import { Timeline } from '../components/timeline'
 import { LightBox, triggerLightBox } from '../components/ui'
 import { MyStatsWidget } from '../components/stats/MyStatsWidget'
 import { useCelebration } from '../components/supernova'
+import { ShareChoiceModal } from '../components/npc'
 import { setImageClickHandler, clearImageClickHandler } from '../lib/parser'
 import { getDraft, setDraft, getDraftReplyTo, setDraftReplyTo, clearDraft } from '../lib/storage'
 import { consumeShareTargetImage } from '../lib/storage/share-target'
@@ -24,6 +25,7 @@ export function HomePage() {
   const [showPreview, setShowPreview] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [replyingTo, setReplyingTo] = useState<Event | null>(null)
+  const [shareChoiceModal, setShareChoiceModal] = useState<{ url: string; text: string } | null>(null)
   const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { celebrate } = useCelebration()
 
@@ -137,6 +139,20 @@ export function HomePage() {
     }
   }, [searchParams, navigate])
 
+  // Handle Web Share Target API (shared URL choice - reporter vs self post)
+  useEffect(() => {
+    const shareChoice = searchParams.get('share_choice')
+    if (shareChoice === 'pending') {
+      const sharedUrl = searchParams.get('shared_url') || ''
+      const sharedText = searchParams.get('shared_text') || ''
+      if (sharedUrl) {
+        setShareChoiceModal({ url: sharedUrl, text: sharedText })
+      }
+      // Remove parameters from URL
+      navigate('/', { replace: true })
+    }
+  }, [searchParams, navigate])
+
   // Set up image click handler for LightBox
   useEffect(() => {
     setImageClickHandler(triggerLightBox)
@@ -223,6 +239,12 @@ export function HomePage() {
           onSharedImageProcessed={handleSharedImageProcessed}
         />
         <MyStatsWidget />
+        <ShareChoiceModal
+          isOpen={!!shareChoiceModal}
+          onClose={() => setShareChoiceModal(null)}
+          sharedUrl={shareChoiceModal?.url || ''}
+          sharedText={shareChoiceModal?.text || ''}
+        />
       </>
     )
   }
@@ -250,6 +272,12 @@ export function HomePage() {
       </div>
       <LightBox />
       <MyStatsWidget />
+      <ShareChoiceModal
+        isOpen={!!shareChoiceModal}
+        onClose={() => setShareChoiceModal(null)}
+        sharedUrl={shareChoiceModal?.url || ''}
+        sharedText={shareChoiceModal?.text || ''}
+      />
     </>
   )
 }

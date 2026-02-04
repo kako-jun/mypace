@@ -300,3 +300,4 @@ CREATE TABLE IF NOT EXISTS wordrot_image_queue (
 );
 
 CREATE INDEX IF NOT EXISTS idx_wordrot_image_queue_status ON wordrot_image_queue(status);
+

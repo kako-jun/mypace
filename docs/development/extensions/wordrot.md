@@ -500,9 +500,15 @@ facing forward, full body, centered
 [NIP-96](https://github.com/nostr-protocol/nips/blob/master/96.md)準拠でnostr.buildにアップロード。
 
 **認証**:
-- アプリ専用のnsec（環境変数 `WORDROT_NSEC`）を使用
+- NPC Uploaderアカウントの秘密鍵（環境変数 `UPLOADER_NSEC`）を使用
 - NIP-98でAuthorization headerを生成
 - ユーザーのnsecは使用しない（サーバーサイドで処理するため）
+
+```bash
+# Cloudflare Workers secrets として設定
+wrangler secret put UPLOADER_NSEC
+# → nsec形式（bech32）の秘密鍵を入力
+```
 
 **削除用情報の保持**:
 - アップロード成功時、`image_hash`（SHA-256）を`wordrot_words`テーブルに保存

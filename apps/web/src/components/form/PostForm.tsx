@@ -37,6 +37,7 @@ import { VoicePicker } from '../voice'
 import { FormActions, ShortTextEditor, PostFormLongMode, TeaserPicker } from './index'
 import type { ShortTextEditorRef } from './ShortTextEditor'
 import { getTeaserColor } from '../../lib/nostr/tags'
+import { NPCModal } from '../npc'
 
 interface PostFormProps {
   longMode: boolean
@@ -87,6 +88,8 @@ export function PostForm({
   const [replyToProfile, setReplyToProfile] = useState<Profile | null | undefined>(undefined)
   const [teaserColor, setTeaserColor] = useState<StellaColor | null>(null)
   const [showTeaserPicker, setShowTeaserPicker] = useState(false)
+  const [postMode, setPostMode] = useState<'post' | 'npc'>('post')
+  const [showNPCModal, setShowNPCModal] = useState(false)
   const teaserButtonRef = useRef<HTMLButtonElement>(null)
   const shortTextEditorRef = useRef<ShortTextEditorRef>(null)
   const fileImportRef = useRef<HTMLInputElement>(null)
@@ -163,10 +166,11 @@ export function PostForm({
     }
   }, [editingEvent])
 
-  // Expand minimized editor when replying or editing
+  // Expand minimized editor when replying or editing, and reset to post mode
   useEffect(() => {
     if (replyingTo || editingEvent) {
       setMinimized(false)
+      setPostMode('post') // NPC mode is not available when editing/replying
     }
   }, [replyingTo, editingEvent])
 
@@ -465,12 +469,44 @@ export function PostForm({
     )
   }
 
+  // Handle NPC mode selection
+  const handleNPCModeSelect = () => {
+    setPostMode('npc')
+    setShowNPCModal(true)
+  }
+
+  const handleNPCModalClose = () => {
+    setShowNPCModal(false)
+    setPostMode('post')
+  }
+
+  const isEditingOrReplying = !!(editingEvent || replyingTo)
+
   // Short mode: full
   return (
     <form
       className={`post-form ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
       onSubmit={handleSubmit}
     >
+      <div className="post-mode-selector">
+        <button
+          type="button"
+          className={`post-mode-tab ${postMode === 'post' ? 'active' : ''}`}
+          onClick={() => setPostMode('post')}
+        >
+          Post
+        </button>
+        <button
+          type="button"
+          className={`post-mode-tab ${postMode === 'npc' ? 'active' : ''}`}
+          onClick={handleNPCModeSelect}
+          disabled={isEditingOrReplying}
+          title={isEditingOrReplying ? 'Not available when editing or replying' : 'Ask NPC to post'}
+        >
+          NPC
+        </button>
+      </div>
+
       {editingEvent &&
         (() => {
           // Check if the event being edited is a reply (has e tag with root/reply marker)
@@ -628,6 +664,8 @@ export function PostForm({
           onClose={() => setShowTeaserPicker(false)}
         />
       )}
+
+      <NPCModal isOpen={showNPCModal} onClose={handleNPCModalClose} />
     </form>
   )
 }

@@ -462,11 +462,11 @@ wordrot.post('/collect', async (c) => {
     }
 
     // Queue image generation (async, don't wait)
-    const nsec = c.env.NOSTR_NSEC
+    const nsec = c.env.UPLOADER_NSEC
     if (nsec) {
       generateWordImage(ai, db, nsec, wordRecord.id, word).catch(console.error)
     } else {
-      console.error('[collect] NOSTR_NSEC not configured')
+      console.error('[collect] UPLOADER_NSEC not configured')
     }
   } else {
     // Increment discovery count
@@ -656,7 +656,7 @@ wordrot.post('/synthesize', async (c) => {
 
       if (resultWord) {
         // Queue image generation
-        const nsec = c.env.NOSTR_NSEC
+        const nsec = c.env.UPLOADER_NSEC
         if (nsec) {
           generateWordImage(ai, db, nsec, resultWord.id, resultText).catch(console.error)
         }
@@ -886,7 +886,7 @@ wordrot.post('/retry-image/:wordId', async (c) => {
   }
 
   // Queue regeneration
-  const nsec = c.env.NOSTR_NSEC
+  const nsec = c.env.UPLOADER_NSEC
   if (nsec) {
     generateWordImage(ai, db, nsec, word.id, word.text).catch(console.error)
   }
