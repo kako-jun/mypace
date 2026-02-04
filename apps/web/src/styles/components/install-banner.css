@@ -1,11 +1,11 @@
-/* PWA Install Banner */
+/* PWA Install Banner - mypace style (no border-radius, black border) */
 .install-banner {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   background: var(--surface-primary);
-  border-bottom: 2px solid var(--theme-primary, #FFCB3D);
+  border-bottom: 2px solid #333;
   padding: 12px 16px;
   z-index: 3000;
   animation: install-banner-slide-down 0.3s ease-out;
@@ -30,9 +30,9 @@
   margin: 0 auto;
 }
 
-.install-banner-content > svg {
+.install-banner-icon {
   flex-shrink: 0;
-  color: var(--theme-primary, #FFCB3D);
+  border-radius: 4px;
 }
 
 .install-banner-message {
@@ -46,7 +46,6 @@
 }
 
 .install-banner-btn {
-  border-radius: 6px;
   padding: 8px 16px;
   font-size: 0.85rem;
   font-weight: 500;
@@ -57,7 +56,7 @@
 .install-banner-btn.install {
   background: var(--theme-primary, #FFCB3D);
   color: #333;
-  border: none;
+  border: 2px solid #333;
 }
 
 .install-banner-btn.install:hover {
@@ -67,11 +66,11 @@
 .install-banner-btn.dismiss {
   background: transparent;
   color: var(--text-primary);
-  border: 1px solid color-mix(in srgb, var(--text-primary) 30%, transparent 70%);
+  border: 2px solid #333;
 }
 
 .install-banner-btn.dismiss:hover {
-  background: color-mix(in srgb, var(--text-primary) 10%, transparent 90%);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 /* Mobile responsive */

@@ -1,5 +1,4 @@
 import { usePWAInstall } from '../../hooks/ui/usePWAInstall'
-import { Icon } from '../ui'
 
 export function InstallBanner() {
   const { canInstall, promptInstall, dismiss } = usePWAInstall()
@@ -16,7 +15,13 @@ export function InstallBanner() {
   return (
     <div className="install-banner">
       <div className="install-banner-content">
-        <Icon name="Download" size={20} />
+        <img
+          src="/static/pwa-icon-192.webp"
+          alt="MY PACE"
+          width={24}
+          height={24}
+          className="install-banner-icon"
+        />
         <span className="install-banner-message">
           Add MY PACE to your home screen for the best experience
         </span>
