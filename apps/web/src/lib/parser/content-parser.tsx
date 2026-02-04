@@ -105,6 +105,7 @@ export function renderContent(
 
   // 8. Process wordrot word highlights (before restoring code blocks)
   if (wordrotWords && wordrotWords.length > 0) {
+    console.log('[ContentParser] Processing wordrot highlights:', wordrotWords.length, 'words')
     html = processWordHighlights(html, wordrotWords, wordrotCollected)
   }
 

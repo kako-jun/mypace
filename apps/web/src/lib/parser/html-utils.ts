@@ -82,6 +82,12 @@ export function removeMediaLinks(html: string): string {
 export function processWordHighlights(html: string, words: string[], collectedWords?: Set<string>): string {
   if (!words || words.length === 0) return html
 
+  console.log('[processWordHighlights] Input:', {
+    wordsCount: words.length,
+    htmlLength: html.length,
+    words: words.slice(0, 5),
+  })
+
   // Sort words by length descending to match longer words first
   const sortedWords = [...words].sort((a, b) => b.length - a.length)
 
@@ -164,5 +170,8 @@ export function processWordHighlights(html: string, words: string[], collectedWo
     })
   })
 
-  return result.join('')
+  const finalResult = result.join('')
+  const highlightCount = (finalResult.match(/wordrot-highlight/g) || []).length
+  console.log('[processWordHighlights] Output:', { highlightCount, resultLength: finalResult.length })
+  return finalResult
 }
