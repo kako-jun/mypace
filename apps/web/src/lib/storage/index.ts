@@ -25,6 +25,7 @@ export interface MypaceStorage {
   // Non-exportable
   auth: {
     sk: string
+    useNip07: boolean
   }
   cache: {
     profile: Profile | null
@@ -60,6 +61,7 @@ const DEFAULT_STORAGE: MypaceStorage = {
   },
   auth: {
     sk: '',
+    useNip07: false,
   },
   cache: {
     profile: null,
@@ -244,6 +246,14 @@ export function setSecretKey(sk: string): void {
 
 export function clearSecretKey(): void {
   updateStorage('auth', (a) => ({ ...a, sk: '' }))
+}
+
+export function getUseNip07(): boolean {
+  return readStorage().auth.useNip07
+}
+
+export function setUseNip07(useNip07: boolean): void {
+  updateStorage('auth', (a) => ({ ...a, useNip07 }))
 }
 
 // ============ Cache ============

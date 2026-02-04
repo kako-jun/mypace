@@ -5,7 +5,7 @@ import {
   getPublicKeyFromSecret,
   exportNsec,
   exportNpub,
-  hasNip07,
+  isNip07Enabled,
   getNip07PublicKey,
 } from '../../lib/nostr/keys'
 import '../../styles/components/settings.css'
@@ -84,7 +84,7 @@ export function Settings() {
         } catch {}
       }
 
-      if (hasNip07()) {
+      if (isNip07Enabled()) {
         const pubkey = await getNip07PublicKey()
         if (pubkey) {
           setUsingNip07(true)

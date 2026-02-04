@@ -1,5 +1,5 @@
 import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
-import { getSecretKey, setSecretKey, clearSecretKey as clearStoredSecretKey } from '../storage'
+import { getSecretKey, setSecretKey, clearSecretKey as clearStoredSecretKey, getUseNip07, setUseNip07 } from '../storage'
 
 declare global {
   interface Window {
@@ -12,6 +12,22 @@ declare global {
 
 export function hasNip07(): boolean {
   return typeof window !== 'undefined' && !!window.nostr
+}
+
+// Check if NIP-07 is both available AND enabled by user
+export function isNip07Enabled(): boolean {
+  return hasNip07() && getUseNip07()
+}
+
+// Enable NIP-07 mode (clears stored secret key)
+export function enableNip07(): void {
+  clearStoredSecretKey()
+  setUseNip07(true)
+}
+
+// Disable NIP-07 mode
+export function disableNip07(): void {
+  setUseNip07(false)
 }
 
 export async function getNip07PublicKey(): Promise<string | null> {

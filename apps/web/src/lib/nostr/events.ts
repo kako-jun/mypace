@@ -1,5 +1,5 @@
 import { finalizeEvent, type EventTemplate } from 'nostr-tools'
-import { hasNip07, getOrCreateSecretKey, getPublicKeyFromSecret } from './keys'
+import { isNip07Enabled, getOrCreateSecretKey, getPublicKeyFromSecret } from './keys'
 import { MYPACE_TAG, AURORA_TAG, KIND_MAGAZINE, MAGAZINE_TAG } from './constants'
 import { getStoredThemeColors } from './theme'
 import { unixNow } from '../utils'
@@ -56,7 +56,7 @@ export async function createTextNote(
     content,
   }
 
-  if (hasNip07() && window.nostr) {
+  if (isNip07Enabled() && window.nostr) {
     return (await window.nostr.signEvent(template)) as Event
   }
 
@@ -82,7 +82,7 @@ export async function createProfileEvent(profile: Profile): Promise<Event> {
     content: JSON.stringify(profileContent),
   }
 
-  if (hasNip07() && window.nostr) {
+  if (isNip07Enabled() && window.nostr) {
     return (await window.nostr.signEvent(template)) as Event
   }
 
@@ -97,7 +97,7 @@ export async function createDeleteEvent(eventIds: string[]): Promise<Event> {
     content: '',
   }
 
-  if (hasNip07() && window.nostr) {
+  if (isNip07Enabled() && window.nostr) {
     return (await window.nostr.signEvent(template)) as Event
   }
 
@@ -115,7 +115,7 @@ export async function createNip98AuthEvent(url: string, method: string): Promise
     content: '',
   }
 
-  if (hasNip07() && window.nostr) {
+  if (isNip07Enabled() && window.nostr) {
     return (await window.nostr.signEvent(template)) as Event
   }
 
@@ -224,7 +224,7 @@ export async function createReactionEvent(
     content,
   }
 
-  if (hasNip07() && window.nostr) {
+  if (isNip07Enabled() && window.nostr) {
     return (await window.nostr.signEvent(template)) as Event
   }
 
@@ -245,7 +245,7 @@ export async function createRepostEvent(targetEvent: Event): Promise<Event> {
     content: JSON.stringify(targetEvent),
   }
 
-  if (hasNip07() && window.nostr) {
+  if (isNip07Enabled() && window.nostr) {
     return (await window.nostr.signEvent(template)) as Event
   }
 
@@ -304,7 +304,7 @@ export async function createReplyEvent(
     content,
   }
 
-  if (hasNip07() && window.nostr) {
+  if (isNip07Enabled() && window.nostr) {
     return (await window.nostr.signEvent(template)) as Event
   }
 
@@ -312,7 +312,7 @@ export async function createReplyEvent(
 }
 
 export async function getCurrentPubkey(): Promise<string> {
-  if (hasNip07() && window.nostr) {
+  if (isNip07Enabled() && window.nostr) {
     return await window.nostr.getPublicKey()
   }
 
@@ -350,7 +350,7 @@ export async function createMagazineEvent(input: MagazineInput): Promise<Event> 
     content: '',
   }
 
-  if (hasNip07() && window.nostr) {
+  if (isNip07Enabled() && window.nostr) {
     return (await window.nostr.signEvent(template)) as Event
   }
 

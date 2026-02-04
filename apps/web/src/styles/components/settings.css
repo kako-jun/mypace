@@ -770,3 +770,39 @@
   font-size: 0.75rem;
   color: var(--text-secondary);
 }
+
+/* Authentication Method Section */
+.auth-method-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auth-method-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.auth-method-option input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.auth-method-content {
+  padding-left: 1.5rem;
+  margin-top: 0.25rem;
+}
+
+.auth-method-content .hint {
+  margin-bottom: 0.5rem;
+}
+
+.auth-method-content .hint.connected {
+  color: #4caf50;
+  font-weight: 500;
+}
