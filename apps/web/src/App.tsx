@@ -4,6 +4,7 @@ import { Layout } from './components/layout'
 import { HomePage } from './pages/HomePage'
 import { PostPage } from './pages/PostPage'
 import { UserPage } from './pages/UserPage'
+import { MagazinePage } from './pages/MagazinePage'
 import { SettingsPage } from './pages/SettingsPage'
 import { UploadHistoryPage } from './pages/UploadHistoryPage'
 import { InventoryPage } from './pages/InventoryPage'
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/intent/post" element={<HomePage />} />
           <Route path="/post/:id" element={<PostPage />} />
           <Route path="/user/:pubkey" element={<UserPage />} />
+          <Route path="/user/:npub/magazine/:slug" element={<MagazinePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/upload-history" element={<UploadHistoryPage />} />
           <Route path="/inventory" element={<InventoryPage />} />

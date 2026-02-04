@@ -1,9 +1,9 @@
 import { finalizeEvent, type EventTemplate } from 'nostr-tools'
 import { hasNip07, getOrCreateSecretKey, getPublicKeyFromSecret } from './keys'
-import { MYPACE_TAG, AURORA_TAG } from './constants'
+import { MYPACE_TAG, AURORA_TAG, KIND_MAGAZINE, MAGAZINE_TAG } from './constants'
 import { getStoredThemeColors } from './theme'
 import { unixNow } from '../utils'
-import type { Event, Profile } from '../../types'
+import type { Event, Profile, Magazine } from '../../types'
 
 export { MYPACE_TAG, APP_TITLE } from './constants'
 export { getEventThemeColors, getThemeCardProps, isDarkColor, getStoredThemeColors } from './theme'
@@ -317,4 +317,68 @@ export async function getCurrentPubkey(): Promise<string> {
   }
 
   return getPublicKeyFromSecret(getOrCreateSecretKey())
+}
+
+// Magazine functions
+
+export interface MagazineInput {
+  slug: string
+  title: string
+  description: string
+  image: string
+  eventIds: string[]
+}
+
+export async function createMagazineEvent(input: MagazineInput): Promise<Event> {
+  const tags: string[][] = [
+    ['d', input.slug],
+    ['title', input.title],
+    ['description', input.description],
+    ['image', input.image],
+    ['t', MAGAZINE_TAG],
+  ]
+
+  // Add event references (order matters)
+  for (const eventId of input.eventIds) {
+    tags.push(['e', eventId, ''])
+  }
+
+  const template: EventTemplate = {
+    kind: KIND_MAGAZINE,
+    created_at: unixNow(),
+    tags,
+    content: '',
+  }
+
+  if (hasNip07() && window.nostr) {
+    return (await window.nostr.signEvent(template)) as Event
+  }
+
+  return finalizeEvent(template, getOrCreateSecretKey())
+}
+
+export function parseMagazineEvent(event: Event): Magazine | null {
+  if (event.kind !== KIND_MAGAZINE) return null
+
+  const getTagValue = (name: string): string => {
+    const tag = event.tags.find((t) => t[0] === name)
+    return tag?.[1] ?? ''
+  }
+
+  // Check for mypace-magazine tag
+  const hasMagazineTag = event.tags.some((t) => t[0] === 't' && t[1] === MAGAZINE_TAG)
+  if (!hasMagazineTag) return null
+
+  const eventIds = event.tags.filter((t) => t[0] === 'e').map((t) => t[1])
+
+  return {
+    id: event.id,
+    pubkey: event.pubkey,
+    slug: getTagValue('d'),
+    title: getTagValue('title'),
+    description: getTagValue('description'),
+    image: getTagValue('image'),
+    eventIds,
+    createdAt: event.created_at,
+  }
 }

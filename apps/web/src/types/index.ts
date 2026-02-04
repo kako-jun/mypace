@@ -149,3 +149,19 @@ export interface Sticker {
   quadrant: StickerQuadrant // Anchor corner for positioning
   layer?: StickerLayer // back (default, behind text) or front
 }
+
+// Magazine types
+export interface Magazine {
+  id: string // Event ID
+  pubkey: string // Creator pubkey
+  slug: string // d-tag (URL identifier)
+  title: string
+  description: string
+  image: string // Thumbnail URL
+  eventIds: string[] // Post event IDs (order matters)
+  createdAt: number
+}
+
+export interface MagazineWithPosts extends Magazine {
+  posts: Event[] // Fetched post events
+}

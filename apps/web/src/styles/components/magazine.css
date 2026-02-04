@@ -1,0 +1,475 @@
+/* ===== Magazine Section ===== */
+.magazine-section {
+  max-width: 600px;
+  margin-left: auto;
+  margin-bottom: 24px;
+}
+
+.magazine-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.magazine-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding-left: 4px;
+}
+
+.magazine-section-content {
+  position: relative;
+}
+
+.magazine-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-light) transparent;
+}
+
+.magazine-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.magazine-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.magazine-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 3px;
+}
+
+.magazine-loading,
+.magazine-empty {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 12px;
+}
+
+/* ===== Magazine Card ===== */
+.magazine-card {
+  flex-shrink: 0;
+  width: 120px;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  padding: 0;
+}
+
+.magazine-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.magazine-card-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--surface-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.magazine-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.magazine-card-placeholder {
+  color: var(--text-muted);
+}
+
+.magazine-card-info {
+  padding: 8px 10px;
+}
+
+.magazine-card-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.magazine-card-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ===== Magazine Add Button ===== */
+.magazine-add-btn {
+  flex-shrink: 0;
+  width: 120px;
+  height: 100%;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  border: 2px dashed var(--border-light);
+  border-radius: 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.magazine-add-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.magazine-add-btn span {
+  font-size: 0.8rem;
+}
+
+/* ===== Magazine Editor Modal ===== */
+.magazine-editor-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.magazine-editor {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 400px;
+  max-height: 90vh;
+  background: var(--surface-primary);
+  border: 2px solid #333;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+}
+
+.magazine-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.magazine-editor-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.magazine-editor-content {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.magazine-editor-field {
+  margin-bottom: 16px;
+}
+
+.magazine-editor-field:last-child {
+  margin-bottom: 0;
+}
+
+.magazine-editor-field label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.magazine-editor-hint {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.magazine-editor-preview {
+  margin-top: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.magazine-editor-preview img {
+  width: 100%;
+  max-height: 120px;
+  object-fit: cover;
+}
+
+.magazine-editor-actions {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px solid var(--border-light);
+}
+
+.magazine-editor-actions .btn {
+  flex: 1;
+}
+
+/* ===== Magazine View Page ===== */
+.magazine-view {
+  padding: 0 0.5rem;
+}
+
+.magazine-view-header {
+  max-width: 600px;
+  margin-left: auto;
+  background: var(--surface-primary);
+  border: 2px solid #333;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.magazine-view-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--surface-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.magazine-view-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.magazine-view-image-placeholder {
+  color: var(--text-muted);
+}
+
+.magazine-view-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.magazine-view-author {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.magazine-view-author a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.magazine-view-author a:hover {
+  text-decoration: underline;
+}
+
+.magazine-view-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.magazine-view-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.magazine-view-posts {
+  max-width: 600px;
+  margin-left: auto;
+}
+
+.magazine-view-posts-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  padding-left: 4px;
+}
+
+.magazine-view-empty {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  padding: 24px;
+  text-align: center;
+  background: var(--surface-secondary);
+  border-radius: 8px;
+}
+
+/* Magazine post item with reorder controls */
+.magazine-post-item {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.magazine-post-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 1;
+}
+
+.magazine-post-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.magazine-post-control-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.magazine-post-control-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.magazine-post-control-btn.delete:hover {
+  border-color: var(--action-delete);
+  color: var(--action-delete);
+}
+
+/* ===== Add to Magazine Menu (in Share Menu) ===== */
+.magazine-select-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.magazine-select-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.magazine-select-item:hover {
+  background: var(--surface-hover);
+}
+
+.magazine-select-item.selected {
+  color: var(--accent);
+}
+
+.magazine-select-checkbox {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-light);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.magazine-select-checkbox.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.magazine-select-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.magazine-select-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ===== Magazine Post Card (simple clickable card) ===== */
+.magazine-post-card {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  background: var(--surface-primary);
+  border: 2px solid #333;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.magazine-post-card:hover {
+  border-color: var(--accent);
+}
+
+.magazine-post-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.magazine-post-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.magazine-post-card-author {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.magazine-post-card-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.magazine-post-card-content {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -10,8 +10,16 @@ import {
   KIND_REPOST,
   KIND_LONG_FORM,
   KIND_SINOV_NPC,
+  KIND_MAGAZINE,
+  MAGAZINE_TAG,
 } from './constants'
-import { parseStellaTags, getTotalStellaCount, EMPTY_STELLA_COUNTS, type StellaCountsByColor } from './events'
+import {
+  parseStellaTags,
+  getTotalStellaCount,
+  EMPTY_STELLA_COUNTS,
+  parseMagazineEvent,
+  type StellaCountsByColor,
+} from './events'
 import {
   filterBySmartFilters,
   filterByNPC,
@@ -20,7 +28,7 @@ import {
   filterByNgTags,
   filterByLanguage,
 } from './filters'
-import type { Event, Profile, ReactionData, ReplyData, RepostData } from '../../types'
+import type { Event, Profile, ReactionData, ReplyData, RepostData, Magazine } from '../../types'
 
 // グローバルプール（再利用）
 let pool: SimplePool | null = null
@@ -670,4 +678,70 @@ export async function fetchEventsEnrich(
   }
 
   return { metadata, profiles: profilesResult, superMentions, views }
+}
+
+// マガジン取得（ユーザーのマガジン一覧）
+export async function fetchUserMagazines(pubkey: string): Promise<Magazine[]> {
+  const p = getPool()
+
+  try {
+    const filter: Filter = {
+      kinds: [KIND_MAGAZINE],
+      authors: [pubkey],
+      '#t': [MAGAZINE_TAG],
+    }
+
+    const events = await p.querySync(GENERAL_RELAYS, filter)
+
+    // d-tagでグループ化し、各dタグの最新イベントのみを保持（replaceable event）
+    const latestByDTag: Record<string, NostrEvent> = {}
+    for (const e of events) {
+      const dTag = e.tags.find((t) => t[0] === 'd')?.[1]
+      if (!dTag) continue
+      if (!latestByDTag[dTag] || e.created_at > latestByDTag[dTag].created_at) {
+        latestByDTag[dTag] = e
+      }
+    }
+
+    const magazines: Magazine[] = []
+    for (const event of Object.values(latestByDTag)) {
+      const magazine = parseMagazineEvent(toEvent(event))
+      if (magazine) {
+        magazines.push(magazine)
+      }
+    }
+
+    // 作成日時でソート（新しい順）
+    magazines.sort((a, b) => b.createdAt - a.createdAt)
+
+    return magazines
+  } catch (e) {
+    console.error('Failed to fetch user magazines:', e)
+    return []
+  }
+}
+
+// 単一マガジン取得（pubkeyとslugで）
+export async function fetchMagazineBySlug(pubkey: string, slug: string): Promise<Magazine | null> {
+  const p = getPool()
+
+  try {
+    const filter: Filter = {
+      kinds: [KIND_MAGAZINE],
+      authors: [pubkey],
+      '#d': [slug],
+    }
+
+    const events = await p.querySync(GENERAL_RELAYS, filter)
+
+    if (events.length === 0) return null
+
+    // 最新のイベントを取得
+    const latestEvent = events.reduce((latest, e) => (e.created_at > latest.created_at ? e : latest), events[0])
+
+    return parseMagazineEvent(toEvent(latestEvent))
+  } catch (e) {
+    console.error('Failed to fetch magazine by slug:', e)
+    return null
+  }
 }

@@ -37,6 +37,7 @@ import { LightBox, triggerLightBox } from '../ui'
 import { UserProfile } from './UserProfile'
 import { UserProfileEditor } from './UserProfileEditor'
 import { UserPosts } from './UserPosts'
+import { MagazineSection } from '../magazine'
 import { useTimeline } from '../../hooks'
 import '../../styles/components/timeline-search.css'
 import { nip19 } from 'nostr-tools'
@@ -362,6 +363,8 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
           onEditClick={() => setEditMode(true)}
         />
       )}
+
+      <MagazineSection pubkey={pubkey} isOwnProfile={isOwnProfile} />
 
       <UserPosts
         items={items}
