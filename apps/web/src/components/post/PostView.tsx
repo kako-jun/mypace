@@ -106,6 +106,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   const [repostingId, setRepostingId] = useState<string | null>(null)
   const [, setThemeVersion] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [localCollectedWords, setLocalCollectedWords] = useState<Set<string>>(new Set())
 
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
 
@@ -129,6 +130,12 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     wordrotCollected,
     wordrotImages,
   } = usePostViewData(eventId)
+
+  // Combine prop collected words with locally collected (for instant UI update)
+  const combinedCollectedWords = useMemo(() => {
+    if (!wordrotCollected) return localCollectedWords
+    return new Set([...wordrotCollected, ...localCollectedWords])
+  }, [wordrotCollected, localCollectedWords])
 
   // Stella debounce refs
   const stellaDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -271,6 +278,8 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
     async (word: string) => {
       if (!myPubkey || !eventId) return
       console.log('[PostView] Collecting word:', word)
+      // Immediately update local state for instant UI feedback
+      setLocalCollectedWords((prev) => new Set([...prev, word.toLowerCase()]))
       try {
         const result = await collectWord(myPubkey, word, eventId)
         if (result.word) {
@@ -550,7 +559,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
                 enableOgpFallback={true}
                 tags={event.tags}
                 wordrotWords={wordrotWords}
-                wordrotCollected={wordrotCollected}
+                wordrotCollected={combinedCollectedWords}
                 wordrotImages={wordrotImages}
                 onWordClick={handleWordCollect}
               />

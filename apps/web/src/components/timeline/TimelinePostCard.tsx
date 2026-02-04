@@ -1,4 +1,4 @@
-import { useState, memo } from 'react'
+import { useState, useMemo, memo } from 'react'
 import { Icon, parseEmojiTags } from '../ui'
 import '../../styles/components/post-card.css'
 import { getEventThemeColors, getThemeCardProps, EMPTY_STELLA_COUNTS } from '../../lib/nostr/events'
@@ -92,7 +92,14 @@ export default memo(function TimelinePostCard({
   onWordCollect,
 }: TimelinePostCardProps) {
   const [expandedThread, setExpandedThread] = useState(false)
+  const [localCollectedWords, setLocalCollectedWords] = useState<Set<string>>(new Set())
   const { isConfirming, showConfirm, hideConfirm } = useDeleteConfirm()
+
+  // Combine prop collected words with locally collected (for instant UI update)
+  const combinedCollectedWords = useMemo(() => {
+    if (!wordrotCollected) return localCollectedWords
+    return new Set([...wordrotCollected, ...localCollectedWords])
+  }, [wordrotCollected, localCollectedWords])
 
   // リポスト（kind:6）かどうか
   const isRepost = event.kind === KIND_REPOST && originalEvent
@@ -251,9 +258,17 @@ export default memo(function TimelinePostCard({
                   onReadMore={() => navigateToPostModal(event.id)}
                   tags={event.tags}
                   wordrotWords={wordrotWords}
-                  wordrotCollected={wordrotCollected}
+                  wordrotCollected={combinedCollectedWords}
                   wordrotImages={wordrotImages}
-                  onWordClick={onWordCollect ? (word) => onWordCollect(word, event.id) : undefined}
+                  onWordClick={
+                    onWordCollect
+                      ? (word) => {
+                          // Immediately update local state for instant UI feedback
+                          setLocalCollectedWords((prev) => new Set([...prev, word.toLowerCase()]))
+                          onWordCollect(word, event.id)
+                        }
+                      : undefined
+                  }
                 />
               </div>
 

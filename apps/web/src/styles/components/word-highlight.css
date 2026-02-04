@@ -12,7 +12,7 @@
   /* Box border styling - link color for all sides, uniform thickness */
   border: 1px solid #4a9;
   border-radius: 4px;
-  padding: 1px 4px;
+  padding: 0 4px;
   margin: 0 2px;
 
   /* Transition */
@@ -31,8 +31,8 @@
 .wordrot-highlight.collected {
   cursor: default;
   border: 1px solid currentColor; /* Normal text color border */
-  border-bottom-width: 1px;
   opacity: 0.7;
+  padding: 0 4px;
 }
 
 .wordrot-highlight.collected:hover {
