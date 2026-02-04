@@ -5,15 +5,23 @@ export function useShare() {
   const [copied, setCopied] = useState(false)
 
   const share = async (url: string): Promise<boolean> => {
-    if (navigator.share) {
+    const shareData = { url }
+
+    // Check if Web Share API is available and can share this data
+    const canUseShare =
+      typeof navigator.share === 'function' &&
+      typeof navigator.canShare === 'function' &&
+      navigator.canShare(shareData)
+
+    if (canUseShare) {
       try {
-        await navigator.share({ url })
+        await navigator.share(shareData)
         return true
       } catch (e) {
         if ((e as Error).name === 'AbortError') {
           return false
         }
-        // Fallback to copy
+        // Fallback to copy for other errors
       }
     }
 
