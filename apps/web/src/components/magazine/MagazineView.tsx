@@ -2,12 +2,54 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { nip19 } from 'nostr-tools'
 import { fetchMagazineBySlug, fetchEventsByIds, fetchUserProfile, publishEvent } from '../../lib/nostr/relay'
-import { createMagazineEvent, formatTimestamp, type MagazineInput } from '../../lib/nostr/events'
-import { getDisplayName, navigateToHome, navigateTo, navigateToPost, copyToClipboard } from '../../lib/utils'
+import {
+  createMagazineEvent,
+  getCurrentPubkey,
+  createDeleteEvent,
+  createReactionEvent,
+  createRepostEvent,
+  type MagazineInput,
+} from '../../lib/nostr/events'
+import {
+  getDisplayName,
+  navigateToHome,
+  navigateTo,
+  navigateToEdit,
+  copyToClipboard,
+  downloadAsMarkdown,
+  openRawUrl,
+  shareOrCopy,
+  getDisplayNameFromCache,
+  getAvatarUrlFromCache,
+} from '../../lib/utils'
+import { openSnsShare } from '../../lib/utils/sns-share'
 import { getSnsIntentUrl } from '../../lib/utils/sns-share'
-import { BackButton, Loading, Icon, Button, Avatar } from '../ui'
+import { BackButton, Loading, Icon, Button, SuccessMessage } from '../ui'
+import { TimelinePostCard } from '../timeline'
 import { MagazineEditor } from './MagazineEditor'
-import type { Magazine, Event, Profile } from '../../types'
+import { loadEnrichForEvents, loadOgpForEvents } from '../../hooks/timeline/useTimelineData'
+import { TIMEOUTS } from '../../lib/constants'
+import {
+  canAddStella,
+  addStellaToColor,
+  removeStellaColor,
+  createEmptyStellaCounts,
+  getTotalStellaCount,
+  EMPTY_STELLA_COUNTS,
+  type StellaColor,
+} from '../../lib/utils/stella'
+import type {
+  Magazine,
+  Event,
+  Profile,
+  ProfileCache,
+  ReactionData,
+  ReplyData,
+  RepostData,
+  ViewCountData,
+  OgpData,
+} from '../../types'
+import type { ShareOption } from '../post/ShareMenu'
 import '../../styles/components/magazine.css'
 
 function decodePubkey(id: string): string {
@@ -35,21 +77,55 @@ export function MagazineView() {
   const [copied, setCopied] = useState(false)
   const [showShareMenu, setShowShareMenu] = useState(false)
 
+  // Timeline data states
+  const [profiles, setProfiles] = useState<ProfileCache>({})
+  const [reactions, setReactions] = useState<{ [eventId: string]: ReactionData }>({})
+  const [replies, setReplies] = useState<{ [eventId: string]: ReplyData }>({})
+  const [reposts, setReposts] = useState<{ [eventId: string]: RepostData }>({})
+  const [views, setViews] = useState<{ [eventId: string]: ViewCountData }>({})
+  const [wikidataMap, setWikidataMap] = useState<Record<string, string>>({})
+  const [ogpMap, setOgpMap] = useState<Record<string, OgpData>>({})
+  const [likingId, setLikingId] = useState<string | null>(null)
+  const [repostingId, setRepostingId] = useState<string | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [deletedId, setDeletedId] = useState<string | null>(null)
+
   const loadMagazine = useCallback(async () => {
     if (!pubkey || !slug) return
 
     setLoading(true)
     try {
-      const [mag, profile] = await Promise.all([fetchMagazineBySlug(pubkey, slug), fetchUserProfile(pubkey)])
+      const [mag, profile, currentPubkey] = await Promise.all([
+        fetchMagazineBySlug(pubkey, slug),
+        fetchUserProfile(pubkey),
+        getCurrentPubkey().catch(() => null),
+      ])
 
       setMagazine(mag)
       setAuthorProfile(profile)
+      setMyPubkey(currentPubkey)
 
       if (mag && mag.eventIds.length > 0) {
         const eventsMap = await fetchEventsByIds(mag.eventIds)
         // Preserve order from magazine.eventIds
         const orderedPosts = mag.eventIds.map((id) => eventsMap[id]).filter((e): e is Event => !!e)
         setPosts(orderedPosts)
+
+        // Load enrich data for timeline post cards
+        if (orderedPosts.length > 0) {
+          await loadEnrichForEvents(
+            orderedPosts,
+            currentPubkey || '',
+            setReactions,
+            setReplies,
+            setReposts,
+            setViews,
+            setProfiles,
+            setWikidataMap
+          )
+          // Load OGP data asynchronously
+          loadOgpForEvents(orderedPosts, setOgpMap)
+        }
       } else {
         setPosts([])
       }
@@ -91,19 +167,228 @@ export function MagazineView() {
     recordView()
   }, [magazine, pubkey, slug])
 
-  useEffect(() => {
-    // Get current user pubkey
-    import('../../lib/nostr/events').then(({ getCurrentPubkey }) => {
-      getCurrentPubkey()
-        .then(setMyPubkey)
-        .catch(() => {})
-    })
-  }, [])
-
   const handleBack = () => navigateToHome()
   const handleAuthorClick = () => navigateTo(`/user/${npub}`)
 
   const isOwner = myPubkey === pubkey
+
+  // Helper functions for TimelinePostCard
+  const getDisplayNameForEvent = useCallback(
+    (eventPubkey: string) => getDisplayNameFromCache(eventPubkey, profiles),
+    [profiles]
+  )
+
+  const getAvatarUrlForEvent = useCallback(
+    (eventPubkey: string) => getAvatarUrlFromCache(eventPubkey, profiles),
+    [profiles]
+  )
+
+  // Empty reaction data
+  const emptyReaction: ReactionData = {
+    myReaction: false,
+    myStella: { ...EMPTY_STELLA_COUNTS },
+    myReactionId: null,
+    reactors: [],
+  }
+
+  // Add stella handler
+  const handleAddStella = useCallback(
+    async (event: Event, color: StellaColor) => {
+      if (!myPubkey || event.pubkey === myPubkey) return
+      const eventId = event.id
+
+      const currentReaction = reactions[eventId] || emptyReaction
+      if (!canAddStella(currentReaction.myStella, createEmptyStellaCounts())) return
+
+      // Optimistic update
+      setReactions((prev) => {
+        const prevData = prev[eventId] || emptyReaction
+        const newMyStella = addStellaToColor(prevData.myStella, color)
+        return {
+          ...prev,
+          [eventId]: {
+            myReaction: true,
+            myStella: newMyStella,
+            myReactionId: prevData.myReactionId,
+            reactors: prevData.reactors,
+          },
+        }
+      })
+
+      setLikingId(eventId)
+      try {
+        const currentData = reactions[eventId] || emptyReaction
+        const newMyStella = addStellaToColor(currentData.myStella, color)
+        const newReaction = await createReactionEvent(event, '+', newMyStella)
+        await publishEvent(newReaction)
+
+        if (currentData.myReactionId) {
+          try {
+            await publishEvent(await createDeleteEvent([currentData.myReactionId]))
+          } catch {}
+        }
+
+        setReactions((prev) => ({
+          ...prev,
+          [eventId]: {
+            myReaction: true,
+            myStella: newMyStella,
+            myReactionId: newReaction.id,
+            reactors: prev[eventId]?.reactors || [],
+          },
+        }))
+      } catch (error) {
+        console.error('Failed to add stella:', error)
+      } finally {
+        setLikingId(null)
+      }
+    },
+    [myPubkey, reactions]
+  )
+
+  // Unlike handler
+  const handleUnlike = useCallback(
+    async (event: Event, color: StellaColor) => {
+      if (!myPubkey) return
+      const eventId = event.id
+      const currentReaction = reactions[eventId]
+      if (!currentReaction?.myReactionId) return
+
+      const myStella = currentReaction.myStella
+      if (myStella[color] <= 0) return
+
+      const newMyStella = removeStellaColor(myStella, color)
+      const remainingTotal = getTotalStellaCount(newMyStella)
+
+      setLikingId(eventId)
+      try {
+        if (remainingTotal > 0) {
+          const newReaction = await createReactionEvent(event, '+', newMyStella)
+          await publishEvent(newReaction)
+          try {
+            await publishEvent(await createDeleteEvent([currentReaction.myReactionId]))
+          } catch {}
+          setReactions((prev) => ({
+            ...prev,
+            [eventId]: {
+              myReaction: true,
+              myStella: newMyStella,
+              myReactionId: newReaction.id,
+              reactors: prev[eventId]?.reactors || [],
+            },
+          }))
+        } else {
+          await publishEvent(await createDeleteEvent([currentReaction.myReactionId]))
+          setReactions((prev) => ({
+            ...prev,
+            [eventId]: {
+              myReaction: false,
+              myStella: { ...EMPTY_STELLA_COUNTS },
+              myReactionId: null,
+              reactors: (prev[eventId]?.reactors || []).filter((r) => r.pubkey !== myPubkey),
+            },
+          }))
+        }
+      } finally {
+        setLikingId(null)
+      }
+    },
+    [myPubkey, reactions]
+  )
+
+  // Repost handler
+  const handleRepost = useCallback(
+    async (event: Event) => {
+      if (repostingId || !myPubkey || reposts[event.id]?.myRepost) return
+      setRepostingId(event.id)
+      try {
+        await publishEvent(await createRepostEvent(event))
+        setReposts((prev) => ({ ...prev, [event.id]: { count: (prev[event.id]?.count || 0) + 1, myRepost: true } }))
+      } finally {
+        setRepostingId(null)
+      }
+    },
+    [myPubkey, repostingId, reposts]
+  )
+
+  // Delete handler
+  const handleDeleteConfirm = useCallback(async (event: Event) => {
+    try {
+      await publishEvent(await createDeleteEvent([event.id]))
+      setDeletedId(event.id)
+      setTimeout(() => setDeletedId(null), TIMEOUTS.DELETE_CONFIRMATION)
+    } catch {}
+  }, [])
+
+  // Share handler
+  const handleShareOption = useCallback(
+    async (eventId: string, content: string, tags: string[][], option: ShareOption, partIndex?: number) => {
+      const url = `${window.location.origin}/post/${eventId}`
+      switch (option) {
+        case 'url-copy': {
+          const success = await copyToClipboard(url)
+          if (success) {
+            setCopiedId(eventId)
+            setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+          }
+          break
+        }
+        case 'url-nostr': {
+          try {
+            const noteId = nip19.noteEncode(eventId)
+            const success = await copyToClipboard(noteId)
+            if (success) {
+              setCopiedId(eventId)
+              setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+            }
+          } catch (err) {
+            console.error('Failed to encode note ID:', err)
+          }
+          break
+        }
+        case 'url-share': {
+          const result = await shareOrCopy(url)
+          if (result.copied) {
+            setCopiedId(eventId)
+            setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+          }
+          break
+        }
+        case 'md-copy': {
+          const success = await copyToClipboard(content)
+          if (success) {
+            setCopiedId(eventId)
+            setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+          }
+          break
+        }
+        case 'md-download': {
+          const filename = `post-${eventId.slice(0, 8)}`
+          downloadAsMarkdown(content, filename)
+          setCopiedId(eventId)
+          setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+          break
+        }
+        case 'md-open': {
+          openRawUrl(eventId)
+          break
+        }
+        case 'x':
+        case 'bluesky':
+        case 'threads': {
+          openSnsShare(option, content, tags, url, partIndex)
+          break
+        }
+      }
+    },
+    []
+  )
+
+  // Edit handler
+  const handleEdit = useCallback((event: Event) => navigateToEdit(event.id), [])
+
+  // Reply handler
+  const handleReplyClick = useCallback((event: Event) => navigateTo(`/reply/${event.id}`), [])
 
   const handleUpdateMagazine = async (input: MagazineInput) => {
     try {
@@ -219,6 +504,10 @@ export function MagazineView() {
       <BackButton onClick={handleBack} />
 
       <div className="magazine-view-header">
+        <div className="magazine-view-label">
+          <Icon name="BookOpen" size={14} /> Magazine
+        </div>
+
         <div className="magazine-view-image">
           {magazine.image ? (
             <img src={magazine.image} alt={magazine.title} />
@@ -285,7 +574,7 @@ export function MagazineView() {
         </div>
       </div>
 
-      <div className="magazine-view-posts">
+      <div className="magazine-view-posts timeline">
         <div className="magazine-view-posts-header">
           <Icon name="FileText" size={14} /> {posts.length} posts
         </div>
@@ -293,49 +582,84 @@ export function MagazineView() {
         {posts.length === 0 ? (
           <div className="magazine-view-empty">No posts in this magazine yet</div>
         ) : (
-          posts.map((post, index) => (
-            <div key={post.id} className="magazine-post-item">
-              {isOwner && (
-                <div className="magazine-post-controls">
-                  <button
-                    className="magazine-post-control-btn"
-                    onClick={() => handleMovePost(post.id, 'up')}
-                    disabled={index === 0}
-                    title="Move up"
-                  >
-                    <Icon name="ChevronUp" size={14} />
-                  </button>
-                  <button
-                    className="magazine-post-control-btn"
-                    onClick={() => handleMovePost(post.id, 'down')}
-                    disabled={index === posts.length - 1}
-                    title="Move down"
-                  >
-                    <Icon name="ChevronDown" size={14} />
-                  </button>
-                  <button
-                    className="magazine-post-control-btn delete"
-                    onClick={() => handleRemovePost(post.id)}
-                    title="Remove from magazine"
-                  >
-                    <Icon name="X" size={14} />
-                  </button>
-                </div>
-              )}
-              <button className="magazine-post-card" onClick={() => navigateToPost(post.id)} type="button">
-                <div className="magazine-post-card-header">
-                  <Avatar src={authorProfile?.picture} size="small" />
-                  <div className="magazine-post-card-meta">
-                    <span className="magazine-post-card-author">{authorName}</span>
-                    <span className="magazine-post-card-time">{formatTimestamp(post.created_at)}</span>
-                  </div>
-                </div>
-                <div className="magazine-post-card-content">
-                  {post.content.length > 200 ? `${post.content.slice(0, 200)}...` : post.content}
-                </div>
-              </button>
-            </div>
-          ))
+          posts.map((post, index) => {
+            const isMyPost = myPubkey === post.pubkey
+
+            if (deletedId === post.id) {
+              return (
+                <article key={post.id} className="post-card">
+                  <SuccessMessage>Deleted!</SuccessMessage>
+                </article>
+              )
+            }
+
+            // Render magazine controls for top controls (right-aligned)
+            const magazineControls = isOwner ? (
+              <div className="post-card-top-controls right">
+                <button
+                  className="post-card-top-control-btn"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleMovePost(post.id, 'up')
+                  }}
+                  disabled={index === 0}
+                  title="Move up"
+                >
+                  <Icon name="ChevronUp" size={14} />
+                </button>
+                <button
+                  className="post-card-top-control-btn"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleMovePost(post.id, 'down')
+                  }}
+                  disabled={index === posts.length - 1}
+                  title="Move down"
+                >
+                  <Icon name="ChevronDown" size={14} />
+                </button>
+                <button
+                  className="post-card-top-control-btn danger"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleRemovePost(post.id)
+                  }}
+                  title="Remove from magazine"
+                >
+                  <Icon name="X" size={14} />
+                </button>
+              </div>
+            ) : null
+
+            return (
+              <TimelinePostCard
+                key={post.id}
+                event={post}
+                isMyPost={isMyPost}
+                myPubkey={myPubkey}
+                profiles={{ ...profiles, [pubkey]: authorProfile ?? null }}
+                wikidataMap={wikidataMap}
+                ogpMap={ogpMap}
+                reactions={reactions[post.id]}
+                replies={replies[post.id]}
+                reposts={reposts[post.id]}
+                views={views[post.id]}
+                likingId={likingId}
+                repostingId={repostingId}
+                copiedId={copiedId}
+                topControls={magazineControls}
+                onEdit={handleEdit}
+                onDeleteConfirm={handleDeleteConfirm}
+                onAddStella={handleAddStella}
+                onUnlike={handleUnlike}
+                onReply={handleReplyClick}
+                onRepost={handleRepost}
+                onShareOption={handleShareOption}
+                getDisplayName={getDisplayNameForEvent}
+                getAvatarUrl={getAvatarUrlForEvent}
+              />
+            )
+          })
         )}
       </div>
 

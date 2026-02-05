@@ -242,6 +242,16 @@
   margin-bottom: 24px;
 }
 
+.magazine-view-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
 .magazine-view-image {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -364,50 +374,6 @@
   border-radius: 8px;
 }
 
-/* Magazine post item with reorder controls */
-.magazine-post-item {
-  position: relative;
-  margin-bottom: 16px;
-}
-
-.magazine-post-controls {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: flex;
-  gap: 4px;
-  z-index: 1;
-}
-
-.magazine-post-control-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: var(--surface-primary);
-  border: 1px solid var(--border-light);
-  border-radius: 4px;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.magazine-post-control-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.magazine-post-control-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.magazine-post-control-btn.delete:hover {
-  border-color: var(--action-delete);
-  color: var(--action-delete);
-}
-
 /* ===== Add to Magazine Menu (in Share Menu) ===== */
 .magazine-select-list {
   max-height: 200px;
@@ -463,54 +429,6 @@
 .magazine-select-count {
   font-size: 0.75rem;
   color: var(--text-muted);
-}
-
-/* ===== Magazine Post Card (simple clickable card) ===== */
-.magazine-post-card {
-  display: block;
-  width: 100%;
-  padding: 16px;
-  background: var(--surface-primary);
-  border: 2px solid #333;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.15s ease;
-}
-
-.magazine-post-card:hover {
-  border-color: var(--accent);
-}
-
-.magazine-post-card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.magazine-post-card-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.magazine-post-card-author {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 0.9rem;
-}
-
-.magazine-post-card-time {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.magazine-post-card-content {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 
 /* ===== Magazine Thumbnail Upload ===== */

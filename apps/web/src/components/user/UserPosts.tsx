@@ -102,6 +102,37 @@ export function UserPosts({
   // Find the TimelineItem for pinned event (for originalEvent)
   const pinnedItem = pinnedEventId ? items.find((item) => item.event.id === pinnedEventId) : undefined
 
+  // Render pin button for top controls
+  const renderPinButton = (event: Event, isMyPost: boolean) => {
+    const isPinned = pinnedEventId === event.id
+    // Show pin button only for own posts, or show pinned indicator for everyone
+    if (!isPinned && !isMyPost) return null
+
+    const handleClick = (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (isPinned) {
+        onUnpin()
+      } else {
+        onPin(event)
+      }
+    }
+
+    return (
+      <div className="post-card-top-controls">
+        <button
+          type="button"
+          className={`post-card-top-control-btn ${isPinned ? 'active' : ''}`}
+          onClick={isMyPost ? handleClick : undefined}
+          disabled={!isMyPost}
+          aria-label={isPinned ? 'Pinned post' : 'Pin this post'}
+          title={isPinned ? (isMyPost ? 'Unpin' : 'Pinned') : 'Pin to profile'}
+        >
+          <Icon name="Pin" size={16} />
+        </button>
+      </div>
+    )
+  }
+
   const renderPostCard = (item: TimelineItem, _isPinnedSection = false) => {
     const event = item.event
     const isMyPost = myPubkey === event.pubkey
@@ -131,16 +162,13 @@ export function UserPosts({
           likingId={likingId}
           repostingId={repostingId}
           copiedId={copiedId}
-          isPinned={pinnedEventId === event.id}
-          showPinButton={isMyPost}
+          topControls={renderPinButton(event, isMyPost)}
           onEdit={() => handleEdit(event)}
           onDeleteConfirm={() => onDeleteConfirm(event)}
           onAddStella={(_ev, color) => onAddStella(event, color)}
           onUnlike={(_ev, color) => onUnlike(event, color)}
           onReply={() => handleReplyClick(event)}
           onRepost={() => onRepost(event)}
-          onPin={() => onPin(event)}
-          onUnpin={onUnpin}
           onShareOption={onShareOption}
           getDisplayName={getDisplayNameForEvent}
           getAvatarUrl={getAvatarUrlForEvent}

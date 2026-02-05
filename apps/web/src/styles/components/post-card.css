@@ -55,6 +55,7 @@
 
 /* Wrapper for drop-shadow on hover */
 .post-card-wrapper {
+  position: relative;
   transition: filter 0.15s ease-out;
 }
 
@@ -76,13 +77,36 @@
   transform: translate(-10px, -10px);
 }
 
-/* Pin button at top center */
-.post-pin-button {
+/* ===== Top controls (outside the card, above it) ===== */
+/* Container for controls displayed above the card */
+.post-card-top-controls {
   position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: -12px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
   z-index: 20;
+  pointer-events: none;
+}
+
+.post-card-top-controls > * {
+  pointer-events: auto;
+}
+
+/* Position variants for top controls */
+.post-card-top-controls.center {
+  justify-content: center;
+}
+
+.post-card-top-controls.right {
+  justify-content: flex-end;
+  padding-right: 8px;
+}
+
+/* Common button style for top controls */
+.post-card-top-control-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -98,34 +122,44 @@
   outline: none;
 }
 
-.post-pin-button:hover:not(:disabled) {
+.post-card-top-control-btn:hover:not(:disabled) {
   background: var(--surface-hover);
   color: var(--text-primary);
-  transform: translateX(-50%) scale(1.1);
+  transform: scale(1.1);
 }
 
-/* Pinned state - clickable (owner) */
-.post-pin-button.pinned:not(:disabled) {
+.post-card-top-control-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.post-card-top-control-btn:disabled:hover {
+  transform: none;
+}
+
+/* Active/pinned state */
+.post-card-top-control-btn.active {
   background: var(--btn-primary-bg);
   color: #fff;
 }
 
-.post-pin-button.pinned:hover:not(:disabled) {
+.post-card-top-control-btn.active:hover:not(:disabled) {
   background: var(--btn-primary-bg);
-  transform: translateX(-50%) scale(1.1);
+  transform: scale(1.1);
   opacity: 0.9;
 }
 
-/* Pinned state - non-clickable (non-owner viewing) */
-.post-pin-button.pinned:disabled {
+/* Non-clickable active state (for viewing others' pinned posts) */
+.post-card-top-control-btn.active:disabled {
   background: var(--text-muted);
   color: #fff;
-  cursor: default;
+  opacity: 1;
 }
 
-/* Unpinned disabled state */
-.post-pin-button:disabled:not(.pinned) {
-  cursor: default;
+/* Delete/danger variant */
+.post-card-top-control-btn.danger:hover:not(:disabled) {
+  background: var(--action-delete);
+  color: #fff;
 }
 
 /* Post header */

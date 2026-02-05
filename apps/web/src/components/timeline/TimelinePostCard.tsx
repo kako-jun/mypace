@@ -1,4 +1,4 @@
-import { useState, useMemo, memo } from 'react'
+import { useState, useMemo, memo, type ReactNode } from 'react'
 import { Icon, parseEmojiTags } from '../ui'
 import '../../styles/components/post-card.css'
 import { getEventThemeColors, getThemeCardProps, EMPTY_STELLA_COUNTS } from '../../lib/nostr/events'
@@ -37,16 +37,14 @@ interface TimelinePostCardProps {
   likingId: string | null
   repostingId: string | null
   copiedId: string | null
-  isPinned?: boolean
-  showPinButton?: boolean
+  // Controls displayed outside the card (above it)
+  topControls?: ReactNode
   onEdit: (event: Event) => void
   onDeleteConfirm: (event: Event) => void
   onAddStella: (event: Event, color: StellaColor) => void
   onUnlike: (event: Event, color: StellaColor) => void
   onReply: (event: Event) => void
   onRepost: (event: Event) => void
-  onPin?: (event: Event) => void
-  onUnpin?: () => void
   onShareOption: (eventId: string, content: string, tags: string[][], option: ShareOption, partIndex?: number) => void
   getDisplayName: (pubkey: string) => string
   getAvatarUrl: (pubkey: string) => string | null
@@ -73,16 +71,13 @@ export default memo(function TimelinePostCard({
   likingId,
   repostingId,
   copiedId,
-  isPinned = false,
-  showPinButton = false,
+  topControls,
   onEdit,
   onDeleteConfirm,
   onAddStella,
   onUnlike,
   onReply,
   onRepost,
-  onPin,
-  onUnpin,
   onShareOption,
   getDisplayName,
   getAvatarUrl,
@@ -148,15 +143,6 @@ export default memo(function TimelinePostCard({
 
   const isTruncated = hasTeaserTag(event)
 
-  const handlePinClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (isPinned) {
-      onUnpin?.()
-    } else {
-      onPin?.(event)
-    }
-  }
-
   // リポストの場合は元投稿へ遷移
   const handleOriginalPostClick = () => {
     if (originalEvent) {
@@ -166,6 +152,9 @@ export default memo(function TimelinePostCard({
 
   return (
     <div className="post-card-wrapper">
+      {/* Controls displayed outside the card (above it) */}
+      {topControls}
+
       <article
         className={`post-card clickable ${isMyPost ? 'my-post' : ''} ${themeProps.className}`}
         style={themeProps.style}
@@ -173,22 +162,6 @@ export default memo(function TimelinePostCard({
       >
         {/* Sticker area: contains everything except ThreadReplies so stickers don't shift when replies expand */}
         <div className="post-card-sticker-area">
-          {/* Pin indicator/button at top center */}
-          {/* Pinned: visible to everyone (clickable only for owner) */}
-          {/* Not pinned + owner: visible only to owner */}
-          {(isPinned || showPinButton) && (
-            <button
-              type="button"
-              className={`post-pin-button ${isPinned ? 'pinned' : ''}`}
-              onClick={showPinButton ? handlePinClick : undefined}
-              disabled={!showPinButton}
-              aria-label={isPinned ? 'Pinned post' : 'Pin this post'}
-              title={isPinned ? (showPinButton ? 'Unpin' : 'Pinned') : 'Pin to profile'}
-            >
-              <Icon name="Pin" size={16} />
-            </button>
-          )}
-
           {/* Back layer stickers (behind content) */}
           <PostStickers stickers={stickers} truncated={isTruncated} layer="back" />
 
