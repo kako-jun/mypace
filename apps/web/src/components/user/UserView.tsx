@@ -245,6 +245,19 @@ export function UserView({ pubkey: rawPubkey }: UserViewProps) {
         }
         break
       }
+      case 'url-nostr': {
+        try {
+          const noteId = nip19.noteEncode(eventId)
+          const copied = await copyToClipboard(noteId)
+          if (copied) {
+            setCopiedId(eventId)
+            setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+          }
+        } catch (err) {
+          console.error('Failed to encode note ID:', err)
+        }
+        break
+      }
       case 'url-share': {
         const result = await shareOrCopy(url)
         if (result.copied) {

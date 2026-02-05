@@ -18,6 +18,7 @@ import {
   formatNumber,
 } from '../../lib/utils'
 import { openSnsShare } from '../../lib/utils/sns-share'
+import { nip19 } from 'nostr-tools'
 import type { Event } from '../../types'
 import type { ShareOption } from '../post/ShareMenu'
 
@@ -111,6 +112,19 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
           if (copied) {
             setCopiedId(eventId)
             setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+          }
+          break
+        }
+        case 'url-nostr': {
+          try {
+            const noteId = nip19.noteEncode(eventId)
+            const copied = await copyToClipboard(noteId)
+            if (copied) {
+              setCopiedId(eventId)
+              setTimeout(() => setCopiedId(null), TIMEOUTS.COPY_FEEDBACK)
+            }
+          } catch (err) {
+            console.error('Failed to encode note ID:', err)
           }
           break
         }

@@ -60,6 +60,12 @@ export default defineConfig({
             ],
           },
         },
+        protocol_handlers: [
+          {
+            protocol: 'web+nostr',
+            url: '/nostr?uri=%s',
+          },
+        ],
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,webp,woff2}'],

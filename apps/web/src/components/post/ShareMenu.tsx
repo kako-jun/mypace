@@ -8,7 +8,16 @@ import { createMagazineEvent, getCurrentPubkey } from '../../lib/nostr/events'
 import { navigateTo } from '../../lib/utils'
 import type { Magazine } from '../../types'
 
-export type ShareOption = 'url-copy' | 'url-share' | 'md-copy' | 'md-download' | 'md-open' | 'x' | 'bluesky' | 'threads'
+export type ShareOption =
+  | 'url-copy'
+  | 'url-nostr'
+  | 'url-share'
+  | 'md-copy'
+  | 'md-download'
+  | 'md-open'
+  | 'x'
+  | 'bluesky'
+  | 'threads'
 export type SnsType = 'x' | 'bluesky' | 'threads'
 
 type SubMenu = 'content' | 'sns' | 'url' | 'magazine' | SnsType | null
@@ -249,6 +258,10 @@ export default function ShareMenu({
         <button className="share-menu-option" onClick={handleSelect('url-copy')}>
           <Icon name="Clipboard" size={16} />
           <span>Copy URL</span>
+        </button>
+        <button className="share-menu-option" onClick={handleSelect('url-nostr')}>
+          <Icon name="Hash" size={16} />
+          <span>Copy Nostr ID</span>
         </button>
         <button className="share-menu-option" onClick={handleSelect('url-share')}>
           <Icon name="Share2" size={16} />

@@ -10,6 +10,7 @@ import { SettingsPage } from './pages/SettingsPage'
 import { UploadHistoryPage } from './pages/UploadHistoryPage'
 import { InventoryPage } from './pages/InventoryPage'
 import { EmbedPage } from './pages/EmbedPage'
+import { NostrPage } from './pages/NostrPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ReporterIntentPage } from './pages/ReporterIntentPage'
 import { PostModal } from './components/post'
@@ -48,6 +49,9 @@ export default function App() {
           <Routes location={backgroundLocation || location}>
             {/* Embed page - no Layout */}
             <Route path="/embed/:noteId" element={<EmbedPage />} />
+
+            {/* Nostr URI handler - no Layout */}
+            <Route path="/nostr" element={<NostrPage />} />
 
             <Route element={<Layout />}>
               <Route path="/" element={<HomePage />} />
