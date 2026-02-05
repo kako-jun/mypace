@@ -37,7 +37,7 @@ import { VoicePicker } from '../voice'
 import { FormActions, ShortTextEditor, PostFormLongMode, TeaserPicker } from './index'
 import type { ShortTextEditorRef } from './ShortTextEditor'
 import { getTeaserColor } from '../../lib/nostr/tags'
-import { NPCModal } from '../npc'
+import { NPCContent } from '../npc'
 
 interface PostFormProps {
   longMode: boolean
@@ -89,7 +89,6 @@ export function PostForm({
   const [teaserColor, setTeaserColor] = useState<StellaColor | null>(null)
   const [showTeaserPicker, setShowTeaserPicker] = useState(false)
   const [postMode, setPostMode] = useState<'post' | 'npc'>('post')
-  const [showNPCModal, setShowNPCModal] = useState(false)
   const teaserButtonRef = useRef<HTMLButtonElement>(null)
   const shortTextEditorRef = useRef<ShortTextEditorRef>(null)
   const fileImportRef = useRef<HTMLInputElement>(null)
@@ -469,17 +468,6 @@ export function PostForm({
     )
   }
 
-  // Handle NPC mode selection
-  const handleNPCModeSelect = () => {
-    setPostMode('npc')
-    setShowNPCModal(true)
-  }
-
-  const handleNPCModalClose = () => {
-    setShowNPCModal(false)
-    setPostMode('post')
-  }
-
   const isEditingOrReplying = !!(editingEvent || replyingTo)
 
   // Short mode: full
@@ -499,7 +487,7 @@ export function PostForm({
         <button
           type="button"
           className={`post-mode-tab ${postMode === 'npc' ? 'active' : ''}`}
-          onClick={handleNPCModeSelect}
+          onClick={() => setPostMode('npc')}
           disabled={isEditingOrReplying}
           title={isEditingOrReplying ? 'Not available when editing or replying' : 'Ask NPC to post'}
         >
@@ -532,140 +520,144 @@ export function PostForm({
         </div>
       )}
 
-      <div className="post-form-row-1">
-        <button type="button" className="post-form-avatar-button" onClick={handleAvatarClick}>
-          <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
-        </button>
-        {!content && (
-          <label
-            className={`file-import-area ${fileImportDragging ? 'dragging' : ''}`}
-            title="Import text file"
-            onDragOver={fileImportHandlers.onDragOver}
-            onDragLeave={fileImportHandlers.onDragLeave}
-            onDrop={fileImportHandlers.onDrop}
-          >
-            <Icon name="FileUp" size={16} />
-            <input
-              ref={fileImportRef}
-              type="file"
-              accept=".md,.txt,text/markdown,text/plain"
-              onChange={handleFileImport}
-              style={{ display: 'none' }}
+      {postMode === 'npc' ? (
+        <NPCContent />
+      ) : (
+        <>
+          <div className="post-form-row-1">
+            <button type="button" className="post-form-avatar-button" onClick={handleAvatarClick}>
+              <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
+            </button>
+            {!content && (
+              <label
+                className={`file-import-area ${fileImportDragging ? 'dragging' : ''}`}
+                title="Import text file"
+                onDragOver={fileImportHandlers.onDragOver}
+                onDragLeave={fileImportHandlers.onDragLeave}
+                onDrop={fileImportHandlers.onDrop}
+              >
+                <Icon name="FileUp" size={16} />
+                <input
+                  ref={fileImportRef}
+                  type="file"
+                  accept=".md,.txt,text/markdown,text/plain"
+                  onChange={handleFileImport}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            )}
+            <button
+              type="button"
+              className="super-mention-button"
+              onClick={() => setShowSuperMentionPopup(true)}
+              title="Super Mention (@@)"
+            >
+              @@
+            </button>
+            <div className="post-form-spacer" />
+            <TextButton variant="primary" className="mode-toggle-corner" onClick={handleLongModeToggle}>
+              LONG ↗
+            </TextButton>
+            <button
+              type="button"
+              className="minimize-button"
+              onClick={() => setMinimized(true)}
+              aria-label="Minimize editor"
+            >
+              <Icon name="Minus" size={20} strokeWidth={3} />
+            </button>
+          </div>
+
+          <div className="post-form-row-2">
+            <ImagePicker
+              onEmbed={insertImageUrl}
+              onAddSticker={handleAddSticker}
+              onError={setError}
+              initialFile={sharedImageFile}
+              onInitialFileProcessed={onSharedImageProcessed}
             />
-          </label>
-        )}
-        <button
-          type="button"
-          className="super-mention-button"
-          onClick={() => setShowSuperMentionPopup(true)}
-          title="Super Mention (@@)"
-        >
-          @@
-        </button>
-        <div className="post-form-spacer" />
-        <TextButton variant="primary" className="mode-toggle-corner" onClick={handleLongModeToggle}>
-          LONG ↗
-        </TextButton>
-        <button
-          type="button"
-          className="minimize-button"
-          onClick={() => setMinimized(true)}
-          aria-label="Minimize editor"
-        >
-          <Icon name="Minus" size={20} strokeWidth={3} />
-        </button>
-      </div>
+            <DrawingPicker onEmbed={insertImageUrl} onAddSticker={handleAddSticker} />
+            <VoicePicker onComplete={insertImageUrl} />
+            <LocationPicker
+              onSelect={(geohash, name) => setLocations([...locations, { geohash, name }])}
+              currentLocations={locations}
+            />
+            {content.length > LIMITS.FOLD_THRESHOLD && (
+              <button
+                ref={teaserButtonRef}
+                type="button"
+                className={`teaser-button ${teaserColor ? 'active' : ''}`}
+                onClick={() => setShowTeaserPicker(true)}
+                title="Teaser"
+              >
+                <span style={teaserColor ? { color: STELLA_COLORS[teaserColor].hex } : undefined}>
+                  <Icon name="Lock" size={16} />
+                </span>
+              </button>
+            )}
+          </div>
 
-      <div className="post-form-row-2">
-        <ImagePicker
-          onEmbed={insertImageUrl}
-          onAddSticker={handleAddSticker}
-          onError={setError}
-          initialFile={sharedImageFile}
-          onInitialFileProcessed={onSharedImageProcessed}
-        />
-        <DrawingPicker onEmbed={insertImageUrl} onAddSticker={handleAddSticker} />
-        <VoicePicker onComplete={insertImageUrl} />
-        <LocationPicker
-          onSelect={(geohash, name) => setLocations([...locations, { geohash, name }])}
-          currentLocations={locations}
-        />
-        {content.length > LIMITS.FOLD_THRESHOLD && (
-          <button
-            ref={teaserButtonRef}
-            type="button"
-            className={`teaser-button ${teaserColor ? 'active' : ''}`}
-            onClick={() => setShowTeaserPicker(true)}
-            title="Teaser"
-          >
-            <span style={teaserColor ? { color: STELLA_COLORS[teaserColor].hex } : undefined}>
-              <Icon name="Lock" size={16} />
-            </span>
-          </button>
-        )}
-      </div>
+          <ShortTextEditor
+            ref={shortTextEditorRef}
+            content={content}
+            onContentChange={onContentChange}
+            onSuperMentionTrigger={() => setShowSuperMentionPopup(true)}
+            placeholder={stickers.length > 0 ? '投稿するには1文字以上必要です' : 'マイペースで書こう'}
+          />
 
-      <ShortTextEditor
-        ref={shortTextEditorRef}
-        content={content}
-        onContentChange={onContentChange}
-        onSuperMentionTrigger={() => setShowSuperMentionPopup(true)}
-        placeholder={stickers.length > 0 ? '投稿するには1文字以上必要です' : 'マイペースで書こう'}
-      />
+          <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
+          <AttachedLocations
+            locations={locations}
+            onRemove={(index) => setLocations(locations.filter((_, i) => i !== index))}
+          />
 
-      <AttachedImages imageUrls={imageUrls} onRemove={handleRemoveImage} />
-      <AttachedLocations
-        locations={locations}
-        onRemove={(index) => setLocations(locations.filter((_, i) => i !== index))}
-      />
+          {showPreview && (
+            <PostPreview
+              content={content}
+              themeColors={themeColors}
+              emojis={myEmojis}
+              stickers={stickers}
+              editableStickers
+              onStickerMove={handleStickerMove}
+              onStickerResize={handleStickerResize}
+              onStickerRotate={handleStickerRotate}
+              onStickerLayerChange={handleStickerLayerChange}
+              onStickerRemove={handleRemoveSticker}
+              locations={locations}
+            />
+          )}
 
-      {showPreview && (
-        <PostPreview
-          content={content}
-          themeColors={themeColors}
-          emojis={myEmojis}
-          stickers={stickers}
-          editableStickers
-          onStickerMove={handleStickerMove}
-          onStickerResize={handleStickerResize}
-          onStickerRotate={handleStickerRotate}
-          onStickerLayerChange={handleStickerLayerChange}
-          onStickerRemove={handleRemoveSticker}
-          locations={locations}
-        />
+          <FormActions
+            content={content}
+            posting={posting}
+            showPreview={showPreview}
+            onShowPreviewChange={onShowPreviewChange}
+            editingEvent={editingEvent}
+            replyingTo={replyingTo}
+            onCancel={handleCancel}
+          />
+
+          <ErrorMessage>{error}</ErrorMessage>
+
+          {showSuperMentionPopup && (
+            <SuperMentionPopup
+              onSelect={(text) => shortTextEditorRef.current?.insertText(text + '\n')}
+              onClose={() => setShowSuperMentionPopup(false)}
+            />
+          )}
+
+          {showTeaserPicker && (
+            <TeaserPicker
+              selectedColor={teaserColor}
+              onSelect={(color) => {
+                setTeaserColor(color)
+                setShowTeaserPicker(false)
+              }}
+              onClose={() => setShowTeaserPicker(false)}
+            />
+          )}
+        </>
       )}
-
-      <FormActions
-        content={content}
-        posting={posting}
-        showPreview={showPreview}
-        onShowPreviewChange={onShowPreviewChange}
-        editingEvent={editingEvent}
-        replyingTo={replyingTo}
-        onCancel={handleCancel}
-      />
-
-      <ErrorMessage>{error}</ErrorMessage>
-
-      {showSuperMentionPopup && (
-        <SuperMentionPopup
-          onSelect={(text) => shortTextEditorRef.current?.insertText(text + '\n')}
-          onClose={() => setShowSuperMentionPopup(false)}
-        />
-      )}
-
-      {showTeaserPicker && (
-        <TeaserPicker
-          selectedColor={teaserColor}
-          onSelect={(color) => {
-            setTeaserColor(color)
-            setShowTeaserPicker(false)
-          }}
-          onClose={() => setShowTeaserPicker(false)}
-        />
-      )}
-
-      <NPCModal isOpen={showNPCModal} onClose={handleNPCModalClose} />
     </form>
   )
 }

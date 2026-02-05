@@ -483,16 +483,28 @@
 
 /* ===================== Tab Navigation ===================== */
 
+/* Inventory tabs - Octagonal design */
 .inventory-tabs {
+  --tab-corner: 8px;
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1rem;
-  padding: 0.25rem;
+  padding: 0.35rem;
   background: var(--surface-secondary);
-  border-radius: 8px;
+  clip-path: polygon(
+    var(--tab-corner) 0,
+    calc(100% - var(--tab-corner)) 0,
+    100% var(--tab-corner),
+    100% calc(100% - var(--tab-corner)),
+    calc(100% - var(--tab-corner)) 100%,
+    var(--tab-corner) 100%,
+    0 calc(100% - var(--tab-corner)),
+    0 var(--tab-corner)
+  );
 }
 
 .inventory-tab {
+  --tab-corner: 6px;
   flex: 1;
   display: flex;
   align-items: center;
@@ -500,13 +512,22 @@
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   border: none;
-  border-radius: 6px;
   background: transparent;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
+  clip-path: polygon(
+    var(--tab-corner) 0,
+    calc(100% - var(--tab-corner)) 0,
+    100% var(--tab-corner),
+    100% calc(100% - var(--tab-corner)),
+    calc(100% - var(--tab-corner)) 100%,
+    var(--tab-corner) 100%,
+    0 calc(100% - var(--tab-corner)),
+    0 var(--tab-corner)
+  );
 }
 
 .inventory-tab:hover {
@@ -516,18 +537,27 @@
 .inventory-tab.active {
   background: var(--surface-primary);
   color: var(--text-primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .inventory-tab-badge {
+  --badge-corner: 4px;
   padding: 0.1rem 0.4rem;
   background: #a855f7;
   color: #fff;
   font-size: 0.7rem;
   font-weight: 700;
-  border-radius: 999px;
   min-width: 1.5em;
   text-align: center;
+  clip-path: polygon(
+    var(--badge-corner) 0,
+    calc(100% - var(--badge-corner)) 0,
+    100% var(--badge-corner),
+    100% calc(100% - var(--badge-corner)),
+    calc(100% - var(--badge-corner)) 100%,
+    var(--badge-corner) 100%,
+    0 calc(100% - var(--badge-corner)),
+    0 var(--badge-corner)
+  );
 }
 
 /* ===================== Wordrot Tab ===================== */
