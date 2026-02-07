@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { createReporterQuote } from '../../lib/api'
 import { useState } from 'react'
+import { Icon } from '../ui'
 
 interface ShareChoiceModalProps {
   isOpen: boolean
@@ -49,25 +50,27 @@ export function ShareChoiceModal({ isOpen, onClose, sharedUrl, sharedText }: Sha
       <div className="npc-modal">
         <div className="npc-modal-header">
           <span className="npc-modal-title">シェア先を選択</span>
-          <button className="npc-modal-close" onClick={onClose} disabled={loading}>✕</button>
+          <button className="npc-modal-close" onClick={onClose} disabled={loading} aria-label="閉じる">
+            <Icon name="X" size={18} />
+          </button>
         </div>
         <div className="npc-modal-content">
           <div className="npc-list">
             <button className={`npc-item${loading ? ' npc-item-disabled' : ''}`} onClick={handleSelfPost} disabled={loading}>
-              <span className="npc-item-icon">✏️</span>
+              <span className="npc-item-icon"><Icon name="PenLine" size={20} /></span>
               <div className="npc-item-info">
                 <span className="npc-item-name">自分で投稿</span>
                 <span className="npc-item-desc">URLを本文に埋め込んで編集</span>
               </div>
-              <span className="npc-item-arrow">›</span>
+              <Icon name="ChevronRight" size={18} className="npc-item-arrow" />
             </button>
             <button className={`npc-item${loading ? ' npc-item-disabled' : ''}`} onClick={handleReporterQuote} disabled={loading}>
-              <span className="npc-item-icon">📰</span>
+              <span className="npc-item-icon"><Icon name="Newspaper" size={20} /></span>
               <div className="npc-item-info">
                 <span className="npc-item-name">{loading ? '作成中...' : '記者に依頼'}</span>
                 <span className="npc-item-desc">記者に引用投稿を作らせる</span>
               </div>
-              <span className="npc-item-arrow">›</span>
+              <Icon name="ChevronRight" size={18} className="npc-item-arrow" />
             </button>
           </div>
         </div>
