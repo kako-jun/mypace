@@ -44,6 +44,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
+  const playPromiseRef = useRef<Promise<void> | null>(null)
 
   // Load video
   useEffect(() => {
@@ -97,17 +98,42 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     return () => video.removeEventListener('timeupdate', handleTimeUpdate)
   }, [videoLoaded])
 
+  // Safe pause helper that waits for pending play() to resolve before pausing
+  const safePause = useCallback((video: HTMLVideoElement) => {
+    const pending = playPromiseRef.current
+    if (pending) {
+      pending
+        .then(() => {
+          video.pause()
+        })
+        .catch(() => {
+          // play() was already aborted, no need to pause
+        })
+      playPromiseRef.current = null
+    } else {
+      video.pause()
+    }
+  }, [])
+
   // Preview playback - plays within selected range
   useEffect(() => {
     if (!playing || !videoRef.current) return
 
     const video = videoRef.current
     video.currentTime = startTime
-    video.play()
+    const promise = video.play()
+    playPromiseRef.current = promise
+
+    // Handle the play promise to prevent unhandled AbortError
+    if (promise) {
+      promise.catch(() => {
+        // AbortError from pause() interrupting play() — safe to ignore
+      })
+    }
 
     const handleTimeUpdate = () => {
       if (video.currentTime >= endTime) {
-        video.pause()
+        safePause(video)
         video.currentTime = startTime
         setPlaying(false)
       }
@@ -116,13 +142,13 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     video.addEventListener('timeupdate', handleTimeUpdate)
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate)
-      video.pause()
+      safePause(video)
     }
-  }, [playing, startTime, endTime])
+  }, [playing, startTime, endTime, safePause])
 
   const togglePlay = () => {
     if (playing) {
-      videoRef.current?.pause()
+      // safePause is handled by the effect cleanup when playing becomes false
       setPlaying(false)
     } else {
       // Always start from startTime when play is pressed
@@ -174,9 +200,8 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     e.preventDefault()
     e.stopPropagation()
 
-    // Stop playback and preview at marker position
+    // Stop playback — safePause is handled by the effect cleanup
     if (playing) {
-      videoRef.current?.pause()
       setPlaying(false)
     }
 
@@ -222,9 +247,8 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     e.preventDefault()
     e.stopPropagation()
 
-    // Stop playback and preview at marker position
+    // Stop playback — safePause is handled by the effect cleanup
     if (playing) {
-      videoRef.current?.pause()
       setPlaying(false)
     }
 
