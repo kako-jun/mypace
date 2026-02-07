@@ -139,6 +139,12 @@ body.custom-theme .logo-pace {
   text-shadow: none !important;
 }
 
+/* Native browser controls (audio/video) should not inherit text-shadow */
+.themed-card audio,
+.themed-card video {
+  text-shadow: none !important;
+}
+
 /* Light text for dark themed cards - black outline shadow */
 .themed-card.light-text {
   color: #ffffff;
