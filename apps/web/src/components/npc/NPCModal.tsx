@@ -83,7 +83,7 @@ export function NPCModal({ isOpen, onClose, initialUrl = '' }: NPCModalProps) {
               <button className="npc-modal-back" onClick={handleBack} aria-label="戻る">
                 <Icon name="ArrowLeft" size={18} />
               </button>
-              <span className="npc-modal-title">📰 記者に依頼</span>
+              <span className="npc-modal-title">記者に依頼</span>
             </>
           ) : (
             <span className="npc-modal-title">NPCに依頼</span>
@@ -97,19 +97,13 @@ export function NPCModal({ isOpen, onClose, initialUrl = '' }: NPCModalProps) {
           {view === 'select' ? (
             <div className="npc-list">
               <button className="npc-item" onClick={handleReporterSelect}>
-                <span className="npc-item-icon">📰</span>
-                <div className="npc-item-info">
-                  <span className="npc-item-name">記者</span>
-                  <span className="npc-item-desc">記事を引用投稿させる</span>
-                </div>
-                <Icon name="ChevronRight" size={18} className="npc-item-arrow" />
+                <Icon name="Newspaper" size={16} />
+                <span>記者</span>
+                <Icon name="ChevronRight" size={16} />
               </button>
-              <button className="npc-item npc-item-disabled" disabled>
-                <span className="npc-item-icon">🔄</span>
-                <div className="npc-item-info">
-                  <span className="npc-item-name">スプレッダー</span>
-                  <span className="npc-item-desc">準備中</span>
-                </div>
+              <button className="npc-item" disabled>
+                <Icon name="RefreshCw" size={16} />
+                <span>スプレッダー</span>
               </button>
             </div>
           ) : (
