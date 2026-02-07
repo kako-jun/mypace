@@ -45,20 +45,31 @@ export function ShareChoiceModal({ isOpen, onClose, sharedUrl, sharedText }: Sha
   }
 
   return (
-    <div className="share-choice-overlay" onClick={handleOverlayClick}>
-      <div className="share-choice-modal">
-        <div className="share-choice-title">シェア先を選択</div>
-        <div className="share-choice-options">
-          <button className="share-choice-btn" onClick={handleSelfPost} disabled={loading}>
-            <span className="share-choice-btn-icon">✏️</span>
-            <span className="share-choice-btn-title">自分で投稿</span>
-            <span className="share-choice-btn-desc">URLを本文に埋め込んで編集</span>
-          </button>
-          <button className="share-choice-btn" onClick={handleReporterQuote} disabled={loading}>
-            <span className="share-choice-btn-icon">📰</span>
-            <span className="share-choice-btn-title">{loading ? '作成中...' : '記者に依頼'}</span>
-            <span className="share-choice-btn-desc">記者に引用投稿を作らせる</span>
-          </button>
+    <div className="npc-modal-overlay" onClick={handleOverlayClick}>
+      <div className="npc-modal">
+        <div className="npc-modal-header">
+          <span className="npc-modal-title">シェア先を選択</span>
+          <button className="npc-modal-close" onClick={onClose} disabled={loading}>✕</button>
+        </div>
+        <div className="npc-modal-content">
+          <div className="npc-list">
+            <button className={`npc-item${loading ? ' npc-item-disabled' : ''}`} onClick={handleSelfPost} disabled={loading}>
+              <span className="npc-item-icon">✏️</span>
+              <div className="npc-item-info">
+                <span className="npc-item-name">自分で投稿</span>
+                <span className="npc-item-desc">URLを本文に埋め込んで編集</span>
+              </div>
+              <span className="npc-item-arrow">›</span>
+            </button>
+            <button className={`npc-item${loading ? ' npc-item-disabled' : ''}`} onClick={handleReporterQuote} disabled={loading}>
+              <span className="npc-item-icon">📰</span>
+              <div className="npc-item-info">
+                <span className="npc-item-name">{loading ? '作成中...' : '記者に依頼'}</span>
+                <span className="npc-item-desc">記者に引用投稿を作らせる</span>
+              </div>
+              <span className="npc-item-arrow">›</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
