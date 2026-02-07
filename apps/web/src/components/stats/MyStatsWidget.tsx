@@ -77,9 +77,11 @@ export function MyStatsWidget() {
           <Icon name="Star" size={14} fill="#f1c40f" /> {formatNumber(stats?.givenStellaCount)}
         </span>
       )}
-      <TextButton className="my-stats-inventory-btn" onClick={handleInventoryClick}>
-        INV
-      </TextButton>
+      <span id="inv-button">
+        <TextButton className="my-stats-inventory-btn" onClick={handleInventoryClick}>
+          INV
+        </TextButton>
+      </span>
     </div>
   )
 }

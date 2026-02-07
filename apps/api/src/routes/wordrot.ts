@@ -97,6 +97,23 @@ vibrant colors,
 centered composition,
 no text or labels`
 
+// Helper: Validate that a word is strictly katakana-only or English-alphabet-only
+// This is a hard filter applied AFTER LLM extraction to guarantee correctness
+function isValidWordrotWord(word: string): boolean {
+  // Must be at least 2 characters
+  if (word.length < 2) return false
+
+  // Pattern 1: Pure katakana (ァ-ヶ, prolonged sound mark ー, iteration marks ヽヾ)
+  const isKatakana = /^[\u30A1-\u30F6\u30FC\u30FD\u30FE]+$/.test(word)
+  if (isKatakana) return true
+
+  // Pattern 2: Pure English letters (at least 2 chars, only alphabetic)
+  const isEnglish = /^[a-zA-Z]{2,}$/.test(word)
+  if (isEnglish) return true
+
+  return false
+}
+
 // Helper: Clean content before noun extraction
 // Removes URLs, code blocks, hashtags, mentions - elements that shouldn't be word sources
 function cleanContentForExtraction(content: string): string {
@@ -123,18 +140,76 @@ function cleanContentForExtraction(content: string): string {
   return cleaned
 }
 
-// Helper: Extract nouns using Workers AI
+// Helper: Regex-based extraction as a safety net against LLM misses
+// Catches all katakana sequences and English words deterministically
+function extractByRegex(cleanedContent: string): string[] {
+  const words: string[] = []
+
+  // Extract katakana sequences (2+ chars)
+  const katakanaMatches = cleanedContent.match(/[\u30A1-\u30F6\u30FC\u30FD\u30FE]{2,}/g)
+  if (katakanaMatches) {
+    words.push(...katakanaMatches)
+  }
+
+  // Extract English words (2+ chars, standalone alphabetic tokens)
+  const englishMatches = cleanedContent.match(/\b[a-zA-Z]{2,}\b/g)
+  if (englishMatches) {
+    words.push(...englishMatches)
+  }
+
+  return words.filter((w) => w.length <= 20)
+}
+
+// Helper: Extract nouns using Workers AI + regex safety net
 async function extractNouns(ai: Bindings['AI'], content: string): Promise<string[]> {
-  try {
-    // Clean content before extraction
-    const cleanedContent = cleanContentForExtraction(content)
+  // Clean content before extraction
+  const cleanedContent = cleanContentForExtraction(content)
 
-    // Skip if nothing left after cleaning
-    if (!cleanedContent || cleanedContent.length < 2) {
-      return []
+  // Skip if nothing left after cleaning
+  if (!cleanedContent || cleanedContent.length < 2) {
+    return []
+  }
+
+  // Run regex extraction (deterministic, never misses) and LLM extraction (handles compound splitting) in parallel
+  const [regexWords, llmWords] = await Promise.all([
+    Promise.resolve(extractByRegex(cleanedContent)),
+    extractNounsLLM(ai, cleanedContent),
+  ])
+
+  // Merge: union of both, deduplicated, validated
+  const seen = new Set<string>()
+  const merged: string[] = []
+
+  // LLM results first (they include compound splits like マリオカート → マリオ, カート)
+  for (const w of llmWords) {
+    const key = w.toLowerCase()
+    if (!seen.has(key)) {
+      seen.add(key)
+      merged.push(w)
     }
+  }
 
-    // Use any to avoid strict type checking on model names
+  // Then regex results to fill in anything LLM missed
+  // Skip regex words that are already covered by LLM compound splits
+  for (const w of regexWords) {
+    const key = w.toLowerCase()
+    if (!seen.has(key)) {
+      // Check if this regex word is a compound that LLM already split
+      // e.g. regex found "マリオカート" but LLM already returned "マリオ" and "カート"
+      const alreadySplit = merged.some((m) => w.length > m.length && w.includes(m))
+      if (!alreadySplit) {
+        seen.add(key)
+        merged.push(w)
+      }
+    }
+  }
+
+  return merged.filter(isValidWordrotWord).slice(0, 10)
+}
+
+// Helper: LLM-based noun extraction (handles compound splitting and noun filtering)
+async function extractNounsLLM(ai: Bindings['AI'], cleanedContent: string): Promise<string[]> {
+  try {
     const response = await (ai as any).run('@cf/meta/llama-3.1-8b-instruct', {
       messages: [
         {
@@ -155,10 +230,9 @@ async function extractNouns(ai: Bindings['AI'], content: string): Promise<string
     const parsed = JSON.parse(match[0])
     if (!Array.isArray(parsed)) return []
 
-    // Filter and clean
-    return parsed.filter((w): w is string => typeof w === 'string' && w.length > 0 && w.length <= 20).slice(0, 10) // Max 10 words per post
+    return parsed.filter((w): w is string => typeof w === 'string' && w.length > 0 && w.length <= 20)
   } catch (e) {
-    console.error('Noun extraction error:', e)
+    console.error('LLM noun extraction error:', e)
     return []
   }
 }
