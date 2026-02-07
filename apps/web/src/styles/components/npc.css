@@ -215,3 +215,80 @@
   background: var(--surface-hover);
 }
 
+/* Share Choice Popup */
+.share-choice-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--surface-backdrop);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.share-choice-popup {
+  background: var(--surface-primary);
+  border: 2px solid var(--border-card);
+  width: 100%;
+  max-width: 300px;
+  padding: 0.75rem;
+}
+
+.share-choice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--border-card);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.share-choice-title {
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.share-choice-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.share-choice-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.share-choice-option:hover {
+  background: var(--surface-secondary);
+}
+
+.share-choice-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.share-choice-option svg {
+  stroke: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.share-choice-option span {
+  flex: 1;
+}
+

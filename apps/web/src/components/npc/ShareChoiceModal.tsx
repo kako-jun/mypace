@@ -46,31 +46,23 @@ export function ShareChoiceModal({ isOpen, onClose, sharedUrl, sharedText }: Sha
   }
 
   return (
-    <div className="npc-modal-overlay" onClick={handleOverlayClick}>
-      <div className="npc-modal">
-        <div className="npc-modal-header">
-          <span className="npc-modal-title">シェア先を選択</span>
-          <CloseButton onClick={onClose} />
+    <div className="share-choice-backdrop" onClick={handleOverlayClick}>
+      <div className="share-choice-popup">
+        <div className="share-choice-header">
+          <span className="share-choice-title">シェア先を選択</span>
+          <CloseButton onClick={onClose} size={16} />
         </div>
-        <div className="npc-modal-content">
-          <div className="npc-list">
-            <button className={`npc-item${loading ? ' npc-item-disabled' : ''}`} onClick={handleSelfPost} disabled={loading}>
-              <span className="npc-item-icon"><Icon name="PenLine" size={20} /></span>
-              <div className="npc-item-info">
-                <span className="npc-item-name">自分で投稿</span>
-                <span className="npc-item-desc">URLを本文に埋め込んで編集</span>
-              </div>
-              <Icon name="ChevronRight" size={18} className="npc-item-arrow" />
-            </button>
-            <button className={`npc-item${loading ? ' npc-item-disabled' : ''}`} onClick={handleReporterQuote} disabled={loading}>
-              <span className="npc-item-icon"><Icon name="Newspaper" size={20} /></span>
-              <div className="npc-item-info">
-                <span className="npc-item-name">{loading ? '作成中...' : '記者に依頼'}</span>
-                <span className="npc-item-desc">記者に引用投稿を作らせる</span>
-              </div>
-              <Icon name="ChevronRight" size={18} className="npc-item-arrow" />
-            </button>
-          </div>
+        <div className="share-choice-options">
+          <button className="share-choice-option" onClick={handleSelfPost} disabled={loading}>
+            <Icon name="PenLine" size={16} />
+            <span>自分で投稿</span>
+            <Icon name="ChevronRight" size={16} />
+          </button>
+          <button className="share-choice-option" onClick={handleReporterQuote} disabled={loading}>
+            <Icon name="Newspaper" size={16} />
+            <span>{loading ? '作成中...' : '記者に依頼'}</span>
+            <Icon name="ChevronRight" size={16} />
+          </button>
         </div>
       </div>
     </div>
