@@ -197,6 +197,10 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
         { tag: tags.strikethrough, textDecoration: 'line-through', color: darkTheme ? '#8b949e' : '#6e7781' },
       ])
 
+      // Android + Gboard環境では、highlightActiveLine() がデコレーション更新時にDOMを変更し、
+      // ネイティブの範囲選択が段落境界で強制解除されるバグがある
+      const isAndroid = /android/i.test(navigator.userAgent)
+
       const extensions = [
         lineNumbers(),
         highlightActiveLineGutter(),
@@ -211,7 +215,7 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
         autocompletion(),
         rectangularSelection(),
         crosshairCursor(),
-        highlightActiveLine(),
+        ...(isAndroid ? [] : [highlightActiveLine()]),
         highlightSelectionMatches(),
         keymap.of([
           ...closeBracketsKeymap,
@@ -227,6 +231,35 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
         theme,
         cmPlaceholder(placeholder),
         EditorView.lineWrapping,
+        // Android + Gboard環境では、空行タップ時にCodeMirrorのscrollIntoViewと
+        // ブラウザネイティブのキャレットスクロールが過剰なスクロールジャンプを引き起こす
+        ...(isAndroid
+          ? [
+              EditorView.scrollHandler.of((view) => {
+                const coords = view.coordsAtPos(view.state.selection.main.head)
+                if (!coords) return false
+                const scroller = view.scrollDOM.getBoundingClientRect()
+                const margin = 80
+                // カーソルが既に画面内にある場合はCodeMirrorのスクロールを抑制
+                return coords.top >= scroller.top + margin && coords.bottom <= scroller.bottom - margin
+              }),
+              // ブラウザネイティブのキャレットスクロールも補正
+              EditorView.domEventHandlers({
+                touchend: (_event, view) => {
+                  const scrollTop = view.scrollDOM.scrollTop
+                  requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                      const delta = Math.abs(view.scrollDOM.scrollTop - scrollTop)
+                      if (delta > 100) {
+                        view.scrollDOM.scrollTop = scrollTop
+                      }
+                    })
+                  })
+                  return false
+                },
+              }),
+            ]
+          : []),
         EditorView.updateListener.of((update: ViewUpdate) => {
           if (update.docChanged) {
             const newDoc = update.state.doc.toString()
