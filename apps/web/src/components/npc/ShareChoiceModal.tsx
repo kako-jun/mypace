@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { createReporterQuote } from '../../lib/api'
 import { useState } from 'react'
-import { Icon } from '../ui'
+import { CloseButton, Icon } from '../ui'
 
 interface ShareChoiceModalProps {
   isOpen: boolean
@@ -50,9 +50,7 @@ export function ShareChoiceModal({ isOpen, onClose, sharedUrl, sharedText }: Sha
       <div className="npc-modal">
         <div className="npc-modal-header">
           <span className="npc-modal-title">シェア先を選択</span>
-          <button className="npc-modal-close" onClick={onClose} disabled={loading} aria-label="閉じる">
-            <Icon name="X" size={18} />
-          </button>
+          <CloseButton onClick={onClose} />
         </div>
         <div className="npc-modal-content">
           <div className="npc-list">
