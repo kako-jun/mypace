@@ -235,29 +235,39 @@ export const LongModeEditor = forwardRef<LongModeEditorRef, LongModeEditorProps>
         // ブラウザネイティブのキャレットスクロールが過剰なスクロールジャンプを引き起こす
         ...(isAndroid
           ? [
-              EditorView.scrollHandler.of((view) => {
-                const coords = view.coordsAtPos(view.state.selection.main.head)
+              EditorView.scrollHandler.of((_view, range) => {
+                const coords = _view.coordsAtPos(range.head)
                 if (!coords) return false
-                const scroller = view.scrollDOM.getBoundingClientRect()
+                const scroller = _view.scrollDOM.getBoundingClientRect()
                 const margin = 80
                 // カーソルが既に画面内にある場合はCodeMirrorのスクロールを抑制
                 return coords.top >= scroller.top + margin && coords.bottom <= scroller.bottom - margin
               }),
-              // ブラウザネイティブのキャレットスクロールも補正
-              EditorView.domEventHandlers({
-                touchend: (_event, view) => {
-                  const scrollTop = view.scrollDOM.scrollTop
-                  requestAnimationFrame(() => {
+              // ブラウザネイティブのキャレットスクロールも補正（タップ時のみ）
+              (() => {
+                let touchStartY = 0
+                return EditorView.domEventHandlers({
+                  touchstart: (event) => {
+                    touchStartY = event.touches[0].clientY
+                    return false
+                  },
+                  touchend: (event, view) => {
+                    const dy = Math.abs(event.changedTouches[0].clientY - touchStartY)
+                    // 10px以上動いていたらスクロール操作なので補正しない
+                    if (dy > 10) return false
+                    const scrollTop = view.scrollDOM.scrollTop
                     requestAnimationFrame(() => {
-                      const delta = Math.abs(view.scrollDOM.scrollTop - scrollTop)
-                      if (delta > 100) {
-                        view.scrollDOM.scrollTop = scrollTop
-                      }
+                      requestAnimationFrame(() => {
+                        const delta = Math.abs(view.scrollDOM.scrollTop - scrollTop)
+                        if (delta > 100) {
+                          view.scrollDOM.scrollTop = scrollTop
+                        }
+                      })
                     })
-                  })
-                  return false
-                },
-              }),
+                    return false
+                  },
+                })
+              })(),
             ]
           : []),
         EditorView.updateListener.of((update: ViewUpdate) => {
