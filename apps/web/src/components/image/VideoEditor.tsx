@@ -148,9 +148,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
 
   const togglePlay = () => {
     if (playing) {
-      if (videoRef.current) {
-        safePause(videoRef.current)
-      }
+      // safePause is handled by the effect cleanup when playing becomes false
       setPlaying(false)
     } else {
       // Always start from startTime when play is pressed
@@ -202,11 +200,8 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     e.preventDefault()
     e.stopPropagation()
 
-    // Stop playback and preview at marker position
+    // Stop playback — safePause is handled by the effect cleanup
     if (playing) {
-      if (videoRef.current) {
-        safePause(videoRef.current)
-      }
       setPlaying(false)
     }
 
@@ -252,11 +247,8 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
     e.preventDefault()
     e.stopPropagation()
 
-    // Stop playback and preview at marker position
+    // Stop playback — safePause is handled by the effect cleanup
     if (playing) {
-      if (videoRef.current) {
-        safePause(videoRef.current)
-      }
       setPlaying(false)
     }
 
