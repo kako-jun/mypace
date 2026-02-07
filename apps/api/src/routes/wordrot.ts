@@ -97,6 +97,23 @@ vibrant colors,
 centered composition,
 no text or labels`
 
+// Helper: Validate that a word is strictly katakana-only or English-alphabet-only
+// This is a hard filter applied AFTER LLM extraction to guarantee correctness
+function isValidWordrotWord(word: string): boolean {
+  // Must be at least 2 characters
+  if (word.length < 2) return false
+
+  // Pattern 1: Pure katakana (ァ-ヶ, prolonged sound mark ー, iteration marks ヽヾ)
+  const isKatakana = /^[\u30A1-\u30F6\u30FC\u30FD\u30FE]+$/.test(word)
+  if (isKatakana) return true
+
+  // Pattern 2: Pure English letters (at least 2 chars, only alphabetic)
+  const isEnglish = /^[a-zA-Z]{2,}$/.test(word)
+  if (isEnglish) return true
+
+  return false
+}
+
 // Helper: Clean content before noun extraction
 // Removes URLs, code blocks, hashtags, mentions - elements that shouldn't be word sources
 function cleanContentForExtraction(content: string): string {
@@ -155,8 +172,11 @@ async function extractNouns(ai: Bindings['AI'], content: string): Promise<string
     const parsed = JSON.parse(match[0])
     if (!Array.isArray(parsed)) return []
 
-    // Filter and clean
-    return parsed.filter((w): w is string => typeof w === 'string' && w.length > 0 && w.length <= 20).slice(0, 10) // Max 10 words per post
+    // Filter: must be string, reasonable length, AND pass strict katakana/English validation
+    return parsed
+      .filter((w): w is string => typeof w === 'string' && w.length > 0 && w.length <= 20)
+      .filter(isValidWordrotWord)
+      .slice(0, 10) // Max 10 words per post
   } catch (e) {
     console.error('Noun extraction error:', e)
     return []
