@@ -65,13 +65,16 @@ export async function loadEnrichForEvents(
     setReposts((prev) => ({ ...prev, ...repostMap }))
     setViews((prev) => ({ ...prev, ...viewMap }))
 
-    // プロフィールをマージ（リクエストした全pubkeyに対して設定）
+    // プロフィールをマージ（取得結果が存在するpubkeyのみ設定）
     setProfiles((prev) => {
       const newProfiles = { ...prev }
       for (const pk of authorPubkeys) {
-        if (newProfiles[pk] === undefined) {
-          // Nostrから取得したprofileがあればそれを、なければnull（取得失敗 = マイペースさん表示）
-          newProfiles[pk] = profiles[pk] || null
+        if (pk in profiles) {
+          // 取得結果がある場合のみ更新（Profile=見つかった、null=未設定）
+          // 取得結果がない場合（undefined）はリレー障害の可能性があるため、undefinedのまま保持しリトライ可能にする
+          if (newProfiles[pk] === undefined || profiles[pk] !== null) {
+            newProfiles[pk] = profiles[pk]
+          }
         }
       }
       return newProfiles
@@ -94,8 +97,8 @@ export async function loadEnrichForEvents(
         setProfiles((prev) => {
           const newProfiles = { ...prev }
           for (const pk of uniqueReactorPubkeys) {
-            if (newProfiles[pk] === undefined) {
-              newProfiles[pk] = reactorProfiles[pk] || null
+            if (newProfiles[pk] === undefined && pk in reactorProfiles) {
+              newProfiles[pk] = reactorProfiles[pk]
             }
           }
           return newProfiles
@@ -128,16 +131,8 @@ export async function loadEnrichForEvents(
     setReposts((prev) => ({ ...prev, ...repostMap }))
     setViews((prev) => ({ ...prev, ...viewMap }))
 
-    // エラー時もプロフィールをnullに設定（虹色アニメーション停止のため）
-    setProfiles((prev) => {
-      const newProfiles = { ...prev }
-      for (const pk of authorPubkeys) {
-        if (newProfiles[pk] === undefined) {
-          newProfiles[pk] = null
-        }
-      }
-      return newProfiles
-    })
+    // エラー時はプロフィールをundefinedのまま保持（次回リトライ可能にする）
+    // 虹色ローディングアニメーションは継続するが、マイペースさん誤表示よりも適切
   }
 }
 
@@ -156,7 +151,10 @@ export async function mergeProfiles(
     setProfiles((prev) => {
       const newProfiles = { ...prev }
       for (const pk of missingPubkeys) {
-        newProfiles[pk] = profiles[pk] || null
+        // 取得結果がある場合のみ設定（キーが存在しない=リレー障害→リトライ対象）
+        if (pk in profiles) {
+          newProfiles[pk] = profiles[pk]
+        }
       }
       return newProfiles
     })
