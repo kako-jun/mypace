@@ -248,3 +248,14 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+@media (max-width: 480px) {
+  .tabs {
+    gap: 0.25rem;
+  }
+
+  .tab {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
+  }
+}
