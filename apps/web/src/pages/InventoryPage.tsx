@@ -71,20 +71,21 @@ export function InventoryPage() {
         const pk = await getCurrentPubkey()
         setPubkey(pk)
 
-        // checkSupernovas + データ取得を全て並列実行
-        const [checkResult, balanceRes, userSupernovasRes, allSupernovasRes, statsRes, fullStatsRes] =
-          await Promise.all([
-            checkSupernovas(pk),
-            fetchStellaBalance(pk),
-            fetchUserSupernovas(pk),
-            fetchSupernovaDefinitions(),
-            fetchUserStellaStats(pk),
-            fetchUserStats(pk),
-          ])
-
+        // checkSupernovasはDB書き込み（unlock）を含むため、先に順次実行
+        // fetchUserSupernovasが新しくunlockされたデータを読めるよう順序を保証
+        const checkResult = await checkSupernovas(pk)
         if (checkResult.newlyUnlocked.length > 0) {
           celebrate(checkResult.newlyUnlocked)
         }
+
+        // 読み取り系を全て並列実行
+        const [balanceRes, userSupernovasRes, allSupernovasRes, statsRes, fullStatsRes] = await Promise.all([
+          fetchStellaBalance(pk),
+          fetchUserSupernovas(pk),
+          fetchSupernovaDefinitions(),
+          fetchUserStellaStats(pk),
+          fetchUserStats(pk),
+        ])
 
         if (balanceRes) {
           setBalance(balanceRes.balance)

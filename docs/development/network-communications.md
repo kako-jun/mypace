@@ -181,9 +181,11 @@ URLアクセス
   [API] GET /api/wordrot/inventory/{pubkey}
   │  ※ TTL 60秒以内ならクライアントキャッシュHit(0回)
   │
-  ▼ Promise.all (6並列):
+  ▼ checkSupernovas (順次 - DB書き込みを含むため順序保証が必要)
+  [API] POST /api/supernovas/check
+  │
+  ▼ Promise.all (5並列):
   ┌─────────────────────────────────────────────────┐
-  │ [API] POST /api/supernovas/check                                       │
   │ [API] GET /api/stella-balance/{pubkey}                                 │
   │ [API] GET /api/supernovas/{pubkey}                                     │
   │ [API] GET /api/supernovas/definitions                                  │
@@ -192,7 +194,7 @@ URLアクセス
   └─────────────────────────────────────────────────┘
 ```
 
-**合計**: API 6-7回（全て並列） ← 改善: checkSupernovasを並列化、inventoryキャッシュ
+**合計**: API 6-7回（check順次 + 5並列） ← 改善: inventoryキャッシュ
 
 ### 1-8. 通知パネル
 
@@ -306,8 +308,8 @@ URLアクセス
 ```
 ページロード
   [1] fetchWordrotInventory (useWordrotマウント、キャッシュHit時0回)
-  [2-7] Promise.all (6並列):
-    checkSupernovas ← 順次→並列に移動
+  [2] checkSupernovas (順次 - DB書き込みを含むため並列化不可)
+  [3-7] Promise.all (5並列):
     fetchStellaBalance
     fetchUserSupernovas
     fetchSupernovaDefinitions
@@ -316,9 +318,9 @@ URLアクセス
 ```
 
 **対策**:
-1. `checkSupernovas` を `Promise.all` に含めて並列化
-2. `fetchWordrotInventory` のキャッシュで遷移時は0回に
-3. 残: API統合エンドポイント `GET /api/inventory/full` で 6→1 削減は将来課題
+1. `fetchWordrotInventory` のキャッシュで遷移時は0回に
+2. `checkSupernovas` はDB書き込み→読み取りの順序保証が必要なため順次のまま
+3. 残: API統合エンドポイント `GET /api/inventory/full` で 5→1 削減は将来課題
 
 ---
 
@@ -378,7 +380,7 @@ collectWord(word) → 成功 → レスポンスにinventory含む → 直接sta
 | Wordrotインベントリ重複取得 | `fetchWordrotInventory` にTTL 60sクライアントキャッシュ | ページ遷移時API 0回 |
 | extractNouns キャッシュ未共有 | `extractNouns`/`extractNounsBatch` にapi.tsレベルでキャッシュ統一 | タイムライン→詳細遷移時API 0回 |
 | collectWord → inventory全取得 | APIレスポンスにinventory含める | collect後のAPI 1回→0回 |
-| InventoryPage checkSupernovas順次 | Promise.allに統合して全6並列 | RTT 1回分短縮 |
+| InventoryPage checkSupernovas | DB書き込み→読み取り順序保証のため順次維持 | 正確性を優先 |
 | synthesizeWords後のキャッシュ | 合成成功時にinventoryキャッシュ無効化 | 次回fetchで最新取得 |
 
 ### バッチ化すべき残課題
