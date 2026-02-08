@@ -102,7 +102,8 @@ export function MagazineView() {
       setMyPubkey(currentPubkey)
 
       // Pre-seed author profile into profiles cache (avoids redundant fetch in loadEnrichForEvents)
-      const initialProfiles: ProfileCache = profile ? { [pubkey]: profile } : {}
+      // nullの場合も設定する（プロフィール未設定と確認済み→再取得不要）
+      const initialProfiles: ProfileCache = { [pubkey]: profile }
       setProfiles(initialProfiles)
 
       if (mag && mag.eventIds.length > 0) {
