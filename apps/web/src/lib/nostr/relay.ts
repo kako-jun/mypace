@@ -390,16 +390,14 @@ export async function fetchUserEvents(
 }
 
 // プロフィール取得（直接リレー接続）
+// 戻り値: Profile=取得成功、null=クエリ成功だがプロフィール未設定、キー無し(undefined)=取得失敗（リトライ対象）
 export async function fetchProfiles(pubkeys: string[]): Promise<Record<string, Profile | null>> {
   if (pubkeys.length === 0) return {}
 
   const p = getPool()
   const result: Record<string, Profile | null> = {}
 
-  // 初期化
-  for (const pk of pubkeys) {
-    result[pk] = null
-  }
+  // ※ ここでnullに初期化しない。クエリ成功後にのみnullを設定する
 
   try {
     const filter: Filter = {
@@ -414,6 +412,14 @@ export async function fetchProfiles(pubkeys: string[]): Promise<Record<string, P
     for (const e of events) {
       if (!latestByPubkey[e.pubkey] || e.created_at > latestByPubkey[e.pubkey].created_at) {
         latestByPubkey[e.pubkey] = e
+      }
+    }
+
+    // クエリ成功時のみ、見つからなかったpubkeyをnull（プロフィール未設定）としてマーク
+    // ただし、バッチクエリで結果が0件の場合はレート制限の可能性があるため、nullにしない
+    if (events.length > 0 || pubkeys.length === 1) {
+      for (const pk of pubkeys) {
+        result[pk] = null
       }
     }
 
@@ -437,6 +443,7 @@ export async function fetchProfiles(pubkeys: string[]): Promise<Record<string, P
     }
   } catch (e) {
     console.error('Failed to fetch profiles:', e)
+    // エラー時はresultを空のまま返す（呼び出し元でundefinedとして扱われ、リトライ対象になる）
   }
 
   return result
@@ -672,9 +679,12 @@ export async function fetchEventsEnrich(
   ])
 
   // profilesをRecord<string, Profile | null>に変換
+  // fetchProfilesの結果にキーが存在しない場合（取得失敗）はundefinedのまま保持し、リトライ可能にする
   const profilesResult: Record<string, Profile | null> = {}
   for (const pk of authorPubkeys) {
-    profilesResult[pk] = profiles[pk] || null
+    if (pk in profiles) {
+      profilesResult[pk] = profiles[pk]
+    }
   }
 
   return { metadata, profiles: profilesResult, superMentions, views }

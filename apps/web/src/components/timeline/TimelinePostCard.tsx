@@ -131,6 +131,7 @@ export default memo(function TimelinePostCard({
       replies: replies || { count: 0, replies: [] },
       reposts: reposts || { count: 0, myRepost: false },
       views: views || { detail: 0, impression: 0 },
+      superMentions: wikidataMap,
     }
     cachePostWithMetadata(event, profile, metadata)
     navigateToPostModal(event.id)

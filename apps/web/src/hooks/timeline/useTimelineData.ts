@@ -6,6 +6,7 @@ import { extractFromContents } from '../../lib/utils/content'
 import type { Event, ProfileCache, ReactionData, ReplyData, RepostData, ViewCountData, OgpData } from '../../types'
 
 // イベントのエンリッチメント一括読み込み（metadata + profiles + super-mentions + views）
+// currentProfiles: 既にキャッシュ済みのプロフィール（渡された場合、既知のpubkeyはリレークエリから除外）
 export async function loadEnrichForEvents(
   events: Event[],
   viewerPubkey: string,
@@ -14,7 +15,8 @@ export async function loadEnrichForEvents(
   setReposts: React.Dispatch<React.SetStateAction<{ [eventId: string]: RepostData }>>,
   setViews: React.Dispatch<React.SetStateAction<{ [eventId: string]: ViewCountData }>>,
   setProfiles: React.Dispatch<React.SetStateAction<ProfileCache>>,
-  setWikidataMap: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  setWikidataMap: React.Dispatch<React.SetStateAction<Record<string, string>>>,
+  currentProfiles?: ProfileCache
 ): Promise<void> {
   if (events.length === 0) return
 
@@ -23,11 +25,16 @@ export async function loadEnrichForEvents(
   const contents = events.map((e) => e.content)
   const { superMentionPaths } = extractFromContents(contents)
 
+  // キャッシュ済みのpubkeyを除外してリレークエリを節約
+  const unknownPubkeys = currentProfiles
+    ? authorPubkeys.filter((pk) => currentProfiles[pk] === undefined)
+    : authorPubkeys
+
   try {
     // fetchEventsEnrich で一括取得（md計画通りの関数名）
     const { metadata, profiles, views, superMentions } = await fetchEventsEnrich(
       eventIds,
-      authorPubkeys,
+      unknownPubkeys,
       superMentionPaths,
       viewerPubkey
     )
@@ -65,13 +72,16 @@ export async function loadEnrichForEvents(
     setReposts((prev) => ({ ...prev, ...repostMap }))
     setViews((prev) => ({ ...prev, ...viewMap }))
 
-    // プロフィールをマージ（リクエストした全pubkeyに対して設定）
+    // プロフィールをマージ（取得結果が存在するpubkeyのみ設定）
     setProfiles((prev) => {
       const newProfiles = { ...prev }
       for (const pk of authorPubkeys) {
-        if (newProfiles[pk] === undefined) {
-          // Nostrから取得したprofileがあればそれを、なければnull（取得失敗 = マイペースさん表示）
-          newProfiles[pk] = profiles[pk] || null
+        if (pk in profiles) {
+          // 取得結果がある場合のみ更新（Profile=見つかった、null=未設定）
+          // 取得結果がない場合（undefined）はリレー障害の可能性があるため、undefinedのまま保持しリトライ可能にする
+          if (newProfiles[pk] === undefined || profiles[pk] !== null) {
+            newProfiles[pk] = profiles[pk]
+          }
         }
       }
       return newProfiles
@@ -83,9 +93,10 @@ export async function loadEnrichForEvents(
     }
 
     // リアクター（ステラを押した人）のプロフィールも取得
+    // 今回取得済み + キャッシュ済みの両方を除外
     const reactorPubkeys = Object.values(metadata)
       .flatMap((m) => m.reactions.reactors.map((r) => r.pubkey))
-      .filter((pk) => profiles[pk] === undefined)
+      .filter((pk) => profiles[pk] === undefined && (!currentProfiles || currentProfiles[pk] === undefined))
     const uniqueReactorPubkeys = [...new Set(reactorPubkeys)]
 
     if (uniqueReactorPubkeys.length > 0) {
@@ -94,8 +105,8 @@ export async function loadEnrichForEvents(
         setProfiles((prev) => {
           const newProfiles = { ...prev }
           for (const pk of uniqueReactorPubkeys) {
-            if (newProfiles[pk] === undefined) {
-              newProfiles[pk] = reactorProfiles[pk] || null
+            if (newProfiles[pk] === undefined && pk in reactorProfiles) {
+              newProfiles[pk] = reactorProfiles[pk]
             }
           }
           return newProfiles
@@ -128,16 +139,8 @@ export async function loadEnrichForEvents(
     setReposts((prev) => ({ ...prev, ...repostMap }))
     setViews((prev) => ({ ...prev, ...viewMap }))
 
-    // エラー時もプロフィールをnullに設定（虹色アニメーション停止のため）
-    setProfiles((prev) => {
-      const newProfiles = { ...prev }
-      for (const pk of authorPubkeys) {
-        if (newProfiles[pk] === undefined) {
-          newProfiles[pk] = null
-        }
-      }
-      return newProfiles
-    })
+    // エラー時はプロフィールをundefinedのまま保持（次回リトライ可能にする）
+    // 虹色ローディングアニメーションは継続するが、マイペースさん誤表示よりも適切
   }
 }
 
@@ -156,7 +159,10 @@ export async function mergeProfiles(
     setProfiles((prev) => {
       const newProfiles = { ...prev }
       for (const pk of missingPubkeys) {
-        newProfiles[pk] = profiles[pk] || null
+        // 取得結果がある場合のみ設定（キーが存在しない=リレー障害→リトライ対象）
+        if (pk in profiles) {
+          newProfiles[pk] = profiles[pk]
+        }
       }
       return newProfiles
     })

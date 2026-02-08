@@ -112,8 +112,12 @@ export function useWordrot(): UseWordrotReturn {
           // Show celebration
           setCelebrationWord(collectResult)
 
-          // Refresh inventory
-          loadInventory()
+          // collectWordレスポンスにinventoryが含まれている場合、直接stateを更新（再fetchを回避）
+          if (result.inventory) {
+            setInventory(result.inventory.words)
+            setTotalCount(result.inventory.totalCount)
+            setUniqueCount(result.inventory.uniqueCount)
+          }
 
           return collectResult
         }
@@ -123,7 +127,7 @@ export function useWordrot(): UseWordrotReturn {
         setIsCollecting(false)
       }
     },
-    [pubkey, loadInventory]
+    [pubkey]
   )
 
   // Clear celebration

@@ -11,7 +11,6 @@ import {
   type MagazineInput,
 } from '../../lib/nostr/events'
 import {
-  getDisplayName,
   navigateToHome,
   navigateTo,
   navigateToEdit,
@@ -41,7 +40,6 @@ import {
 import type {
   Magazine,
   Event,
-  Profile,
   ProfileCache,
   ReactionData,
   ReplyData,
@@ -70,7 +68,6 @@ export function MagazineView() {
 
   const [magazine, setMagazine] = useState<Magazine | null>(null)
   const [posts, setPosts] = useState<Event[]>([])
-  const [authorProfile, setAuthorProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [showEditor, setShowEditor] = useState(false)
   const [myPubkey, setMyPubkey] = useState<string | null>(null)
@@ -102,8 +99,12 @@ export function MagazineView() {
       ])
 
       setMagazine(mag)
-      setAuthorProfile(profile)
       setMyPubkey(currentPubkey)
+
+      // Pre-seed author profile into profiles cache (avoids redundant fetch in loadEnrichForEvents)
+      // nullの場合も設定する（プロフィール未設定と確認済み→再取得不要）
+      const initialProfiles: ProfileCache = { [pubkey]: profile }
+      setProfiles(initialProfiles)
 
       if (mag && mag.eventIds.length > 0) {
         const eventsMap = await fetchEventsByIds(mag.eventIds)
@@ -121,7 +122,8 @@ export function MagazineView() {
             setReposts,
             setViews,
             setProfiles,
-            setWikidataMap
+            setWikidataMap,
+            initialProfiles
           )
           // Load OGP data asynchronously
           loadOgpForEvents(orderedPosts, setOgpMap)
@@ -473,7 +475,7 @@ export function MagazineView() {
   }
 
   const handleSnsShare = (sns: 'x' | 'bluesky' | 'threads') => {
-    const text = `📚 ${magazine?.title || 'Magazine'} by @${getDisplayName(authorProfile, pubkey)}\n${shareUrl}`
+    const text = `📚 ${magazine?.title || 'Magazine'} by @${getDisplayNameFromCache(pubkey, profiles)}\n${shareUrl}`
     const intentUrl = getSnsIntentUrl(sns, text)
     window.open(intentUrl, '_blank', 'noopener,noreferrer')
     setShowShareMenu(false)
@@ -497,7 +499,7 @@ export function MagazineView() {
     )
   }
 
-  const authorName = getDisplayName(authorProfile, pubkey)
+  const authorName = getDisplayNameFromCache(pubkey, profiles)
 
   return (
     <div className="magazine-view">
@@ -637,7 +639,7 @@ export function MagazineView() {
                 event={post}
                 isMyPost={isMyPost}
                 myPubkey={myPubkey}
-                profiles={{ ...profiles, [pubkey]: authorProfile ?? null }}
+                profiles={profiles}
                 wikidataMap={wikidataMap}
                 ogpMap={ogpMap}
                 reactions={reactions[post.id]}

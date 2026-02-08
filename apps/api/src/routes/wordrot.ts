@@ -570,11 +570,50 @@ wordrot.post('/collect', async (c) => {
   // Refresh word record to get latest data
   wordRecord = await db.prepare(`SELECT * FROM wordrot_words WHERE id = ?`).bind(wordRecord.id).first<WordrotWord>()
 
+  // collectレスポンスに更新後インベントリを含める（クライアントの再取得を不要にする）
+  const inventoryResult = await db
+    .prepare(
+      `SELECT
+         w.id, w.text, w.image_url, w.image_status, w.discovered_by, w.discovered_at,
+         w.discovery_count, w.synthesis_count,
+         uw.count, uw.first_collected_at, uw.last_collected_at, uw.source
+       FROM wordrot_user_words uw
+       JOIN wordrot_words w ON uw.word_id = w.id
+       WHERE uw.pubkey = ?
+       ORDER BY uw.last_collected_at DESC`
+    )
+    .bind(pubkey)
+    .all<WordrotWord & { count: number; first_collected_at: number; last_collected_at: number; source: string }>()
+
+  const inventoryWords: UserWord[] = (inventoryResult.results || []).map((row) => ({
+    word: {
+      id: row.id,
+      text: row.text,
+      image_url: row.image_url,
+      image_status: row.image_status,
+      discovered_by: row.discovered_by,
+      discovered_at: row.discovered_at,
+      discovery_count: row.discovery_count,
+      synthesis_count: row.synthesis_count,
+    },
+    count: row.count,
+    first_collected_at: row.first_collected_at,
+    last_collected_at: row.last_collected_at,
+    source: row.source,
+  }))
+
+  const inventoryTotalCount = inventoryWords.reduce((sum, w) => sum + w.count, 0)
+
   return c.json({
     word: wordRecord,
     isNew,
     isFirstEver,
     count: 1, // Always return 1 since it's binary
+    inventory: {
+      words: inventoryWords,
+      totalCount: inventoryTotalCount,
+      uniqueCount: inventoryWords.length,
+    },
   })
 })
 
