@@ -274,7 +274,10 @@ reporter.post('/', async (c) => {
     }
 
     // Create event
-    const content = `📰 ${ogp.title}\n\nShare your thoughts in the replies!\n\n${url}`
+    const isNonEnglishTitle = /[^\x20-\x7E]/.test(ogp.title)
+    const intro = isNonEnglishTitle ? 'こちらの記事をお届けします。' : "Here's an article for you."
+    const cta = isNonEnglishTitle ? 'リプライであなたの感想を聞かせてください!' : 'Share your thoughts in the replies!'
+    const content = `${intro}\n${cta}\n\n${ogp.title}\n${url}`
 
     const eventTemplate = {
       kind: 1,
