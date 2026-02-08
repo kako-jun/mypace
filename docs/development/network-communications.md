@@ -103,8 +103,10 @@ Browser (React SPA)
   │
   ▼ Promise.all:
   ┌─────────────────────────────────────────────────┐
-  │ [API×2] extractNouns + fetchWordrotInventory ... Wordrot (直列)         │
-  │ [リレー] fetchEventsByIds([親ID])             ... 親イベント取得        │
+  │ [API 0-2] extractNouns + fetchWordrotInventory ... Wordrot               │
+  │           ※ extractNouns: バッチ抽出済みならクライアントキャッシュHit(0回) │
+  │           ※ inventory: TTL 60秒以内ならクライアントキャッシュHit(0回)     │
+  │ [リレー]  fetchEventsByIds([親ID])             ... 親イベント取得         │
   └─────────────────────────────────────────────────┘
   │  ※ superMentionsキャッシュ済みならAPI呼び出し0回
   │  ※ キャッシュ無しなら [API] POST /api/events/enrich (スーパーメンションのみ)
@@ -115,7 +117,7 @@ Browser (React SPA)
   └─ [API]  POST /api/views/impressions (fire-and-forget)
 ```
 
-**合計**: リレー2回 + API 2-3回
+**合計**: リレー2回 + API 0-3回（キャッシュHit時は0回）
 
 ### 1-5. 投稿詳細（直接URLアクセス = キャッシュなし）
 
@@ -177,12 +179,11 @@ URLアクセス
   │
   ▼ useWordrot: fetchWordrotInventory (hook mount)
   [API] GET /api/wordrot/inventory/{pubkey}
+  │  ※ TTL 60秒以内ならクライアントキャッシュHit(0回)
   │
-  ▼ checkSupernovas (順次)
-  [API] POST /api/supernovas/check
-  │
-  ▼ Promise.all (5並列):
+  ▼ Promise.all (6並列):
   ┌─────────────────────────────────────────────────┐
+  │ [API] POST /api/supernovas/check                                       │
   │ [API] GET /api/stella-balance/{pubkey}                                 │
   │ [API] GET /api/supernovas/{pubkey}                                     │
   │ [API] GET /api/supernovas/definitions                                  │
@@ -191,7 +192,7 @@ URLアクセス
   └─────────────────────────────────────────────────┘
 ```
 
-**合計**: API 7回（うち5回並列） 🔴 高負荷
+**合計**: API 6-7回（全て並列） ← 改善: checkSupernovasを並列化、inventoryキャッシュ
 
 ### 1-8. 通知パネル
 
@@ -285,29 +286,28 @@ URLアクセス
 
 ## 4. 高負荷箇所の分析
 
-### 🔴 高負荷: `fetchWordrotInventory` の重複呼び出し
+### ✅ 解決済み: `fetchWordrotInventory` の重複呼び出し
 
 ```
 タイムライン表示                      投稿詳細
   useWordrotTimeline                   usePostViewData
-    └─ fetchWordrotInventory(pk) ──→     └─ fetchWordrotInventory(pk)
-       API 1回                              API 1回 (同じデータ)
+    └─ fetchWordrotInventory(pk)         └─ fetchWordrotInventory(pk)
+       API 1回                              クライアントキャッシュHit (0回)
 ```
 
-**問題**: 同じユーザーのインベントリがページ遷移のたびに再取得される。
-セッション中にインベントリが変わるのは `collectWord` 実行時のみ。
-
-**改善案**: `fetchWordrotInventory` にモジュールレベルのクライアントキャッシュ（TTL: 60秒）を追加。`collectWord` 成功時にキャッシュを無効化。
+**対策**: `fetchWordrotInventory` にTTL 60秒のクライアントキャッシュを追加。
+`collectWord` 成功時はレスポンスに含まれるinventoryでキャッシュを直接更新。
+`synthesizeWords` 成功時はキャッシュを無効化。
 
 ---
 
-### 🔴 高負荷: インベントリページのAPI 7連射
+### ✅ 改善済み: インベントリページのAPI呼び出し
 
 ```
 ページロード
-  [1] fetchWordrotInventory (useWordrotマウント)
-  [2] checkSupernovas (順次)
-  [3-7] Promise.all:
+  [1] fetchWordrotInventory (useWordrotマウント、キャッシュHit時0回)
+  [2-7] Promise.all (6並列):
+    checkSupernovas ← 順次→並列に移動
     fetchStellaBalance
     fetchUserSupernovas
     fetchSupernovaDefinitions
@@ -315,38 +315,34 @@ URLアクセス
     fetchUserStats
 ```
 
-**問題**: 7 API呼び出し。うち `checkSupernovas` は `Promise.all` の前に順次実行されている。
-
-**改善案**:
-1. `checkSupernovas` を `Promise.all` に含める（順次→並列化）
-2. API統合エンドポイント `GET /api/inventory/full` で 5→1 に削減
-3. `fetchWordrotInventory` のキャッシュで +1 削減
+**対策**:
+1. `checkSupernovas` を `Promise.all` に含めて並列化
+2. `fetchWordrotInventory` のキャッシュで遷移時は0回に
+3. 残: API統合エンドポイント `GET /api/inventory/full` で 6→1 削減は将来課題
 
 ---
 
-### 🟡 中負荷: `extractNouns` のクライアントキャッシュ未共有
+### ✅ 解決済み: `extractNouns` のクライアントキャッシュ統一
 
 ```
-useWordrot.ts:    extractedWordsCache (モジュールMap) ← キャッシュあり
-usePostViewData:  extractNouns を直接呼び出し         ← キャッシュなし
+api.ts:           extractNounsCache (モジュールMap) ← eventIDベースでキャッシュ
+extractNounsBatch: バッチ結果を extractNounsCache に反映 ← タイムライン→詳細の重複回避
+useWordrot.ts:    extractedWordsCache ← 既存のhookレベルキャッシュも併存
 ```
 
-**問題**: `useWordrot` にはイベントIDベースのキャッシュがあるが、`usePostViewData` は同じ関数を使わずAPIを直接呼ぶ。
-サーバー側でもキャッシュしているが、ネットワーク往復は発生する。
-
-**改善案**: `extractNouns` 関数自体にクライアントキャッシュを追加（api.ts内）。
+**対策**: `extractNouns` 関数自体にクライアントキャッシュを追加（api.ts内）。
+`extractNounsBatch` の結果も個別キャッシュに反映し、タイムライン→投稿詳細遷移時の再取得を回避。
 
 ---
 
-### 🟡 中負荷: `collectWord` 後のインベントリ全取得
+### ✅ 解決済み: `collectWord` 後のインベントリ全取得
 
 ```
-collectWord(word) → 成功 → loadInventory() → fetchWordrotInventory(全件取得)
+collectWord(word) → 成功 → レスポンスにinventory含む → 直接state更新
 ```
 
-**問題**: 1語コレクト後に全インベントリを再取得。
-
-**改善案**: `collectWord` APIレスポンスに更新後インベントリを含める。
+**対策**: `POST /api/wordrot/collect` のレスポンスに更新後インベントリを含めるようAPI変更。
+クライアント側は `loadInventory()` の再呼び出しを廃止し、レスポンスデータで直接更新。
 
 ---
 
@@ -375,11 +371,18 @@ collectWord(word) → 成功 → loadInventory() → fetchWordrotInventory(全�
 | キャッシュスキップ | `currentProfiles` で既知pubkeyをリレークエリから除外 |
 | sessionStorageキャッシュ | タイムライン→詳細でevent, profile, metadata, superMentionsを引き継ぎ |
 
+### 実施済みの最適化
+
+| 課題 | 対策 | 効果 |
+|---|---|---|
+| Wordrotインベントリ重複取得 | `fetchWordrotInventory` にTTL 60sクライアントキャッシュ | ページ遷移時API 0回 |
+| extractNouns キャッシュ未共有 | `extractNouns`/`extractNounsBatch` にapi.tsレベルでキャッシュ統一 | タイムライン→詳細遷移時API 0回 |
+| collectWord → inventory全取得 | APIレスポンスにinventory含める | collect後のAPI 1回→0回 |
+| InventoryPage checkSupernovas順次 | Promise.allに統合して全6並列 | RTT 1回分短縮 |
+| synthesizeWords後のキャッシュ | 合成成功時にinventoryキャッシュ無効化 | 次回fetchで最新取得 |
+
 ### バッチ化すべき残課題
 
 | 課題 | 現状 | 理想 |
 |---|---|---|
-| インベントリページ | 7 API (うち2順次 + 5並列) | 1-2 API (統合エンドポイント) |
-| Wordrotインベントリ | ページ遷移毎に再取得 | クライアントキャッシュ (TTL: 60s) |
-| extractNouns | 呼び出し元ごとにキャッシュ有無が異なる | API関数レベルでキャッシュ統一 |
-| collectWord → inventory | 全件再取得 | レスポンスに含める |
+| インベントリページ | 6 API (全並列) | 1-2 API (統合エンドポイント `GET /api/inventory/full`) |

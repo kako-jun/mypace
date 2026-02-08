@@ -675,6 +675,7 @@ export async function collectWord(
 }
 
 // Synthesize words
+// 合成成功でインベントリが変わるため、キャッシュを無効化する
 export async function synthesizeWords(
   pubkey: string,
   wordA: string,
@@ -696,6 +697,10 @@ export async function synthesizeWords(
     const data = await res.json()
     if (data.error && !data.result) {
       return { result: null, isNewSynthesis: false, isNewWord: false, formula: '', error: data.error }
+    }
+    // 合成成功 → インベントリに新語が追加されるのでキャッシュを無効化
+    if (data.result) {
+      invalidateWordrotInventoryCache()
     }
     return data
   } catch {
