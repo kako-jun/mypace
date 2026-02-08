@@ -564,8 +564,38 @@ export interface WordrotSynthesis {
   use_count: number
 }
 
+// --- Wordrot クライアントキャッシュ ---
+
+// extractNouns: eventIDベースのキャッシュ（抽出結果は不変）
+const extractNounsCache = new Map<string, string[]>()
+
+// fetchWordrotInventory: pubkeyベースのキャッシュ（TTL: 60秒、collectWord時に無効化）
+let inventoryCache: {
+  pubkey: string
+  data: { words: UserWordrotWord[]; totalCount: number; uniqueCount: number }
+  timestamp: number
+} | null = null
+const INVENTORY_CACHE_TTL = 60_000
+
+/** インベントリキャッシュを無効化（collectWord/synthesize成功時に呼ばれる） */
+export function invalidateWordrotInventoryCache(): void {
+  inventoryCache = null
+}
+
+/** インベントリキャッシュを直接更新（collectWordレスポンスにinventoryが含まれる場合） */
+export function updateWordrotInventoryCache(
+  pubkey: string,
+  data: { words: UserWordrotWord[]; totalCount: number; uniqueCount: number }
+): void {
+  inventoryCache = { pubkey, data, timestamp: Date.now() }
+}
+
 // Extract nouns from post content
 export async function extractNouns(eventId: string, content: string): Promise<{ words: string[]; cached: boolean }> {
+  // クライアントキャッシュチェック（サーバーD1にもキャッシュがあるが、ネットワーク往復を回避）
+  const clientCached = extractNounsCache.get(eventId)
+  if (clientCached) return { words: clientCached, cached: true }
+
   try {
     const res = await fetch(`${API_BASE}/api/wordrot/extract`, {
       method: 'POST',
@@ -573,7 +603,12 @@ export async function extractNouns(eventId: string, content: string): Promise<{ 
       body: JSON.stringify({ eventId, content }),
     })
     if (!res.ok) return { words: [], cached: false }
-    return res.json()
+    const result: { words: string[]; cached: boolean } = await res.json()
+    // 成功結果をクライアントキャッシュに保存
+    if (result.words.length > 0) {
+      extractNounsCache.set(eventId, result.words)
+    }
+    return result
   } catch {
     return { words: [], cached: false }
   }
@@ -595,13 +630,21 @@ export async function extractNounsBatch(
       body: JSON.stringify({ posts }),
     })
     if (!res.ok) return { results: {}, stats: { total: 0, cached: 0, extracted: 0 } }
-    return res.json()
+    const data: BatchExtractionResult = await res.json()
+    // バッチ結果を個別キャッシュにも反映（post detail遷移時にextractNouns単発呼び出しを回避）
+    for (const [eventId, result] of Object.entries(data.results)) {
+      if (result.words.length > 0) {
+        extractNounsCache.set(eventId, result.words)
+      }
+    }
+    return data
   } catch {
     return { results: {}, stats: { total: 0, cached: 0, extracted: 0 } }
   }
 }
 
 // Collect a word from a post
+// APIレスポンスに更新後inventoryが含まれるため、クライアントキャッシュを自動更新
 export async function collectWord(
   pubkey: string,
   word: string,
@@ -611,6 +654,7 @@ export async function collectWord(
   isNew: boolean
   isFirstEver: boolean
   count: number
+  inventory?: { words: UserWordrotWord[]; totalCount: number; uniqueCount: number }
 }> {
   try {
     const res = await fetch(`${API_BASE}/api/wordrot/collect`, {
@@ -619,7 +663,12 @@ export async function collectWord(
       body: JSON.stringify({ pubkey, word, eventId }),
     })
     if (!res.ok) return { word: null, isNew: false, isFirstEver: false, count: 0 }
-    return res.json()
+    const result = await res.json()
+    // レスポンスにinventoryが含まれていればキャッシュを直接更新
+    if (result.inventory) {
+      updateWordrotInventoryCache(pubkey, result.inventory)
+    }
+    return result
   } catch {
     return { word: null, isNew: false, isFirstEver: false, count: 0 }
   }
@@ -660,10 +709,22 @@ export async function fetchWordrotInventory(pubkey: string): Promise<{
   totalCount: number
   uniqueCount: number
 }> {
+  // クライアントキャッシュチェック（TTL: 60秒、同一pubkey）
+  if (
+    inventoryCache &&
+    inventoryCache.pubkey === pubkey &&
+    Date.now() - inventoryCache.timestamp < INVENTORY_CACHE_TTL
+  ) {
+    return inventoryCache.data
+  }
+
   try {
     const res = await fetch(`${API_BASE}/api/wordrot/inventory/${pubkey}`)
     if (!res.ok) return { words: [], totalCount: 0, uniqueCount: 0 }
-    return res.json()
+    const data: { words: UserWordrotWord[]; totalCount: number; uniqueCount: number } = await res.json()
+    // 成功結果をクライアントキャッシュに保存
+    inventoryCache = { pubkey, data, timestamp: Date.now() }
+    return data
   } catch {
     return { words: [], totalCount: 0, uniqueCount: 0 }
   }

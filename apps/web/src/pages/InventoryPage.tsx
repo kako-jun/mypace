@@ -71,20 +71,20 @@ export function InventoryPage() {
         const pk = await getCurrentPubkey()
         setPubkey(pk)
 
-        // Check and unlock any pending supernovas
-        const checkResult = await checkSupernovas(pk)
+        // checkSupernovas + データ取得を全て並列実行
+        const [checkResult, balanceRes, userSupernovasRes, allSupernovasRes, statsRes, fullStatsRes] =
+          await Promise.all([
+            checkSupernovas(pk),
+            fetchStellaBalance(pk),
+            fetchUserSupernovas(pk),
+            fetchSupernovaDefinitions(),
+            fetchUserStellaStats(pk),
+            fetchUserStats(pk),
+          ])
+
         if (checkResult.newlyUnlocked.length > 0) {
           celebrate(checkResult.newlyUnlocked)
         }
-
-        // Fetch data in parallel
-        const [balanceRes, userSupernovasRes, allSupernovasRes, statsRes, fullStatsRes] = await Promise.all([
-          fetchStellaBalance(pk),
-          fetchUserSupernovas(pk),
-          fetchSupernovaDefinitions(),
-          fetchUserStellaStats(pk),
-          fetchUserStats(pk),
-        ])
 
         if (balanceRes) {
           setBalance(balanceRes.balance)
