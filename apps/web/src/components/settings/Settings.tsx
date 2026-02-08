@@ -14,7 +14,7 @@ import { fetchUserProfile } from '../../lib/nostr/relay'
 import { getLocalProfile, getUIThemeColors, getStoredAppTheme, applyThemeColors, DEFAULT_COLORS } from '../../lib/utils'
 import { setThemeColors as saveThemeColors, setThemeMode, getThemeColors, getThemeMode } from '../../lib/storage'
 import { CUSTOM_EVENTS } from '../../lib/constants'
-import { TextButton } from '../ui'
+import { Tabs, TextButton } from '../ui'
 import {
   ProfileSection,
   ThemeSection,
@@ -161,26 +161,16 @@ export function Settings() {
       <div className="settings-backdrop" onClick={() => setOpen(false)} />
       <div className="settings-panel" onClick={(e) => e.stopPropagation()}>
         <CloseButton onClick={() => setOpen(false)} size={24} />
-        <div className="settings-tabs">
-          <button
-            className={`settings-tab ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-          >
-            SETTINGS
-          </button>
-          <button
-            className={`settings-tab ${activeTab === 'account' ? 'active' : ''}`}
-            onClick={() => setActiveTab('account')}
-          >
-            ACCOUNT
-          </button>
-          <button
-            className={`settings-tab ${activeTab === 'about' ? 'active' : ''}`}
-            onClick={() => setActiveTab('about')}
-          >
-            ABOUT
-          </button>
-        </div>
+        <Tabs
+          tabs={[
+            { value: 'settings' as const, label: 'Settings' },
+            { value: 'account' as const, label: 'Account' },
+            { value: 'about' as const, label: 'About' },
+          ]}
+          value={activeTab}
+          onChange={setActiveTab}
+          className="settings-tabs"
+        />
 
         <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
           <ThemeSection

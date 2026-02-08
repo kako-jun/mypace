@@ -183,3 +183,52 @@
 .post-button:active:not(:disabled) {
   transform: scale(0.98);
 }
+
+/* ===========================================
+   Tabs - Octagonal tab group
+   =========================================== */
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tab {
+  --btn-corner: 8px;
+  flex: 1;
+  background: var(--surface-secondary);
+  color: var(--text-muted);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  clip-path: polygon(
+    var(--btn-corner) 0,
+    calc(100% - var(--btn-corner)) 0,
+    100% var(--btn-corner),
+    100% calc(100% - var(--btn-corner)),
+    calc(100% - var(--btn-corner)) 100%,
+    var(--btn-corner) 100%,
+    0 calc(100% - var(--btn-corner)),
+    0 var(--btn-corner)
+  );
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.tab:hover:not(:disabled) {
+  background: var(--surface-tertiary);
+  color: var(--text-secondary);
+}
+
+.tab.active {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+.tab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

@@ -80,51 +80,8 @@
   margin-bottom: 0.5rem;
 }
 
-/* Post mode selector (Post / NPC toggle) - matches settings-tabs */
-.post-mode-selector {
-  display: flex;
+.post-mode-row .tabs {
   flex: 1;
-  gap: 0.5rem;
-}
-
-.post-mode-tab {
-  --btn-corner: 8px;
-  flex: 1;
-  background: var(--surface-secondary);
-  color: var(--text-muted);
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  clip-path: polygon(
-    var(--btn-corner) 0,
-    calc(100% - var(--btn-corner)) 0,
-    100% var(--btn-corner),
-    100% calc(100% - var(--btn-corner)),
-    calc(100% - var(--btn-corner)) 100%,
-    var(--btn-corner) 100%,
-    0 calc(100% - var(--btn-corner)),
-    0 var(--btn-corner)
-  );
-  padding: 0.75rem 1rem;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-.post-mode-tab:hover:not(:disabled) {
-  background: var(--surface-tertiary);
-  color: var(--text-secondary);
-}
-
-.post-mode-tab.active {
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-}
-
-.post-mode-tab:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 /* NPC Content (inline, not modal) */

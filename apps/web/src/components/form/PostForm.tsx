@@ -26,7 +26,7 @@ import {
 } from '../../lib/utils'
 import { CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
 import { AttachedImages, AttachedLocations, PostPreview } from '../post'
-import { Avatar, Icon, TextButton, ErrorMessage } from '../ui'
+import { Avatar, Icon, Tabs, TextButton, ErrorMessage } from '../ui'
 import { setVimMode as saveVimMode } from '../../lib/storage'
 import { ImagePicker } from '../sticker'
 import { useDragDrop } from '../../hooks'
@@ -477,24 +477,14 @@ export function PostForm({
       onSubmit={handleSubmit}
     >
       <div className="post-mode-row">
-        <div className="post-mode-selector">
-          <button
-            type="button"
-            className={`post-mode-tab ${postMode === 'post' ? 'active' : ''}`}
-            onClick={() => setPostMode('post')}
-          >
-            Post
-          </button>
-          <button
-            type="button"
-            className={`post-mode-tab ${postMode === 'npc' ? 'active' : ''}`}
-            onClick={() => setPostMode('npc')}
-            disabled={isEditingOrReplying}
-            title={isEditingOrReplying ? 'Not available when editing or replying' : 'Ask NPC to post'}
-          >
-            NPC
-          </button>
-        </div>
+        <Tabs
+          tabs={[
+            { value: 'post' as const, label: 'Post' },
+            { value: 'npc' as const, label: 'NPC', disabled: isEditingOrReplying },
+          ]}
+          value={postMode}
+          onChange={setPostMode}
+        />
         <button
           type="button"
           className="minimize-button"
