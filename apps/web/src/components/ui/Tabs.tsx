@@ -1,6 +1,8 @@
+import type { ReactNode } from 'react'
+
 interface Tab<T extends string> {
   value: T
-  label: string
+  label: ReactNode
   disabled?: boolean
 }
 

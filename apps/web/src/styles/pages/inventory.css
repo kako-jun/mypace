@@ -483,58 +483,12 @@
 
 /* ===================== Tab Navigation ===================== */
 
-/* Inventory tabs - Octagonal design */
+/* Inventory tabs - override shared .tabs/.tab */
 .inventory-tabs {
-  --tab-corner: 8px;
-  display: flex;
-  gap: 0.5rem;
   margin-bottom: 1rem;
-  padding: 0.35rem;
-  background: var(--surface-secondary);
-  clip-path: polygon(
-    var(--tab-corner) 0,
-    calc(100% - var(--tab-corner)) 0,
-    100% var(--tab-corner),
-    100% calc(100% - var(--tab-corner)),
-    calc(100% - var(--tab-corner)) 100%,
-    var(--tab-corner) 100%,
-    0 calc(100% - var(--tab-corner)),
-    0 var(--tab-corner)
-  );
 }
 
-.inventory-tab {
-  --tab-corner: 6px;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border: none;
-  background: transparent;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  clip-path: polygon(
-    var(--tab-corner) 0,
-    calc(100% - var(--tab-corner)) 0,
-    100% var(--tab-corner),
-    100% calc(100% - var(--tab-corner)),
-    calc(100% - var(--tab-corner)) 100%,
-    var(--tab-corner) 100%,
-    0 calc(100% - var(--tab-corner)),
-    0 var(--tab-corner)
-  );
-}
-
-.inventory-tab:hover {
-  background: var(--surface-tertiary);
-}
-
-.inventory-tab.active {
+.inventory-tabs .tab.active {
   background: var(--surface-primary);
   color: var(--text-primary);
 }
@@ -620,13 +574,9 @@
     gap: 0.25rem;
   }
 
-  .inventory-tab {
+  .inventory-tabs .tab {
     padding: 0.6rem 0.5rem;
     font-size: 0.8rem;
-  }
-
-  .inventory-tab span {
-    display: inline;
   }
 
   .inventory-words-grid {

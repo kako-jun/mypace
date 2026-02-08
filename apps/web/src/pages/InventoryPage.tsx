@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { BackButton, Icon, Loading } from '../components/ui'
+import { BackButton, Icon, Loading, Tabs } from '../components/ui'
 import { useCelebration } from '../components/supernova'
 import { WordCard } from '../components/wordrot'
 // SynthesisPanel is Phase 2
@@ -351,23 +351,27 @@ export function InventoryPage() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="inventory-tabs">
-        <button
-          className={`inventory-tab ${activeTab === 'stella' ? 'active' : ''}`}
-          onClick={() => setActiveTab('stella')}
-        >
-          <Icon name="Star" size={16} />
-          <span>Stella</span>
-        </button>
-        <button
-          className={`inventory-tab ${activeTab === 'wordrot' ? 'active' : ''}`}
-          onClick={() => setActiveTab('wordrot')}
-        >
-          <Icon name="FlaskConical" size={16} />
-          <span>Wordrot</span>
-          {wordrotUniqueCount > 0 && <span className="inventory-tab-badge">{wordrotUniqueCount}</span>}
-        </button>
-      </div>
+      <Tabs
+        tabs={[
+          {
+            value: 'stella' as const,
+            label: <><Icon name="Star" size={16} /><span>Stella</span></>,
+          },
+          {
+            value: 'wordrot' as const,
+            label: (
+              <>
+                <Icon name="FlaskConical" size={16} />
+                <span>Wordrot</span>
+                {wordrotUniqueCount > 0 && <span className="inventory-tab-badge">{wordrotUniqueCount}</span>}
+              </>
+            ),
+          },
+        ]}
+        value={activeTab}
+        onChange={setActiveTab}
+        className="inventory-tabs"
+      />
 
       {/* Stella Tab Content */}
       {activeTab === 'stella' && (
