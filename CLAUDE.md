@@ -28,6 +28,7 @@
   - [SEO](./docs/development/seo.md) - 動的OGP、sitemap
   - [UIデザイン](./docs/development/ui-design.md) - デザインガイドライン
   - [拡張仕様](./docs/development/extensions/index.md) - 独自タグ・API仕様
+  - [通信マップ](./docs/development/network-communications.md) - ブラウザ通信の全量マップ・高負荷分析
 
 ---
 
