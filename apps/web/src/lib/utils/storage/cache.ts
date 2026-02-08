@@ -12,6 +12,7 @@ export interface CachedPostMetadata {
   replies: { count: number; replies: Event[] }
   reposts: RepostData
   views: ViewCountData
+  superMentions?: Record<string, string>
 }
 
 // Post cache

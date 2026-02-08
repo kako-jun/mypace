@@ -83,6 +83,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const stellaDebounceTimers = useRef<{ [eventId: string]: ReturnType<typeof setTimeout> }>({})
   // Pending stella per color
   const pendingStella = useRef<{ [eventId: string]: StellaCountsByColor }>({})
+  const profilesRef = useRef(profiles)
+  profilesRef.current = profiles
   const reactionsRef = useRef(reactions)
   reactionsRef.current = reactions
 
@@ -540,7 +542,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
             setReposts,
             setViews,
             setProfiles,
-            setWikidataMap
+            setWikidataMap,
+            profilesRef.current
           )
           // OGPデータ一括取得（非同期）- リポスト元も含める
           loadOgpForEvents(allEventsForEnrich, setOgpMap)

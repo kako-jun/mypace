@@ -6,7 +6,6 @@ import { getFilterSettings } from '../../lib/storage'
 import { getMutedPubkeys } from '../../lib/utils'
 import type { Event, ProfileCache, TimelineItem } from '../../types'
 import type { UseTimelineOptions } from './types'
-import { mergeProfiles } from './useTimelineData'
 
 // イベントをTimelineItemに変換（リポストの場合はoriginalEventをセット）
 function eventsToTimelineItems(events: Event[]): { items: TimelineItem[]; originalEvents: Event[] } {
@@ -192,11 +191,8 @@ export function useTimelinePolling({
     const maxTime = Math.max(...eventsToAdd.map((e) => e.created_at))
     setLatestEventTime((prev) => Math.max(prev, maxTime))
 
-    // プロフィールとenrichデータを取得（リポスト元の著者も含める）
-    const pubkeys = [...new Set([...eventsToAdd.map((e) => e.pubkey), ...originalEvents.map((e) => e.pubkey)])]
-    await mergeProfiles(pubkeys, profiles, setProfiles)
-
-    // metadata + super-mention一括取得（リポスト元イベントも含める）
+    // metadata + profiles + super-mention一括取得（リポスト元イベントも含める）
+    // ※ loadEnrichForEvents内でプロフィールも取得するため、mergeProfilesは不要（二重取得防止）
     if (myPubkey) {
       const allEventsForEnrich = [...eventsToAdd, ...originalEvents]
       const { loadEnrichForEvents, recordImpressionsForEvents, loadOgpForEvents } = await import('./useTimelineData')
@@ -208,7 +204,8 @@ export function useTimelinePolling({
         setReposts,
         setViews,
         setProfiles,
-        setWikidataMap
+        setWikidataMap,
+        profiles
       )
       // OGPデータ一括取得（非同期）- リポスト元も含める
       loadOgpForEvents(allEventsForEnrich, setOgpMap)

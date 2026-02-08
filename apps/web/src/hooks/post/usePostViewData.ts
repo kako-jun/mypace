@@ -43,6 +43,32 @@ const initialReactions: ReactionData = {
   reactors: [],
 }
 
+// Wordrot取得（extractNouns + fetchWordrotInventory）- fire-and-forget用ヘルパー
+async function loadWordrotData(
+  eventId: string,
+  content: string,
+  pubkey: string,
+  setWordrotWords: React.Dispatch<React.SetStateAction<string[]>>,
+  setWordrotCollected: React.Dispatch<React.SetStateAction<Set<string>>>,
+  setWordrotImages: React.Dispatch<React.SetStateAction<Record<string, string | null>>>
+): Promise<void> {
+  const extractionResult = await extractNouns(eventId, content)
+  if (extractionResult.words.length === 0) return
+
+  setWordrotWords(extractionResult.words)
+  const inventory = await fetchWordrotInventory(pubkey)
+  const collected = new Set<string>(inventory.words.map((w) => w.word.text.toLowerCase()))
+  setWordrotCollected(collected)
+
+  const images: Record<string, string | null> = {}
+  for (const item of inventory.words) {
+    if (item.word.image_url) {
+      images[item.word.text] = item.word.image_url
+    }
+  }
+  setWordrotImages(images)
+}
+
 export function usePostViewData(eventId: string): PostViewData {
   const [event, setEvent] = useState<Event | null>(null)
   const [profile, setProfile] = useState<LoadableProfile>(undefined)
@@ -74,21 +100,16 @@ export function usePostViewData(eventId: string): PostViewData {
       let eventData: Event | null = getCachedPost(eventId)
       const cachedMetadata = getCachedPostMetadata(eventId)
 
+      // === イベント取得 ===
       if (eventData) {
         setEvent(eventData)
         setLoading(false)
-
+        // キャッシュ済みプロフィールは即座に設定（後でバッチ取得で更新される可能性あり）
         const cachedProfileData = getCachedProfile(eventData.pubkey)
         if (cachedProfileData) {
           setProfile(cachedProfileData)
-        } else {
-          const eventPubkey = eventData.pubkey
-          fetchProfiles([eventPubkey]).then((profiles) => {
-            if (profiles[eventPubkey]) setProfile(profiles[eventPubkey] as Profile)
-          })
         }
-
-        // Use cached metadata from timeline if available (instant display)
+        // キャッシュ済みメタデータを即座に設定
         if (cachedMetadata) {
           setReactions(cachedMetadata.reactions)
           setReplies(cachedMetadata.replies)
@@ -105,109 +126,122 @@ export function usePostViewData(eventId: string): PostViewData {
         }
         setEvent(eventData)
         setLoading(false)
-
-        const profilesData = await fetchProfiles([eventData.pubkey])
-        if (profilesData[eventData.pubkey]) {
-          setProfile(profilesData[eventData.pubkey] as Profile)
-        }
       }
 
       if (!eventData) return
 
-      // Fetch Wordrot data for this post
-      if (pubkey && eventData.content) {
-        try {
-          // Extract words from this post
-          const extractionResult = await extractNouns(eventId, eventData.content)
-          if (extractionResult.words.length > 0) {
-            setWordrotWords(extractionResult.words)
-
-            // Fetch user's inventory to know which words are collected
-            const inventory = await fetchWordrotInventory(pubkey)
-            const collected = new Set<string>(inventory.words.map((w) => w.word.text.toLowerCase()))
-            setWordrotCollected(collected)
-
-            // Build image cache from inventory
-            const images: Record<string, string | null> = {}
-            for (const item of inventory.words) {
-              if (item.word.image_url) {
-                images[item.word.text] = item.word.image_url
-              }
-            }
-            setWordrotImages(images)
-          }
-        } catch (err) {
-          console.error('[usePostViewData] Failed to fetch Wordrot data:', err)
-        }
-      }
-
-      // Skip API fetch if we already have cached metadata from timeline
-      // This avoids unnecessary network requests and keeps the UI consistent
+      // === キャッシュ済みメタデータパス（タイムラインからの遷移） ===
       if (cachedMetadata) {
-        // Record detail view for mypace posts (still needed even with cached data)
+        // スーパーメンション: キャッシュ済みなら使用、なければAPI取得
+        if (cachedMetadata.superMentions && Object.keys(cachedMetadata.superMentions).length > 0) {
+          setWikidataMap(cachedMetadata.superMentions)
+        } else {
+          const superMentionPaths = extractSuperMentionPaths(eventData.content)
+          if (superMentionPaths.length > 0) {
+            fetchViewsAndSuperMentions([], superMentionPaths)
+              .then(({ superMentions }) => setWikidataMap(superMentions))
+              .catch(() => {})
+          }
+        }
+
+        // インプレッション記録（fire-and-forget）
         if (hasMypaceTag(eventData) && pubkey) {
           recordImpressions([{ eventId, authorPubkey: eventData.pubkey }], 'detail', pubkey).catch(() => {})
         }
 
-        // Fetch super mentions (not cached in timeline metadata)
-        const superMentionPaths = extractSuperMentionPaths(eventData.content)
-        if (superMentionPaths.length > 0) {
-          fetchViewsAndSuperMentions([], superMentionPaths)
-            .then(({ superMentions }) => setWikidataMap(superMentions))
-            .catch(() => {})
+        // リプライタグから親イベントIDを取得
+        const replyTag = eventData.tags.find((tag) => tag[0] === 'e' && (tag[3] === 'reply' || tag[3] === 'root'))
+
+        // 並列実行: Wordrot(API) + 親イベント取得(リレー)
+        const [, parentResult] = await Promise.all([
+          // Wordrot（API呼び出し2回: extractNouns + fetchWordrotInventory）
+          pubkey && eventData.content
+            ? loadWordrotData(
+                eventId,
+                eventData.content,
+                pubkey,
+                setWordrotWords,
+                setWordrotCollected,
+                setWordrotImages
+              ).catch((err) => console.error('[usePostViewData] Failed to fetch Wordrot data:', err))
+            : Promise.resolve(),
+          // 親イベント取得（リレー1回）
+          replyTag
+            ? fetchEventsByIds([replyTag[1]])
+                .then((events) => (events[replyTag[1]] as Event) || null)
+                .catch(() => null)
+            : Promise.resolve(null),
+        ])
+
+        if (parentResult) {
+          setParentEvent(parentResult)
         }
 
-        // Batch fetch profiles for reply authors and reactors (from cached data)
+        // 全pubkeyを収集してプロフィールを1回でバッチ取得（リレー1回）
         const replyPubkeys = cachedMetadata.replies.replies.map((r) => r.pubkey)
         const reactorPubkeys = cachedMetadata.reactions.reactors.map((r) => r.pubkey)
-        // リポストの場合、元投稿者のプロフィールも取得
         const originalPubkey = eventData.kind === KIND_REPOST ? parseRepostEvent(eventData)?.pubkey : null
         const allPubkeys = [
-          ...new Set([...replyPubkeys, ...reactorPubkeys, ...(originalPubkey ? [originalPubkey] : [])]),
+          ...new Set([
+            // 投稿者プロフィールがキャッシュに無い場合のみ含める
+            ...(getCachedProfile(eventData.pubkey) ? [] : [eventData.pubkey]),
+            ...replyPubkeys,
+            ...reactorPubkeys,
+            ...(originalPubkey ? [originalPubkey] : []),
+            ...(parentResult ? [parentResult.pubkey] : []),
+          ]),
         ]
 
         if (allPubkeys.length > 0) {
           try {
             const fetchedProfiles = await fetchProfiles(allPubkeys)
-            const profiles: { [pubkey: string]: LoadableProfile } = {}
-            for (const pk of allPubkeys) {
-              // null means "tried to fetch but not found", undefined means "not yet fetched"
-              profiles[pk] = fetchedProfiles[pk] ?? null
+            // 投稿者プロフィール設定（キャッシュに無かった場合）
+            if (!getCachedProfile(eventData.pubkey) && fetchedProfiles[eventData.pubkey]) {
+              setProfile(fetchedProfiles[eventData.pubkey] as Profile)
             }
-            setReplyProfiles(profiles)
-          } catch {}
-        }
-
-        // Fetch parent event if this is a reply
-        const replyTag = eventData.tags.find((tag) => tag[0] === 'e' && (tag[3] === 'reply' || tag[3] === 'root'))
-        if (replyTag) {
-          const parentId = replyTag[1]
-          try {
-            const parentEvents = await fetchEventsByIds([parentId])
-            const parent = parentEvents[parentId]
-            if (parent) {
-              setParentEvent(parent as Event)
-              const parentProfiles = await fetchProfiles([parent.pubkey])
-              if (parentProfiles[parent.pubkey]) {
-                setParentProfile(parentProfiles[parent.pubkey] as Profile)
-              }
+            // リプライ/リアクター/元投稿者プロフィール設定
+            const rpProfiles: { [pubkey: string]: LoadableProfile } = {}
+            for (const pk of allPubkeys) {
+              rpProfiles[pk] = fetchedProfiles[pk] ?? null
+            }
+            setReplyProfiles(rpProfiles)
+            // 親投稿者プロフィール設定
+            if (parentResult && fetchedProfiles[parentResult.pubkey]) {
+              setParentProfile(fetchedProfiles[parentResult.pubkey] as Profile)
             }
           } catch {}
         }
         return
       }
 
-      // Extract super mention paths from content
+      // === 非キャッシュパス（直接URLアクセス等） ===
       const superMentionPaths = extractSuperMentionPaths(eventData.content)
+      const replyTag = eventData.tags.find((tag) => tag[0] === 'e' && (tag[3] === 'reply' || tag[3] === 'root'))
 
-      // Fetch all metadata + views + super mentions in parallel (only when not cached)
-      // Profile is already fetched above, so we only fetch metadata and views here
-      const [metadata, { views: viewsData, superMentions }] = await Promise.all([
+      // 並列実行: メタデータ(リレー) + ビュー&スーパーメンション(API) + 親イベント(リレー) + Wordrot(API)
+      const [metadata, { views: viewsData, superMentions }, parentResult] = await Promise.all([
         fetchEventMetadata([eventId], pubkey || undefined),
         fetchViewsAndSuperMentions([eventId], superMentionPaths),
+        replyTag
+          ? fetchEventsByIds([replyTag[1]])
+              .then((events) => (events[replyTag[1]] as Event) || null)
+              .catch(() => null)
+          : Promise.resolve(null),
       ])
-      const eventMetadata = metadata[eventId]
 
+      // Wordrotはメタデータ取得と並列で開始（fire-and-forget）
+      if (pubkey && eventData.content) {
+        loadWordrotData(
+          eventId,
+          eventData.content,
+          pubkey,
+          setWordrotWords,
+          setWordrotCollected,
+          setWordrotImages
+        ).catch((err) => console.error('[usePostViewData] Failed to fetch Wordrot data:', err))
+      }
+
+      const eventMetadata = metadata[eventId]
       if (eventMetadata) {
         setReactions(eventMetadata.reactions)
         setReplies(eventMetadata.replies)
@@ -216,41 +250,45 @@ export function usePostViewData(eventId: string): PostViewData {
       setViews(viewsData[eventId] || { impression: 0, detail: 0 })
       setWikidataMap(superMentions)
 
-      // Record detail view for mypace posts
+      // インプレッション記録（fire-and-forget）
       if (hasMypaceTag(eventData) && pubkey) {
         recordImpressions([{ eventId, authorPubkey: eventData.pubkey }], 'detail', pubkey).catch(() => {})
       }
 
-      // Fetch profiles for reply authors and reactors
-      const replyPubkeys = eventMetadata?.replies.replies.map((r) => r.pubkey) || []
-      const reactorPubkeys = eventMetadata?.reactions.reactors.map((r) => r.pubkey) || []
-      // リポストの場合、元投稿者のプロフィールも取得
-      const originalPubkey = eventData.kind === KIND_REPOST ? parseRepostEvent(eventData)?.pubkey : null
-      const allPubkeys = [...new Set([...replyPubkeys, ...reactorPubkeys, ...(originalPubkey ? [originalPubkey] : [])])]
-
-      if (allPubkeys.length > 0) {
-        const replyReactorProfiles = await fetchProfiles(allPubkeys)
-        const profiles: { [pubkey: string]: LoadableProfile } = {}
-        for (const pk of allPubkeys) {
-          // null means "tried to fetch but not found", undefined means "not yet fetched"
-          profiles[pk] = replyReactorProfiles[pk] ?? null
-        }
-        setReplyProfiles(profiles)
+      if (parentResult) {
+        setParentEvent(parentResult)
       }
 
-      // Fetch parent event if this is a reply
-      const replyTag = eventData.tags.find((tag) => tag[0] === 'e' && (tag[3] === 'reply' || tag[3] === 'root'))
-      if (replyTag) {
-        const parentId = replyTag[1]
+      // 全pubkeyを収集して1回でバッチ取得（リレー1回）
+      const replyPubkeys = eventMetadata?.replies.replies.map((r) => r.pubkey) || []
+      const reactorPubkeys = eventMetadata?.reactions.reactors.map((r) => r.pubkey) || []
+      const originalPubkey = eventData.kind === KIND_REPOST ? parseRepostEvent(eventData)?.pubkey : null
+      const allPubkeys = [
+        ...new Set([
+          eventData.pubkey,
+          ...replyPubkeys,
+          ...reactorPubkeys,
+          ...(originalPubkey ? [originalPubkey] : []),
+          ...(parentResult ? [parentResult.pubkey] : []),
+        ]),
+      ]
+
+      if (allPubkeys.length > 0) {
         try {
-          const parentEvents = await fetchEventsByIds([parentId])
-          const parent = parentEvents[parentId]
-          if (parent) {
-            setParentEvent(parent as Event)
-            const parentProfiles = await fetchProfiles([parent.pubkey])
-            if (parentProfiles[parent.pubkey]) {
-              setParentProfile(parentProfiles[parent.pubkey] as Profile)
-            }
+          const fetchedProfiles = await fetchProfiles(allPubkeys)
+          // 投稿者プロフィール設定
+          if (fetchedProfiles[eventData.pubkey]) {
+            setProfile(fetchedProfiles[eventData.pubkey] as Profile)
+          }
+          // リプライ/リアクター/元投稿者プロフィール設定
+          const rpProfiles: { [pubkey: string]: LoadableProfile } = {}
+          for (const pk of allPubkeys) {
+            rpProfiles[pk] = fetchedProfiles[pk] ?? null
+          }
+          setReplyProfiles(rpProfiles)
+          // 親投稿者プロフィール設定
+          if (parentResult && fetchedProfiles[parentResult.pubkey]) {
+            setParentProfile(fetchedProfiles[parentResult.pubkey] as Profile)
           }
         } catch {}
       }
