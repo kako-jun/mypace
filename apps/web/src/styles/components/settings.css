@@ -43,56 +43,8 @@
 
 /* Tabs */
 .settings-tabs {
-  display: flex;
-  gap: 0.5rem;
   margin-top: 2.5rem;
   margin-bottom: 1.25rem;
-}
-
-/* Shared button styles for tabs and theme switcher */
-.settings-tab,
-.theme-btn {
-  --btn-corner: 8px;
-  flex: 1;
-  background: var(--surface-secondary);
-  color: var(--text-muted);
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  clip-path: polygon(
-    var(--btn-corner) 0,
-    calc(100% - var(--btn-corner)) 0,
-    100% var(--btn-corner),
-    100% calc(100% - var(--btn-corner)),
-    calc(100% - var(--btn-corner)) 100%,
-    var(--btn-corner) 100%,
-    0 calc(100% - var(--btn-corner)),
-    0 var(--btn-corner)
-  );
-}
-
-.settings-tab:hover,
-.theme-btn:hover {
-  background: var(--surface-tertiary);
-  color: var(--text-secondary);
-}
-
-.settings-tab.active,
-.theme-btn.active {
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-}
-
-.settings-tab {
-  padding: 0.75rem 1rem;
-  font-size: 0.85rem;
-}
-
-.theme-btn {
-  max-width: 6rem;
-  padding: 0.6rem 1rem;
-  font-size: 0.8rem;
 }
 
 .settings-panel .close-button {

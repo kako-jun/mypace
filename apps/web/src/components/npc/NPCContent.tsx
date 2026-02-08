@@ -73,19 +73,13 @@ export function NPCContent({ initialUrl = '' }: NPCContentProps) {
       {view === 'select' ? (
         <div className="npc-list">
           <button className="npc-item" onClick={handleReporterSelect}>
-            <span className="npc-item-icon">📰</span>
-            <div className="npc-item-info">
-              <span className="npc-item-name">Reporter</span>
-              <span className="npc-item-desc">Quote an article</span>
-            </div>
-            <Icon name="ChevronRight" size={18} className="npc-item-arrow" />
+            <Icon name="Newspaper" size={16} />
+            <span>Reporter</span>
+            <Icon name="ChevronRight" size={16} />
           </button>
-          <button className="npc-item npc-item-disabled" disabled>
-            <span className="npc-item-icon">🔄</span>
-            <div className="npc-item-info">
-              <span className="npc-item-name">Spreader</span>
-              <span className="npc-item-desc">Coming soon</span>
-            </div>
+          <button className="npc-item" disabled>
+            <Icon name="RefreshCw" size={16} />
+            <span>Spreader</span>
           </button>
         </div>
       ) : (
@@ -96,7 +90,7 @@ export function NPCContent({ initialUrl = '' }: NPCContentProps) {
           </button>
 
           <div className="npc-reporter-header">
-            <span className="npc-reporter-icon">📰</span>
+            <Icon name="Newspaper" size={16} />
             <span className="npc-reporter-title">Ask Reporter</span>
           </div>
 

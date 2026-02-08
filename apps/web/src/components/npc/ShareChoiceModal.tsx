@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { createReporterQuote } from '../../lib/api'
 import { useState } from 'react'
+import { CloseButton, Icon } from '../ui'
 
 interface ShareChoiceModalProps {
   isOpen: boolean
@@ -45,19 +46,22 @@ export function ShareChoiceModal({ isOpen, onClose, sharedUrl, sharedText }: Sha
   }
 
   return (
-    <div className="share-choice-overlay" onClick={handleOverlayClick}>
-      <div className="share-choice-modal">
-        <div className="share-choice-title">シェア先を選択</div>
+    <div className="share-choice-backdrop" onClick={handleOverlayClick}>
+      <div className="share-choice-popup">
+        <div className="share-choice-header">
+          <span className="share-choice-title">シェア先を選択</span>
+          <CloseButton onClick={onClose} size={16} />
+        </div>
         <div className="share-choice-options">
-          <button className="share-choice-btn" onClick={handleSelfPost} disabled={loading}>
-            <span className="share-choice-btn-icon">✏️</span>
-            <span className="share-choice-btn-title">自分で投稿</span>
-            <span className="share-choice-btn-desc">URLを本文に埋め込んで編集</span>
+          <button className="share-choice-option" onClick={handleSelfPost} disabled={loading}>
+            <Icon name="PenLine" size={16} />
+            <span>自分で投稿</span>
+            <Icon name="ChevronRight" size={16} />
           </button>
-          <button className="share-choice-btn" onClick={handleReporterQuote} disabled={loading}>
-            <span className="share-choice-btn-icon">📰</span>
-            <span className="share-choice-btn-title">{loading ? '作成中...' : '記者に依頼'}</span>
-            <span className="share-choice-btn-desc">記者に引用投稿を作らせる</span>
+          <button className="share-choice-option" onClick={handleReporterQuote} disabled={loading}>
+            <Icon name="Newspaper" size={16} />
+            <span>{loading ? '作成中...' : '記者に依頼'}</span>
+            <Icon name="ChevronRight" size={16} />
           </button>
         </div>
       </div>

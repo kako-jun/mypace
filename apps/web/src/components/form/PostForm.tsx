@@ -26,7 +26,7 @@ import {
 } from '../../lib/utils'
 import { CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
 import { AttachedImages, AttachedLocations, PostPreview } from '../post'
-import { Avatar, Icon, TextButton, ErrorMessage } from '../ui'
+import { Avatar, Icon, Tabs, TextButton, ErrorMessage } from '../ui'
 import { setVimMode as saveVimMode } from '../../lib/storage'
 import { ImagePicker } from '../sticker'
 import { useDragDrop } from '../../hooks'
@@ -476,22 +476,22 @@ export function PostForm({
       className={`post-form ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
       onSubmit={handleSubmit}
     >
-      <div className="post-mode-selector">
+      <div className="post-mode-row">
+        <Tabs
+          tabs={[
+            { value: 'post' as const, label: 'Post' },
+            { value: 'npc' as const, label: 'NPC', disabled: isEditingOrReplying },
+          ]}
+          value={postMode}
+          onChange={setPostMode}
+        />
         <button
           type="button"
-          className={`post-mode-tab ${postMode === 'post' ? 'active' : ''}`}
-          onClick={() => setPostMode('post')}
+          className="minimize-button"
+          onClick={() => setMinimized(true)}
+          aria-label="Minimize editor"
         >
-          Post
-        </button>
-        <button
-          type="button"
-          className={`post-mode-tab ${postMode === 'npc' ? 'active' : ''}`}
-          onClick={() => setPostMode('npc')}
-          disabled={isEditingOrReplying}
-          title={isEditingOrReplying ? 'Not available when editing or replying' : 'Ask NPC to post'}
-        >
-          NPC
+          <Icon name="Minus" size={20} strokeWidth={3} />
         </button>
       </div>
 
@@ -558,14 +558,6 @@ export function PostForm({
             <TextButton variant="primary" className="mode-toggle-corner" onClick={handleLongModeToggle}>
               LONG ↗
             </TextButton>
-            <button
-              type="button"
-              className="minimize-button"
-              onClick={() => setMinimized(true)}
-              aria-label="Minimize editor"
-            >
-              <Icon name="Minus" size={20} strokeWidth={3} />
-            </button>
           </div>
 
           <div className="post-form-row-2">
