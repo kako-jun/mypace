@@ -229,8 +229,8 @@
     0 calc(100% - var(--btn-corner)),
     0 var(--btn-corner)
   );
-  padding: 0.75rem 1rem;
-  font-size: 0.85rem;
+  padding: 0.6rem 0.5rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -247,15 +247,4 @@
 .tab:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-@media (max-width: 480px) {
-  .tabs {
-    gap: 0.25rem;
-  }
-
-  .tab {
-    padding: 0.6rem 0.5rem;
-    font-size: 0.8rem;
-  }
 }
