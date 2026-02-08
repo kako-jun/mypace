@@ -12,7 +12,7 @@ import { getCurrentPubkey, EMPTY_STELLA_COUNTS } from '../../lib/nostr/events'
 import { getCachedPost, getCachedProfile, getCachedPostMetadata, getErrorMessage } from '../../lib/utils'
 import { extractSuperMentionPaths } from '../../lib/utils/content'
 import { hasMypaceTag } from '../../lib/nostr/tags'
-import type { Event, LoadableProfile, ReactionData, Profile, ViewCountData } from '../../types'
+import type { Event, LoadableProfile, ReactionData, ViewCountData } from '../../types'
 
 interface PostViewData {
   event: Event | null
@@ -196,8 +196,9 @@ export function usePostViewData(eventId: string): PostViewData {
           try {
             const fetchedProfiles = await fetchProfiles(allPubkeys)
             // 投稿者プロフィール設定（キャッシュに無かった場合）
-            if (!getCachedProfile(eventData.pubkey) && fetchedProfiles[eventData.pubkey]) {
-              setProfile(fetchedProfiles[eventData.pubkey] as Profile)
+            // null=プロフィール未設定、undefined(キー無し)=取得失敗 → inで判定
+            if (!getCachedProfile(eventData.pubkey) && eventData.pubkey in fetchedProfiles) {
+              setProfile(fetchedProfiles[eventData.pubkey])
             }
             // リプライ/リアクター/元投稿者プロフィール設定
             const rpProfiles: { [pubkey: string]: LoadableProfile } = {}
@@ -206,8 +207,8 @@ export function usePostViewData(eventId: string): PostViewData {
             }
             setReplyProfiles(rpProfiles)
             // 親投稿者プロフィール設定
-            if (parentResult && fetchedProfiles[parentResult.pubkey]) {
-              setParentProfile(fetchedProfiles[parentResult.pubkey] as Profile)
+            if (parentResult && parentResult.pubkey in fetchedProfiles) {
+              setParentProfile(fetchedProfiles[parentResult.pubkey])
             }
           } catch {}
         }
@@ -277,8 +278,9 @@ export function usePostViewData(eventId: string): PostViewData {
         try {
           const fetchedProfiles = await fetchProfiles(allPubkeys)
           // 投稿者プロフィール設定
-          if (fetchedProfiles[eventData.pubkey]) {
-            setProfile(fetchedProfiles[eventData.pubkey] as Profile)
+          // null=プロフィール未設定、undefined(キー無し)=取得失敗 → inで判定
+          if (eventData.pubkey in fetchedProfiles) {
+            setProfile(fetchedProfiles[eventData.pubkey])
           }
           // リプライ/リアクター/元投稿者プロフィール設定
           const rpProfiles: { [pubkey: string]: LoadableProfile } = {}
@@ -287,8 +289,8 @@ export function usePostViewData(eventId: string): PostViewData {
           }
           setReplyProfiles(rpProfiles)
           // 親投稿者プロフィール設定
-          if (parentResult && fetchedProfiles[parentResult.pubkey]) {
-            setParentProfile(fetchedProfiles[parentResult.pubkey] as Profile)
+          if (parentResult && parentResult.pubkey in fetchedProfiles) {
+            setParentProfile(fetchedProfiles[parentResult.pubkey])
           }
         } catch {}
       }
