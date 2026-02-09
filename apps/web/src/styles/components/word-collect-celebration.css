@@ -240,16 +240,13 @@
 }
 
 .word-card-text {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-primary, #000);
   width: 100%;
   text-align: center;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  word-break: break-all;
+  overflow-wrap: break-word;
+  word-break: break-word;
   line-height: 1.3;
 }
 

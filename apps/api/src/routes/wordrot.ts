@@ -557,6 +557,8 @@ async function generateImage(ai: Bindings['AI'], word: string, isSynthesis = fal
     const response = await (ai as any).run('@cf/black-forest-labs/flux-1-schnell', {
       prompt,
       steps: 8,
+      width: 256,
+      height: 256,
     })
 
     // FLUX.1 returns { image: "<base64>" }
