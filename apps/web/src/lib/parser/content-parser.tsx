@@ -16,6 +16,7 @@ import {
   sanitizeHtml,
   processLinks,
   processImageUrls,
+  processImageKeywordUrls,
   removeImageLinks,
   processAudioUrls,
   removeMediaLinks,
@@ -93,6 +94,7 @@ export function renderContent(
 
   // 7. Process additional elements
   html = processImageUrls(html)
+  html = processImageKeywordUrls(html)
   html = removeImageLinks(html)
   html = processAudioUrls(html)
   html = removeMediaLinks(html)

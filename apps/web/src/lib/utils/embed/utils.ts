@@ -48,10 +48,19 @@ export function isAudioUrl(url: string): boolean {
   }
 }
 
+// Keywords in URL path that suggest the URL serves an image
+const IMAGE_PATH_KEYWORD_REGEX = /[/_-](image|img|photo|picture|thumbnail|thumb)([/_-]|$)/i
+
+// File extensions that indicate the URL is NOT an image
+const NON_IMAGE_EXTENSION_REGEX = /\.(html?|json|xml|js|css|txt|pdf|zip|tar|gz|mp[34]|wav|ogg|webm|mov|avi)$/i
+
 export function isImageUrl(url: string): boolean {
   try {
     const pathname = new URL(url).pathname.toLowerCase()
-    return IMAGE_EXTENSIONS.some((ext) => pathname.endsWith(ext))
+    if (IMAGE_EXTENSIONS.some((ext) => pathname.endsWith(ext))) return true
+    // Check for image keywords in path (for extensionless image URLs like /api/article-image?...)
+    if (!NON_IMAGE_EXTENSION_REGEX.test(pathname) && IMAGE_PATH_KEYWORD_REGEX.test(pathname)) return true
+    return false
   } catch {
     return false
   }
