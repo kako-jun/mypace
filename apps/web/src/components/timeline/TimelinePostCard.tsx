@@ -14,6 +14,7 @@ import {
   PostBarcode,
   OriginalPostCard,
 } from '../post'
+import { WordrotImages } from '../wordrot/WordrotImages'
 import { cachePostWithMetadata, navigateToPostModal, navigateToUser } from '../../lib/utils'
 import { parseStickers, hasTeaserTag, extractUniqueLocations } from '../../lib/nostr/tags'
 import { useDeleteConfirm } from '../../hooks'
@@ -233,7 +234,6 @@ export default memo(function TimelinePostCard({
                   tags={event.tags}
                   wordrotWords={wordrotWords}
                   wordrotCollected={combinedCollectedWords}
-                  wordrotImages={wordrotImages}
                   onWordClick={
                     onWordCollect
                       ? (word) => {
@@ -308,6 +308,11 @@ export default memo(function TimelinePostCard({
           />
         )}
       </article>
+
+      {/* Wordrot images displayed outside (below) the post card */}
+      {!isRepost && wordrotWords && wordrotImages && combinedCollectedWords && (
+        <WordrotImages words={wordrotWords} collected={combinedCollectedWords} images={wordrotImages} />
+      )}
     </div>
   )
 })

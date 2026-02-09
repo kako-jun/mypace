@@ -38,10 +38,19 @@ export function InventoryPage() {
   const { celebrate } = useCelebration()
 
   // Tab state from URL
-  const activeTab = (searchParams.get('tab') as TabType) || 'stella'
+  const activeTab = (searchParams.get('tab') as TabType) || 'wordrot'
   const setActiveTab = (tab: TabType) => {
-    setSearchParams(tab === 'stella' ? {} : { tab })
+    const params = new URLSearchParams(searchParams)
+    if (tab === 'wordrot') {
+      params.delete('tab')
+    } else {
+      params.set('tab', tab)
+    }
+    setSearchParams(params)
   }
+
+  // Word parameter from URL - if provided, open wordrot tab and highlight word
+  const highlightWord = searchParams.get('word')
 
   const [_pubkey, setPubkey] = useState<string | null>(null)
   const [balance, setBalance] = useState<StellaBalance | null>(null)
@@ -153,6 +162,29 @@ export function InventoryPage() {
 
     loadData()
   }, [])
+
+  // Auto-switch to wordrot tab if word parameter is provided
+  useEffect(() => {
+    if (highlightWord && activeTab !== 'wordrot') {
+      const params = new URLSearchParams(searchParams)
+      params.set('tab', 'wordrot')
+      setSearchParams(params, { replace: true })
+    }
+  }, [highlightWord])
+
+  // Scroll to highlighted word after inventory loads
+  useEffect(() => {
+    if (highlightWord && activeTab === 'wordrot' && !wordrotLoading && wordrotInventory.length > 0) {
+      // Wait for render to complete
+      setTimeout(() => {
+        const anchorId = `word-${highlightWord.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
+        const element = document.getElementById(anchorId)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 300)
+    }
+  }, [highlightWord, activeTab, wordrotLoading, wordrotInventory.length])
 
   const getTotalBalance = () => {
     if (!balance) return 0
@@ -404,21 +436,21 @@ export function InventoryPage() {
       <Tabs
         tabs={[
           {
-            value: 'stella' as const,
-            label: (
-              <>
-                <Icon name="Star" size={16} />
-                <span>Stella</span>
-              </>
-            ),
-          },
-          {
             value: 'wordrot' as const,
             label: (
               <>
                 <Icon name="FlaskConical" size={16} />
                 <span>Wordrot</span>
                 {wordrotUniqueCount > 0 && <span className="inventory-tab-badge">{wordrotUniqueCount}</span>}
+              </>
+            ),
+          },
+          {
+            value: 'stella' as const,
+            label: (
+              <>
+                <Icon name="Star" size={16} />
+                <span>Stella</span>
               </>
             ),
           },
@@ -668,6 +700,7 @@ export function InventoryPage() {
                               selected={
                                 item.word.text === slotA || item.word.text === slotB || item.word.text === slotC
                               }
+                              highlight={highlightWord?.toLowerCase() === item.word.text.toLowerCase()}
                               onRetryImage={retryWordImage}
                             />
                           ))}

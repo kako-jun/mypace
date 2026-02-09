@@ -70,6 +70,7 @@ import { parseEmojiTags, Loading, TextButton, BackButton, SuccessMessage, Icon }
 import { useDeleteConfirm, usePostViewData } from '../../hooks'
 import { collectWord } from '../../lib/api/api'
 import { useWordCelebration } from '../wordrot/WordCollectCelebration'
+import { WordrotImages } from '../wordrot/WordrotImages'
 import type { Profile, LoadableProfile, ReactionData } from '../../types'
 import type { ShareOption } from './ShareMenu'
 
@@ -573,7 +574,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
                 tags={event.tags}
                 wordrotWords={wordrotWords}
                 wordrotCollected={combinedCollectedWords}
-                wordrotImages={wordrotImages}
                 onWordClick={handleWordCollect}
               />
               {/* Locked teaser message */}
@@ -645,6 +645,11 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
         {/* Barcode on right edge - only for non-repost */}
         {!isRepost && <PostBarcode eventId={event.id} />}
       </article>
+
+      {/* Wordrot images displayed outside (below) the post card */}
+      {!isRepost && wordrotWords && wordrotImages && combinedCollectedWords && (
+        <WordrotImages words={wordrotWords} collected={combinedCollectedWords} images={wordrotImages} />
+      )}
 
       {/* リポストの場合はリプライセクションを非表示 */}
       {!isRepost && replies.count > 0 && (

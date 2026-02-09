@@ -18,7 +18,9 @@
   pointer-events: none;
   transform: translateX(-50%) translateY(20px);
   opacity: 0;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.25s ease;
   will-change: transform, opacity;
 }
 
@@ -50,7 +52,8 @@
 }
 
 @keyframes generating-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   }
   50% {
@@ -76,8 +79,12 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Word info text */
@@ -128,7 +135,8 @@
 }
 
 @keyframes toast-badge-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 4px rgba(245, 158, 11, 0.3);
   }
   50% {
@@ -163,6 +171,22 @@
 .word-card.selected {
   border-color: #a855f7;
   background: rgba(168, 85, 247, 0.1);
+}
+
+.word-card.highlight {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  animation: highlight-pulse 1.5s ease-in-out 3;
+}
+
+@keyframes highlight-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.8);
+  }
 }
 
 .word-card-image {

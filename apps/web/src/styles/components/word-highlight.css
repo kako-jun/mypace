@@ -72,7 +72,7 @@ button.wordrot-highlight:active {
   border-radius: 3px;
 }
 
-/* Character images section */
+/* Character images section (legacy - inside post content) */
 .wordrot-images-section {
   display: flex;
   flex-wrap: wrap;
@@ -81,17 +81,29 @@ button.wordrot-highlight:active {
   padding-top: 0.5rem;
 }
 
+/* Character images container (outside post card) */
+.wordrot-images-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 0;
+  margin: 0 auto;
+  max-width: 600px;
+}
+
 .wordrot-image-button {
   appearance: none;
   background: rgba(139, 92, 246, 0.1);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.3);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
   padding: 0;
   margin: 0;
   transition: all 0.2s ease;

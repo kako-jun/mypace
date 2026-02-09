@@ -174,6 +174,7 @@ export function WordCard({
   count,
   onClick,
   selected,
+  highlight,
   size = 'normal',
   onRetryImage,
 }: {
@@ -181,6 +182,7 @@ export function WordCard({
   count?: number
   onClick?: () => void
   selected?: boolean
+  highlight?: boolean
   size?: 'small' | 'normal' | 'large'
   onRetryImage?: (wordId: number) => void
 }) {
@@ -222,10 +224,13 @@ export function WordCard({
   const isImageReady = word.image_status === 'done' && word.image_url
 
   const sizeClass = `word-card-${size}`
+  // Create anchor ID from word text (sanitized for URL)
+  const anchorId = `word-${word.text.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
 
   return (
     <button
-      className={`word-card ${sizeClass} ${selected ? 'selected' : ''} ${onClick ? 'clickable' : ''}`}
+      id={anchorId}
+      className={`word-card ${sizeClass} ${selected ? 'selected' : ''} ${highlight ? 'highlight' : ''} ${onClick ? 'clickable' : ''}`}
       onClick={onClick}
       disabled={!onClick}
     >
