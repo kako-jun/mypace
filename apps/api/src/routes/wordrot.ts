@@ -71,22 +71,24 @@ JSON配列のみを出力してください。説明は不要です。
 
 const SYNTHESIS_PROMPT = `あなたは単語のベクトル演算を行う専門家です。
 
-単語の意味的な関係性を考慮して、以下の演算の結果を導出してください。
+Word2Vecのように、単語を意味空間のベクトルとして扱います。
+A－B＋C は「AからBの意味成分を引き、Cの意味成分を足す」演算です。
 
 【演算】
 「{wordA}」 － 「{wordB}」 ＋ 「{wordC}」 ＝ ？
 
 【参考例】
-- 「ファイアマリオ」－「マリオ」＋「ルイージ」＝「ファイアルイージ」
-- 「王様」－「男」＋「女」＝「女王」
-- 「東京」－「日本」＋「フランス」＝「パリ」
-- 「子犬」－「犬」＋「猫」＝「子猫」
-- 「朝食」－「朝」＋「夜」＝「夕食」
+- 「キング」－「マン」＋「ウーマン」＝「クイーン」（性別の軸を入れ替え）
+- 「アイスコーヒー」－「コーヒー」＋「ティー」＝「アイスティー」（飲料の種類を入れ替え）
+- 「ファイアマリオ」－「マリオ」＋「ルイージ」＝「ファイアルイージ」（キャラの軸を入れ替え）
+- 「ドラゴン」－「ファイア」＋「アイス」＝「フロストドラゴン」（属性の軸を入れ替え）
+- 「スシ」－「ジャパン」＋「イタリア」＝「ピッツァ」（文化圏の軸を入れ替え）
+- 「ライオン」－「サバンナ」＋「オーシャン」＝「シャーク」（生息域の軸を入れ替え）
 
 【ルール】
-1. 結果は1つの名詞または複合語のみ
-2. 意味的な関係性を考慮して導出
-3. 存在しない造語も可（ファイアルイージなど）
+1. 結果は1つの名詞または複合語のみ（カタカナまたは英語）
+2. AとBの関係性を見抜き、同じ関係性でCに対応する語を導出
+3. 存在しない造語も可（ファイアルイージ、フロストドラゴンなど）
 4. 結果が導出できない場合のみ「???」を返す
 5. 余計な説明は不要、結果の単語のみを出力
 
@@ -98,6 +100,13 @@ const IMAGE_PROMPT_TEMPLATE = `Extreme close-up 16-bit pixel art of {description
 Flat solid golden yellow (#F1C40F) background, nothing else behind the subject.
 One single subject, very large, zoomed in, touching all four edges of the image.
 Retro SNES game sprite style, bold outlines, vibrant saturated colors that contrast against yellow.
+No text, no letters, no words, no border, no frame, no grid, no pattern, no multiple copies.`
+
+const SYNTHESIS_IMAGE_PROMPT_TEMPLATE = `Extreme close-up 16-bit pixel art of {description}, filling the entire frame.
+Flat solid yellow-green (#8BC34A) background, nothing else behind the subject.
+One single subject, very large, zoomed in, touching all four edges of the image.
+The subject should look like a cute, round, small living creature — with big friendly eyes, soft body, like a Kirby or Slime. Not humanoid, not scary. Adorable and squishy.
+Retro SNES game sprite style, bold outlines, vibrant saturated colors that contrast against yellow-green.
 No text, no letters, no words, no border, no frame, no grid, no pattern, no multiple copies.`
 
 const DESCRIBE_WORD_PROMPT = `Given a word, output a concise English visual description (3-8 words) for a pixel art image prompt.
@@ -113,6 +122,24 @@ Rules:
 - Abstract → symbol: "a glowing blue code terminal screen", "a purple electric lightning bolt"
 - Brands → mascot/logo: "a black and white tuxedo penguin", "a purple chat bubble bot"
 - AVOID yellow, orange, gold, amber colors in the subject
+
+Word: `
+
+const SYNTHESIS_DESCRIBE_WORD_PROMPT = `Given a word, output a concise English visual description (3-8 words) for a pixel art creature prompt.
+
+IMPORTANT: The subject must be a cute, round, small living creature — like a Kirby, Slime, or Tamagotchi pet.
+Do NOT draw the object itself. Instead, imagine an adorable little creature INSPIRED BY or THEMED AFTER the word.
+Never scary, never humanoid. Always round, squishy, friendly, with big eyes.
+
+Rules:
+- Output ONLY the description phrase, no explanation, no quotes
+- Always include a specific color that is NOT green/lime/yellow-green (to contrast with yellow-green background)
+- Foods → cute creature themed after it: "a round red apple buddy with big eyes", "a bubbly blue soda blob pet"
+- Objects → adorable creature inspired by it: "a silver round robot-shaped pet", "a blue glowing screen-face blob"
+- Animals → cute round version: "a puffy blue baby dolphin", "a tiny round red ladybug pet"
+- Characters → cute creature version: "a round red caped tiny hero blob", "a pink squishy puffball"
+- Abstract → adorable living form: "a glowing blue jellyfish pet", "a tiny purple spark blob"
+- AVOID green, lime, yellow-green, chartreuse colors in the subject
 
 Word: `
 
@@ -410,7 +437,9 @@ async function synthesizeWords(
 
     // Clean result
     const result = stripThinkTags(rawText)
-      .replace(/^「|」$/g, '')
+      .replace(/^(?:結果|答え|出力|回答)\s*[：:]\s*/i, '')
+      .replace(/[「」『』""''""]/g, '')
+      .replace(/[。．.！!？?]+$/g, '')
       .trim()
     if (!result || result === '???' || result.length > 30) return null
 
@@ -422,10 +451,11 @@ async function synthesizeWords(
 }
 
 // Helper: Translate word to English visual description for image generation
-async function describeWordForImage(ai: Bindings['AI'], word: string): Promise<string> {
+async function describeWordForImage(ai: Bindings['AI'], word: string, isSynthesis = false): Promise<string> {
   try {
+    const describePrompt = isSynthesis ? SYNTHESIS_DESCRIBE_WORD_PROMPT : DESCRIBE_WORD_PROMPT
     const response = await (ai as any).run('@cf/qwen/qwen3-30b-a3b-fp8', {
-      messages: [{ role: 'user', content: DESCRIBE_WORD_PROMPT + `"${word}"\n/no_think` }],
+      messages: [{ role: 'user', content: describePrompt + `"${word}"\n/no_think` }],
       max_tokens: 100,
     })
     const rawText = extractLLMText(response)
@@ -443,11 +473,12 @@ async function describeWordForImage(ai: Bindings['AI'], word: string): Promise<s
 }
 
 // Helper: Generate image using Workers AI FLUX.1
-async function generateImage(ai: Bindings['AI'], word: string): Promise<ArrayBuffer | null> {
+async function generateImage(ai: Bindings['AI'], word: string, isSynthesis = false): Promise<ArrayBuffer | null> {
   try {
-    console.log(`[generateImage] Starting image generation for word: ${word}`)
-    const description = await describeWordForImage(ai, word)
-    const prompt = IMAGE_PROMPT_TEMPLATE.replace('{description}', description)
+    console.log(`[generateImage] Starting image generation for word: ${word} (synthesis: ${isSynthesis})`)
+    const description = await describeWordForImage(ai, word, isSynthesis)
+    const template = isSynthesis ? SYNTHESIS_IMAGE_PROMPT_TEMPLATE : IMAGE_PROMPT_TEMPLATE
+    const prompt = template.replace('{description}', description)
     console.log(`[generateImage] Using prompt: ${prompt.substring(0, 100)}...`)
 
     const response = await (ai as any).run('@cf/black-forest-labs/flux-1-schnell', {
@@ -824,14 +855,15 @@ async function generateWordImage(
   db: Bindings['DB'],
   nsec: string,
   wordId: number,
-  wordText: string
+  wordText: string,
+  isSynthesis = false
 ): Promise<void> {
   try {
     // Mark as generating
     await db.prepare(`UPDATE wordrot_words SET image_status = 'generating' WHERE id = ?`).bind(wordId).run()
 
     // Generate image
-    const imageData = await generateImage(ai, wordText)
+    const imageData = await generateImage(ai, wordText, isSynthesis)
 
     if (!imageData) {
       await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
@@ -943,7 +975,7 @@ wordrot.post('/synthesize', async (c) => {
     const resultText = await synthesizeWords(ai, wordA, wordB, wordC)
 
     if (!resultText) {
-      return c.json({ error: 'Synthesis failed - no valid result', result: '???' }, 200)
+      return c.json({ error: 'Synthesis failed - no valid result' }, 200)
     }
 
     isNewSynthesis = true
@@ -969,7 +1001,7 @@ wordrot.post('/synthesize', async (c) => {
         // Queue image generation (async, keep worker alive with waitUntil)
         const nsec = c.env.UPLOADER_NSEC
         if (nsec) {
-          c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, resultWord.id, resultText))
+          c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, resultWord.id, resultText, true))
         } else {
           console.error('[synthesize] UPLOADER_NSEC not configured, marking image as failed')
           await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(resultWord.id).run()

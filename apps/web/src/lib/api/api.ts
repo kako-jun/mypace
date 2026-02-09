@@ -695,7 +695,7 @@ export async function synthesizeWords(
       body: JSON.stringify({ pubkey, wordA, wordB, wordC }),
     })
     const data = await res.json()
-    if (data.error && !data.result) {
+    if (data.error) {
       return { result: null, isNewSynthesis: false, isNewWord: false, formula: '', error: data.error }
     }
     // 合成成功 → インベントリに新語が追加されるのでキャッシュを無効化

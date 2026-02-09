@@ -202,7 +202,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-primary, #000);
-  max-width: 80px;
+  max-width: 64px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -228,7 +228,7 @@
 
 .word-card-small .word-card-text {
   font-size: 0.65rem;
-  max-width: 56px;
+  max-width: 48px;
 }
 
 .word-card-large {
@@ -242,7 +242,7 @@
 
 .word-card-large .word-card-text {
   font-size: 0.9rem;
-  max-width: 110px;
+  max-width: 96px;
 }
 
 /* Mobile adjustments */

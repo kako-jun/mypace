@@ -16,7 +16,9 @@
 - ゲーム的な例: 「ファイアマリオ - マリオ + ルイージ = ファイアルイージ」
 - タイムライン上の投稿から名詞を見つけてクリックで収集
 - 収集した単語を使って合成を楽しむ
-- 単語ごとにAI生成のキャラクター画像が付く（ドット絵/2頭身）
+- 単語ごとにAI生成の16bitピクセルアート画像が付く
+- 通常ワード: 黄色背景（#F1C40F）の物体アイコン
+- 合成ワード: 黄緑背景（#8BC34A）の可愛い生物クリーチャー
 
 ## コンセプト
 
@@ -36,10 +38,12 @@
 - 新しい単語を最初に生み出した人は「発見者」
 - 同じ組み合わせはキャッシュされ、`use_count` で人気度を追跡
 
-### 画像生成（Phase 1）
+### 画像生成（Phase 1 + Phase 2）
 
-- 単語が初めてシステムに登録されたとき、AI画像を生成
-- 統一フォーマット: 正方形、ドット絵または2頭身キャラ
+- 単語が初めてシステムに登録されたとき、AI画像を非同期生成
+- **通常ワード**: 16bitピクセルアート、黄色背景（#F1C40F）、物体のアイコン
+- **合成ワード**: 16bitピクセルアート、黄緑背景（#8BC34A）、可愛い丸い生物
+  - 背景色で通常/合成を視覚的に区別（ステラ=黄色、合成=黄緑、将来のさらなる合成=緑系統）
 - 変な絵でも「味がある」として受け入れる美学
 - 画像はnostr.buildにアップロードして永続化
 
@@ -359,8 +363,7 @@ POST /api/wordrot/synthesize
 
 ```json
 {
-  "error": "Synthesis failed - no valid result",
-  "result": "???"
+  "error": "Synthesis failed - no valid result"
 }
 ```
 
@@ -372,7 +375,7 @@ POST /api/wordrot/synthesize
 | 400 | `All three words are required` | 3語が揃っていない |
 | 400 | `One or more words not found in your collection` | 単語がDBに存在しない |
 | 400 | `You do not own all three words` | ユーザーのインベントリにない |
-| 200 | `Synthesis failed - no valid result` | LLMが`???`を返した / 結果が30文字超 |
+| 200 | `Synthesis failed - no valid result` | LLMが`???`を返した / 結果が空・30文字超 |
 
 ### インベントリ取得
 
@@ -475,10 +478,11 @@ GET /api/wordrot/inventory/:pubkey
 │ [img] [img] [img] [img] [img] [img]                │
 │ カート  ファイア  ...                               │
 │                                                     │
-├─────────────────────────────────────────────────────┤
-│ ┌──┐   ┌──┐   ┌──┐   ┌──┐  ← 数式バー（下部固定）│
-│ │A │ - │B │ + │C │ = │? │                         │
-│ └──┘   └──┘   └──┘   └──┘                         │
+┌─────────────────────────────────────────────────────┐
+│ ┌──┐   ┌──┐   ┌──┐   ┌──┐  ← 数式バー（黒枠2px） │
+│ │A │ - │B │ + │C │ = │? │     Wordrotセクションと  │
+│ └──┘   └──┘   └──┘   └──┘     同じ枠スタイル       │
+│                                                     │
 │          [Clear] [Synthesize!]                      │
 └─────────────────────────────────────────────────────┘
 ```
@@ -489,7 +493,8 @@ GET /api/wordrot/inventory/:pubkey
 3. 入ったら次の空きスロットが自動的に選択状態になる
 4. スロットを直接タップ → そのスロットを選択状態に変更
 5. 既に入っているスロットをタップ → ワードを解除し、そのスロットが選択状態に
-6. 3つ揃うと「Synthesize!」ボタンが紫にハイライトして有効化
+6. 同じワードを複数スロットに入れることはできない（重複防止ガード）
+7. 3つ揃うと「Synthesize!」ボタンが紫にハイライトして有効化
 7. 合成実行 → `=` の右の `?` が結果カードに変わる（誕生アニメーション）
 8. New Word / New Recipe バッジ表示
 
@@ -501,14 +506,19 @@ GET /api/wordrot/inventory/:pubkey
 ┌──────────┐
 │  [画像]  │  64x64 または 48x48
 │          │
-│  単語名  │  テキスト（折り返し）
+│  単語名  │  テキスト（ellipsis省略、ホバーでフル表示）
 └──────────┘
 ```
 
 **状態による表示**:
-- 通常: 黒枠、白背景
+- 通常: 透明枠、白背景
 - ホバー: 影が付く
 - 選択中（合成スロットにセット済み）: 紫枠、薄紫背景
+
+**テキスト表示**:
+- テキスト幅は画像幅に合わせて制約（normal: 64px、small: 48px、large: 96px）
+- 溢れる場合は `text-overflow: ellipsis` で省略
+- `title` 属性によりホバーでフルネーム表示
 
 ## アクセシビリティ
 
@@ -589,22 +599,24 @@ Workers AI (Qwen3-30B-A3B-FP8) を使用。
 ```
 あなたは単語のベクトル演算を行う専門家です。
 
-単語の意味的な関係性を考慮して、以下の演算の結果を導出してください。
+Word2Vecのように、単語を意味空間のベクトルとして扱います。
+A－B＋C は「AからBの意味成分を引き、Cの意味成分を足す」演算です。
 
 【演算】
 「{wordA}」 － 「{wordB}」 ＋ 「{wordC}」 ＝ ？
 
 【参考例】
-- 「ファイアマリオ」－「マリオ」＋「ルイージ」＝「ファイアルイージ」
-- 「王様」－「男」＋「女」＝「女王」
-- 「東京」－「日本」＋「フランス」＝「パリ」
-- 「子犬」－「犬」＋「猫」＝「子猫」
-- 「朝食」－「朝」＋「夜」＝「夕食」
+- 「キング」－「マン」＋「ウーマン」＝「クイーン」（性別の軸を入れ替え）
+- 「アイスコーヒー」－「コーヒー」＋「ティー」＝「アイスティー」（飲料の種類を入れ替え）
+- 「ファイアマリオ」－「マリオ」＋「ルイージ」＝「ファイアルイージ」（キャラの軸を入れ替え）
+- 「ドラゴン」－「ファイア」＋「アイス」＝「フロストドラゴン」（属性の軸を入れ替え）
+- 「スシ」－「ジャパン」＋「イタリア」＝「ピッツァ」（文化圏の軸を入れ替え）
+- 「ライオン」－「サバンナ」＋「オーシャン」＝「シャーク」（生息域の軸を入れ替え）
 
 【ルール】
-1. 結果は1つの名詞または複合語のみ
-2. 意味的な関係性を考慮して導出
-3. 存在しない造語も可（ファイアルイージなど）
+1. 結果は1つの名詞または複合語のみ（カタカナまたは英語）
+2. AとBの関係性を見抜き、同じ関係性でCに対応する語を導出
+3. 存在しない造語も可（ファイアルイージ、フロストドラゴンなど）
 4. 結果が導出できない場合のみ「???」を返す
 5. 余計な説明は不要、結果の単語のみを出力
 
@@ -615,7 +627,12 @@ Workers AI (Qwen3-30B-A3B-FP8) を使用。
 **パラメータ**:
 - `max_tokens: 100`（結果の単語のみなので短い）
 - `/no_think` フラグでQwen3のreasoning出力を抑制
-- `<think>...</think>` タグがあれば除去
+
+**結果クリーニング**:
+- `<think>...</think>` タグを除去
+- `結果：`、`答え：`、`出力：`、`回答：` 等の接頭辞を除去
+- 各種引用符（`「」『』""''""`）を除去
+- 末尾の句読点（`。．.！!？?`）を除去
 - 結果が `???`、空、30文字超の場合は失敗扱い
 
 #### キャッシュ戦略
@@ -624,30 +641,65 @@ Workers AI (Qwen3-30B-A3B-FP8) を使用。
 - 2回目以降は LLM を呼ばず、キャッシュから結果を返す（`use_count++`）
 - これにより同じ演算のコストが 0 に
 
-### 画像生成（Phase 1）
+### 画像生成（Phase 1 + Phase 2）
 
-Workers AI (Stable Diffusion XL) を使用。
+Workers AI (FLUX.1-Schnell) を使用。2段階プロンプト方式。
 
-#### プロンプト
+#### Step 1: 単語 → 英語の視覚描写（LLM: Qwen3-30B）
 
-すべての単語をキャラクター化する（抽象概念でも無理やりキャラにするのが面白い）。
+単語を3-8語の英語フレーズに変換する。通常ワードと合成ワードで描写方針が異なる。
+
+**通常ワード（収集）**: 物体のアイコンとして描写
 
 ```
-{word} as a cute chibi character,
-2-head-tall proportions, pixel art style,
-simple pastel background, game sprite,
-facing forward, full body, centered
+- Foods → the food: "a bright red bell pepper"
+- Objects → the object: "a silver metallic robot"
+- Animals → the animal: "a blue and white dolphin"
+- 背景が黄色のため、黄/橙/金は避ける
 ```
 
-**指定のポイント**:
-- `chibi`: 2頭身のデフォルメキャラ
-- `pixel art style`: ドット絵風
-- `pastel background`: 淡い背景色
-- `game sprite`: ゲームのキャラっぽく
-- `full body, centered`: 全身、中央配置
+**合成ワード（合成結果）**: 可愛い丸い生物として描写
 
-> プロンプトは英語。Stable Diffusionは英語プロンプトの方が品質が高い。
-> 日本語の単語もそのまま渡す（例: `マリオ as a cute chibi character...`）。
+```
+- Foods → cute creature: "a round red apple buddy with big eyes"
+- Objects → adorable pet: "a silver round robot-shaped pet"
+- Animals → cute round version: "a puffy blue baby dolphin"
+- Never scary, never humanoid. Always round, squishy, friendly.
+- 背景が黄緑のため、緑/ライムは避ける
+```
+
+#### Step 2: 描写 → 画像生成（FLUX.1-Schnell, 8 steps）
+
+**通常ワード**: 黄色背景の物体アイコン
+
+```
+Extreme close-up 16-bit pixel art of {description}, filling the entire frame.
+Flat solid golden yellow (#F1C40F) background, nothing else behind the subject.
+One single subject, very large, zoomed in, touching all four edges of the image.
+Retro SNES game sprite style, bold outlines, vibrant saturated colors that contrast against yellow.
+No text, no letters, no words, no border, no frame, no grid, no pattern, no multiple copies.
+```
+
+**合成ワード**: 黄緑背景の可愛い生物
+
+```
+Extreme close-up 16-bit pixel art of {description}, filling the entire frame.
+Flat solid yellow-green (#8BC34A) background, nothing else behind the subject.
+One single subject, very large, zoomed in, touching all four edges of the image.
+The subject should look like a cute, round, small living creature — with big friendly eyes,
+soft body, like a Kirby or Slime. Not humanoid, not scary. Adorable and squishy.
+Retro SNES game sprite style, bold outlines, vibrant saturated colors that contrast against yellow-green.
+No text, no letters, no words, no border, no frame, no grid, no pattern, no multiple copies.
+```
+
+**背景色による階層設計**:
+
+| 種別 | 背景色 | 絵柄 | 意図 |
+|------|--------|------|------|
+| ステラ | 黄色 | - | 基盤通貨 |
+| 通常ワード | 黄色（#F1C40F） | 物体アイコン | 収集素材 |
+| 合成ワード | 黄緑（#8BC34A） | 可愛い生物 | 合成結果 |
+| 将来の再合成 | 緑系統（予定） | TBD | さらなる合成の種 |
 
 #### アップロード
 
@@ -704,7 +756,7 @@ image_hash TEXT,  -- SHA-256 hash for NIP-96 delete
 
 **合成API失敗時**:
 - バリデーションエラー（400）→ 数式バー内にエラーメッセージ表示
-- LLM演算失敗（200, `result: "???"` ）→ 「Synthesis failed」表示
+- LLM演算失敗（200, `error` のみ）→ 「Synthesis failed」表示
 - ネットワークエラー → 「Network error」表示
 - いずれの場合もスロットは保持され、再試行可能
 

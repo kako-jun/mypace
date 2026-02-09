@@ -66,6 +66,15 @@ export function InventoryPage() {
 
   // Card tap → place word into active slot, then advance to next empty
   const handleWordSelect = (word: { text: string }) => {
+    // Prevent selecting the same word for multiple slots
+    if (
+      (activeSlot !== 'A' && slotA === word.text) ||
+      (activeSlot !== 'B' && slotB === word.text) ||
+      (activeSlot !== 'C' && slotC === word.text)
+    ) {
+      return
+    }
+
     switch (activeSlot) {
       case 'A':
         setSlotA(word.text)
