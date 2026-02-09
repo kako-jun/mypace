@@ -7,15 +7,15 @@
 
 | フェーズ | 内容 | 状態 |
 |---------|------|------|
-| Phase 1 | 単語収集（タイムラインハイライト、クリック収集、インベントリ） | 実装対象 |
-| Phase 2 | 単語合成（A + B = ? または A - B + C = ?） | 後日 |
+| Phase 1 | 単語収集（タイムラインハイライト、クリック収集、インベントリ） | 実装済み |
+| Phase 2 | 単語合成（A - B + C = ?） | 実装済み |
 
 ## 背景
 
 - Word2Vecの有名な例: 「王様 - 男 + 女 = 女王」
 - ゲーム的な例: 「ファイアマリオ - マリオ + ルイージ = ファイアルイージ」
 - タイムライン上の投稿から名詞を見つけてクリックで収集
-- 収集した単語を使って合成を楽しむ（Phase 2）
+- 収集した単語を使って合成を楽しむ
 - 単語ごとにAI生成のキャラクター画像が付く（ドット絵/2頭身）
 
 ## コンセプト
@@ -30,10 +30,11 @@
 ### 合成の楽しさ（Phase 2）
 
 - 単語を組み合わせて新しい単語を生み出す
-- 足し算のみ（A + B = ?）または引き算も（A - B + C = ?）は後日検討
-- 結果はLLMが意味的に計算（ベクトル演算的な動作）
+- 演算式: A - B + C = ?（Word2Vecスタイルのベクトル演算）
+- 結果はLLMが意味的に計算
 - 変な結果が出ても「brainrot」として楽しむ
 - 新しい単語を最初に生み出した人は「発見者」
+- 同じ組み合わせはキャッシュされ、`use_count` で人気度を追跡
 
 ### 画像生成（Phase 1）
 
@@ -42,7 +43,7 @@
 - 変な絵でも「味がある」として受け入れる美学
 - 画像はnostr.buildにアップロードして永続化
 
-## データフロー（Phase 1）
+## データフロー
 
 ### タイムライン表示時
 
@@ -106,22 +107,43 @@
 
 ### 単語合成時（Phase 2）
 
-> Phase 2で実装予定。足し算のみ（A + B = ?）にするか、引き算も含める（A - B + C = ?）かは後日検討。
-
 ```
-1. ユーザーがスロットに単語をセット
+1. インベントリのカードをタップ → 数式バーのスロットにセット
+   - スロットA（Base）、B（Remove）、C（Add）の3つ
+   - 最初はスロットAが選択状態、入力後に次の空きスロットへ自動遷移
+   - スロットをタップで解除・再選択可能
    ↓
-2. POST /api/wordrot/synthesize
+2. 3スロット全て埋まったら「Synthesize!」ボタンが有効化
    ↓
-3. API側処理:
-   - LLMに演算を計算させる
-   - 結果の単語がDBになければ作成
-   - wordrot_syntheses に合成記録
+3. POST /api/wordrot/synthesize
+   - pubkey, wordA, wordB, wordC を送信
    ↓
-4. レスポンス: 結果の単語
+4. API側処理:
+   a. 入力バリデーション（pubkey形式、3語存在、ユーザー所有確認）
+   b. wordrot_syntheses テーブルでキャッシュチェック
+      - キャッシュヒット → use_count++ して即返却
+      - キャッシュミス → LLMで演算
+   c. LLM演算（Qwen3-30B）: 「A - B + C = ?」を意味的に計算
+   d. 結果の単語がDBになければ wordrot_words に作成
+   e. 新規単語なら画像生成を非同期キュー（waitUntil）
+   f. wordrot_syntheses に合成記録を保存
+   g. 結果単語をユーザーのインベントリに追加（source='synthesis'）
+   ↓
+5. レスポンス:
+   {
+     result: { id, text, image_url, ... },
+     isNewSynthesis: true/false,
+     isNewWord: true/false,
+     formula: "マリオ - マリオ + ルイージ = ファイアルイージ"
+   }
+   ↓
+6. UI更新:
+   - 数式バーの結果スロットに誕生アニメーション付きでカード表示
+   - New Word / New Recipe バッジ表示
+   - インベントリキャッシュを無効化してリロード
 ```
 
-## DBスキーマ（Phase 1）
+## DBスキーマ
 
 ### wordrot_words（単語マスター）
 
@@ -170,9 +192,32 @@ CREATE TABLE IF NOT EXISTS wordrot_event_words (
 );
 ```
 
-### wordrot_syntheses（合成記録）【Phase 2】
+### wordrot_syntheses（合成記録）
 
-> Phase 2で実装予定。スキーマは合成仕様確定後に決定。
+合成の組み合わせと結果を記録。同じ組み合わせはキャッシュとして再利用される。
+
+```sql
+CREATE TABLE IF NOT EXISTS wordrot_syntheses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  word_a_id INTEGER NOT NULL,        -- Base word
+  word_b_id INTEGER NOT NULL,        -- Word to subtract
+  word_c_id INTEGER NOT NULL,        -- Word to add
+  result_word_id INTEGER NOT NULL,   -- Result word
+  discovered_by TEXT,                -- 最初にこの組み合わせを発見したpubkey
+  discovered_at INTEGER NOT NULL,
+  use_count INTEGER DEFAULT 1,       -- 同じ組み合わせが使われた回数
+  FOREIGN KEY (word_a_id) REFERENCES wordrot_words(id),
+  FOREIGN KEY (word_b_id) REFERENCES wordrot_words(id),
+  FOREIGN KEY (word_c_id) REFERENCES wordrot_words(id),
+  FOREIGN KEY (result_word_id) REFERENCES wordrot_words(id),
+  UNIQUE(word_a_id, word_b_id, word_c_id)
+);
+
+CREATE INDEX idx_wordrot_syntheses_result ON wordrot_syntheses(result_word_id);
+```
+
+- `UNIQUE(word_a_id, word_b_id, word_c_id)`: 同じ組み合わせの重複防止・キャッシュキー
+- キャッシュヒット時は `use_count` をインクリメントし、LLM呼び出しをスキップ
 
 ### wordrot_image_queue（画像生成キュー）
 
@@ -188,7 +233,7 @@ CREATE TABLE IF NOT EXISTS wordrot_image_queue (
 );
 ```
 
-## API仕様（Phase 1）
+## API仕様
 
 ### バッチ単語抽出
 
@@ -269,9 +314,65 @@ POST /api/wordrot/collect
 
 **注意**: 収集済みの単語もクリック可能（重複収集でcount増加）。
 
-### 単語合成【Phase 2】
+### 単語合成
 
-> Phase 2で実装予定。API仕様は合成方式確定後に決定。
+```
+POST /api/wordrot/synthesize
+```
+
+リクエスト:
+
+```json
+{
+  "pubkey": "user_pubkey_hex_64chars",
+  "wordA": "ファイアマリオ",
+  "wordB": "マリオ",
+  "wordC": "ルイージ"
+}
+```
+
+レスポンス（成功）:
+
+```json
+{
+  "result": {
+    "id": 42,
+    "text": "ファイアルイージ",
+    "image_url": null,
+    "image_status": "pending",
+    "discovered_by": "pubkey...",
+    "discovered_at": 1234567890,
+    "discovery_count": 1,
+    "synthesis_count": 1
+  },
+  "isNewSynthesis": true,
+  "isNewWord": true,
+  "formula": "ファイアマリオ - マリオ + ルイージ = ファイアルイージ"
+}
+```
+
+- `isNewSynthesis`: この A-B+C の組み合わせが初めてか
+- `isNewWord`: 結果の単語がシステム上で新規作成されたか
+- `formula`: 人間が読める数式文字列
+
+レスポンス（合成失敗 - LLMが結果を導出できない場合）:
+
+```json
+{
+  "error": "Synthesis failed - no valid result",
+  "result": "???"
+}
+```
+
+**エラーケース**:
+
+| ステータス | エラー | 原因 |
+|-----------|--------|------|
+| 400 | `Invalid pubkey` | pubkeyが64文字hex以外 |
+| 400 | `All three words are required` | 3語が揃っていない |
+| 400 | `One or more words not found in your collection` | 単語がDBに存在しない |
+| 400 | `You do not own all three words` | ユーザーのインベントリにない |
+| 200 | `Synthesis failed - no valid result` | LLMが`???`を返した / 結果が30文字超 |
 
 ### インベントリ取得
 
@@ -290,7 +391,7 @@ GET /api/wordrot/inventory/:pubkey
 }
 ```
 
-## UI仕様（Phase 1）
+## UI仕様
 
 ### タイムライン上のハイライト表示
 
@@ -366,18 +467,31 @@ GET /api/wordrot/inventory/:pubkey
 │ [Star] Stella    [FlaskConical] Wordrot             │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
-│ Word Collection                                     │
+│ Wordrot (12 types, 25 total)                        │
 │                                                     │
-│ [img] [img] [img] [img] [img] [img]                │
-│ マリオ ルイージ  スター  キノコ  ...                │
+│ [img] [img] [img] [img] [img] [img]  ← タップで    │
+│ マリオ ルイージ  スター  キノコ  ...    スロットに入る│
 │                                                     │
 │ [img] [img] [img] [img] [img] [img]                │
 │ カート  ファイア  ...                               │
 │                                                     │
+├─────────────────────────────────────────────────────┤
+│ ┌──┐   ┌──┐   ┌──┐   ┌──┐  ← 数式バー（下部固定）│
+│ │A │ - │B │ + │C │ = │? │                         │
+│ └──┘   └──┘   └──┘   └──┘                         │
+│          [Clear] [Synthesize!]                      │
 └─────────────────────────────────────────────────────┘
 ```
 
-> 合成UIはPhase 2で追加予定。
+**合成UIの操作フロー**:
+1. スロットAが初期選択状態（紫ハイライト枠）
+2. インベントリのカードをタップ → 選択中スロットにワードが入る
+3. 入ったら次の空きスロットが自動的に選択状態になる
+4. スロットを直接タップ → そのスロットを選択状態に変更
+5. 既に入っているスロットをタップ → ワードを解除し、そのスロットが選択状態に
+6. 3つ揃うと「Synthesize!」ボタンが紫にハイライトして有効化
+7. 合成実行 → `=` の右の `?` が結果カードに変わる（誕生アニメーション）
+8. New Word / New Recipe バッジ表示
 
 ### ワードカード
 
@@ -394,7 +508,7 @@ GET /api/wordrot/inventory/:pubkey
 **状態による表示**:
 - 通常: 黒枠、白背景
 - ホバー: 影が付く
-- 選択中（Phase 2 合成スロット用）: 紫枠、薄紫背景
+- 選択中（合成スロットにセット済み）: 紫枠、薄紫背景
 
 ## アクセシビリティ
 
@@ -466,9 +580,49 @@ LLMに渡す前に、ハイライト対象外の要素を除去する:
 出力: ["今日", "マリオ", "カート", "ルイージ", "スター"]
 ```
 
-### 単語合成【Phase 2】
+### 単語合成（Phase 2）
 
-> Phase 2で実装予定。
+Workers AI (Qwen3-30B-A3B-FP8) を使用。
+
+#### プロンプト
+
+```
+あなたは単語のベクトル演算を行う専門家です。
+
+単語の意味的な関係性を考慮して、以下の演算の結果を導出してください。
+
+【演算】
+「{wordA}」 － 「{wordB}」 ＋ 「{wordC}」 ＝ ？
+
+【参考例】
+- 「ファイアマリオ」－「マリオ」＋「ルイージ」＝「ファイアルイージ」
+- 「王様」－「男」＋「女」＝「女王」
+- 「東京」－「日本」＋「フランス」＝「パリ」
+- 「子犬」－「犬」＋「猫」＝「子猫」
+- 「朝食」－「朝」＋「夜」＝「夕食」
+
+【ルール】
+1. 結果は1つの名詞または複合語のみ
+2. 意味的な関係性を考慮して導出
+3. 存在しない造語も可（ファイアルイージなど）
+4. 結果が導出できない場合のみ「???」を返す
+5. 余計な説明は不要、結果の単語のみを出力
+
+【出力】
+結果の単語のみを出力してください（「」は不要）:
+```
+
+**パラメータ**:
+- `max_tokens: 100`（結果の単語のみなので短い）
+- `/no_think` フラグでQwen3のreasoning出力を抑制
+- `<think>...</think>` タグがあれば除去
+- 結果が `???`、空、30文字超の場合は失敗扱い
+
+#### キャッシュ戦略
+
+- 同じ `(wordA, wordB, wordC)` の組み合わせは `wordrot_syntheses` テーブルに保存
+- 2回目以降は LLM を呼ばず、キャッシュから結果を返す（`use_count++`）
+- これにより同じ演算のコストが 0 に
 
 ### 画像生成（Phase 1）
 
@@ -548,6 +702,12 @@ image_hash TEXT,  -- SHA-256 hash for NIP-96 delete
 - トースト通知でエラー表示
 - ユーザーは再度クリックで再試行可能
 
+**合成API失敗時**:
+- バリデーションエラー（400）→ 数式バー内にエラーメッセージ表示
+- LLM演算失敗（200, `result: "???"` ）→ 「Synthesis failed」表示
+- ネットワークエラー → 「Network error」表示
+- いずれの場合もスロットは保持され、再試行可能
+
 **Workers AI エラー時**:
 1. `image_status = 'failed'` に更新
 2. Cronジョブが定期的にリトライ
@@ -620,12 +780,13 @@ apps/web/src/styles/components/
   └── word-collect-celebration.css       # 収集演出
 ```
 
-### Phase 2（後日追加）
+### Phase 2（合成機能）
 
 ```
-apps/web/src/hooks/wordrot/useSynthesis.ts
-apps/web/src/components/wordrot/SynthesisPanel.tsx
-apps/web/src/styles/components/synthesis-panel.css
+apps/web/src/hooks/wordrot/useSynthesis.ts       # 合成状態管理hook
+apps/web/src/components/wordrot/SynthesisPanel.tsx # 数式バーUI（下部固定）
+apps/web/src/styles/components/synthesis-panel.css  # 数式バースタイル
+apps/web/src/lib/api/api.ts                        # synthesizeWords() クライアント関数
 ```
 
 [← 拡張仕様一覧に戻る](./index.md)

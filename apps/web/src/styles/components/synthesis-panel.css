@@ -1,34 +1,17 @@
-/* Synthesis Panel */
+/* Synthesis Bar - Bottom fixed */
 
-.synthesis-panel {
+.synthesis-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-  background: var(--surface-secondary, #f9f9f9);
-  border-radius: 12px;
-  border: 1px solid var(--border-primary, #eee);
-}
-
-.synthesis-header {
-  text-align: center;
-}
-
-.synthesis-header h3 {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 0.5rem;
-  margin: 0 0 0.25rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-primary, #000);
-}
-
-.synthesis-description {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--text-secondary, #666);
+  padding: 0.75rem;
+  background: var(--surface-primary, #fff);
+  border-top: 1px solid var(--border-primary, #eee);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+  margin: 0 -1rem -1rem;
 }
 
 /* Formula display */
@@ -36,29 +19,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: var(--surface-primary, #fff);
-  border-radius: 8px;
-  overflow-x: auto;
+  gap: 0.35rem;
 }
 
 .synthesis-slot {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 80px;
-  min-height: 100px;
-  padding: 0.5rem;
+  width: 52px;
+  height: 52px;
+  padding: 2px;
   background: var(--surface-tertiary, #f0f0f0);
   border: 2px dashed var(--border-primary, #ddd);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
 .synthesis-slot:hover {
-  background: var(--surface-secondary, #f5f5f5);
   border-color: var(--text-secondary, #999);
 }
 
@@ -66,34 +45,64 @@
   border-color: #a855f7;
   border-style: solid;
   background: rgba(168, 85, 247, 0.1);
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
 }
 
 .synthesis-slot.filled {
   border-style: solid;
   border-color: var(--border-primary, #ddd);
+  padding: 0;
+}
+
+.synthesis-slot.filled .word-card {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.synthesis-slot.filled .word-card-image {
+  width: 100%;
+  height: 100%;
+}
+
+.synthesis-slot.filled .word-card-text,
+.synthesis-slot.filled .word-card-count {
+  display: none;
 }
 
 .synthesis-slot.result {
   cursor: default;
   background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
   border-color: #3d3d5c;
+  border-style: solid;
 }
 
-.synthesis-slot.result .synthesis-slot-empty {
-  color: #666;
+.synthesis-slot.result .word-card {
+  pointer-events: none;
 }
 
-.synthesis-slot-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
+.synthesis-slot.result .synthesis-slot-placeholder {
+  color: #555;
+}
+
+.synthesis-slot.result.filled.born {
+  animation: slot-born 0.4s ease-out;
+}
+
+@keyframes slot-born {
+  0% { transform: scale(0.5); opacity: 0.3; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.synthesis-slot-placeholder {
+  font-size: 1.2rem;
+  font-weight: 700;
   color: var(--text-tertiary, #999);
-  font-size: 0.7rem;
 }
 
 .synthesis-operator {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-secondary, #666);
   flex-shrink: 0;
@@ -102,21 +111,19 @@
 /* Result details */
 .synthesis-result-details {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem;
-  background: var(--surface-primary, #fff);
-  border-radius: 8px;
+  flex-wrap: wrap;
 }
 
 .synthesis-badge {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.75rem;
+  gap: 0.2rem;
+  padding: 0.15rem 0.5rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
 }
 
@@ -131,8 +138,7 @@
 }
 
 .synthesis-formula-text {
-  margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: var(--text-secondary, #666);
   font-family: monospace;
 }
@@ -142,108 +148,54 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 8px;
+  border-radius: 6px;
   color: #ef4444;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
 }
 
 /* Actions */
 .synthesis-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   justify-content: center;
 }
 
-.synthesis-actions button {
-  min-width: 100px;
-}
-
-/* Word picker */
-.synthesis-word-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background: var(--surface-primary, #fff);
-  border-radius: 8px;
-  border: 1px solid var(--border-primary, #eee);
-  max-height: 300px;
-  overflow: hidden;
-}
-
-.synthesis-word-picker-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.synthesis-actions .btn {
+  min-width: 0;
   font-size: 0.8rem;
-  color: var(--text-secondary, #666);
 }
 
-.synthesis-close-picker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-secondary, #666);
-  border-radius: 4px;
-}
-
-.synthesis-close-picker:hover {
-  background: var(--surface-secondary, #f5f5f5);
-}
-
-.synthesis-word-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-  gap: 0.5rem;
-  overflow-y: auto;
-  max-height: 220px;
-  padding-right: 0.5rem;
-}
-
-.synthesis-empty-inventory {
-  grid-column: 1 / -1;
-  text-align: center;
-  color: var(--text-tertiary, #999);
-  font-size: 0.8rem;
-  padding: 1rem;
-}
-
-/* Hint */
-.synthesis-hint {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--text-tertiary, #999);
+/* Synthesize button highlight when ready */
+.synthesis-actions .btn-primary:not(:disabled) {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  border-color: #7c3aed;
 }
 
 /* Mobile adjustments */
 @media (max-width: 600px) {
+  .synthesis-bar {
+    padding: 0.5rem;
+    gap: 0.35rem;
+  }
+
   .synthesis-formula {
-    flex-wrap: wrap;
     gap: 0.25rem;
-    padding: 0.75rem;
   }
 
   .synthesis-slot {
-    min-width: 60px;
-    min-height: 80px;
+    width: 44px;
+    height: 44px;
   }
 
   .synthesis-operator {
-    font-size: 1.2rem;
+    font-size: 0.9rem;
   }
 
-  .synthesis-word-grid {
-    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  .synthesis-slot-placeholder {
+    font-size: 1rem;
   }
 }

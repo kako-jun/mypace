@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BackButton, Icon, Loading, Tabs } from '../components/ui'
 import { useCelebration } from '../components/supernova'
-import { WordCard } from '../components/wordrot'
-// SynthesisPanel is Phase 2
-// import { SynthesisPanel } from '../components/wordrot'
-import { useWordrot } from '../hooks/wordrot'
+import { WordCard, SynthesisPanel } from '../components/wordrot'
+import { useWordrot, useSynthesis } from '../hooks/wordrot'
 import { getThemeCardProps, STELLA_COLORS } from '../lib/nostr/events'
 import { getThemeColors } from '../lib/storage'
 import { getCurrentPubkey } from '../lib/nostr/events'
@@ -58,9 +56,45 @@ export function InventoryPage() {
     totalCount: wordrotTotalCount,
     uniqueCount: wordrotUniqueCount,
     isLoadingInventory: wordrotLoading,
-    // loadInventory is used in Phase 2 SynthesisPanel
-    loadInventory: _loadWordrotInventory,
+    loadInventory: loadWordrotInventory,
   } = useWordrot()
+
+  // Synthesis state
+  const synthesis = useSynthesis()
+  const { slotA, slotB, slotC, setSlotA, setSlotB, setSlotC } = synthesis
+  const [activeSlot, setActiveSlot] = useState<'A' | 'B' | 'C'>('A')
+
+  // Card tap → place word into active slot, then advance to next empty
+  const handleWordSelect = (word: { text: string }) => {
+    switch (activeSlot) {
+      case 'A':
+        setSlotA(word.text)
+        break
+      case 'B':
+        setSlotB(word.text)
+        break
+      case 'C':
+        setSlotC(word.text)
+        break
+    }
+    // Advance to next empty slot after this render
+    const slots = { A: slotA, B: slotB, C: slotC }
+    slots[activeSlot] = word.text // reflect what we just set
+    const order: ('A' | 'B' | 'C')[] = ['A', 'B', 'C']
+    const next = order.find((s) => s !== activeSlot && !slots[s])
+    if (next) setActiveSlot(next)
+  }
+
+  // Slot tap → if filled, clear it; set as active
+  const handleSlotTap = (slot: 'A' | 'B' | 'C') => {
+    const value = slot === 'A' ? slotA : slot === 'B' ? slotB : slotC
+    if (value) {
+      if (slot === 'A') setSlotA(null)
+      else if (slot === 'B') setSlotB(null)
+      else setSlotC(null)
+    }
+    setActiveSlot(slot)
+  }
 
   useEffect(() => {
     const loadData = async () => {
@@ -356,7 +390,12 @@ export function InventoryPage() {
         tabs={[
           {
             value: 'stella' as const,
-            label: <><Icon name="Star" size={16} /><span>Stella</span></>,
+            label: (
+              <>
+                <Icon name="Star" size={16} />
+                <span>Stella</span>
+              </>
+            ),
           },
           {
             value: 'wordrot' as const,
@@ -589,15 +628,6 @@ export function InventoryPage() {
             </div>
           ) : (
             <>
-              {/* Synthesis Panel - Phase 2 */}
-              {/* <SynthesisPanel
-                inventory={wordrotInventory}
-                onSynthesisComplete={() => {
-                  // Refresh inventory after synthesis
-                  _loadWordrotInventory()
-                }}
-              /> */}
-
               {/* Word Collection */}
               <div className="inventory-words-section">
                 <h3>
@@ -613,11 +643,29 @@ export function InventoryPage() {
                 ) : (
                   <div className="inventory-words-grid">
                     {wordrotInventory.map((item) => (
-                      <WordCard key={item.word.id} word={item.word} count={item.count} />
+                      <WordCard
+                        key={item.word.id}
+                        word={item.word}
+                        count={item.count}
+                        onClick={() => handleWordSelect(item.word)}
+                        selected={item.word.text === slotA || item.word.text === slotB || item.word.text === slotC}
+                      />
                     ))}
                   </div>
                 )}
               </div>
+
+              {/* Synthesis bar - bottom fixed */}
+              <SynthesisPanel
+                inventory={wordrotInventory}
+                synthesis={synthesis}
+                activeSlot={activeSlot}
+                onSlotTap={handleSlotTap}
+                onClear={() => setActiveSlot('A')}
+                onSynthesisComplete={() => {
+                  loadWordrotInventory()
+                }}
+              />
             </>
           )}
         </div>
