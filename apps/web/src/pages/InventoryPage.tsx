@@ -682,7 +682,7 @@ export function InventoryPage() {
                 return (
                   <>
                     <div className="inventory-words-section">
-                      <h3>Words ({harvestWords.length} types)</h3>
+                      <h3>Words ({harvestWords.length})</h3>
 
                       {harvestWords.length === 0 ? (
                         <div className="inventory-words-empty">
@@ -745,7 +745,6 @@ export function InventoryPage() {
                         <h3>
                           <Icon name="FlaskConical" size={20} /> Wordrot ({synthesizedWords.length})
                         </h3>
-                        <p className="inventory-words-hint">Wordrot cannot be used as synthesis materials.</p>
                         <div className="inventory-words-grid">
                           {synthesizedWords.map((item) => (
                             <WordCard

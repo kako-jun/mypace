@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { navigateTo } from '../../lib/utils'
 
 interface WordrotImagesProps {
@@ -7,6 +8,9 @@ interface WordrotImagesProps {
 }
 
 export function WordrotImages({ words, collected, images }: WordrotImagesProps) {
+  const [tooltip, setTooltip] = useState<{ word: string; x: number; y: number } | null>(null)
+  const [longPressTimer, setLongPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
+
   // Filter words that are collected and have images
   const displayWords = words.filter((word) => collected.has(word) && images[word])
 
@@ -20,21 +24,66 @@ export function WordrotImages({ words, collected, images }: WordrotImagesProps) 
     navigateTo(`/inventory?tab=wordrot&word=${encodeURIComponent(word)}#${anchorId}`)
   }
 
+  const handleLongPressStart = (word: string, e: React.TouchEvent | React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = rect.left + rect.width / 2
+    const y = rect.top - 10
+
+    const timer = setTimeout(() => {
+      setTooltip({ word, x, y })
+    }, 500)
+
+    setLongPressTimer(timer)
+  }
+
+  const handleLongPressEnd = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer)
+      setLongPressTimer(null)
+    }
+  }
+
+  const handleTooltipClose = () => {
+    setTooltip(null)
+  }
+
   return (
-    <div className="wordrot-images-container">
-      {displayWords.map((word) => (
-        <button
-          key={word}
-          className="wordrot-image-button"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleWordClick(word)
+    <>
+      <div className="wordrot-images-container">
+        {displayWords.map((word) => (
+          <button
+            key={word}
+            className="wordrot-image-button"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleWordClick(word)
+            }}
+            onTouchStart={(e) => handleLongPressStart(word, e)}
+            onTouchEnd={handleLongPressEnd}
+            onTouchCancel={handleLongPressEnd}
+            onMouseDown={(e) => handleLongPressStart(word, e)}
+            onMouseUp={handleLongPressEnd}
+            onMouseLeave={handleLongPressEnd}
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            <img src={images[word]!} alt={word} className="wordrot-image" draggable={false} />
+          </button>
+        ))}
+      </div>
+
+      {/* Custom tooltip */}
+      {tooltip && (
+        <div
+          className="wordrot-image-tooltip"
+          style={{
+            left: `${tooltip.x}px`,
+            top: `${tooltip.y}px`,
           }}
-          title={word}
+          onClick={handleTooltipClose}
         >
-          <img src={images[word]!} alt={word} className="wordrot-image" />
-        </button>
-      ))}
-    </div>
+          {tooltip.word}
+        </div>
+      )}
+    </>
   )
 }

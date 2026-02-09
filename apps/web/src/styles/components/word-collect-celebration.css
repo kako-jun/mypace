@@ -170,12 +170,10 @@
 
 .word-card.selected {
   border-color: #a855f7;
-  background: rgba(168, 85, 247, 0.1);
 }
 
 .word-card.highlight {
   border-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.15);
   animation: highlight-pulse 1.5s ease-in-out 3;
 }
 
