@@ -167,7 +167,6 @@ export function useWordrotTimeline() {
               word: result.word,
               isNew: result.isNew,
               isFirstEver: result.isFirstEver,
-              count: result.count,
             })
           }
 

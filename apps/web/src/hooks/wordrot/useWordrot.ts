@@ -22,7 +22,6 @@ export interface UseWordrotReturn {
 
   // Inventory
   inventory: UserWordrotWord[]
-  totalCount: number
   uniqueCount: number
   loadInventory: () => Promise<void>
   isLoadingInventory: boolean
@@ -36,14 +35,12 @@ export interface CollectResult {
   word: WordrotWord
   isNew: boolean
   isFirstEver: boolean
-  count: number
 }
 
 export function useWordrot(): UseWordrotReturn {
   const [pubkey, setPubkey] = useState<string | null>(null)
   const [isCollecting, setIsCollecting] = useState(false)
   const [inventory, setInventory] = useState<UserWordrotWord[]>([])
-  const [totalCount, setTotalCount] = useState(0)
   const [uniqueCount, setUniqueCount] = useState(0)
   const [isLoadingInventory, setIsLoadingInventory] = useState(false)
   const [celebrationWord, setCelebrationWord] = useState<CollectResult | null>(null)
@@ -85,7 +82,6 @@ export function useWordrot(): UseWordrotReturn {
     try {
       const result = await fetchWordrotInventory(pubkey)
       setInventory(result.words)
-      setTotalCount(result.totalCount)
       setUniqueCount(result.uniqueCount)
     } finally {
       setIsLoadingInventory(false)
@@ -106,7 +102,6 @@ export function useWordrot(): UseWordrotReturn {
             word: result.word,
             isNew: result.isNew,
             isFirstEver: result.isFirstEver,
-            count: result.count,
           }
 
           // Show celebration
@@ -115,7 +110,6 @@ export function useWordrot(): UseWordrotReturn {
           // collectWordレスポンスにinventoryが含まれている場合、直接stateを更新（再fetchを回避）
           if (result.inventory) {
             setInventory(result.inventory.words)
-            setTotalCount(result.inventory.totalCount)
             setUniqueCount(result.inventory.uniqueCount)
           }
 
@@ -148,7 +142,6 @@ export function useWordrot(): UseWordrotReturn {
     collect,
     isCollecting,
     inventory,
-    totalCount,
     uniqueCount,
     loadInventory,
     isLoadingInventory,

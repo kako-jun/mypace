@@ -554,7 +554,6 @@ export interface WordrotWord {
 
 export interface UserWordrotWord {
   word: WordrotWord
-  count: number
   first_collected_at: number
   last_collected_at: number
   source: 'harvest' | 'synthesis'
@@ -576,7 +575,7 @@ const extractNounsCache = new Map<string, string[]>()
 // fetchWordrotInventory: pubkeyベースのキャッシュ（TTL: 60秒、collectWord時に無効化）
 let inventoryCache: {
   pubkey: string
-  data: { words: UserWordrotWord[]; totalCount: number; uniqueCount: number }
+  data: { words: UserWordrotWord[]; uniqueCount: number }
   timestamp: number
 } | null = null
 const INVENTORY_CACHE_TTL = 60_000
@@ -589,7 +588,7 @@ export function invalidateWordrotInventoryCache(): void {
 /** インベントリキャッシュを直接更新（collectWordレスポンスにinventoryが含まれる場合） */
 export function updateWordrotInventoryCache(
   pubkey: string,
-  data: { words: UserWordrotWord[]; totalCount: number; uniqueCount: number }
+  data: { words: UserWordrotWord[]; uniqueCount: number }
 ): void {
   inventoryCache = { pubkey, data, timestamp: Date.now() }
 }
@@ -657,8 +656,7 @@ export async function collectWord(
   word: WordrotWord | null
   isNew: boolean
   isFirstEver: boolean
-  count: number
-  inventory?: { words: UserWordrotWord[]; totalCount: number; uniqueCount: number }
+  inventory?: { words: UserWordrotWord[]; uniqueCount: number }
 }> {
   try {
     const res = await fetch(`${API_BASE}/api/wordrot/collect`, {
@@ -666,7 +664,7 @@ export async function collectWord(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pubkey, word, eventId }),
     })
-    if (!res.ok) return { word: null, isNew: false, isFirstEver: false, count: 0 }
+    if (!res.ok) return { word: null, isNew: false, isFirstEver: false }
     const result = await res.json()
     // レスポンスにinventoryが含まれていればキャッシュを直接更新
     if (result.inventory) {
@@ -674,7 +672,7 @@ export async function collectWord(
     }
     return result
   } catch {
-    return { word: null, isNew: false, isFirstEver: false, count: 0 }
+    return { word: null, isNew: false, isFirstEver: false }
   }
 }
 
@@ -715,7 +713,6 @@ export async function synthesizeWords(
 // Get user's word inventory
 export async function fetchWordrotInventory(pubkey: string): Promise<{
   words: UserWordrotWord[]
-  totalCount: number
   uniqueCount: number
 }> {
   // クライアントキャッシュチェック（TTL: 60秒、同一pubkey）
@@ -729,13 +726,13 @@ export async function fetchWordrotInventory(pubkey: string): Promise<{
 
   try {
     const res = await fetch(`${API_BASE}/api/wordrot/inventory/${pubkey}`)
-    if (!res.ok) return { words: [], totalCount: 0, uniqueCount: 0 }
-    const data: { words: UserWordrotWord[]; totalCount: number; uniqueCount: number } = await res.json()
+    if (!res.ok) return { words: [], uniqueCount: 0 }
+    const data: { words: UserWordrotWord[]; uniqueCount: number } = await res.json()
     // 成功結果をクライアントキャッシュに保存
     inventoryCache = { pubkey, data, timestamp: Date.now() }
     return data
   } catch {
-    return { words: [], totalCount: 0, uniqueCount: 0 }
+    return { words: [], uniqueCount: 0 }
   }
 }
 

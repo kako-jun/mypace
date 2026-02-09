@@ -23,7 +23,6 @@ interface WordrotWord {
 
 interface UserWord {
   word: WordrotWord
-  count: number
   first_collected_at: number
   last_collected_at: number
   source: string
@@ -853,25 +852,23 @@ wordrot.post('/collect', async (c) => {
       .run()
   }
 
-  // Add to user's collection
+  // Add to user's collection (boolean ownership: row exists = owned)
   const existingUserWord = await db
-    .prepare(`SELECT count FROM wordrot_user_words WHERE pubkey = ? AND word_id = ?`)
+    .prepare(`SELECT id FROM wordrot_user_words WHERE pubkey = ? AND word_id = ? AND source = 'harvest'`)
     .bind(pubkey, wordRecord.id)
-    .first<{ count: number }>()
+    .first<{ id: number }>()
 
   const isNew = !existingUserWord
 
   if (!existingUserWord) {
-    // First time collecting this word - add to inventory
     await db
       .prepare(
-        `INSERT INTO wordrot_user_words (pubkey, word_id, count, first_collected_at, last_collected_at, source)
-         VALUES (?, ?, 1, ?, ?, 'harvest')`
+        `INSERT INTO wordrot_user_words (pubkey, word_id, first_collected_at, last_collected_at, source)
+         VALUES (?, ?, ?, ?, 'harvest')`
       )
       .bind(pubkey, wordRecord.id, now, now)
       .run()
   }
-  // If already exists, do nothing - Wordrot is binary (have/not have)
 
   // Refresh word record to get latest data
   wordRecord = await db.prepare(`SELECT * FROM wordrot_words WHERE id = ?`).bind(wordRecord.id).first<WordrotWord>()
@@ -880,17 +877,17 @@ wordrot.post('/collect', async (c) => {
   const inventoryResult = await db
     .prepare(
       `SELECT
-         w.id, w.text, w.image_url, w.image_hash, w.image_status, 
+         w.id, w.text, w.image_url, w.image_hash, w.image_status,
          w.image_url_synthesis, w.image_hash_synthesis, w.image_status_synthesis,
          w.discovered_by, w.discovered_at, w.discovery_count, w.synthesis_count,
-         uw.count, uw.first_collected_at, uw.last_collected_at, uw.source
+         uw.first_collected_at, uw.last_collected_at, uw.source
        FROM wordrot_user_words uw
        JOIN wordrot_words w ON uw.word_id = w.id
        WHERE uw.pubkey = ?
        ORDER BY uw.last_collected_at DESC`
     )
     .bind(pubkey)
-    .all<WordrotWord & { count: number; first_collected_at: number; last_collected_at: number; source: string }>()
+    .all<WordrotWord & { first_collected_at: number; last_collected_at: number; source: string }>()
 
   const inventoryWords: UserWord[] = (inventoryResult.results || []).map((row) => ({
     word: {
@@ -907,22 +904,17 @@ wordrot.post('/collect', async (c) => {
       discovery_count: row.discovery_count,
       synthesis_count: row.synthesis_count,
     },
-    count: row.count,
     first_collected_at: row.first_collected_at,
     last_collected_at: row.last_collected_at,
     source: row.source,
   }))
 
-  const inventoryTotalCount = inventoryWords.reduce((sum, w) => sum + w.count, 0)
-
   return c.json({
     word: wordRecord,
     isNew,
     isFirstEver,
-    count: 1, // Always return 1 since it's binary
     inventory: {
       words: inventoryWords,
-      totalCount: inventoryTotalCount,
       uniqueCount: inventoryWords.length,
     },
   })
@@ -1025,20 +1017,20 @@ wordrot.post('/synthesize', async (c) => {
     return c.json({ error: 'One or more words not found in your collection' }, 400)
   }
 
-  // Check if user owns all three words
+  // Check if user owns all three words (boolean: row exists = owned)
   const [userA, userB, userC] = await Promise.all([
     db
-      .prepare(`SELECT count FROM wordrot_user_words WHERE pubkey = ? AND word_id = ?`)
+      .prepare(`SELECT id FROM wordrot_user_words WHERE pubkey = ? AND word_id = ?`)
       .bind(pubkey, wordARecord.id)
-      .first<{ count: number }>(),
+      .first<{ id: number }>(),
     db
-      .prepare(`SELECT count FROM wordrot_user_words WHERE pubkey = ? AND word_id = ?`)
+      .prepare(`SELECT id FROM wordrot_user_words WHERE pubkey = ? AND word_id = ?`)
       .bind(pubkey, wordBRecord.id)
-      .first<{ count: number }>(),
+      .first<{ id: number }>(),
     db
-      .prepare(`SELECT count FROM wordrot_user_words WHERE pubkey = ? AND word_id = ?`)
+      .prepare(`SELECT id FROM wordrot_user_words WHERE pubkey = ? AND word_id = ?`)
       .bind(pubkey, wordCRecord.id)
-      .first<{ count: number }>(),
+      .first<{ id: number }>(),
   ])
 
   if (!userA || !userB || !userC) {
@@ -1153,22 +1145,15 @@ wordrot.post('/synthesize', async (c) => {
   // Add result to user's synthesis collection
   // UNIQUE(pubkey, word_id, source) allows both harvest and synthesis records for the same word
   const existingSynthesisWord = await db
-    .prepare(`SELECT count FROM wordrot_user_words WHERE pubkey = ? AND word_id = ? AND source = 'synthesis'`)
+    .prepare(`SELECT id FROM wordrot_user_words WHERE pubkey = ? AND word_id = ? AND source = 'synthesis'`)
     .bind(pubkey, resultWord.id)
-    .first<{ count: number }>()
+    .first<{ id: number }>()
 
-  if (existingSynthesisWord) {
+  if (!existingSynthesisWord) {
     await db
       .prepare(
-        `UPDATE wordrot_user_words SET count = count + 1, last_collected_at = ? WHERE pubkey = ? AND word_id = ? AND source = 'synthesis'`
-      )
-      .bind(now, pubkey, resultWord.id)
-      .run()
-  } else {
-    await db
-      .prepare(
-        `INSERT INTO wordrot_user_words (pubkey, word_id, count, first_collected_at, last_collected_at, source)
-         VALUES (?, ?, 1, ?, ?, 'synthesis')`
+        `INSERT INTO wordrot_user_words (pubkey, word_id, first_collected_at, last_collected_at, source)
+         VALUES (?, ?, ?, ?, 'synthesis')`
       )
       .bind(pubkey, resultWord.id, now, now)
       .run()
@@ -1195,17 +1180,17 @@ wordrot.get('/inventory/:pubkey', async (c) => {
   const result = await db
     .prepare(
       `SELECT
-         w.id, w.text, w.image_url, w.image_hash, w.image_status, 
+         w.id, w.text, w.image_url, w.image_hash, w.image_status,
          w.image_url_synthesis, w.image_hash_synthesis, w.image_status_synthesis,
          w.discovered_by, w.discovered_at, w.discovery_count, w.synthesis_count,
-         uw.count, uw.first_collected_at, uw.last_collected_at, uw.source
+         uw.first_collected_at, uw.last_collected_at, uw.source
        FROM wordrot_user_words uw
        JOIN wordrot_words w ON uw.word_id = w.id
        WHERE uw.pubkey = ?
        ORDER BY uw.last_collected_at DESC`
     )
     .bind(pubkey)
-    .all<WordrotWord & { count: number; first_collected_at: number; last_collected_at: number; source: string }>()
+    .all<WordrotWord & { first_collected_at: number; last_collected_at: number; source: string }>()
 
   const words: UserWord[] = (result.results || []).map((row) => ({
     word: {
@@ -1222,17 +1207,13 @@ wordrot.get('/inventory/:pubkey', async (c) => {
       discovery_count: row.discovery_count,
       synthesis_count: row.synthesis_count,
     },
-    count: row.count,
     first_collected_at: row.first_collected_at,
     last_collected_at: row.last_collected_at,
     source: row.source,
   }))
 
-  const totalCount = words.reduce((sum, w) => sum + w.count, 0)
-
   return c.json({
     words,
-    totalCount,
     uniqueCount: words.length,
   })
 })

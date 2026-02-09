@@ -253,13 +253,6 @@
   line-height: 1.3;
 }
 
-.word-card-count {
-  font-size: 0.65rem;
-  color: var(--text-secondary, #666);
-  background: var(--surface-primary, #fff);
-  padding: 0.1rem 0.3rem;
-  border-radius: 4px;
-}
 
 /* Size variants */
 .word-card-small {

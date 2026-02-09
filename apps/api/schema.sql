@@ -248,12 +248,11 @@ CREATE INDEX IF NOT EXISTS idx_wordrot_words_text ON wordrot_words(text);
 CREATE INDEX IF NOT EXISTS idx_wordrot_words_discovered_by ON wordrot_words(discovered_by);
 CREATE INDEX IF NOT EXISTS idx_wordrot_words_discovery_count ON wordrot_words(discovery_count DESC);
 
--- User word collection (user's inventory)
+-- User word collection (user's inventory) — boolean ownership (row exists = owned)
 CREATE TABLE IF NOT EXISTS wordrot_user_words (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   pubkey TEXT NOT NULL,
   word_id INTEGER NOT NULL,
-  count INTEGER DEFAULT 1,                -- How many of this word user owns
   first_collected_at INTEGER NOT NULL,
   last_collected_at INTEGER NOT NULL,
   source TEXT DEFAULT 'harvest',          -- 'harvest' | 'synthesis'
