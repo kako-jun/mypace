@@ -291,7 +291,6 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
               word: result.word,
               isNew: result.isNew,
               isFirstEver: result.isFirstEver,
-              count: result.count,
             })
           }
         }

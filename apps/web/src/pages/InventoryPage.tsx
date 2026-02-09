@@ -64,7 +64,6 @@ export function InventoryPage() {
   // Wordrot state
   const {
     inventory: wordrotInventory,
-    totalCount: _wordrotTotalCount,
     uniqueCount: wordrotUniqueCount,
     isLoadingInventory: wordrotLoading,
     loadInventory: loadWordrotInventory,
@@ -695,7 +694,6 @@ export function InventoryPage() {
                             <WordCard
                               key={item.word.id}
                               word={item.word}
-                              count={item.count}
                               source="harvest"
                               onClick={() => handleWordSelect(item.word)}
                               selected={
@@ -751,9 +749,16 @@ export function InventoryPage() {
                             <WordCard
                               key={item.word.id}
                               word={item.word}
-                              count={item.count}
                               source="synthesis"
-                              // No onClick - wordrot cannot be used as synthesis materials
+                              onClick={() => {
+                                setSynthesisCelebration({
+                                  result: item.word,
+                                  isNewSynthesis: false,
+                                  isNewWord: false,
+                                  formula: '',
+                                })
+                                setShowSynthesisCelebration(true)
+                              }}
                               selected={false}
                               onRetryImage={retryWordImage}
                             />

@@ -9,7 +9,6 @@ export interface WordCollectResult {
   word: WordrotWord
   isNew: boolean
   isFirstEver: boolean
-  count: number
 }
 
 interface WordCelebrationContextType {
@@ -171,7 +170,6 @@ function WordCollectToast({ result, phase }: WordCollectToastProps) {
 // Simple inline word card for showing word in lists
 export function WordCard({
   word: initialWord,
-  count,
   onClick,
   selected,
   highlight,
@@ -180,7 +178,6 @@ export function WordCard({
   onRetryImage,
 }: {
   word: WordrotWord
-  count?: number
   onClick?: () => void
   selected?: boolean
   highlight?: boolean
@@ -206,8 +203,11 @@ export function WordCard({
     const poll = setInterval(async () => {
       try {
         const details = await fetchWordDetails(word.text)
-        if (details.word && details.word.image_status !== word.image_status) {
-          setWord(details.word)
+        if (details.word) {
+          const newStatus = source === 'synthesis' ? details.word.image_status_synthesis : details.word.image_status
+          if (newStatus !== imageStatus) {
+            setWord(details.word)
+          }
         }
       } catch {
         // ignore
@@ -215,7 +215,7 @@ export function WordCard({
     }, 3000)
 
     return () => clearInterval(poll)
-  }, [word.text, imageStatus])
+  }, [word.text, imageStatus, source])
 
   const defaultImage =
     'data:image/svg+xml,' +
@@ -268,7 +268,6 @@ export function WordCard({
       <span className="word-card-text" title={word.text}>
         {word.text}
       </span>
-      {count !== undefined && count > 1 && <span className="word-card-count">x{count}</span>}
     </button>
   )
 }
