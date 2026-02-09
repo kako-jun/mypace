@@ -565,15 +565,6 @@
 
 /* Mobile adjustments */
 @media (max-width: 480px) {
-  .inventory-tabs {
-    gap: 0.25rem;
-  }
-
-  .inventory-tabs .tab {
-    padding: 0.6rem 0.5rem;
-    font-size: 0.8rem;
-  }
-
   .inventory-words-grid {
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
     gap: 0.5rem;
