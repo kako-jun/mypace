@@ -472,9 +472,8 @@ export function PostForm({
 
   // Short mode: full
   return (
-    <form
+    <div
       className={`post-form ${editingEvent ? 'editing' : ''} ${replyingTo ? 'replying' : ''} ${content.trim() ? 'active' : ''}`}
-      onSubmit={handleSubmit}
     >
       <div className="post-mode-row">
         <Tabs
@@ -495,35 +494,35 @@ export function PostForm({
         </button>
       </div>
 
-      {editingEvent &&
-        (() => {
-          // Check if the event being edited is a reply (has e tag with root/reply marker)
-          const replyTag = editingEvent.tags?.find((t) => t[0] === 'e' && (t[3] === 'reply' || t[3] === 'root'))
-          const replyPubkey = editingEvent.tags?.find((t) => t[0] === 'p')?.[1]
-          if (replyTag && replyPubkey) {
-            return (
-              <>
-                <div className="replying-label">
-                  <span>Reply</span>
-                  <span className="reply-to-name">→ @{getDisplayName(replyToProfile, replyPubkey)}</span>
-                </div>
-                <div className="editing-label">Editing</div>
-              </>
-            )
-          }
-          return <div className="editing-label">Editing</div>
-        })()}
-      {replyingTo && (
-        <div className="replying-label">
-          <span>Reply</span>
-          <span className="reply-to-name">→ @{getDisplayName(replyToProfile, replyingTo.pubkey)}</span>
-        </div>
-      )}
-
       {postMode === 'npc' ? (
         <NPCContent />
       ) : (
-        <>
+        <form onSubmit={handleSubmit}>
+          {editingEvent &&
+            (() => {
+              // Check if the event being edited is a reply (has e tag with root/reply marker)
+              const replyTag = editingEvent.tags?.find((t) => t[0] === 'e' && (t[3] === 'reply' || t[3] === 'root'))
+              const replyPubkey = editingEvent.tags?.find((t) => t[0] === 'p')?.[1]
+              if (replyTag && replyPubkey) {
+                return (
+                  <>
+                    <div className="replying-label">
+                      <span>Reply</span>
+                      <span className="reply-to-name">→ @{getDisplayName(replyToProfile, replyPubkey)}</span>
+                    </div>
+                    <div className="editing-label">Editing</div>
+                  </>
+                )
+              }
+              return <div className="editing-label">Editing</div>
+            })()}
+          {replyingTo && (
+            <div className="replying-label">
+              <span>Reply</span>
+              <span className="reply-to-name">→ @{getDisplayName(replyToProfile, replyingTo.pubkey)}</span>
+            </div>
+          )}
+
           <div className="post-form-row-1">
             <button type="button" className="post-form-avatar-button" onClick={handleAvatarClick}>
               <Avatar src={myAvatarUrl} size="small" className="post-form-avatar" />
@@ -648,8 +647,8 @@ export function PostForm({
               onClose={() => setShowTeaserPicker(false)}
             />
           )}
-        </>
+        </form>
       )}
-    </form>
+    </div>
   )
 }
