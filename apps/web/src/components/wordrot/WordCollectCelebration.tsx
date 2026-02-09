@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import { Icon } from '../ui'
+import { fetchWordDetails } from '../../lib/api'
 import type { WordrotWord } from '../../lib/api'
 import '../../styles/components/word-collect-celebration.css'
 
@@ -86,9 +87,28 @@ interface WordCollectToastProps {
 }
 
 function WordCollectToast({ result, phase }: WordCollectToastProps) {
-  const { word, isNew, isFirstEver } = result
+  const { word: initialWord, isNew, isFirstEver } = result
   const toastRef = useRef<HTMLDivElement>(null)
   const [flyStyle, setFlyStyle] = useState<React.CSSProperties>({})
+  const [word, setWord] = useState(initialWord)
+
+  // Poll for image status when not done
+  useEffect(() => {
+    if (word.image_status === 'done' || word.image_status === 'failed') return
+
+    const poll = setInterval(async () => {
+      try {
+        const details = await fetchWordDetails(word.text)
+        if (details.word && details.word.image_status !== word.image_status) {
+          setWord(details.word)
+        }
+      } catch {
+        // ignore
+      }
+    }, 2000)
+
+    return () => clearInterval(poll)
+  }, [word.text, word.image_status])
 
   // Default placeholder image for words without generated image
   const defaultImage =
@@ -158,7 +178,7 @@ function WordCollectToast({ result, phase }: WordCollectToastProps) {
 
 // Simple inline word card for showing word in lists
 export function WordCard({
-  word,
+  word: initialWord,
   count,
   onClick,
   selected,
@@ -170,6 +190,31 @@ export function WordCard({
   selected?: boolean
   size?: 'small' | 'normal' | 'large'
 }) {
+  const [word, setWord] = useState(initialWord)
+
+  // Sync with prop changes
+  useEffect(() => {
+    setWord(initialWord)
+  }, [initialWord])
+
+  // Poll for image status when pending/generating
+  useEffect(() => {
+    if (word.image_status === 'done' || word.image_status === 'failed') return
+
+    const poll = setInterval(async () => {
+      try {
+        const details = await fetchWordDetails(word.text)
+        if (details.word && details.word.image_status !== word.image_status) {
+          setWord(details.word)
+        }
+      } catch {
+        // ignore
+      }
+    }, 3000)
+
+    return () => clearInterval(poll)
+  }, [word.text, word.image_status])
+
   const defaultImage =
     'data:image/svg+xml,' +
     encodeURIComponent(`

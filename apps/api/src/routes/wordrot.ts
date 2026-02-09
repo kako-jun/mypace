@@ -532,10 +532,10 @@ wordrot.post('/collect', async (c) => {
       return c.json({ error: 'Failed to create word' }, 500)
     }
 
-    // Queue image generation (async, don't wait)
+    // Queue image generation (async, keep worker alive with waitUntil)
     const nsec = c.env.UPLOADER_NSEC
     if (nsec) {
-      generateWordImage(ai, db, nsec, wordRecord.id, word).catch(console.error)
+      c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, wordRecord.id, word))
     } else {
       console.error('[collect] UPLOADER_NSEC not configured')
     }
@@ -765,10 +765,10 @@ wordrot.post('/synthesize', async (c) => {
       resultWord = await db.prepare(`SELECT * FROM wordrot_words WHERE text = ?`).bind(resultText).first<WordrotWord>()
 
       if (resultWord) {
-        // Queue image generation
+        // Queue image generation (async, keep worker alive with waitUntil)
         const nsec = c.env.UPLOADER_NSEC
         if (nsec) {
-          generateWordImage(ai, db, nsec, resultWord.id, resultText).catch(console.error)
+          c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, resultWord.id, resultText))
         }
       }
     } else {
