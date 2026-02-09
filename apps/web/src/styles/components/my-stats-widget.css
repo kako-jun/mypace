@@ -41,7 +41,7 @@
 .stella-colors-row {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: clamp(6px, 1.5vw, 10px);
+  gap: clamp(10px, 2.5vw, 16px);
   justify-content: flex-end;
   row-gap: 2px;
 }
