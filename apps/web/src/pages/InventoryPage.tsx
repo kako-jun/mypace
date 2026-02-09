@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BackButton, Icon, Loading, Tabs } from '../components/ui'
 import { useCelebration } from '../components/supernova'
-import { WordCard, SynthesisPanel } from '../components/wordrot'
+import { WordCard, SynthesisPanel, WordSynthesisCelebration } from '../components/wordrot'
 import { useWordrot, useSynthesis } from '../hooks/wordrot'
+import type { SynthesisResult } from '../hooks/wordrot'
 import { getThemeCardProps, STELLA_COLORS } from '../lib/nostr/events'
 import { getThemeColors } from '../lib/storage'
 import { getCurrentPubkey } from '../lib/nostr/events'
@@ -64,6 +65,10 @@ export function InventoryPage() {
   const synthesis = useSynthesis()
   const { slotA, slotB, slotC, setSlotA, setSlotB, setSlotC } = synthesis
   const [activeSlot, setActiveSlot] = useState<'A' | 'B' | 'C'>('A')
+
+  // Synthesis celebration state
+  const [synthesisCelebration, setSynthesisCelebration] = useState<SynthesisResult | null>(null)
+  const [showSynthesisCelebration, setShowSynthesisCelebration] = useState(false)
 
   // Card tap → place word into active slot, then advance to next empty
   const handleWordSelect = (word: { text: string }) => {
@@ -677,8 +682,27 @@ export function InventoryPage() {
                       activeSlot={activeSlot}
                       onSlotTap={handleSlotTap}
                       onClear={() => setActiveSlot('A')}
-                      onSynthesisComplete={() => {
+                      onSynthesisComplete={(result) => {
+                        // Check if user already had this word before synthesis
+                        const hadBefore = wordrotInventory.some((item) => item.word.id === result.result.id)
+
+                        // Reload inventory
                         loadWordrotInventory()
+
+                        // Show celebration with corrected isNewWord flag
+                        setSynthesisCelebration({
+                          ...result,
+                          isNewWord: !hadBefore, // True only if user didn't have it before
+                        })
+                        setShowSynthesisCelebration(true)
+                      }}
+                      onResultClick={(result) => {
+                        // When clicking result slot, always show as not new (since they have it now)
+                        setSynthesisCelebration({
+                          ...result,
+                          isNewWord: false,
+                        })
+                        setShowSynthesisCelebration(true)
                       }}
                     />
 
@@ -688,16 +712,15 @@ export function InventoryPage() {
                         <h3>
                           <Icon name="FlaskConical" size={20} /> Wordrot ({synthesizedWords.length})
                         </h3>
+                        <p className="inventory-words-hint">Wordrot cannot be used as synthesis materials.</p>
                         <div className="inventory-words-grid">
                           {synthesizedWords.map((item) => (
                             <WordCard
                               key={item.word.id}
                               word={item.word}
                               count={item.count}
-                              onClick={() => handleWordSelect(item.word)}
-                              selected={
-                                item.word.text === slotA || item.word.text === slotB || item.word.text === slotC
-                              }
+                              // No onClick - wordrot cannot be used as synthesis materials
+                              selected={false}
                               onRetryImage={retryWordImage}
                             />
                           ))}
@@ -710,6 +733,17 @@ export function InventoryPage() {
             </>
           )}
         </div>
+      )}
+
+      {/* Synthesis celebration modal */}
+      {synthesisCelebration && (
+        <WordSynthesisCelebration
+          word={synthesisCelebration.result}
+          isNewWord={synthesisCelebration.isNewWord}
+          isNewRecipe={synthesisCelebration.isNewSynthesis}
+          isVisible={showSynthesisCelebration}
+          onClose={() => setShowSynthesisCelebration(false)}
+        />
       )}
     </div>
   )

@@ -4,3 +4,4 @@ export * from './WordrotProvider'
 // Current implementation uses tag-style display below post content
 // export * from './WordHighlight'
 export * from './SynthesisPanel'
+export * from './WordSynthesisCelebration'

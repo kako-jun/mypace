@@ -5,17 +5,17 @@
 
 ## 用語
 
-| 用語 | 英語 | 説明 |
-|------|------|------|
-| ワード (Word) | Word | 投稿から収集した合成前の単語。黄色背景の物体アイコン画像。 |
+| 用語                   | 英語    | 説明                                                                             |
+| ---------------------- | ------- | -------------------------------------------------------------------------------- |
+| ワード (Word)          | Word    | 投稿から収集した合成前の単語。黄色背景の物体アイコン画像。                       |
 | ワードロット (Wordrot) | Wordrot | 合成によって生まれた単語。黄緑背景の可愛い生物画像。FlaskConicalアイコンで表す。 |
 
 ## フェーズ
 
-| フェーズ | 内容 | 状態 |
-|---------|------|------|
-| Phase 1 | 単語収集（タイムラインハイライト、クリック収集、インベントリ） | 実装済み |
-| Phase 2 | 単語合成（A - B + C = ?） | 実装済み |
+| フェーズ | 内容                                                           | 状態     |
+| -------- | -------------------------------------------------------------- | -------- |
+| Phase 1  | 単語収集（タイムラインハイライト、クリック収集、インベントリ） | 実装済み |
+| Phase 2  | 単語合成（A - B + C = ?）                                      | 実装済み |
 
 ## 背景
 
@@ -38,8 +38,9 @@
 
 ### 合成の楽しさ（Phase 2）
 
-- 単語を組み合わせて新しい単語を生み出す
+- 投稿から収集したワード（Word）を組み合わせて新しいワードロット（Wordrot）を生み出す
 - 演算式: A - B + C = ?（Word2Vecスタイルのベクトル演算）
+- **合成素材**:ワード（harvest）のみ使用可能。ワードロット（synthesis）は素材にできない
 - 結果はLLMが意味的に計算
 - 変な結果が出ても「brainrot」として楽しむ
 - 新しい単語を最初に生み出した人は「発見者」
@@ -88,6 +89,7 @@
 ```
 
 **表示方式**:
+
 - **インラインハイライト**: 本文中の単語をクリック可能なボタンに変換
 - **画像セクション**: 投稿下部に収集済み単語のキャラ画像（32x32）を並べて表示
 - 収集済みは緑系、未収集は紫系のスタイル
@@ -143,15 +145,42 @@
 5. レスポンス:
    {
      result: { id, text, image_url, ... },
-     isNewSynthesis: true/false,
-     isNewWord: true/false,
+     isNewSynthesis: true/false,  // 新しいレシピの発見
+     isNewWord: true/false,        // DB上の新規ワード（画像生成対象）
      formula: "マリオ - マリオ + ルイージ = ファイアルイージ"
    }
    ↓
-6. UI更新:
-   - 数式バーの結果スロットに誕生アニメーション付きでカード表示
-   - New Word / New Recipe バッジ表示
-   - インベントリキャッシュを無効化してリロード
+6. クライアント側処理:
+   - ユーザーが既に持っていたワードかチェック（合成前のインベントリと比較）
+   - isNewWord を上書き: !hadBefore（ユーザーにとっての新規取得）
+   ↓
+7. 合成演出ポップアップ表示:
+   - スーパーノヴァ風のフルスクリーン演出
+   - ワードカード（大）を表示
+   - isNewWord = true → 「New Wordrot!」タイトル + 「NEW!」バッジ
+   - isNewRecipe = true → 「New Recipe!」タイトル + 「New Recipe!」バッジ
+   - ポップアップは手動で閉じるまで表示（シェア可能）
+   ↓
+8. 過去レシピ一覧を表示:
+   - APIから最新10件のレシピ（A - B + C）を取得
+   - 最新順（discovered_at DESC）でソート → 今回使った式が常に一番上
+   - 各レシピの右にスピーカーボタン🔊を配置
+   ↓
+9. イタリア語読み上げ機能:
+   - スピーカーボタンクリック → LLMで式をイタリア語変換
+     * A: 所有格（di + 名詞）または関係形容詞（より自然な方）
+     * B: 関係形容詞（Aと異なる形）
+     * C: 名詞形
+   - 例: King - Man + Woman → "Regale Umano Donna"
+   - Web Speech API (lang="it-IT") で読み上げ
+   - イタリア語変換結果はキャッシュされ、2回目以降は即座に再生
+   - 連打対策: 既存の音声を停止してから再生
+   - ローディング状態: 再生中はスピナーアイコン表示、他ボタン無効化
+   - エラー通知: 変換失敗/TTS非対応時は赤い通知を3秒間表示
+   ↓
+10. UI更新:
+   - インベントリをリロード
+   - 数式バーの結果スロット（=の右）をクリックすれば再度ポップアップ表示可能
 ```
 
 ## DBスキーマ
@@ -215,7 +244,7 @@ CREATE TABLE IF NOT EXISTS wordrot_syntheses (
   word_c_id INTEGER NOT NULL,        -- Word to add
   result_word_id INTEGER NOT NULL,   -- Result word
   discovered_by TEXT,                -- 最初にこの組み合わせを発見したpubkey
-  discovered_at INTEGER NOT NULL,
+  discovered_at INTEGER NOT NULL,    -- 最後に使用された日時（毎回更新）
   use_count INTEGER DEFAULT 1,       -- 同じ組み合わせが使われた回数
   FOREIGN KEY (word_a_id) REFERENCES wordrot_words(id),
   FOREIGN KEY (word_b_id) REFERENCES wordrot_words(id),
@@ -228,7 +257,9 @@ CREATE INDEX idx_wordrot_syntheses_result ON wordrot_syntheses(result_word_id);
 ```
 
 - `UNIQUE(word_a_id, word_b_id, word_c_id)`: 同じ組み合わせの重複防止・キャッシュキー
-- キャッシュヒット時は `use_count` をインクリメントし、LLM呼び出しをスキップ
+- キャッシュヒット時は `use_count` をインクリメントし、`discovered_at` を現在時刻に更新
+  - これにより、レシピ一覧で「今回使った式が常に一番上」に表示される
+- LLM呼び出しをスキップしてパフォーマンス向上
 
 ### wordrot_image_queue（画像生成キュー）
 
@@ -376,13 +407,84 @@ POST /api/wordrot/synthesize
 
 **エラーケース**:
 
-| ステータス | エラー | 原因 |
-|-----------|--------|------|
-| 400 | `Invalid pubkey` | pubkeyが64文字hex以外 |
-| 400 | `All three words are required` | 3語が揃っていない |
-| 400 | `One or more words not found in your collection` | 単語がDBに存在しない |
-| 400 | `You do not own all three words` | ユーザーのインベントリにない |
-| 200 | `Synthesis failed - no valid result` | LLMが`???`を返した / 結果が空・30文字超 |
+| ステータス | エラー                                           | 原因                                    |
+| ---------- | ------------------------------------------------ | --------------------------------------- |
+| 400        | `Invalid pubkey`                                 | pubkeyが64文字hex以外                   |
+| 400        | `All three words are required`                   | 3語が揃っていない                       |
+| 400        | `One or more words not found in your collection` | 単語がDBに存在しない                    |
+| 400        | `You do not own all three words`                 | ユーザーのインベントリにない            |
+| 200        | `Synthesis failed - no valid result`             | LLMが`???`を返した / 結果が空・30文字超 |
+
+### レシピ一覧取得
+
+特定のWordrotになった合成レシピを取得する（最新10件）。
+
+```
+GET /api/wordrot/recipes/:text
+```
+
+パラメータ:
+
+- `text`: Wordrotのテキスト（URLエンコード必須）
+
+レスポンス:
+
+```json
+{
+  "recipes": [
+    {
+      "word_a": "King",
+      "word_b": "Man",
+      "word_c": "Woman",
+      "discovered_at": 1234567890
+    },
+    {
+      "word_a": "Emperor",
+      "word_b": "Male",
+      "word_c": "Female",
+      "discovered_at": 1234567880
+    }
+  ]
+}
+```
+
+- 最新順（`discovered_at DESC`）でソート
+- 最大10件まで返す
+- 今回使った式が常に一番上に表示される
+
+### イタリア語変換
+
+合成式（A, B, C）をイタリア語のフレーズに変換する。読み上げ機能で使用。
+
+```
+POST /api/wordrot/italian
+```
+
+リクエスト:
+
+```json
+{
+  "wordA": "King",
+  "wordB": "Man",
+  "wordC": "Woman"
+}
+```
+
+レスポンス:
+
+```json
+{
+  "a": "Regale",
+  "b": "Umano",
+  "c": "Donna"
+}
+```
+
+- **A**: 所有格（di + 名詞）または関係形容詞（より自然な方）
+- **B**: 関係形容詞（Aと異なる形）
+- **C**: 名詞形
+- LLMが自動判定し、最も自然なイタリア語に変換
+- 読み上げ時は "Regale Umano Donna" のように連結
 
 ### インベントリ取得
 
@@ -408,18 +510,21 @@ GET /api/wordrot/inventory/:pubkey
 投稿本文内の収集可能な単語をインラインでハイライト表示する。
 
 **未収集の単語**:
+
 - 背景: 紫系グラデーション（rgba(139, 92, 246, 0.15)）
 - 下線: 紫系（text-decoration-color）
 - ホバー時: 背景色が濃くなる
 - カーソル: pointer
 
 **収集済みの単語**:
+
 - 背景: 緑系グラデーション（rgba(34, 197, 94, 0.15)）
 - 下線: 緑系
 - クリック可能（再収集でカウント増加）
 - カーソル: pointer
 
 **ハイライト対象外**:
+
 - リンク（`<a>`タグ内）
 - コードブロック・インラインコード（`<code>`, `<pre>`タグ内）
 - 既存のボタン（ハッシュタグ、メンション等）
@@ -495,30 +600,49 @@ GET /api/wordrot/inventory/:pubkey
 └─────────────────────────────────────────────────────┘
 │                                                     │
 │ [FlaskConical] Wordrot (4) ← 合成で生まれたもの    │
+│ Wordrot cannot be used as synthesis materials.     │
 │                                                     │
 │ [img] [img] [img] [img]                            │
-│ ファイア  フロスト  ...   ← タップで素材にも使える  │
+│ ファイア  フロスト  ...   ← クリック不可（閲覧のみ） │
 │ ルイージ  ドラゴン                                  │
 │                                                     │
 └─────────────────────────────────────────────────────┘
 ```
 
 **合成UIの操作フロー**:
+
 1. スロットAが初期選択状態（紫ハイライト枠）
-2. ワードカードをタップ → 選択中スロットにワードが入る
+2. **ワード（Wordsセクション）**のカードをタップ → 選択中スロットにワードが入る
 3. 入ったら次の空きスロットが自動的に選択状態になる
 4. スロットを直接タップ → そのスロットを選択状態に変更
 5. 既に入っているスロットをタップ → ワードを解除し、そのスロットが選択状態に
 6. 同じワードを複数スロットに入れることはできない（重複防止ガード）
-7. 3つ揃うと「Synthesize!」ボタンが紫にハイライトして有効化
-8. 合成実行 → `=` の右の `?` が結果カードに変わる（誕生アニメーション）
-9. New Word / New Recipe バッジ表示
-10. 合成後は「New Synthesis」ボタン1つに変わり、押すとスロット全クリア＋結果クリア
+7. **ワードロット（Wordrotセクション）**のカードはクリック不可（合成素材にできない）
+8. 3つ揃うと「Synthesize!」ボタンが紫にハイライトして有効化
+9. 合成実行 → スーパーノヴァ風のフルスクリーン演出ポップアップが表示
+10. ポップアップには以下を表示:
+
+- ワードカード（大サイズ）
+- レシピ式（A - B + C = Result）
+- バッジ（NEW! または New Recipe!）
+- タイトル（New Wordrot! / New Recipe! / Synthesis Complete!）
+
+11. ポップアップは手動で閉じるまで表示（タップ or Escキー）→ シェア可能
+12. ポップアップを閉じると数式バーの結果スロット（=の右）にカード表示
+13. 結果スロットをクリックすればいつでもポップアップを再表示可能
+14. 合成後は「New Synthesis」ボタン1つに変わり、押すとスロット全クリア＋結果クリア
+
+**「NEW!」の判定ロジック**:
+
+- **ユーザー視点**: そのユーザーが初めて取得したワードロットかどうか
+- クライアント側で判定: 合成前のインベントリに存在しなければ「NEW!」
+- APIの`isNewWord`は画像生成判定用（DB上の新規ワード）
+- 全ユーザーでの初回かどうかは考慮しない（すべてが新鮮に見える方がシェア意欲向上）
 
 **表示の分離**:
-- Words（ワード）セクション: 投稿から収集した素材。合成バーの上に表示。FlaskConicalアイコンなし。
-- Wordrot（ワードロット）セクション: 合成で生まれた単語。合成バーの下に表示。FlaskConicalアイコン付き。
-- どちらのセクションのカードも合成素材として使用可能。
+
+- Words（ワード）セクション: 投稿から収集した素材。合成バーの上に表示。FlaskConicalアイコンなし。**合成素材として使用可能**。
+- Wordrot（ワードロット）セクション: 合成で生まれた単語。合成バーの下に表示。FlaskConicalアイコン付き。**合成素材としては使用不可**（閲覧のみ）。
 
 ### ワードカード（WordCard）
 
@@ -533,14 +657,81 @@ GET /api/wordrot/inventory/:pubkey
 ```
 
 **状態による表示**:
+
 - 通常: 透明枠、白背景
 - ホバー: 影が付く
 - 選択中（合成スロットにセット済み）: 紫枠、薄紫背景
 
 **テキスト表示**:
+
 - テキスト幅は画像幅に合わせて制約（normal: 64px、small: 48px、large: 96px）
 - 溢れる場合は `text-overflow: ellipsis` で省略
 - `title` 属性によりホバーでフルネーム表示
+
+### 合成演出ポップアップ（WordSynthesisCelebration）
+
+合成成功時に表示されるフルスクリーン演出モーダル。スーパーノヴァ取得時と同様のデザイン。
+
+```
+┌─────────────────────────────────────────────────┐
+│                                                 │
+│     ✨✨✨ (20個のスパークルパーティクル)        │
+│                                                 │
+│           [FlaskConical]                        │
+│         (グローエフェクト付き)                   │
+│                                                 │
+│         New Wordrot!                            │
+│         (または New Recipe! / Synthesis Complete!)│
+│                                                 │
+│     ┌────────────────┐                          │
+│     │                │                          │
+│     │  [ワード画像]  │  (大サイズカード)         │
+│     │                │                          │
+│     │   単語テキスト │                          │
+│     └────────────────┘                          │
+│                                                 │
+│     マリオ - マリオ + ルイージ = ファイアルイージ│
+│     (レシピ式)                                  │
+│                                                 │
+│     ┌──────────┐                                │
+│     │ ✨ NEW!  │  (isNewWord = true の場合)    │
+│     └──────────┘                                │
+│     または                                      │
+│     ┌────────────────┐                          │
+│     │ ⭐ New Recipe! │  (isNewRecipe = true)   │
+│     └────────────────┘                          │
+│                                                 │
+│     Tap anywhere to continue                    │
+│                                                 │
+└─────────────────────────────────────────────────┘
+```
+
+**表示タイミング**:
+
+- 合成実行直後（自動表示）
+- 結果スロット（=の右）クリック時（手動表示）
+
+**閉じる方法**:
+
+- 背景タップ
+- Escキー
+- 自動では閉じない（シェアのため）
+
+**バッジとタイトルの組み合わせ**:
+
+| 条件               | タイトル            | バッジ         | 説明                                 |
+| ------------------ | ------------------- | -------------- | ------------------------------------ |
+| isNewWord = true   | New Wordrot!        | ✨ NEW!        | ユーザーが初めて取得したワードロット |
+| isNewRecipe = true | New Recipe!         | ⭐ New Recipe! | 新しいレシピを発見（既存ワードでも） |
+| それ以外           | Synthesis Complete! | なし           | 既知のレシピで既存ワードを再取得     |
+
+**演出の詳細**:
+
+- 背景: 半透明黒（opacity: 0.85）
+- スパークルパーティクル: ランダム配置、フェードアニメーション
+- コンテンツ: scale(0.8) → scale(1) のバウンスアニメーション
+- アイコン: パルスグロー（2秒周期）
+- z-index: 10000（最前面）
 
 ## アクセシビリティ
 
@@ -549,10 +740,12 @@ GET /api/wordrot/inventory/:pubkey
 色覚異常のユーザーでも区別できるよう、色と下線スタイルで区別する。
 
 **未収集 vs 収集済み**:
+
 - 未収集: 紫系グラデーション背景 + 紫下線
 - 収集済み: 緑系グラデーション背景 + 緑下線
 
 **title属性**:
+
 - 未収集: `Collect: {単語}`
 - 収集済み: `{単語} (collected)`
 
@@ -574,20 +767,21 @@ Workers AI (LLaMA 3.1 8B) を使用。
 
 LLMに渡す前に、ハイライト対象外の要素を除去する:
 
-```typescript
+````typescript
 // 除去対象（抽出もハイライトもしない）
 - コードブロック (```...```)
 - インラインコード (`...`)
 - URL (https://...)
 - nostr:メンション (nostr:npub..., nostr:note...)
 - ハッシュタグ (#tag)
-```
+````
 
 これにより、URLやコード内の文字列から誤って単語を抽出することを防ぐ。
 
 #### 最小マッチ戦略
 
 複合語は最小の意味単位に分割する:
+
 - 「マリオカート」→ ["マリオ", "カート"]
 - 「ファイアマリオ」→ ["ファイア", "マリオ"]
 - 「スーパーキノコ」→ ["スーパー", "キノコ"]
@@ -647,10 +841,12 @@ A－B＋C は「AからBの意味成分を引き、Cの意味成分を足す」�
 ```
 
 **パラメータ**:
+
 - `max_tokens: 100`（結果の単語のみなので短い）
 - `/no_think` フラグでQwen3のreasoning出力を抑制
 
 **結果クリーニング**:
+
 - `<think>...</think>` タグを除去
 - `結果：`、`答え：`、`出力：`、`回答：` 等の接頭辞を除去
 - 各種引用符（`「」『』""''""`）を除去
@@ -716,18 +912,19 @@ No text, no letters, no words, no border, no frame, no grid, no pattern, no mult
 
 **背景色による階層設計**:
 
-| 種別 | 背景色 | 絵柄 | 意図 |
-|------|--------|------|------|
-| ステラ | 黄色 | - | 基盤通貨 |
-| ワード（Word） | 黄色（#F1C40F） | 物体アイコン | 収集素材 |
-| ワードロット（Wordrot） | 黄緑（#8BC34A） | 可愛い生物 | 合成結果 |
-| 将来の再合成 | 緑系統（予定） | TBD | さらなる合成の種 |
+| 種別                    | 背景色          | 絵柄         | 意図             |
+| ----------------------- | --------------- | ------------ | ---------------- |
+| ステラ                  | 黄色            | -            | 基盤通貨         |
+| ワード（Word）          | 黄色（#F1C40F） | 物体アイコン | 収集素材         |
+| ワードロット（Wordrot） | 黄緑（#8BC34A） | 可愛い生物   | 合成結果         |
+| 将来の再合成            | 緑系統（予定）  | TBD          | さらなる合成の種 |
 
 #### アップロード
 
 [NIP-96](https://github.com/nostr-protocol/nips/blob/master/96.md)準拠でnostr.buildにアップロード。
 
 **認証**:
+
 - NPC Uploaderアカウントの秘密鍵（環境変数 `UPLOADER_NSEC`）を使用
 - NIP-98でAuthorization headerを生成
 - ユーザーのnsecは使用しない（サーバーサイドで処理するため）
@@ -739,6 +936,7 @@ wrangler secret put UPLOADER_NSEC
 ```
 
 **削除用情報の保持**:
+
 - アップロード成功時、`image_hash`（SHA-256）を`wordrot_words`テーブルに保存
 - 失敗時やリトライ時に古い画像を削除可能
 
@@ -748,6 +946,7 @@ image_hash TEXT,  -- SHA-256 hash for NIP-96 delete
 ```
 
 **エラーハンドリング**:
+
 1. 生成失敗 → `image_status = 'failed'`、リトライキューへ
 2. アップロード失敗 → 生成済み画像は破棄、リトライキューへ
 3. 成功 → `image_url`と`image_hash`を保存、`image_status = 'done'`
@@ -757,32 +956,38 @@ image_hash TEXT,  -- SHA-256 hash for NIP-96 delete
 ### レート制限
 
 **ユーザー → Worker API**:
+
 - Cloudflare Rate Limiting で設定
 - 目安: 1分100リクエスト/IP
 - 超過時は `429 Too Many Requests`
 
 **Worker → Workers AI（LLM/画像生成）**:
+
 - 制限はCloudflare側で管理（自前カウント不要）
 - エラー時は失敗として記録、Cronでリトライ
 
 ### エラーハンドリング
 
 **バッチAPI失敗時**:
+
 - キャッシュ済みの結果のみ返す
 - 未抽出の投稿はハイライトなし
 - 静かに失敗（トースト通知なし）
 
 **収集API失敗時**:
+
 - トースト通知でエラー表示
 - ユーザーは再度クリックで再試行可能
 
 **合成API失敗時**:
+
 - バリデーションエラー（400）→ 数式バー内にエラーメッセージ表示
 - LLM演算失敗（200, `error` のみ）→ 「Synthesis failed」表示
 - ネットワークエラー → 「Network error」表示
 - いずれの場合もスロットは保持され、再試行可能
 
 **Workers AI エラー時**:
+
 1. `image_status = 'failed'` に更新
 2. Cronジョブが定期的にリトライ
 3. 成功するまで繰り返す
@@ -790,6 +995,7 @@ image_hash TEXT,  -- SHA-256 hash for NIP-96 delete
 ### 画像生成キュー処理
 
 Cronジョブ（1分ごと）:
+
 1. `wordrot_image_queue` から `status = 'pending'` を取得
 2. 1回の実行で最大10件処理
 3. Workers AIでエラー → `attempts++`、次回リトライ
@@ -797,15 +1003,16 @@ Cronジョブ（1分ごと）:
 
 ### エッジケース
 
-| ケース | 対応 |
-|--------|------|
-| 単語0件の投稿 | 空配列を返す（正常） |
-| 長い単語（20文字超） | 20文字で切り捨て |
-| 不正文字（制御文字等） | サニタイズして除去 |
+| ケース                 | 対応                 |
+| ---------------------- | -------------------- |
+| 単語0件の投稿          | 空配列を返す（正常） |
+| 長い単語（20文字超）   | 20文字で切り捨て     |
+| 不正文字（制御文字等） | サニタイズして除去   |
 
 ### プレースホルダー表示
 
 画像生成中（`image_status != 'done'`）の単語:
+
 - 単語の頭文字を大きく表示（例: 「マ」）
 - 背景色はパステル（ランダムまたはハッシュベース）
 - 画像取得後に差し替え
@@ -813,6 +1020,7 @@ Cronジョブ（1分ごと）:
 ### クライアント側キャッシュ
 
 セッション中のみメモリキャッシュ（リロードでクリア）:
+
 - `eventId → 単語配列` のマップ
 - `単語テキスト → 画像URL` のマップ
 - `collected` セット（収集済み単語）
@@ -842,7 +1050,8 @@ apps/web/src/hooks/wordrot/
 apps/web/src/components/wordrot/
   ├── index.ts
   ├── WordrotProvider.tsx                # Contextプロバイダー
-  ├── WordCollectCelebration.tsx         # 収集演出モーダル
+  ├── WordCollectCelebration.tsx         # 収集演出モーダル（トースト風）
+  ├── WordSynthesisCelebration.tsx       # 合成演出ポップアップ（フルスクリーン）
   └── WordHighlight.tsx                  # (未使用: インラインは parser で処理)
 
 apps/web/src/lib/parser/
@@ -851,16 +1060,26 @@ apps/web/src/lib/parser/
 
 apps/web/src/styles/components/
   ├── word-highlight.css                 # ハイライト + 画像セクション
-  └── word-collect-celebration.css       # 収集演出
+  ├── word-collect-celebration.css       # 収集演出（トースト風）
+  └── word-synthesis-celebration.css     # 合成演出（フルスクリーン）
 ```
 
 ### Phase 2（合成機能）
 
 ```
-apps/web/src/hooks/wordrot/useSynthesis.ts       # 合成状態管理hook
-apps/web/src/components/wordrot/SynthesisPanel.tsx # 数式バーUI（下部固定）
-apps/web/src/styles/components/synthesis-panel.css  # 数式バースタイル
-apps/web/src/lib/api/api.ts                        # synthesizeWords() クライアント関数
+apps/web/src/hooks/wordrot/useSynthesis.ts          # 合成状態管理hook
+apps/web/src/components/wordrot/SynthesisPanel.tsx  # 数式バーUI（下部固定）
+apps/web/src/components/wordrot/WordSynthesisCelebration.tsx # 合成演出ポップアップ
+apps/web/src/styles/components/synthesis-panel.css # 数式バースタイル
+apps/web/src/styles/components/word-synthesis-celebration.css # 合成演出スタイル
+apps/web/src/lib/api/api.ts                         # synthesizeWords() クライアント関数
 ```
+
+**主要コンポーネント**:
+
+- `WordCollectCelebration`: 投稿からワード収集時のトースト演出（小さめ、2秒表示後INVに飛ぶ）
+- `WordSynthesisCelebration`: 合成成功時のフルスクリーン演出（手動で閉じるまで表示）
+- `SynthesisPanel`: 数式バー（A - B + C = ? の入力UI）
+- `WordCard`: ワード/ワードロットのカード表示（3サイズ: small/normal/large）
 
 [← 拡張仕様一覧に戻る](./index.md)

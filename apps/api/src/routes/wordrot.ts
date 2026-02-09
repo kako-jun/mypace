@@ -143,6 +143,40 @@ Rules:
 
 Word: `
 
+const ITALIAN_CONVERSION_PROMPT = `You are an expert translator for creating Italian phrases from word formulas.
+
+Given three words (A, B, C) in a synthesis formula "A - B + C", convert them to Italian following these rules:
+
+1. A (first word): Convert to POSSESSIVE or ADJECTIVAL form
+   - Use possessive (di + noun) if it sounds more natural (e.g., "King" → "Di Re")
+   - Use relational adjective if more natural (e.g., "King" → "Regale")
+   - Choose whichever sounds better in Italian
+
+2. B (second word): Convert to ADJECTIVAL form (different from A's form)
+   - Use relational adjective (e.g., "Man" → "Umano", "Male" → "Maschile")
+   - Should be a different grammatical form than A
+
+3. C (third word): Convert to NOUN form
+   - Keep as singular noun (e.g., "Woman" → "Donna", "Queen" → "Regina")
+
+Special cases:
+- Proper nouns (Mario, Pikachu): Keep as-is OR translate if commonly known
+- Katakana loanwords (コーヒー): Translate to Italian equivalent (Caffè)
+- English words: Translate to Italian
+- Abstract concepts: Use poetic/metaphorical Italian
+
+Output format: Return ONLY three words separated by spaces: "A_italian B_italian C_italian"
+No explanation, no quotes, no punctuation except hyphens if needed for compound words.
+
+Example:
+Input: King, Man, Woman
+Output: Regale Umano Donna
+
+Input: Emperor, Male, Female
+Output: Imperiale Maschile Femmina
+
+Now translate: `
+
 // Helper: Validate that a word is strictly katakana-only or English-alphabet-only
 // This is a hard filter applied AFTER LLM extraction to guarantee correctness
 const ENGLISH_STOP_WORDS = new Set([
@@ -469,6 +503,42 @@ async function describeWordForImage(ai: Bindings['AI'], word: string, isSynthesi
   } catch (e) {
     console.error(`[describeWordForImage] Error for "${word}":`, e)
     return word
+  }
+}
+
+// Helper: Convert synthesis formula to Italian TTS phrase
+async function convertToItalian(
+  ai: Bindings['AI'],
+  wordA: string,
+  wordB: string,
+  wordC: string
+): Promise<{ a: string; b: string; c: string } | null> {
+  try {
+    const prompt = ITALIAN_CONVERSION_PROMPT + `${wordA}, ${wordB}, ${wordC}`
+    const response = await (ai as any).run('@cf/qwen/qwen3-30b-a3b-fp8', {
+      messages: [{ role: 'user', content: prompt + '\n/no_think' }],
+      max_tokens: 50,
+    })
+
+    const rawText = extractLLMText(response)
+    if (!rawText) return null
+
+    const cleaned = stripThinkTags(rawText)
+      .replace(/^["']|["']$/g, '')
+      .trim()
+
+    // Parse "Word1 Word2 Word3" format
+    const parts = cleaned.split(/\s+/)
+    if (parts.length !== 3) {
+      console.error(`[convertToItalian] Invalid format: ${cleaned}`)
+      return null
+    }
+
+    console.log(`[convertToItalian] ${wordA}, ${wordB}, ${wordC} → ${parts[0]}, ${parts[1]}, ${parts[2]}`)
+    return { a: parts[0], b: parts[1], c: parts[2] }
+  } catch (e) {
+    console.error(`[convertToItalian] Error:`, e)
+    return null
   }
 }
 
@@ -958,12 +1028,12 @@ wordrot.post('/synthesize', async (c) => {
   let isNewWord = false
 
   if (existingSynthesis) {
-    // Use cached result
+    // Use cached result - update use_count and discovered_at to make it appear as the latest recipe
     await db
       .prepare(
-        `UPDATE wordrot_syntheses SET use_count = use_count + 1 WHERE word_a_id = ? AND word_b_id = ? AND word_c_id = ?`
+        `UPDATE wordrot_syntheses SET use_count = use_count + 1, discovered_at = ? WHERE word_a_id = ? AND word_b_id = ? AND word_c_id = ?`
       )
-      .bind(wordARecord.id, wordBRecord.id, wordCRecord.id)
+      .bind(now, wordARecord.id, wordBRecord.id, wordCRecord.id)
       .run()
 
     resultWord = await db
@@ -1164,6 +1234,66 @@ wordrot.get('/word/:text', async (c) => {
     synthesesAsResult: asResult.results || [],
     synthesesAsInput: asInput.results || [],
   })
+})
+
+// GET /api/wordrot/recipes/:text - Get recent synthesis recipes for a word (latest 10)
+wordrot.get('/recipes/:text', async (c) => {
+  const text = decodeURIComponent(c.req.param('text'))
+
+  if (!text) {
+    return c.json({ error: 'Word text is required' }, 400)
+  }
+
+  const db = c.env.DB
+
+  const word = await db.prepare(`SELECT id FROM wordrot_words WHERE text = ?`).bind(text).first<{ id: number }>()
+
+  if (!word) {
+    return c.json({ error: 'Word not found' }, 404)
+  }
+
+  // Get recent syntheses where this word is the result (latest 10, newest first)
+  const recipes = await db
+    .prepare(
+      `SELECT wa.text as word_a, wb.text as word_b, wc.text as word_c, s.discovered_at
+       FROM wordrot_syntheses s
+       JOIN wordrot_words wa ON s.word_a_id = wa.id
+       JOIN wordrot_words wb ON s.word_b_id = wb.id
+       JOIN wordrot_words wc ON s.word_c_id = wc.id
+       WHERE s.result_word_id = ?
+       ORDER BY s.discovered_at DESC
+       LIMIT 10`
+    )
+    .bind(word.id)
+    .all<{ word_a: string; word_b: string; word_c: string; discovered_at: number }>()
+
+  return c.json({
+    recipes: recipes.results || [],
+  })
+})
+
+// POST /api/wordrot/italian - Convert synthesis formula to Italian
+wordrot.post('/italian', async (c) => {
+  const body = await c.req.json<{
+    wordA: string
+    wordB: string
+    wordC: string
+  }>()
+
+  const { wordA, wordB, wordC } = body
+
+  if (!wordA || !wordB || !wordC) {
+    return c.json({ error: 'All three words are required' }, 400)
+  }
+
+  const ai = c.env.AI
+  const result = await convertToItalian(ai, wordA, wordB, wordC)
+
+  if (!result) {
+    return c.json({ error: 'Italian conversion failed' }, 500)
+  }
+
+  return c.json(result)
 })
 
 // GET /api/wordrot/leaderboard - Get discovery leaderboard

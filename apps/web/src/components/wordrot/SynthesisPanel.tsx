@@ -12,6 +12,7 @@ interface SynthesisPanelProps {
   onSlotTap: (slot: 'A' | 'B' | 'C') => void
   onClear?: () => void
   onSynthesisComplete?: (result: SynthesisResult) => void
+  onResultClick?: (result: SynthesisResult) => void
 }
 
 export function SynthesisPanel({
@@ -21,6 +22,7 @@ export function SynthesisPanel({
   onSlotTap,
   onClear,
   onSynthesisComplete,
+  onResultClick,
 }: SynthesisPanelProps) {
   const { slotA, slotB, slotC, clearSlots, synthesize, isSynthesizing, error, lastResult, clearResult, canSynthesize } =
     synthesis
@@ -81,30 +83,22 @@ export function SynthesisPanel({
         <span className="synthesis-operator">=</span>
 
         {/* Result slot */}
-        <div className={`synthesis-slot result ${lastResult ? 'filled born' : ''}`}>
+        <button
+          className={`synthesis-slot result ${lastResult ? 'filled born clickable' : ''}`}
+          onClick={() => lastResult && onResultClick?.(lastResult)}
+          disabled={!lastResult}
+        >
           {lastResult ? (
             <WordCard word={lastResult.result} size="small" onRetryImage={retryWordImage} />
           ) : (
             <span className="synthesis-slot-placeholder">?</span>
           )}
-        </div>
+        </button>
       </div>
 
-      {/* Result badges */}
+      {/* Result formula */}
       {lastResult && (
         <div className="synthesis-result-details">
-          {lastResult.isNewWord && (
-            <span className="synthesis-badge new-word">
-              <Icon name="Sparkles" size={14} />
-              New Wordrot!
-            </span>
-          )}
-          {lastResult.isNewSynthesis && !lastResult.isNewWord && (
-            <span className="synthesis-badge new-synthesis">
-              <Icon name="Star" size={14} />
-              New Recipe!
-            </span>
-          )}
           <span className="synthesis-formula-text">{lastResult.formula}</span>
         </div>
       )}

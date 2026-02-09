@@ -762,6 +762,38 @@ export async function retryWordImage(wordId: number): Promise<boolean> {
   }
 }
 
+// Get recent synthesis recipes for a word (latest 10)
+export async function fetchWordrotRecipes(text: string): Promise<{
+  recipes: Array<{ word_a: string; word_b: string; word_c: string; discovered_at: number }>
+}> {
+  try {
+    const res = await fetch(`${API_BASE}/api/wordrot/recipes/${encodeURIComponent(text)}`)
+    if (!res.ok) return { recipes: [] }
+    return res.json()
+  } catch {
+    return { recipes: [] }
+  }
+}
+
+// Convert synthesis formula to Italian
+export async function convertToItalian(
+  wordA: string,
+  wordB: string,
+  wordC: string
+): Promise<{ a: string; b: string; c: string } | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/wordrot/italian`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wordA, wordB, wordC }),
+    })
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
 // Get leaderboard
 export async function fetchWordrotLeaderboard(): Promise<{
   topDiscoverers: Array<{ pubkey: string; count: number }>
