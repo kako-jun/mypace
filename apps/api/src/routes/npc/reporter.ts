@@ -324,4 +324,44 @@ reporter.post('/', async (c) => {
   }
 })
 
+// DELETE /api/npc/reporter - Delete a reporter quote post by event ID
+reporter.delete('/', async (c) => {
+  const body = await c.req.json<{ eventId: string }>()
+  const { eventId } = body
+
+  if (!eventId) {
+    return c.json({ error: 'eventId is required' }, 400)
+  }
+
+  const nsec = c.env.REPORTER_NSEC
+  if (!nsec) {
+    return c.json({ error: 'reporter_not_configured' }, 500)
+  }
+
+  const { data: sk } = nip19.decode(nsec)
+  const now = getCurrentTimestamp()
+
+  try {
+    const deleteEvent = finalizeEvent(
+      {
+        kind: 5,
+        created_at: now,
+        tags: [['e', eventId]],
+        content: 'Deleted by reporter',
+      },
+      sk as Uint8Array
+    )
+
+    const published = await publishToRelays(deleteEvent)
+    if (!published) {
+      return c.json({ error: 'publish_failed' }, 500)
+    }
+
+    return c.json({ deleted: true, deleteEventId: deleteEvent.id })
+  } catch (e) {
+    console.error('Reporter DELETE error:', e)
+    return c.json({ error: 'internal_error', message: String(e) }, 500)
+  }
+})
+
 export default reporter
