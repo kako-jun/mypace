@@ -164,14 +164,6 @@ function WordCollectToast({ result, phase }: WordCollectToastProps) {
         <span className="word-toast-text">{word.text}</span>
         <span className="word-toast-label">{isFirstEver ? 'First Discovery!' : isNew ? 'NEW' : 'Collected'}</span>
       </div>
-
-      {/* Badge */}
-      {isFirstEver && (
-        <div className="word-toast-badge first-ever">
-          <Icon name="Sparkles" size={12} />
-        </div>
-      )}
-      {isNew && !isFirstEver && <div className="word-toast-badge new-word">NEW</div>}
     </div>
   )
 }

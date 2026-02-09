@@ -56,6 +56,12 @@ const EXTRACT_NOUNS_PROMPT = `あなたはテキストから収集対象の単�
 - 「スーパーマリオ」→ ["スーパー", "マリオ"]
 - 「ドリフトキング」→ ["ドリフト", "キング"]
 
+【セルフチェック - 出力前に必ず確認】
+抽出した各単語について、出力前に以下を自問してください：
+- この単語は名詞か？（冠詞・前置詞・接続詞・代名詞・動詞・形容詞・副詞ではないか？）
+- 英語の場合: the, in, on, at, to, of, is, it, be, are, was, for, with, from, this, that, your, my, his, her などの機能語ではないか？
+名詞でないものは除外してください。
+
 【出力形式】
 JSON配列のみを出力してください。説明は不要です。
 対象となる単語がない場合は [] を返してください。
@@ -99,6 +105,110 @@ no text or labels`
 
 // Helper: Validate that a word is strictly katakana-only or English-alphabet-only
 // This is a hard filter applied AFTER LLM extraction to guarantee correctness
+const ENGLISH_STOP_WORDS = new Set([
+  'a',
+  'an',
+  'the',
+  'in',
+  'on',
+  'at',
+  'to',
+  'of',
+  'is',
+  'it',
+  'be',
+  'am',
+  'are',
+  'was',
+  'were',
+  'do',
+  'does',
+  'did',
+  'has',
+  'have',
+  'had',
+  'he',
+  'she',
+  'we',
+  'me',
+  'my',
+  'or',
+  'and',
+  'but',
+  'if',
+  'so',
+  'no',
+  'not',
+  'nor',
+  'for',
+  'by',
+  'as',
+  'up',
+  'out',
+  'off',
+  'all',
+  'its',
+  'his',
+  'her',
+  'our',
+  'your',
+  'their',
+  'this',
+  'that',
+  'with',
+  'from',
+  'into',
+  'about',
+  'than',
+  'then',
+  'them',
+  'they',
+  'been',
+  'being',
+  'which',
+  'what',
+  'when',
+  'where',
+  'who',
+  'whom',
+  'how',
+  'why',
+  'will',
+  'would',
+  'could',
+  'should',
+  'shall',
+  'may',
+  'might',
+  'must',
+  'can',
+  'just',
+  'also',
+  'very',
+  'here',
+  'there',
+  'each',
+  'every',
+  'both',
+  'some',
+  'any',
+  'such',
+  'only',
+  'own',
+  'same',
+  'other',
+  'more',
+  'most',
+  'too',
+  'now',
+  'over',
+  'under',
+  'after',
+  'before',
+  'between',
+  'through',
+])
+
 function isValidWordrotWord(word: string): boolean {
   // Must be at least 2 characters
   if (word.length < 2) return false
@@ -107,9 +217,9 @@ function isValidWordrotWord(word: string): boolean {
   const isKatakana = /^[\u30A1-\u30F6\u30FC\u30FD\u30FE]+$/.test(word)
   if (isKatakana) return true
 
-  // Pattern 2: Pure English letters (at least 2 chars, only alphabetic)
+  // Pattern 2: Pure English letters (at least 2 chars, only alphabetic, not a stop word)
   const isEnglish = /^[a-zA-Z]{2,}$/.test(word)
-  if (isEnglish) return true
+  if (isEnglish) return !ENGLISH_STOP_WORDS.has(word.toLowerCase())
 
   return false
 }
@@ -387,7 +497,8 @@ wordrot.post('/extract', async (c) => {
     .first<{ words_json: string }>()
 
   if (cached) {
-    return c.json({ words: JSON.parse(cached.words_json), cached: true })
+    const words = (JSON.parse(cached.words_json) as string[]).filter(isValidWordrotWord)
+    return c.json({ words, cached: true })
   }
 
   // Extract nouns using AI
@@ -432,7 +543,7 @@ wordrot.post('/extract-batch', async (c) => {
 
   const cachedMap = new Map<string, string[]>()
   for (const row of cachedResults.results || []) {
-    cachedMap.set(row.event_id, JSON.parse(row.words_json))
+    cachedMap.set(row.event_id, (JSON.parse(row.words_json) as string[]).filter(isValidWordrotWord))
   }
 
   // Find posts that need extraction

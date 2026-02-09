@@ -75,10 +75,17 @@ export function WordHighlight({ content, words, onWordClick, collectedWords }: W
         }
 
         const isCollected = collectedWords?.has(segment.word!)
-        const className = `wordrot-highlight ${isCollected ? 'collected' : ''}`
+
+        if (isCollected) {
+          return (
+            <span key={index} className="wordrot-highlight collected">
+              {segment.content}
+            </span>
+          )
+        }
 
         return (
-          <button key={index} className={className} onClick={(e) => handleWordClick(segment.word!, e)}>
+          <button key={index} className="wordrot-highlight" onClick={(e) => handleWordClick(segment.word!, e)}>
             {segment.content}
           </button>
         )
