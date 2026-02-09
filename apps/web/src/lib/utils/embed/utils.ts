@@ -14,7 +14,6 @@ export const ALLOWED_IFRAME_DOMAINS = [
   'vercel.app',
   'netlify.app',
   'pages.dev',
-  'llll-ll.com',
 ]
 
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov']
