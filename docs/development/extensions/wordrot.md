@@ -5,10 +5,10 @@
 
 ## 用語
 
-| 用語                   | 英語    | 説明                                                                             |
-| ---------------------- | ------- | -------------------------------------------------------------------------------- |
-| ワード (Word)          | Word    | 投稿から収集した合成前の単語。黄色背景の物体アイコン画像。                       |
-| ワードロット (Wordrot) | Wordrot | 合成によって生まれた単語。黄緑背景の可愛い生物画像。FlaskConicalアイコンで表す。 |
+| 用語                   | 英語    | 説明                                                                                  |
+| ---------------------- | ------- | ------------------------------------------------------------------------------------- |
+| ワード (Word)          | Word    | 投稿から収集した合成前の単語。黄色背景（#F1C40F）の物体アイコン画像。                 |
+| ワードロット (Wordrot) | Wordrot | 合成によって生まれた単語。黄緑背景（#8BC34A）の可愛い生物画像。FlaskConicalアイコン。 |
 
 ## フェーズ
 
@@ -48,10 +48,14 @@
 
 ### 画像生成（Phase 1 + Phase 2）
 
-- 単語が初めてシステムに登録されたとき、AI画像を非同期生成
+- 単語がharvest（収集）またはsynthesis（合成）で初めて登録されたとき、AI画像を非同期生成
+- **同じ単語でも入手経路によって別画像を生成**:
+  - harvest経路: `image_url` に保存（黄色背景の物体アイコン）
+  - synthesis経路: `image_url_synthesis` に保存（黄緑背景の可愛い生物）
 - **ワード（Word）**: 16bitピクセルアート、黄色背景（#F1C40F）、物体のアイコン
 - **ワードロット（Wordrot）**: 16bitピクセルアート、黄緑背景（#8BC34A）、可愛い丸い生物
-  - 背景色でワード/ワードロットを視覚的に区別（ステラ=黄色、ワードロット=黄緑、将来のさらなる合成=緑系統）
+  - 背景色でワード/ワードロットを視覚的に区別
+  - 合成して手に入れたワードロットはプレミア感のある緑背景
 - 変な絵でも「味がある」として受け入れる美学
 - 画像はnostr.buildにアップロードして永続化
 
@@ -191,19 +195,31 @@
 
 ```sql
 CREATE TABLE IF NOT EXISTS wordrot_words (
-  id TEXT PRIMARY KEY,           -- UUID
-  text TEXT NOT NULL UNIQUE,     -- 単語テキスト（正規化済み）
-  image_url TEXT,                -- 生成された画像URL
-  image_hash TEXT,               -- SHA-256 hash (NIP-96削除用)
-  image_status TEXT DEFAULT 'pending',  -- pending/generating/done/failed
-  discovered_by TEXT,            -- 最初に登録したユーザーのpubkey
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  text TEXT NOT NULL UNIQUE,                  -- 単語テキスト（正規化済み）
+  image_url TEXT,                             -- harvest用画像URL（黄色背景）
+  image_hash TEXT,                            -- harvest用 SHA-256 hash (NIP-96削除用)
+  image_status TEXT DEFAULT 'pending',        -- harvest用: pending/generating/done/failed
+  image_url_synthesis TEXT,                   -- synthesis用画像URL（緑背景）
+  image_hash_synthesis TEXT,                  -- synthesis用 SHA-256 hash
+  image_status_synthesis TEXT DEFAULT 'pending', -- synthesis用: pending/generating/done/failed
+  discovered_by TEXT,                         -- 最初に登録したユーザーのpubkey
   discovered_at INTEGER NOT NULL,
+  discovery_count INTEGER DEFAULT 1,          -- harvest回数
+  synthesis_count INTEGER DEFAULT 0,          -- synthesis回数
   created_at INTEGER NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_wordrot_words_text ON wordrot_words(text);
-CREATE INDEX IF NOT EXISTS idx_wordrot_words_status ON wordrot_words(image_status);
+CREATE INDEX IF NOT EXISTS idx_wordrot_words_discovered_by ON wordrot_words(discovered_by);
+CREATE INDEX IF NOT EXISTS idx_wordrot_words_discovery_count ON wordrot_words(discovery_count DESC);
 ```
+
+**画像フィールドの使い分け**:
+
+- harvest（投稿から収集）で初入手 → `image_url`, `image_status` を使用（黄色背景）
+- synthesis（合成）で初入手 → `image_url_synthesis`, `image_status_synthesis` を使用（緑背景）
+- 同じ単語を両方の経路で入手可能 → 両方の画像が存在する場合もある
 
 ### wordrot_user_words（ユーザーインベントリ）
 
@@ -211,14 +227,26 @@ CREATE INDEX IF NOT EXISTS idx_wordrot_words_status ON wordrot_words(image_statu
 
 ```sql
 CREATE TABLE IF NOT EXISTS wordrot_user_words (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   pubkey TEXT NOT NULL,
-  word_id TEXT NOT NULL,
-  collected_at INTEGER NOT NULL,
-  PRIMARY KEY (pubkey, word_id)
+  word_id INTEGER NOT NULL,
+  count INTEGER DEFAULT 1,                -- 収集回数（Wordrotは増えない）
+  first_collected_at INTEGER NOT NULL,
+  last_collected_at INTEGER NOT NULL,
+  source TEXT DEFAULT 'harvest',          -- 'harvest' | 'synthesis'
+  FOREIGN KEY (word_id) REFERENCES wordrot_words(id),
+  UNIQUE(pubkey, word_id, source)
 );
 
 CREATE INDEX IF NOT EXISTS idx_wordrot_user_words_pubkey ON wordrot_user_words(pubkey);
+CREATE INDEX IF NOT EXISTS idx_wordrot_user_words_word ON wordrot_user_words(word_id);
 ```
+
+**UNIQUE制約**: `(pubkey, word_id, source)`
+
+- 同じユーザーが同じ単語をharvestとsynthesis両方で持つことが可能
+- `source='harvest'` → Words欄に表示（合成素材として使用可能）
+- `source='synthesis'` → Wordrot欄に表示（合成素材として使用不可）
 
 ### wordrot_event_words（投稿別キャッシュ）
 
@@ -862,6 +890,13 @@ A－B＋C は「AからBの意味成分を引き、Cの意味成分を足す」�
 ### 画像生成（Phase 1 + Phase 2）
 
 Workers AI (FLUX.1-Schnell) を使用。2段階プロンプト方式。
+
+**入手経路による画像の違い**:
+
+- harvest（投稿から収集）: 黄色背景（#F1C40F）の物体アイコン → `image_url` に保存
+- synthesis（合成）: 黄緑背景（#8BC34A）の可愛い生物 → `image_url_synthesis` に保存
+- 同じ単語でも経路が異なれば別々の画像を生成
+- UI表示時は `source` フィールドで判定して適切な画像を選択
 
 #### Step 1: 単語 → 英語の視覚描写（LLM: Qwen3-30B）
 
