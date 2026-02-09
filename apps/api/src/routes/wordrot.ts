@@ -94,14 +94,27 @@ const SYNTHESIS_PROMPT = `あなたは単語のベクトル演算を行う専門
 結果の単語のみを出力してください（「」は不要）:
 `
 
-const IMAGE_PROMPT_TEMPLATE = `A cute chibi pixel art character representing "{word}",
-square format 256x256,
-simple solid color background,
-2-head-tall proportions (large head, small body),
-16-bit retro game style,
-vibrant colors,
-centered composition,
-no text or labels`
+const IMAGE_PROMPT_TEMPLATE = `Extreme close-up 16-bit pixel art of {description}, filling the entire frame.
+Flat solid golden yellow (#F1C40F) background, nothing else behind the subject.
+One single subject, very large, zoomed in, touching all four edges of the image.
+Retro SNES game sprite style, bold outlines, vibrant saturated colors that contrast against yellow.
+No text, no letters, no words, no border, no frame, no grid, no pattern, no multiple copies.`
+
+const DESCRIBE_WORD_PROMPT = `Given a word, output a concise English visual description (3-8 words) for a pixel art image prompt.
+
+Rules:
+- Output ONLY the description phrase, no explanation, no quotes
+- Describe the concrete visual form of the word
+- Always include a specific color that is NOT yellow/orange/gold (to contrast with yellow background)
+- Animals → the animal: "a blue and white dolphin", "a red ladybug beetle"
+- Foods → the food: "a bright red bell pepper", "a green matcha latte cup"
+- Objects → the object: "a silver metallic robot", "a blue desktop computer"
+- Characters → iconic look: "a green one-eyed giant mecha robot", "a round pink puffball creature"
+- Abstract → symbol: "a glowing blue code terminal screen", "a purple electric lightning bolt"
+- Brands → mascot/logo: "a black and white tuxedo penguin", "a purple chat bubble bot"
+- AVOID yellow, orange, gold, amber colors in the subject
+
+Word: `
 
 // Helper: Validate that a word is strictly katakana-only or English-alphabet-only
 // This is a hard filter applied AFTER LLM extraction to guarantee correctness
@@ -317,21 +330,45 @@ async function extractNouns(ai: Bindings['AI'], content: string): Promise<string
   return merged.filter(isValidWordrotWord).slice(0, 10)
 }
 
+// Helper: Strip <think>...</think> tags from LLM responses (Qwen3 reasoning output)
+function stripThinkTags(text: string): string {
+  return text.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+}
+
+// Helper: Extract text content from Workers AI response (handles both old and OpenAI-compatible formats)
+function extractLLMText(response: any): string {
+  // Old format: { response: "..." }
+  if (response?.response && typeof response.response === 'string') {
+    return response.response
+  }
+  // OpenAI-compatible format: { choices: [{ message: { content: "..." } }] }
+  const message = response?.choices?.[0]?.message
+  if (message?.content && typeof message.content === 'string') {
+    return message.content
+  }
+  // Qwen3 reasoning-only output: content is null but reasoning_content has text
+  if (message?.reasoning_content && typeof message.reasoning_content === 'string') {
+    return message.reasoning_content
+  }
+  return ''
+}
+
 // Helper: LLM-based noun extraction (handles compound splitting and noun filtering)
 async function extractNounsLLM(ai: Bindings['AI'], cleanedContent: string): Promise<string[]> {
   try {
-    const response = await (ai as any).run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await (ai as any).run('@cf/qwen/qwen3-30b-a3b-fp8', {
       messages: [
         {
           role: 'user',
-          content: EXTRACT_NOUNS_PROMPT + `"${cleanedContent}"`,
+          content: EXTRACT_NOUNS_PROMPT + `"${cleanedContent}"\n/no_think`,
         },
       ],
       max_tokens: 500,
     })
 
-    const text = response?.response || ''
-    if (!text || typeof text !== 'string') return []
+    const rawText = extractLLMText(response)
+    if (!rawText) return []
+    const text = stripThinkTags(rawText)
 
     // Parse JSON array from response
     const match = text.match(/\[[\s\S]*?\]/)
@@ -358,22 +395,21 @@ async function synthesizeWords(
     const prompt = SYNTHESIS_PROMPT.replace('{wordA}', wordA).replace('{wordB}', wordB).replace('{wordC}', wordC)
 
     // Use any to avoid strict type checking on model names
-    const response = await (ai as any).run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await (ai as any).run('@cf/qwen/qwen3-30b-a3b-fp8', {
       messages: [
         {
           role: 'user',
-          content: prompt,
+          content: prompt + '\n/no_think',
         },
       ],
-      max_tokens: 50,
+      max_tokens: 100,
     })
 
-    const text = response?.response || ''
-    if (!text || typeof text !== 'string') return null
+    const rawText = extractLLMText(response)
+    if (!rawText) return null
 
     // Clean result
-    const result = text
-      .trim()
+    const result = stripThinkTags(rawText)
       .replace(/^「|」$/g, '')
       .trim()
     if (!result || result === '???' || result.length > 30) return null
@@ -385,30 +421,83 @@ async function synthesizeWords(
   }
 }
 
-// Helper: Generate image using Workers AI Stable Diffusion
+// Helper: Translate word to English visual description for image generation
+async function describeWordForImage(ai: Bindings['AI'], word: string): Promise<string> {
+  try {
+    const response = await (ai as any).run('@cf/qwen/qwen3-30b-a3b-fp8', {
+      messages: [{ role: 'user', content: DESCRIBE_WORD_PROMPT + `"${word}"\n/no_think` }],
+      max_tokens: 100,
+    })
+    const rawText = extractLLMText(response)
+    if (!rawText) return word
+    const description = stripThinkTags(rawText)
+      .replace(/^["']|["']$/g, '')
+      .trim()
+    if (!description || description.length > 80) return word
+    console.log(`[describeWordForImage] "${word}" → "${description}"`)
+    return description
+  } catch (e) {
+    console.error(`[describeWordForImage] Error for "${word}":`, e)
+    return word
+  }
+}
+
+// Helper: Generate image using Workers AI FLUX.1
 async function generateImage(ai: Bindings['AI'], word: string): Promise<ArrayBuffer | null> {
   try {
     console.log(`[generateImage] Starting image generation for word: ${word}`)
-    const prompt = IMAGE_PROMPT_TEMPLATE.replace('{word}', word)
-    console.log(`[generateImage] Using prompt: ${prompt.substring(0, 50)}...`)
+    const description = await describeWordForImage(ai, word)
+    const prompt = IMAGE_PROMPT_TEMPLATE.replace('{description}', description)
+    console.log(`[generateImage] Using prompt: ${prompt.substring(0, 100)}...`)
 
-    // Use any to avoid strict type checking on model names
-    const response = await (ai as any).run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
+    const response = await (ai as any).run('@cf/black-forest-labs/flux-1-schnell', {
       prompt,
-      num_steps: 20,
+      steps: 8,
     })
 
-    console.log(
-      `[generateImage] Response type: ${typeof response}, instanceof ArrayBuffer: ${response instanceof ArrayBuffer}, instanceof Uint8Array: ${response instanceof Uint8Array}`
-    )
+    // FLUX.1 returns { image: "<base64>" }
+    if (response && typeof response === 'object' && typeof response.image === 'string') {
+      const base64 = response.image
+      const binaryStr = atob(base64)
+      const bytes = new Uint8Array(binaryStr.length)
+      for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i)
+      }
+      console.log(`[generateImage] Decoded base64 image: ${bytes.byteLength} bytes`)
+      return bytes.buffer as ArrayBuffer
+    }
 
-    if (response instanceof ArrayBuffer || response instanceof Uint8Array) {
-      const buffer = response instanceof ArrayBuffer ? response : (response.buffer as ArrayBuffer)
-      console.log(`[generateImage] Generated image buffer size: ${buffer.byteLength} bytes`)
+    // Fallback: handle raw binary responses (ArrayBuffer, Uint8Array, ReadableStream)
+    if (response instanceof ArrayBuffer) {
+      console.log(`[generateImage] ArrayBuffer response: ${response.byteLength} bytes`)
+      return response
+    }
+    if (response instanceof Uint8Array) {
+      console.log(`[generateImage] Uint8Array response: ${response.byteLength} bytes`)
+      return response.buffer as ArrayBuffer
+    }
+    if (response instanceof ReadableStream) {
+      console.log(`[generateImage] ReadableStream response, reading...`)
+      const reader = response.getReader()
+      const chunks: Uint8Array[] = []
+      let totalLength = 0
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        chunks.push(value)
+        totalLength += value.byteLength
+      }
+      const buffer = new ArrayBuffer(totalLength)
+      const view = new Uint8Array(buffer)
+      let offset = 0
+      for (const chunk of chunks) {
+        view.set(chunk, offset)
+        offset += chunk.byteLength
+      }
       return buffer
     }
 
-    console.error(`[generateImage] Invalid response type for word: ${word}`)
+    console.error(`[generateImage] Unexpected response type for word: ${word}`, typeof response, response)
     return null
   } catch (e) {
     console.error(`[generateImage] Error generating image for word "${word}":`, e)
@@ -648,7 +737,8 @@ wordrot.post('/collect', async (c) => {
     if (nsec) {
       c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, wordRecord.id, word))
     } else {
-      console.error('[collect] UPLOADER_NSEC not configured')
+      console.error('[collect] UPLOADER_NSEC not configured, marking image as failed')
+      await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordRecord.id).run()
     }
   } else {
     // Increment discovery count
@@ -880,6 +970,9 @@ wordrot.post('/synthesize', async (c) => {
         const nsec = c.env.UPLOADER_NSEC
         if (nsec) {
           c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, resultWord.id, resultText))
+        } else {
+          console.error('[synthesize] UPLOADER_NSEC not configured, marking image as failed')
+          await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(resultWord.id).run()
         }
       }
     } else {
@@ -1108,11 +1201,44 @@ wordrot.post('/retry-image/:wordId', async (c) => {
 
   // Queue regeneration
   const nsec = c.env.UPLOADER_NSEC
-  if (nsec) {
-    generateWordImage(ai, db, nsec, word.id, word.text).catch(console.error)
+  if (!nsec) {
+    return c.json({ error: 'UPLOADER_NSEC not configured' }, 500)
   }
 
+  c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text))
+
   return c.json({ success: true, message: 'Image generation queued' })
+})
+
+// POST /api/wordrot/retry-all-images - Retry image generation for all failed/pending words
+wordrot.post('/retry-all-images', async (c) => {
+  const db = c.env.DB
+  const ai = c.env.AI
+  const nsec = c.env.UPLOADER_NSEC
+
+  if (!nsec) {
+    return c.json({ error: 'UPLOADER_NSEC not configured' }, 500)
+  }
+
+  const words = await db
+    .prepare(`SELECT id, text FROM wordrot_words WHERE image_status IN ('failed', 'pending') LIMIT 50`)
+    .all<{ id: number; text: string }>()
+
+  const targets = words.results || []
+
+  if (targets.length === 0) {
+    return c.json({ success: true, queued: 0, message: 'No words need image generation' })
+  }
+
+  for (const word of targets) {
+    c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text))
+  }
+
+  return c.json({
+    success: true,
+    queued: targets.length,
+    message: `Queued ${targets.length} words for image generation`,
+  })
 })
 
 export default wordrot
