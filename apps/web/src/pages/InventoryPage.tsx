@@ -742,7 +742,36 @@ export function InventoryPage() {
                     {synthesizedWords.length > 0 && (
                       <div className="inventory-words-section inventory-synthesized-section">
                         <h3>
-                          <Icon name="FlaskConical" size={20} fill="#10b981" /> Wordrot ({synthesizedWords.length})
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <defs>
+                              <clipPath id="flask-liquid-clip">
+                                <rect x="0" y="16" width="24" height="8" />
+                              </clipPath>
+                            </defs>
+                            {/* Liquid fill - only below waterline */}
+                            <path
+                              d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"
+                              fill="#10b981"
+                              stroke="none"
+                              clipPath="url(#flask-liquid-clip)"
+                            />
+                            {/* Flask outline */}
+                            <path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2" />
+                            {/* Top rim */}
+                            <path d="M8.5 2h7" />
+                            {/* Waterline */}
+                            <path d="M7 16h10" />
+                          </svg>{' '}
+                          Wordrot ({synthesizedWords.length})
                         </h3>
                         <div className="inventory-words-grid">
                           {synthesizedWords.map((item) => (
