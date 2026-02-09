@@ -1118,6 +1118,20 @@ wordrot.post('/synthesize', async (c) => {
         .prepare(`UPDATE wordrot_words SET synthesis_count = synthesis_count + 1 WHERE id = ?`)
         .bind(resultWord.id)
         .run()
+
+      // Generate synthesis image if not yet generated
+      if (!resultWord.image_url_synthesis && resultWord.image_status_synthesis !== 'generating') {
+        const nsec = c.env.UPLOADER_NSEC
+        if (nsec) {
+          c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, resultWord.id, resultWord.text, true))
+        } else {
+          console.error('[synthesize] UPLOADER_NSEC not configured, marking synthesis image as failed')
+          await db
+            .prepare(`UPDATE wordrot_words SET image_status_synthesis = 'failed' WHERE id = ?`)
+            .bind(resultWord.id)
+            .run()
+        }
+      }
     }
 
     if (resultWord) {
@@ -1136,16 +1150,17 @@ wordrot.post('/synthesize', async (c) => {
     return c.json({ error: 'Synthesis failed' }, 500)
   }
 
-  // Add result to user's collection
-  const existingUserWord = await db
-    .prepare(`SELECT count FROM wordrot_user_words WHERE pubkey = ? AND word_id = ?`)
+  // Add result to user's synthesis collection
+  // UNIQUE(pubkey, word_id, source) allows both harvest and synthesis records for the same word
+  const existingSynthesisWord = await db
+    .prepare(`SELECT count FROM wordrot_user_words WHERE pubkey = ? AND word_id = ? AND source = 'synthesis'`)
     .bind(pubkey, resultWord.id)
     .first<{ count: number }>()
 
-  if (existingUserWord) {
+  if (existingSynthesisWord) {
     await db
       .prepare(
-        `UPDATE wordrot_user_words SET count = count + 1, last_collected_at = ? WHERE pubkey = ? AND word_id = ?`
+        `UPDATE wordrot_user_words SET count = count + 1, last_collected_at = ? WHERE pubkey = ? AND word_id = ? AND source = 'synthesis'`
       )
       .bind(now, pubkey, resultWord.id)
       .run()
