@@ -206,8 +206,11 @@ export function WordCard({
     const poll = setInterval(async () => {
       try {
         const details = await fetchWordDetails(word.text)
-        if (details.word && details.word.image_status !== word.image_status) {
-          setWord(details.word)
+        if (details.word) {
+          const newStatus = source === 'synthesis' ? details.word.image_status_synthesis : details.word.image_status
+          if (newStatus !== imageStatus) {
+            setWord(details.word)
+          }
         }
       } catch {
         // ignore
@@ -215,7 +218,7 @@ export function WordCard({
     }, 3000)
 
     return () => clearInterval(poll)
-  }, [word.text, imageStatus])
+  }, [word.text, imageStatus, source])
 
   const defaultImage =
     'data:image/svg+xml,' +

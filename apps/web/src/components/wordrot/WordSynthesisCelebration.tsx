@@ -103,11 +103,9 @@ export function WordSynthesisCelebration({
     }
   }
 
-  // Handle click outside to close
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose()
-    }
+  // Handle click anywhere to close (matching "Tap anywhere to continue" hint)
+  const handleBackdropClick = () => {
+    onClose()
   }
 
   // Handle escape key
@@ -194,7 +192,10 @@ export function WordSynthesisCelebration({
                     <button
                       type="button"
                       className={`word-synthesis-recipe-speaker ${playingRecipeIndex === i ? 'playing' : ''}`}
-                      onClick={() => speakItalian(recipe.word_a, recipe.word_b, recipe.word_c, i)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        speakItalian(recipe.word_a, recipe.word_b, recipe.word_c, i)
+                      }}
                       disabled={playingRecipeIndex !== null}
                       aria-label="Speak in Italian"
                     >

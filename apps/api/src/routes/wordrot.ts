@@ -101,16 +101,16 @@ A－B＋C は「AからBの意味成分を引き、Cの意味成分を足す」�
 `
 
 const IMAGE_PROMPT_TEMPLATE = `Extreme close-up 16-bit pixel art of {description}, filling the entire frame.
-Flat solid golden yellow (#F1C40F) background, nothing else behind the subject.
+Flat solid dark navy (#1a1a2e) background, nothing else behind the subject.
 One single subject, very large, zoomed in, touching all four edges of the image.
-Retro SNES game sprite style, bold outlines, vibrant saturated colors that contrast against yellow.
+Retro SNES game sprite style, bold outlines, vibrant saturated colors that contrast against the dark background.
 No text, no letters, no words, no border, no frame, no grid, no pattern, no multiple copies.`
 
 const SYNTHESIS_IMAGE_PROMPT_TEMPLATE = `Extreme close-up 16-bit pixel art of {description}, filling the entire frame.
-Flat solid yellow-green (#8BC34A) background, nothing else behind the subject.
+Flat solid dark purple (#2d1a3e) background, nothing else behind the subject.
 One single subject, very large, zoomed in, touching all four edges of the image.
 The subject should look like a cute, round, small living creature — with big friendly eyes, soft body, like a Kirby or Slime. Not humanoid, not scary. Adorable and squishy.
-Retro SNES game sprite style, bold outlines, vibrant saturated colors that contrast against yellow-green.
+Retro SNES game sprite style, bold outlines, vibrant saturated colors that contrast against the dark background.
 No text, no letters, no words, no border, no frame, no grid, no pattern, no multiple copies.`
 
 const DESCRIBE_WORD_PROMPT = `Given a word, output a concise English visual description (3-8 words) for a pixel art image prompt.
@@ -118,14 +118,14 @@ const DESCRIBE_WORD_PROMPT = `Given a word, output a concise English visual desc
 Rules:
 - Output ONLY the description phrase, no explanation, no quotes
 - Describe the concrete visual form of the word
-- Always include a specific color that is NOT yellow/orange/gold (to contrast with yellow background)
+- Always include a specific bright color (to contrast with dark background)
 - Animals → the animal: "a blue and white dolphin", "a red ladybug beetle"
 - Foods → the food: "a bright red bell pepper", "a green matcha latte cup"
 - Objects → the object: "a silver metallic robot", "a blue desktop computer"
 - Characters → iconic look: "a green one-eyed giant mecha robot", "a round pink puffball creature"
 - Abstract → symbol: "a glowing blue code terminal screen", "a purple electric lightning bolt"
 - Brands → mascot/logo: "a black and white tuxedo penguin", "a purple chat bubble bot"
-- AVOID yellow, orange, gold, amber colors in the subject
+- AVOID very dark colors (dark navy, dark purple, black) in the subject — they would blend with the dark background
 
 Word: `
 
@@ -137,13 +137,13 @@ Never scary, never humanoid. Always round, squishy, friendly, with big eyes.
 
 Rules:
 - Output ONLY the description phrase, no explanation, no quotes
-- Always include a specific color that is NOT green/lime/yellow-green (to contrast with yellow-green background)
+- Always include a specific bright color (to contrast with dark background)
 - Foods → cute creature themed after it: "a round red apple buddy with big eyes", "a bubbly blue soda blob pet"
 - Objects → adorable creature inspired by it: "a silver round robot-shaped pet", "a blue glowing screen-face blob"
 - Animals → cute round version: "a puffy blue baby dolphin", "a tiny round red ladybug pet"
 - Characters → cute creature version: "a round red caped tiny hero blob", "a pink squishy puffball"
 - Abstract → adorable living form: "a glowing blue jellyfish pet", "a tiny purple spark blob"
-- AVOID green, lime, yellow-green, chartreuse colors in the subject
+- AVOID very dark colors (dark navy, dark purple, black) in the subject — they would blend with the dark background
 
 Word: `
 

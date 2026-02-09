@@ -753,7 +753,15 @@ export function InventoryPage() {
                               word={item.word}
                               count={item.count}
                               source="synthesis"
-                              // No onClick - wordrot cannot be used as synthesis materials
+                              onClick={() => {
+                                setSynthesisCelebration({
+                                  result: item.word,
+                                  isNewSynthesis: false,
+                                  isNewWord: false,
+                                  formula: '',
+                                })
+                                setShowSynthesisCelebration(true)
+                              }}
                               selected={false}
                               onRetryImage={retryWordImage}
                             />
