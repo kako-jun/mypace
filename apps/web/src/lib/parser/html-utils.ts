@@ -77,7 +77,7 @@ export function processImageKeywordUrls(html: string): string {
       return _match
     }
 
-    return `${before}<span class="content-image-wrapper"><img src="${url}" alt="404" class="content-image" data-lightbox="${url}" /></span>${after}`
+    return `${before}<span class="content-image-wrapper" data-keyword-image="true" data-original-url="${url}"><img src="${url}" alt="" class="content-image" data-lightbox="${url}" /></span>${after}`
   })
 }
 
