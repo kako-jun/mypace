@@ -16,6 +16,7 @@ import {
   sanitizeHtml,
   processLinks,
   processImageUrls,
+  processImageKeywordUrls,
   removeImageLinks,
   processAudioUrls,
   removeMediaLinks,
@@ -93,6 +94,7 @@ export function renderContent(
 
   // 7. Process additional elements
   html = processImageUrls(html)
+  html = processImageKeywordUrls(html)
   html = removeImageLinks(html)
   html = processAudioUrls(html)
   html = removeMediaLinks(html)
@@ -124,7 +126,22 @@ export function renderContent(
       if (!img.classList.contains('content-image')) return
 
       const wrapper = img.parentElement
-      if (!wrapper || wrapper.querySelector('.content-image-error')) return
+      if (!wrapper) return
+
+      // Keyword-detected images: not certain it's an image, so fall back to a normal link
+      if (wrapper.getAttribute('data-keyword-image') === 'true') {
+        const originalUrl = wrapper.getAttribute('data-original-url') || img.src
+        const link = document.createElement('a')
+        link.href = originalUrl
+        link.textContent = originalUrl
+        link.target = '_blank'
+        link.rel = 'noopener noreferrer'
+        link.className = 'content-link'
+        wrapper.replaceWith(link)
+        return
+      }
+
+      if (wrapper.querySelector('.content-image-error')) return
 
       img.style.display = 'none'
       const errorDiv = document.createElement('div')
@@ -140,7 +157,22 @@ export function renderContent(
       const imgEl = img as HTMLImageElement
       if (imgEl.complete && imgEl.naturalHeight === 0 && imgEl.naturalWidth === 0) {
         const wrapper = imgEl.parentElement
-        if (!wrapper || wrapper.querySelector('.content-image-error')) return
+        if (!wrapper) return
+
+        // Keyword-detected images: fall back to a normal link
+        if (wrapper.getAttribute('data-keyword-image') === 'true') {
+          const originalUrl = wrapper.getAttribute('data-original-url') || imgEl.src
+          const link = document.createElement('a')
+          link.href = originalUrl
+          link.textContent = originalUrl
+          link.target = '_blank'
+          link.rel = 'noopener noreferrer'
+          link.className = 'content-link'
+          wrapper.replaceWith(link)
+          return
+        }
+
+        if (wrapper.querySelector('.content-image-error')) return
 
         imgEl.style.display = 'none'
         const errorDiv = document.createElement('div')

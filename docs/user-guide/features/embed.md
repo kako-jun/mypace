@@ -23,6 +23,15 @@ https://open.spotify.com/track/xxx
 #mypace
 ```
 
+## 画像の自動展開
+
+画像URLは本文中にインラインで表示されます。
+
+- `.jpg`, `.png`, `.gif`, `.webp`, `.svg` で終わるURL
+- パスに `image`, `img`, `photo` 等を含むURL（例: `/api/article-image?id=5`）
+
+後者は画像でなかった場合、通常のリンクとして表示されます。
+
 ## OGPプレビュー
 
 対応サービス以外のURLも、OGP情報（タイトル・画像）がプレビュー表示されます。

@@ -47,6 +47,40 @@ export function processImageUrls(html: string): string {
   })
 }
 
+// Keywords in URL path that suggest the URL serves an image
+const IMAGE_PATH_KEYWORD_REGEX = /[/_-](image|img|photo|picture|thumbnail|thumb)([/_-]|$)/i
+
+// File extensions that indicate the URL is NOT an image
+const NON_IMAGE_EXTENSION_REGEX = /\.(html?|json|xml|js|css|txt|pdf|zip|tar|gz|mp[34]|wav|ogg|webm|mov|avi)(\?|&|#|$)/i
+
+// Already-handled image extensions
+const HANDLED_IMAGE_EXTENSION_REGEX = /\.(jpg|jpeg|png|gif|webp|svg)(\?|&|#|$)/i
+
+// Process extensionless image URLs that have image-related keywords in the path
+// (e.g. /api/article-image?id=5, /photo/123, /user/thumbnail)
+export function processImageKeywordUrls(html: string): string {
+  const urlRegex = /(^|[\s>])(https?:\/\/[^\s<"]+)([\s<]|$)/gim
+  return html.replace(urlRegex, (_match, before, url, after) => {
+    // Skip if already has an image extension (handled by processImageUrls)
+    if (HANDLED_IMAGE_EXTENSION_REGEX.test(url)) return _match
+    // Skip known non-image extensions
+    if (NON_IMAGE_EXTENSION_REGEX.test(url)) return _match
+    // Skip YouTube thumbnails
+    if (YOUTUBE_THUMBNAIL_REGEX.test(url)) return _match
+
+    // Decode &amp; for URL parsing (HTML-encoded ampersands)
+    const decodedUrl = url.replace(/&amp;/g, '&')
+    try {
+      const pathname = new URL(decodedUrl).pathname.toLowerCase()
+      if (!IMAGE_PATH_KEYWORD_REGEX.test(pathname)) return _match
+    } catch {
+      return _match
+    }
+
+    return `${before}<span class="content-image-wrapper" data-keyword-image="true" data-original-url="${url}"><img src="${url}" alt="" class="content-image" data-lightbox="${url}" /></span>${after}`
+  })
+}
+
 // Remove links that wrap images (marked auto-links image URLs)
 export function removeImageLinks(html: string): string {
   return html.replace(/<a[^>]*>(\s*<span class="content-image-wrapper">.*?<\/span>\s*)<\/a>/gi, '$1')
