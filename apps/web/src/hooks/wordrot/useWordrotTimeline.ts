@@ -45,11 +45,17 @@ export function useWordrotTimeline() {
         const collected = new Set<string>(inventory.words.map((w) => w.word.text.toLowerCase()))
         setCollectedWords(collected)
 
-        // Build image cache from inventory
+        // Build image cache from inventory - use appropriate image based on source
         const images: WordImageCache = {}
         for (const item of inventory.words) {
-          if (item.word.image_url) {
-            images[item.word.text] = item.word.image_url
+          const wordText = item.word.text
+          // Skip if already set (prefer first occurrence)
+          if (images[wordText]) continue
+
+          // Use appropriate image based on source
+          const imageUrl = item.source === 'synthesis' ? item.word.image_url_synthesis : item.word.image_url
+          if (imageUrl) {
+            images[wordText] = imageUrl
           }
         }
         setWordImages(images)

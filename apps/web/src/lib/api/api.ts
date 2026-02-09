@@ -541,7 +541,11 @@ export interface WordrotWord {
   id: number
   text: string
   image_url: string | null
+  image_hash: string | null
   image_status: 'pending' | 'generating' | 'done' | 'failed'
+  image_url_synthesis: string | null
+  image_hash_synthesis: string | null
+  image_status_synthesis: 'pending' | 'generating' | 'done' | 'failed'
   discovered_by: string | null
   discovered_at: number
   discovery_count: number
@@ -751,9 +755,9 @@ export async function fetchWordDetails(text: string): Promise<{
 }
 
 // Retry image generation for a word
-export async function retryWordImage(wordId: number): Promise<boolean> {
+export async function retryWordImage(wordId: number, source: 'harvest' | 'synthesis' = 'harvest'): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/api/wordrot/retry-image/${wordId}`, {
+    const res = await fetch(`${API_BASE}/api/wordrot/retry-image/${wordId}?source=${source}`, {
       method: 'POST',
     })
     return res.ok

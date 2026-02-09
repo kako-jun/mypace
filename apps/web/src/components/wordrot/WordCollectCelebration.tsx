@@ -176,6 +176,7 @@ export function WordCard({
   selected,
   highlight,
   size = 'normal',
+  source = 'harvest',
   onRetryImage,
 }: {
   word: WordrotWord
@@ -184,7 +185,8 @@ export function WordCard({
   selected?: boolean
   highlight?: boolean
   size?: 'small' | 'normal' | 'large'
-  onRetryImage?: (wordId: number) => void
+  source?: 'harvest' | 'synthesis'
+  onRetryImage?: (wordId: number, source: 'harvest' | 'synthesis') => void
 }) {
   const [word, setWord] = useState(initialWord)
 
@@ -193,9 +195,13 @@ export function WordCard({
     setWord(initialWord)
   }, [initialWord])
 
+  // Determine which image fields to use based on source
+  const imageUrl = source === 'synthesis' ? word.image_url_synthesis : word.image_url
+  const imageStatus = source === 'synthesis' ? word.image_status_synthesis : word.image_status
+
   // Poll for image status when pending/generating
   useEffect(() => {
-    if (word.image_status === 'done' || word.image_status === 'failed') return
+    if (imageStatus === 'done' || imageStatus === 'failed') return
 
     const poll = setInterval(async () => {
       try {
@@ -209,7 +215,7 @@ export function WordCard({
     }, 3000)
 
     return () => clearInterval(poll)
-  }, [word.text, word.image_status])
+  }, [word.text, imageStatus])
 
   const defaultImage =
     'data:image/svg+xml,' +
@@ -220,8 +226,8 @@ export function WordCard({
     </svg>
   `)
 
-  const imageUrl = word.image_url || defaultImage
-  const isImageReady = word.image_status === 'done' && word.image_url
+  const displayImageUrl = imageUrl || defaultImage
+  const isImageReady = imageStatus === 'done' && imageUrl
 
   const sizeClass = `word-card-${size}`
   // Create anchor ID from word text (sanitized for URL)
@@ -235,19 +241,24 @@ export function WordCard({
       disabled={!onClick}
     >
       <div className={`word-card-image ${!isImageReady ? 'generating' : ''}`}>
-        <img src={imageUrl} alt={word.text} />
-        {!isImageReady && word.image_status !== 'failed' && (
+        <img src={displayImageUrl} alt={word.text} />
+        {!isImageReady && imageStatus !== 'failed' && (
           <div className="word-card-loading">
             <Icon name="Loader" size={16} className="spinning" />
           </div>
         )}
-        {word.image_status === 'failed' && onRetryImage && (
+        {imageStatus === 'failed' && onRetryImage && (
           <div
             className="word-card-retry"
             onClick={(e) => {
               e.stopPropagation()
-              setWord({ ...word, image_status: 'generating' })
-              onRetryImage(word.id)
+              // Update appropriate status field based on source
+              if (source === 'synthesis') {
+                setWord({ ...word, image_status_synthesis: 'generating' })
+              } else {
+                setWord({ ...word, image_status: 'generating' })
+              }
+              onRetryImage(word.id, source)
             }}
           >
             <Icon name="RefreshCw" size={16} />

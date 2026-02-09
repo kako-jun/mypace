@@ -67,7 +67,11 @@ export function SynthesisPanel({
       className={`synthesis-slot ${activeSlot === slot ? 'active' : ''} ${word ? 'filled' : ''}`}
       onClick={() => handleSlotTap(slot)}
     >
-      {word ? <WordCard word={word} size="small" /> : <span className="synthesis-slot-placeholder">?</span>}
+      {word ? (
+        <WordCard word={word} size="small" source="harvest" />
+      ) : (
+        <span className="synthesis-slot-placeholder">?</span>
+      )}
     </button>
   )
 
@@ -89,7 +93,7 @@ export function SynthesisPanel({
           disabled={!lastResult}
         >
           {lastResult ? (
-            <WordCard word={lastResult.result} size="small" onRetryImage={retryWordImage} />
+            <WordCard word={lastResult.result} size="small" source="synthesis" onRetryImage={retryWordImage} />
           ) : (
             <span className="synthesis-slot-placeholder">?</span>
           )}

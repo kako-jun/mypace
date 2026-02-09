@@ -696,6 +696,7 @@ export function InventoryPage() {
                               key={item.word.id}
                               word={item.word}
                               count={item.count}
+                              source="harvest"
                               onClick={() => handleWordSelect(item.word)}
                               selected={
                                 item.word.text === slotA || item.word.text === slotB || item.word.text === slotC
@@ -743,7 +744,7 @@ export function InventoryPage() {
                     {synthesizedWords.length > 0 && (
                       <div className="inventory-words-section inventory-synthesized-section">
                         <h3>
-                          <Icon name="FlaskConical" size={20} /> Wordrot ({synthesizedWords.length})
+                          <Icon name="FlaskConical" size={20} fill="#10b981" /> Wordrot ({synthesizedWords.length})
                         </h3>
                         <div className="inventory-words-grid">
                           {synthesizedWords.map((item) => (
@@ -751,6 +752,7 @@ export function InventoryPage() {
                               key={item.word.id}
                               word={item.word}
                               count={item.count}
+                              source="synthesis"
                               // No onClick - wordrot cannot be used as synthesis materials
                               selected={false}
                               onRetryImage={retryWordImage}

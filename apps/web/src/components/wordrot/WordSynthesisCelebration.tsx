@@ -151,7 +151,7 @@ export function WordSynthesisCelebration({
 
         {/* Word card - large */}
         <div className="word-synthesis-card">
-          <WordCard word={word} size="large" />
+          <WordCard word={word} size="large" source="synthesis" />
         </div>
 
         {/* Badges */}

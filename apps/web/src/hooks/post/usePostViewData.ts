@@ -60,10 +60,17 @@ async function loadWordrotData(
   const collected = new Set<string>(inventory.words.map((w) => w.word.text.toLowerCase()))
   setWordrotCollected(collected)
 
+  // Build image map - prioritize harvest images for timeline display
   const images: Record<string, string | null> = {}
   for (const item of inventory.words) {
-    if (item.word.image_url) {
-      images[item.word.text] = item.word.image_url
+    const wordText = item.word.text
+    // Skip if already set (harvest items should come first from API)
+    if (images[wordText]) continue
+
+    // Use appropriate image based on source
+    const imageUrl = item.source === 'synthesis' ? item.word.image_url_synthesis : item.word.image_url
+    if (imageUrl) {
+      images[wordText] = imageUrl
     }
   }
   setWordrotImages(images)

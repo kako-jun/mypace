@@ -10,7 +10,11 @@ interface WordrotWord {
   id: number
   text: string
   image_url: string | null
+  image_hash: string | null
   image_status: string
+  image_url_synthesis: string | null
+  image_hash_synthesis: string | null
+  image_status_synthesis: string
   discovered_by: string | null
   discovered_at: number
   discovery_count: number
@@ -876,8 +880,9 @@ wordrot.post('/collect', async (c) => {
   const inventoryResult = await db
     .prepare(
       `SELECT
-         w.id, w.text, w.image_url, w.image_status, w.discovered_by, w.discovered_at,
-         w.discovery_count, w.synthesis_count,
+         w.id, w.text, w.image_url, w.image_hash, w.image_status, 
+         w.image_url_synthesis, w.image_hash_synthesis, w.image_status_synthesis,
+         w.discovered_by, w.discovered_at, w.discovery_count, w.synthesis_count,
          uw.count, uw.first_collected_at, uw.last_collected_at, uw.source
        FROM wordrot_user_words uw
        JOIN wordrot_words w ON uw.word_id = w.id
@@ -892,7 +897,11 @@ wordrot.post('/collect', async (c) => {
       id: row.id,
       text: row.text,
       image_url: row.image_url,
+      image_hash: row.image_hash,
       image_status: row.image_status,
+      image_url_synthesis: row.image_url_synthesis,
+      image_hash_synthesis: row.image_hash_synthesis,
+      image_status_synthesis: row.image_status_synthesis,
       discovered_by: row.discovered_by,
       discovered_at: row.discovered_at,
       discovery_count: row.discovery_count,
@@ -930,13 +939,21 @@ async function generateWordImage(
 ): Promise<void> {
   try {
     // Mark as generating
-    await db.prepare(`UPDATE wordrot_words SET image_status = 'generating' WHERE id = ?`).bind(wordId).run()
+    if (isSynthesis) {
+      await db.prepare(`UPDATE wordrot_words SET image_status_synthesis = 'generating' WHERE id = ?`).bind(wordId).run()
+    } else {
+      await db.prepare(`UPDATE wordrot_words SET image_status = 'generating' WHERE id = ?`).bind(wordId).run()
+    }
 
     // Generate image
     const imageData = await generateImage(ai, wordText, isSynthesis)
 
     if (!imageData) {
-      await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
+      if (isSynthesis) {
+        await db.prepare(`UPDATE wordrot_words SET image_status_synthesis = 'failed' WHERE id = ?`).bind(wordId).run()
+      } else {
+        await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
+      }
       return
     }
 
@@ -944,18 +961,33 @@ async function generateWordImage(
     const imageUrl = await uploadToNostrBuild(imageData, nsec)
 
     if (!imageUrl) {
-      await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
+      if (isSynthesis) {
+        await db.prepare(`UPDATE wordrot_words SET image_status_synthesis = 'failed' WHERE id = ?`).bind(wordId).run()
+      } else {
+        await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
+      }
       return
     }
 
     // Update word with image URL
-    await db
-      .prepare(`UPDATE wordrot_words SET image_url = ?, image_status = 'done' WHERE id = ?`)
-      .bind(imageUrl, wordId)
-      .run()
+    if (isSynthesis) {
+      await db
+        .prepare(`UPDATE wordrot_words SET image_url_synthesis = ?, image_status_synthesis = 'done' WHERE id = ?`)
+        .bind(imageUrl, wordId)
+        .run()
+    } else {
+      await db
+        .prepare(`UPDATE wordrot_words SET image_url = ?, image_status = 'done' WHERE id = ?`)
+        .bind(imageUrl, wordId)
+        .run()
+    }
   } catch (e) {
     console.error(`[generateWordImage] Error for word "${wordText}" (ID: ${wordId}):`, e)
-    await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
+    if (isSynthesis) {
+      await db.prepare(`UPDATE wordrot_words SET image_status_synthesis = 'failed' WHERE id = ?`).bind(wordId).run()
+    } else {
+      await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
+    }
   }
 }
 
@@ -1074,7 +1106,10 @@ wordrot.post('/synthesize', async (c) => {
           c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, resultWord.id, resultText, true))
         } else {
           console.error('[synthesize] UPLOADER_NSEC not configured, marking image as failed')
-          await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(resultWord.id).run()
+          await db
+            .prepare(`UPDATE wordrot_words SET image_status_synthesis = 'failed' WHERE id = ?`)
+            .bind(resultWord.id)
+            .run()
         }
       }
     } else {
@@ -1145,8 +1180,9 @@ wordrot.get('/inventory/:pubkey', async (c) => {
   const result = await db
     .prepare(
       `SELECT
-         w.id, w.text, w.image_url, w.image_status, w.discovered_by, w.discovered_at,
-         w.discovery_count, w.synthesis_count,
+         w.id, w.text, w.image_url, w.image_hash, w.image_status, 
+         w.image_url_synthesis, w.image_hash_synthesis, w.image_status_synthesis,
+         w.discovered_by, w.discovered_at, w.discovery_count, w.synthesis_count,
          uw.count, uw.first_collected_at, uw.last_collected_at, uw.source
        FROM wordrot_user_words uw
        JOIN wordrot_words w ON uw.word_id = w.id
@@ -1161,7 +1197,11 @@ wordrot.get('/inventory/:pubkey', async (c) => {
       id: row.id,
       text: row.text,
       image_url: row.image_url,
+      image_hash: row.image_hash,
       image_status: row.image_status,
+      image_url_synthesis: row.image_url_synthesis,
+      image_hash_synthesis: row.image_hash_synthesis,
+      image_status_synthesis: row.image_status_synthesis,
       discovered_by: row.discovered_by,
       discovered_at: row.discovered_at,
       discovery_count: row.discovery_count,
@@ -1348,6 +1388,10 @@ wordrot.post('/retry-image/:wordId', async (c) => {
     return c.json({ error: 'Invalid word ID' }, 400)
   }
 
+  // Get source from query params (default: harvest)
+  const source = c.req.query('source') || 'harvest'
+  const isSynthesis = source === 'synthesis'
+
   const db = c.env.DB
   const ai = c.env.AI
 
@@ -1357,8 +1401,12 @@ wordrot.post('/retry-image/:wordId', async (c) => {
     return c.json({ error: 'Word not found' }, 404)
   }
 
-  if (word.image_status === 'done') {
-    return c.json({ error: 'Image already generated', image_url: word.image_url }, 400)
+  // Check appropriate image_status based on source
+  const imageStatus = isSynthesis ? word.image_status_synthesis : word.image_status
+  const imageUrl = isSynthesis ? word.image_url_synthesis : word.image_url
+
+  if (imageStatus === 'done') {
+    return c.json({ error: 'Image already generated', image_url: imageUrl }, 400)
   }
 
   // Queue regeneration
@@ -1367,7 +1415,6 @@ wordrot.post('/retry-image/:wordId', async (c) => {
     return c.json({ error: 'UPLOADER_NSEC not configured' }, 500)
   }
 
-  const isSynthesis = word.synthesis_count > 0
   c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text, isSynthesis))
 
   return c.json({ success: true, message: 'Image generation queued' })
@@ -1383,24 +1430,41 @@ wordrot.post('/retry-all-images', async (c) => {
     return c.json({ error: 'UPLOADER_NSEC not configured' }, 500)
   }
 
-  const words = await db
-    .prepare(`SELECT id, text, synthesis_count FROM wordrot_words WHERE image_status IN ('failed', 'pending') LIMIT 50`)
-    .all<{ id: number; text: string; synthesis_count: number }>()
+  // Get words with failed/pending harvest images
+  const harvestWords = await db
+    .prepare(`SELECT id, text FROM wordrot_words WHERE image_status IN ('failed', 'pending') LIMIT 50`)
+    .all<{ id: number; text: string }>()
 
-  const targets = words.results || []
+  // Get words with failed/pending synthesis images
+  const synthesisWords = await db
+    .prepare(`SELECT id, text FROM wordrot_words WHERE image_status_synthesis IN ('failed', 'pending') LIMIT 50`)
+    .all<{ id: number; text: string }>()
 
-  if (targets.length === 0) {
+  const harvestTargets = harvestWords.results || []
+  const synthesisTargets = synthesisWords.results || []
+
+  if (harvestTargets.length === 0 && synthesisTargets.length === 0) {
     return c.json({ success: true, queued: 0, message: 'No words need image generation' })
   }
 
-  for (const word of targets) {
-    c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text, word.synthesis_count > 0))
+  // Queue harvest images
+  for (const word of harvestTargets) {
+    c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text, false))
   }
+
+  // Queue synthesis images
+  for (const word of synthesisTargets) {
+    c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text, true))
+  }
+
+  const totalQueued = harvestTargets.length + synthesisTargets.length
 
   return c.json({
     success: true,
-    queued: targets.length,
-    message: `Queued ${targets.length} words for image generation`,
+    queued: totalQueued,
+    harvest: harvestTargets.length,
+    synthesis: synthesisTargets.length,
+    message: `Queued ${totalQueued} images for generation (${harvestTargets.length} harvest, ${synthesisTargets.length} synthesis)`,
   })
 })
 
