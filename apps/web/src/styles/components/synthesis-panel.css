@@ -79,6 +79,10 @@
   pointer-events: none;
 }
 
+.synthesis-slot.result .word-card-retry {
+  pointer-events: auto;
+}
+
 .synthesis-slot.result .synthesis-slot-placeholder {
   color: #555;
 }

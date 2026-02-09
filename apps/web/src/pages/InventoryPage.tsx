@@ -14,6 +14,7 @@ import {
   fetchUserStellaStats,
   fetchUserStats,
   checkSupernovas,
+  retryWordImage,
   type StellaBalance,
   type UserSupernova,
   type SupernovaDefinition,
@@ -53,7 +54,7 @@ export function InventoryPage() {
   // Wordrot state
   const {
     inventory: wordrotInventory,
-    totalCount: wordrotTotalCount,
+    totalCount: _wordrotTotalCount,
     uniqueCount: wordrotUniqueCount,
     isLoadingInventory: wordrotLoading,
     loadInventory: loadWordrotInventory,
@@ -637,44 +638,75 @@ export function InventoryPage() {
             </div>
           ) : (
             <>
-              {/* Word Collection */}
-              <div className="inventory-words-section">
-                <h3>
-                  <Icon name="FlaskConical" size={20} /> Wordrot ({wordrotUniqueCount} types, {wordrotTotalCount} total)
-                </h3>
+              {/* Harvest words - collected from posts */}
+              {(() => {
+                const harvestWords = wordrotInventory.filter((item) => item.source === 'harvest')
+                const synthesizedWords = wordrotInventory.filter((item) => item.source === 'synthesis')
+                return (
+                  <>
+                    <div className="inventory-words-section">
+                      <h3>Words ({harvestWords.length} types)</h3>
 
-                {wordrotInventory.length === 0 ? (
-                  <div className="inventory-words-empty">
-                    <Icon name="FlaskConical" size={32} />
-                    <p>No Wordrots collected yet.</p>
-                    <p className="inventory-words-hint">Click on highlighted Wordrots in posts to collect them!</p>
-                  </div>
-                ) : (
-                  <div className="inventory-words-grid">
-                    {wordrotInventory.map((item) => (
-                      <WordCard
-                        key={item.word.id}
-                        word={item.word}
-                        count={item.count}
-                        onClick={() => handleWordSelect(item.word)}
-                        selected={item.word.text === slotA || item.word.text === slotB || item.word.text === slotC}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+                      {harvestWords.length === 0 ? (
+                        <div className="inventory-words-empty">
+                          <p>No Words collected yet.</p>
+                          <p className="inventory-words-hint">Click on highlighted words in posts to collect them!</p>
+                        </div>
+                      ) : (
+                        <div className="inventory-words-grid">
+                          {harvestWords.map((item) => (
+                            <WordCard
+                              key={item.word.id}
+                              word={item.word}
+                              count={item.count}
+                              onClick={() => handleWordSelect(item.word)}
+                              selected={
+                                item.word.text === slotA || item.word.text === slotB || item.word.text === slotC
+                              }
+                              onRetryImage={retryWordImage}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
-              {/* Synthesis bar - bottom fixed */}
-              <SynthesisPanel
-                inventory={wordrotInventory}
-                synthesis={synthesis}
-                activeSlot={activeSlot}
-                onSlotTap={handleSlotTap}
-                onClear={() => setActiveSlot('A')}
-                onSynthesisComplete={() => {
-                  loadWordrotInventory()
-                }}
-              />
+                    {/* Synthesis bar - bottom sticky */}
+                    <SynthesisPanel
+                      inventory={wordrotInventory}
+                      synthesis={synthesis}
+                      activeSlot={activeSlot}
+                      onSlotTap={handleSlotTap}
+                      onClear={() => setActiveSlot('A')}
+                      onSynthesisComplete={() => {
+                        loadWordrotInventory()
+                      }}
+                    />
+
+                    {/* Synthesized words - created from synthesis */}
+                    {synthesizedWords.length > 0 && (
+                      <div className="inventory-words-section inventory-synthesized-section">
+                        <h3>
+                          <Icon name="FlaskConical" size={20} /> Wordrot ({synthesizedWords.length})
+                        </h3>
+                        <div className="inventory-words-grid">
+                          {synthesizedWords.map((item) => (
+                            <WordCard
+                              key={item.word.id}
+                              word={item.word}
+                              count={item.count}
+                              onClick={() => handleWordSelect(item.word)}
+                              selected={
+                                item.word.text === slotA || item.word.text === slotB || item.word.text === slotC
+                              }
+                              onRetryImage={retryWordImage}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
             </>
           )}
         </div>

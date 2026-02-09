@@ -1237,7 +1237,8 @@ wordrot.post('/retry-image/:wordId', async (c) => {
     return c.json({ error: 'UPLOADER_NSEC not configured' }, 500)
   }
 
-  c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text))
+  const isSynthesis = word.synthesis_count > 0
+  c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text, isSynthesis))
 
   return c.json({ success: true, message: 'Image generation queued' })
 })
@@ -1253,8 +1254,8 @@ wordrot.post('/retry-all-images', async (c) => {
   }
 
   const words = await db
-    .prepare(`SELECT id, text FROM wordrot_words WHERE image_status IN ('failed', 'pending') LIMIT 50`)
-    .all<{ id: number; text: string }>()
+    .prepare(`SELECT id, text, synthesis_count FROM wordrot_words WHERE image_status IN ('failed', 'pending') LIMIT 50`)
+    .all<{ id: number; text: string; synthesis_count: number }>()
 
   const targets = words.results || []
 
@@ -1263,7 +1264,7 @@ wordrot.post('/retry-all-images', async (c) => {
   }
 
   for (const word of targets) {
-    c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text))
+    c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text, word.synthesis_count > 0))
   }
 
   return c.json({

@@ -2,6 +2,7 @@ import { Icon, Button } from '../ui'
 import { WordCard } from './WordCollectCelebration'
 import type { SynthesisResult, UseSynthesisReturn } from '../../hooks/wordrot'
 import type { UserWordrotWord, WordrotWord } from '../../lib/api'
+import { retryWordImage } from '../../lib/api'
 import '../../styles/components/synthesis-panel.css'
 
 interface SynthesisPanelProps {
@@ -82,7 +83,7 @@ export function SynthesisPanel({
         {/* Result slot */}
         <div className={`synthesis-slot result ${lastResult ? 'filled born' : ''}`}>
           {lastResult ? (
-            <WordCard word={lastResult.result} size="small" />
+            <WordCard word={lastResult.result} size="small" onRetryImage={retryWordImage} />
           ) : (
             <span className="synthesis-slot-placeholder">?</span>
           )}
@@ -95,7 +96,7 @@ export function SynthesisPanel({
           {lastResult.isNewWord && (
             <span className="synthesis-badge new-word">
               <Icon name="Sparkles" size={14} />
-              New Word!
+              New Wordrot!
             </span>
           )}
           {lastResult.isNewSynthesis && !lastResult.isNewWord && (
@@ -118,22 +119,31 @@ export function SynthesisPanel({
 
       {/* Actions */}
       <div className="synthesis-actions">
-        <Button variant="secondary" size="sm" onClick={handleClear} disabled={isSynthesizing}>
-          Clear
-        </Button>
-        <Button variant="primary" size="sm" onClick={handleSynthesize} disabled={!canSynthesize || isSynthesizing}>
-          {isSynthesizing ? (
-            <>
-              <Icon name="Loader" size={14} className="spinning" />
-              Synthesizing...
-            </>
-          ) : (
-            <>
-              <Icon name="FlaskConical" size={14} />
-              Synthesize!
-            </>
-          )}
-        </Button>
+        {lastResult ? (
+          <Button variant="primary" size="sm" onClick={handleClear}>
+            <Icon name="FlaskConical" size={14} />
+            New Synthesis
+          </Button>
+        ) : (
+          <>
+            <Button variant="secondary" size="sm" onClick={handleClear} disabled={isSynthesizing}>
+              Clear
+            </Button>
+            <Button variant="primary" size="sm" onClick={handleSynthesize} disabled={!canSynthesize || isSynthesizing}>
+              {isSynthesizing ? (
+                <>
+                  <Icon name="Loader" size={14} className="spinning" />
+                  Synthesizing...
+                </>
+              ) : (
+                <>
+                  <Icon name="FlaskConical" size={14} />
+                  Synthesize!
+                </>
+              )}
+            </Button>
+          </>
+        )}
       </div>
     </div>
   )

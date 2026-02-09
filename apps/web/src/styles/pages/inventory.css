@@ -563,6 +563,16 @@
   gap: 0.75rem;
 }
 
+/* Synthesized words section */
+.inventory-synthesized-section {
+  border-color: #3d3d5c;
+  background: linear-gradient(180deg, var(--surface-primary) 0%, rgba(168, 85, 247, 0.05) 100%);
+}
+
+.inventory-synthesized-section h3 {
+  color: #a855f7;
+}
+
 /* Mobile adjustments */
 @media (max-width: 480px) {
   .inventory-words-grid {

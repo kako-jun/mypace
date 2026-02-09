@@ -175,12 +175,14 @@ export function WordCard({
   onClick,
   selected,
   size = 'normal',
+  onRetryImage,
 }: {
   word: WordrotWord
   count?: number
   onClick?: () => void
   selected?: boolean
   size?: 'small' | 'normal' | 'large'
+  onRetryImage?: (wordId: number) => void
 }) {
   const [word, setWord] = useState(initialWord)
 
@@ -232,6 +234,18 @@ export function WordCard({
         {!isImageReady && word.image_status !== 'failed' && (
           <div className="word-card-loading">
             <Icon name="Loader" size={16} className="spinning" />
+          </div>
+        )}
+        {word.image_status === 'failed' && onRetryImage && (
+          <div
+            className="word-card-retry"
+            onClick={(e) => {
+              e.stopPropagation()
+              setWord({ ...word, image_status: 'generating' })
+              onRetryImage(word.id)
+            }}
+          >
+            <Icon name="RefreshCw" size={16} />
           </div>
         )}
       </div>

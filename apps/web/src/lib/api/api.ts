@@ -750,6 +750,18 @@ export async function fetchWordDetails(text: string): Promise<{
   }
 }
 
+// Retry image generation for a word
+export async function retryWordImage(wordId: number): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/wordrot/retry-image/${wordId}`, {
+      method: 'POST',
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 // Get leaderboard
 export async function fetchWordrotLeaderboard(): Promise<{
   topDiscoverers: Array<{ pubkey: string; count: number }>
