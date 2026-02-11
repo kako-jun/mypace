@@ -612,6 +612,63 @@ async function generateImage(ai: Bindings['AI'], word: string, isSynthesis = fal
 }
 
 // Helper: Upload to nostr.build using NIP-98 authentication
+
+// Helper: Extract SHA-256 hash from nostr.build URL
+// URL format: https://image.nostr.build/<hash>.<ext>
+function extractHashFromNostrBuildUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url)
+    const filename = urlObj.pathname.split('/').pop()
+    if (!filename) return null
+    const hash = filename.replace(/\.[^.]+$/, '')
+    if (/^[a-f0-9]{64}$/i.test(hash)) return hash
+    return null
+  } catch {
+    return null
+  }
+}
+
+// Helper: Delete from nostr.build using NIP-98 authentication
+async function deleteFromNostrBuild(imageUrl: string, nsec: string): Promise<boolean> {
+  try {
+    const hash = extractHashFromNostrBuildUrl(imageUrl)
+    if (!hash) {
+      console.error(`[deleteFromNostrBuild] Could not extract hash from URL: ${imageUrl}`)
+      return false
+    }
+
+    const deleteUrl = `https://nostr.build/api/v2/nip96/upload/${hash}`
+    const { data: secretKey } = nip19.decode(nsec)
+
+    const authEvent = {
+      kind: 27235,
+      created_at: Math.floor(Date.now() / 1000),
+      tags: [
+        ['u', deleteUrl],
+        ['method', 'DELETE'],
+      ],
+      content: '',
+      pubkey: '',
+    }
+
+    const signedEvent = finalizeEvent(authEvent, secretKey as Uint8Array)
+    const authBase64 = btoa(JSON.stringify(signedEvent))
+
+    const response = await fetch(deleteUrl, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Nostr ${authBase64}`,
+      },
+    })
+
+    console.log(`[deleteFromNostrBuild] DELETE ${hash}: status ${response.status}`)
+    return response.ok || response.status === 404 // 404 = already gone, treat as success
+  } catch (e) {
+    console.error('[deleteFromNostrBuild] Error:', e)
+    return false
+  }
+}
+
 async function uploadToNostrBuild(imageData: ArrayBuffer, nsec: string): Promise<string | null> {
   try {
     console.log(`[uploadToNostrBuild] Uploading image, size: ${imageData.byteLength} bytes`)
@@ -963,16 +1020,21 @@ async function generateWordImage(
       return
     }
 
-    // Update word with image URL
+    // Extract hash for future deletion
+    const imageHash = extractHashFromNostrBuildUrl(imageUrl)
+
+    // Update word with image URL and hash
     if (isSynthesis) {
       await db
-        .prepare(`UPDATE wordrot_words SET image_url_synthesis = ?, image_status_synthesis = 'done' WHERE id = ?`)
-        .bind(imageUrl, wordId)
+        .prepare(
+          `UPDATE wordrot_words SET image_url_synthesis = ?, image_hash_synthesis = ?, image_status_synthesis = 'done' WHERE id = ?`
+        )
+        .bind(imageUrl, imageHash, wordId)
         .run()
     } else {
       await db
-        .prepare(`UPDATE wordrot_words SET image_url = ?, image_status = 'done' WHERE id = ?`)
-        .bind(imageUrl, wordId)
+        .prepare(`UPDATE wordrot_words SET image_url = ?, image_hash = ?, image_status = 'done' WHERE id = ?`)
+        .bind(imageUrl, imageHash, wordId)
         .run()
     }
   } catch (e) {
@@ -1416,6 +1478,74 @@ wordrot.post('/retry-image/:wordId', async (c) => {
   c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text, isSynthesis))
 
   return c.json({ success: true, message: 'Image generation queued' })
+})
+
+// POST /api/wordrot/clear-all-images - Delete all wordrot images from nostr.build and reset DB
+wordrot.post('/clear-all-images', async (c) => {
+  const db = c.env.DB
+  const nsec = c.env.UPLOADER_NSEC
+
+  if (!nsec) {
+    return c.json({ error: 'UPLOADER_NSEC not configured' }, 500)
+  }
+
+  // Get all words with image URLs
+  const words = await db
+    .prepare(
+      `SELECT id, text, image_url, image_url_synthesis FROM wordrot_words WHERE image_url IS NOT NULL OR image_url_synthesis IS NOT NULL`
+    )
+    .all<{ id: number; text: string; image_url: string | null; image_url_synthesis: string | null }>()
+
+  const targets = words.results || []
+
+  if (targets.length === 0) {
+    return c.json({ success: true, message: 'No images to delete', deleted: 0, failed: 0 })
+  }
+
+  let deleted = 0
+  let failed = 0
+  const errors: string[] = []
+
+  for (const word of targets) {
+    // Delete harvest image
+    if (word.image_url) {
+      const ok = await deleteFromNostrBuild(word.image_url, nsec)
+      if (ok) {
+        deleted++
+      } else {
+        failed++
+        errors.push(`harvest:${word.text}(${word.id})`)
+      }
+    }
+    // Delete synthesis image
+    if (word.image_url_synthesis) {
+      const ok = await deleteFromNostrBuild(word.image_url_synthesis, nsec)
+      if (ok) {
+        deleted++
+      } else {
+        failed++
+        errors.push(`synthesis:${word.text}(${word.id})`)
+      }
+    }
+  }
+
+  // Reset all image columns in DB
+  await db
+    .prepare(
+      `UPDATE wordrot_words SET image_url = NULL, image_hash = NULL, image_status = 'pending', image_url_synthesis = NULL, image_hash_synthesis = NULL, image_status_synthesis = 'pending'`
+    )
+    .run()
+
+  // Clear image queue
+  await db.prepare(`DELETE FROM wordrot_image_queue`).run()
+
+  return c.json({
+    success: true,
+    deleted,
+    failed,
+    errors: errors.length > 0 ? errors : undefined,
+    message: `Deleted ${deleted} images from nostr.build, ${failed} failed. DB image data reset.`,
+  })
 })
 
 // POST /api/wordrot/retry-all-images - Retry image generation for all failed/pending words
