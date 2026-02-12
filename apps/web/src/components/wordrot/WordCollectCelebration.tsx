@@ -266,7 +266,6 @@ export function WordCard({
         )}
       </div>
       <span className="word-card-text">{word.text}</span>
-      {count !== undefined && count > 1 && <span className="word-card-count">x{count}</span>}
     </button>
   )
 }
