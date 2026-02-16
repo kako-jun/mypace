@@ -18,6 +18,8 @@ export interface VideoToWebPOptions {
   }
   /** Rotation in degrees (-90 to 90) */
   rotation?: number
+  /** CSS filter string to apply (e.g. 'brightness(1.1) contrast(1.3)') */
+  filter?: string
   /** Target FPS (default: 24) */
   fps?: number
   /** Max dimension for output (default: 320) */
@@ -35,7 +37,7 @@ interface WebPAnimationFrame {
  * Extract frames from video and encode to animated WebP
  */
 export async function videoToAnimatedWebP(videoFile: File, options: VideoToWebPOptions): Promise<File | null> {
-  const { startTime, endTime, crop, rotation = 0, fps = 24, maxDimension = 320, onProgress } = options
+  const { startTime, endTime, crop, rotation = 0, filter, fps = 24, maxDimension = 320, onProgress } = options
 
   // Validate time range (max 10 seconds)
   const duration = Math.min(endTime - startTime, 10)
@@ -118,6 +120,7 @@ export async function videoToAnimatedWebP(videoFile: File, options: VideoToWebPO
         tempCanvas.height = video.videoHeight
         const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true })
         if (tempCtx) {
+          if (filter) tempCtx.filter = filter
           const radians = (rotation * Math.PI) / 180
           tempCtx.translate(video.videoWidth / 2, video.videoHeight / 2)
           tempCtx.rotate(radians)
@@ -129,7 +132,9 @@ export async function videoToAnimatedWebP(videoFile: File, options: VideoToWebPO
         }
       } else {
         // No rotation - draw directly with crop
+        if (filter) ctx.filter = filter
         ctx.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight)
+        if (filter) ctx.filter = 'none'
       }
 
       // Get RGBA data
