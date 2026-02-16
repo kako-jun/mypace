@@ -371,6 +371,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
             <button
               type="button"
               className={`video-editor-filter-toggle ${filterEnabled ? 'active' : ''}`}
+              aria-pressed={filterEnabled}
               onClick={() => setFilterEnabled((v) => !v)}
             >
               Film

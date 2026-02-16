@@ -106,7 +106,7 @@ AndroidのファイラーやChromeの共有メニューからMY PACEに直接シ
 ### 概要
 
 - **テキストのシェア**: Chromeの共有ボタン → MY PACEを選択 → 投稿欄にテキストがセットされた状態で開く
-- **画像のシェア**: ファイラーで画像を共有 → MY PACEを選択 → ImageEditorが開く（クロップ等の編集が可能）
+- **画像のシェア**: ファイラーで画像を共有 → MY PACEを選択 → ImageEditorが開く（クロップ・フィルタ等の編集が可能）
 
 ### マニフェスト設定
 
@@ -159,7 +159,7 @@ IndexedDBに一時保存（share-target-images）
 HomePage: share_imageパラメータを検知
     ↓ IndexedDBから画像を取得 → 即座にIndexedDBから削除
     ↓ Fileオブジェクトはメモリ（React state）に保持
-ImageEditorが開く（クロップ・ステッカー追加可能）
+ImageEditorが開く（クロップ・フィルタ・ステッカー追加可能）
     ↓
 （以降は通常のImagePicker経由と同じ動作）
 ```

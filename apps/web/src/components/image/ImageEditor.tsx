@@ -266,6 +266,7 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
             <button
               type="button"
               className={`image-editor-filter-toggle ${filterEnabled ? 'active' : ''}`}
+              aria-pressed={filterEnabled}
               onClick={() => setFilterEnabled((v) => !v)}
             >
               Film

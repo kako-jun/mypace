@@ -65,17 +65,17 @@ body.long-mode-active .image-editor-modal {
 
 /* Filter toggle (in header, before close button) */
 .image-editor-filter-toggle {
-  padding: 0.2rem 0.6rem;
+  padding: 0.25rem 0.5rem;
   font-size: 0.75rem;
   font-weight: 500;
-  border: 1.5px solid var(--border-light);
+  border: 1px solid var(--border-light);
   border-radius: 999px;
   background: var(--surface-secondary);
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
   margin-left: auto;
-  margin-right: 0.5rem;
+  margin-right: 2rem;
 }
 
 .image-editor-filter-toggle:hover {
