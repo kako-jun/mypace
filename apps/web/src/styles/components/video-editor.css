@@ -63,6 +63,31 @@ body.long-mode-active .video-editor-modal {
   font-weight: 600;
 }
 
+/* Filter toggle (in header, before close button) */
+.video-editor-filter-toggle {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+  background: var(--surface-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: auto;
+  margin-right: 2rem;
+}
+
+.video-editor-filter-toggle:hover {
+  border-color: var(--text-muted);
+}
+
+.video-editor-filter-toggle.active {
+  background: var(--text-primary);
+  color: var(--surface-primary);
+  border-color: var(--text-primary);
+}
+
 /* Content area */
 .video-editor-content {
   display: flex;

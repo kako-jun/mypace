@@ -38,6 +38,10 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
   // Rotation state (-90 to +90 degrees)
   const [rotation, setRotation] = useState(0)
 
+  // Filter state
+  const [filterEnabled, setFilterEnabled] = useState(false)
+  const RETRO_FILTER = 'brightness(1.1) contrast(1.3)'
+
   // Create object URL for file
   useEffect(() => {
     setImageLoaded(false)
@@ -167,6 +171,7 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
       tempCanvas.height = image.naturalHeight
       const tempCtx = tempCanvas.getContext('2d')
       if (tempCtx) {
+        if (filterEnabled) tempCtx.filter = RETRO_FILTER
         const radians = (rotation * Math.PI) / 180
         tempCtx.translate(image.naturalWidth / 2, image.naturalHeight / 2)
         tempCtx.rotate(radians)
@@ -177,7 +182,9 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
         ctx.drawImage(tempCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
       }
     } else {
+      if (filterEnabled) ctx.filter = RETRO_FILTER
       ctx.drawImage(image, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
+      ctx.filter = 'none'
     }
 
     // Draw stickers
@@ -225,11 +232,11 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
       fileType,
       0.95
     )
-  }, [completedCrop, stickers, rotation, onComplete])
+  }, [completedCrop, stickers, rotation, filterEnabled, onComplete])
 
-  // No stickers, no crop, and no rotation = use original
+  // No stickers, no crop, no rotation, and no filter = use original
   const handleConfirmWrapper = useCallback(async () => {
-    if (stickers.length === 0 && rotation === 0) {
+    if (stickers.length === 0 && rotation === 0 && !filterEnabled) {
       if (!completedCrop) {
         onComplete(file)
         return
@@ -248,7 +255,7 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
       }
     }
     await handleConfirm()
-  }, [stickers.length, rotation, completedCrop, file, onComplete, handleConfirm])
+  }, [stickers.length, rotation, filterEnabled, completedCrop, file, onComplete, handleConfirm])
 
   return (
     <Portal>
@@ -256,6 +263,14 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
         <div className="image-editor-modal" onClick={(e) => e.stopPropagation()}>
           <div className="image-editor-header">
             <h3>Edit Image</h3>
+            <button
+              type="button"
+              className={`image-editor-filter-toggle ${filterEnabled ? 'active' : ''}`}
+              aria-pressed={filterEnabled}
+              onClick={() => setFilterEnabled((v) => !v)}
+            >
+              Film
+            </button>
             <CloseButton onClick={onCancel} size={20} />
           </div>
 
@@ -277,7 +292,10 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
                     src={imageSrc}
                     alt="Edit preview"
                     className="image-editor-image"
-                    style={{ transform: rotation !== 0 ? `rotate(${rotation}deg)` : undefined }}
+                    style={{
+                      transform: rotation !== 0 ? `rotate(${rotation}deg)` : undefined,
+                      filter: filterEnabled ? RETRO_FILTER : undefined,
+                    }}
                     onLoad={() => {
                       requestAnimationFrame(() => {
                         setCrop({
