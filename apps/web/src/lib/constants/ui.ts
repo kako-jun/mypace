@@ -56,7 +56,7 @@ export function isValidReaction(content: string): boolean {
 
 // Filter gacha presets
 export const FILTER_PRESETS = [
-  { name: 'Fuji', filter: 'brightness(1.1) contrast(1.3) saturate(1.1) hue-rotate(-5deg)', color: '#00a86b' },
+  { name: 'Fuji', filter: 'brightness(1.1) contrast(1.3) saturate(1.2) hue-rotate(-5deg)', color: '#00a86b' },
   { name: 'Kodak', filter: 'brightness(1.05) contrast(1.2) saturate(0.9) sepia(0.15)', color: '#e6a817' },
   { name: 'Wash', filter: 'brightness(1.15) contrast(0.85) saturate(0.7)', color: '#b8a9c9' },
   { name: 'Xpro', filter: 'brightness(1.05) contrast(1.4) saturate(1.3) hue-rotate(15deg)', color: '#e04070' },
