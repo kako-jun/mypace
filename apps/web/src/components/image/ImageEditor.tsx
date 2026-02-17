@@ -1,11 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { CloseButton, Portal, RotationSlider } from '../ui'
+import { CloseButton, Portal, RotationSlider, GachaFilterButton } from '../ui'
 import Button from '../ui/Button'
 import { PostStickers } from '../post/PostStickers'
 import { getStickerHistory, type StickerHistoryItem } from '../../lib/api'
 import type { Sticker, StickerQuadrant } from '../../types'
+import type { FilterPreset } from '../../lib/constants/ui'
 import '../../styles/components/image-editor.css'
 
 interface ImageEditorProps {
@@ -38,9 +39,8 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
   // Rotation state (-90 to +90 degrees)
   const [rotation, setRotation] = useState(0)
 
-  // Filter state
-  const [filterEnabled, setFilterEnabled] = useState(false)
-  const RETRO_FILTER = 'brightness(1.1) contrast(1.3)'
+  // Filter gacha
+  const [activeFilter, setActiveFilter] = useState<FilterPreset | null>(null)
 
   // Create object URL for file
   useEffect(() => {
@@ -171,7 +171,7 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
       tempCanvas.height = image.naturalHeight
       const tempCtx = tempCanvas.getContext('2d')
       if (tempCtx) {
-        if (filterEnabled) tempCtx.filter = RETRO_FILTER
+        if (activeFilter) tempCtx.filter = activeFilter.filter
         const radians = (rotation * Math.PI) / 180
         tempCtx.translate(image.naturalWidth / 2, image.naturalHeight / 2)
         tempCtx.rotate(radians)
@@ -182,7 +182,7 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
         ctx.drawImage(tempCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
       }
     } else {
-      if (filterEnabled) ctx.filter = RETRO_FILTER
+      if (activeFilter) ctx.filter = activeFilter.filter
       ctx.drawImage(image, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
       ctx.filter = 'none'
     }
@@ -232,11 +232,11 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
       fileType,
       0.95
     )
-  }, [completedCrop, stickers, rotation, filterEnabled, onComplete])
+  }, [completedCrop, stickers, rotation, activeFilter, onComplete])
 
   // No stickers, no crop, no rotation, and no filter = use original
   const handleConfirmWrapper = useCallback(async () => {
-    if (stickers.length === 0 && rotation === 0 && !filterEnabled) {
+    if (stickers.length === 0 && rotation === 0 && !activeFilter) {
       if (!completedCrop) {
         onComplete(file)
         return
@@ -255,7 +255,7 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
       }
     }
     await handleConfirm()
-  }, [stickers.length, rotation, filterEnabled, completedCrop, file, onComplete, handleConfirm])
+  }, [stickers.length, rotation, activeFilter, completedCrop, file, onComplete, handleConfirm])
 
   return (
     <Portal>
@@ -263,14 +263,11 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
         <div className="image-editor-modal" onClick={(e) => e.stopPropagation()}>
           <div className="image-editor-header">
             <h3>Edit Image</h3>
-            <button
-              type="button"
-              className={`image-editor-filter-toggle ${filterEnabled ? 'active' : ''}`}
-              aria-pressed={filterEnabled}
-              onClick={() => setFilterEnabled((v) => !v)}
-            >
-              Film
-            </button>
+            <GachaFilterButton
+              activeFilter={activeFilter}
+              onChange={setActiveFilter}
+              className="image-editor-filter-toggle"
+            />
             <CloseButton onClick={onCancel} size={20} />
           </div>
 
@@ -294,7 +291,7 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
                     className="image-editor-image"
                     style={{
                       transform: rotation !== 0 ? `rotate(${rotation}deg)` : undefined,
-                      filter: filterEnabled ? RETRO_FILTER : undefined,
+                      filter: activeFilter ? activeFilter.filter : undefined,
                     }}
                     onLoad={() => {
                       requestAnimationFrame(() => {

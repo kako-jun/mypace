@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { CloseButton, Portal, Icon, RotationSlider } from '../ui'
+import { CloseButton, Portal, Icon, RotationSlider, GachaFilterButton } from '../ui'
 import Button from '../ui/Button'
 import { videoToAnimatedWebP, getVideoDuration } from '../../lib/animatedWebpEncoder'
+import type { FilterPreset } from '../../lib/constants/ui'
 import '../../styles/components/video-editor.css'
 
 interface VideoEditorProps {
@@ -38,9 +39,8 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
   // Rotation state (-90 to +90 degrees)
   const [rotation, setRotation] = useState(0)
 
-  // Filter state
-  const [filterEnabled, setFilterEnabled] = useState(false)
-  const RETRO_FILTER = 'brightness(1.1) contrast(1.3)'
+  // Filter gacha
+  const [activeFilter, setActiveFilter] = useState<FilterPreset | null>(null)
 
   // Playback state
   const [playing, setPlaying] = useState(false)
@@ -334,7 +334,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
         endTime,
         crop: cropPixels,
         rotation,
-        filter: filterEnabled ? RETRO_FILTER : undefined,
+        filter: activeFilter ? activeFilter.filter : undefined,
         fps: 24,
         maxDimension: 320,
         onProgress: setProgress,
@@ -368,14 +368,11 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
         <div className="video-editor-modal" onClick={(e) => e.stopPropagation()}>
           <div className="video-editor-header">
             <h3>Edit Video</h3>
-            <button
-              type="button"
-              className={`video-editor-filter-toggle ${filterEnabled ? 'active' : ''}`}
-              aria-pressed={filterEnabled}
-              onClick={() => setFilterEnabled((v) => !v)}
-            >
-              Film
-            </button>
+            <GachaFilterButton
+              activeFilter={activeFilter}
+              onChange={setActiveFilter}
+              className="video-editor-filter-toggle"
+            />
             <CloseButton onClick={onCancel} size={20} />
           </div>
 
@@ -399,7 +396,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
                     className="video-editor-video"
                     style={{
                       transform: rotation !== 0 ? `rotate(${rotation}deg)` : undefined,
-                      filter: filterEnabled ? RETRO_FILTER : undefined,
+                      filter: activeFilter ? activeFilter.filter : undefined,
                     }}
                     onLoadedMetadata={handleVideoLoaded}
                     muted

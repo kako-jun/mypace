@@ -1,0 +1,23 @@
+/* Gacha filter button (capsule style) */
+.gacha-filter-button {
+  min-width: 4rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+  background: var(--surface-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.gacha-filter-button:hover {
+  border-color: var(--text-muted);
+}
+
+.gacha-filter-button.active {
+  color: var(--surface-primary);
+  border-color: var(--text-primary);
+}
