@@ -61,7 +61,7 @@ export const FILTER_PRESETS = [
   { name: 'Wash', filter: 'brightness(1.15) contrast(0.85) saturate(0.7)', color: '#b8a9c9' },
   { name: 'Xpro', filter: 'brightness(1.05) contrast(1.4) saturate(1.3) hue-rotate(15deg)', color: '#e04070' },
   { name: 'Mono', filter: 'brightness(1.1) contrast(1.4) grayscale(1)', color: '#606060' },
-  { name: 'Cool', filter: 'brightness(1.05) contrast(1.2) saturate(0.85) hue-rotate(10deg)', color: '#4a90d9' },
+  { name: 'Cool', filter: 'brightness(1.05) contrast(1.2) saturate(0.85) hue-rotate(20deg)', color: '#4a90d9' },
   { name: 'Vivid', filter: 'contrast(1.2) saturate(1.4)', color: '#ff6b35' },
 ] as const
 
