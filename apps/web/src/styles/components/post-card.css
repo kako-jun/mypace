@@ -59,9 +59,10 @@
   transition: filter 0.15s ease-out;
 }
 
-/* Sticker area: position reference for stickers, excludes ThreadReplies */
+/* Sticker area: wraps content excluding ThreadReplies */
+/* No position:relative here — stickers position to .post-card instead,
+   so they cover the full card including padding (matching PostView behavior) */
 .post-card-sticker-area {
-  position: relative;
 }
 
 .post-card-wrapper:hover {
