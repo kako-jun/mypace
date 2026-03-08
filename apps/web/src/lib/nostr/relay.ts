@@ -600,11 +600,12 @@ export async function fetchEventMetadata(
           })
         }
       } else if (e.kind === 1) {
-        // リプライ（rootへの返信のみ）
+        // リプライ（直接の親に紐づける。reply marker優先、なければroot）
         const eTags = e.tags.filter((t) => t[0] === 'e')
         if (eTags.length === 0) continue
+        const replyTag = eTags.find((t) => t[3] === 'reply')
         const rootTag = eTags.find((t) => t[3] === 'root') || eTags[0]
-        const replyTargetId = rootTag[1]
+        const replyTargetId = (replyTag || rootTag)[1]
         if (result[replyTargetId]) {
           result[replyTargetId].replies.replies.push(toEvent(e))
         }

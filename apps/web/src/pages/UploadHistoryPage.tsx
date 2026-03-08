@@ -17,7 +17,7 @@ export function UploadHistoryPage() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deletePopupPosition, setDeletePopupPosition] = useState<{ top: number; left: number } | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
-  const [deleteMessage, setDeleteMessage] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [pubkey, setPubkey] = useState<string>('')
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
   const themeProps = getThemeCardProps(getThemeColors())
@@ -78,19 +78,18 @@ export function UploadHistoryPage() {
 
   const handleDeleteFromNostrBuild = async (url: string) => {
     setDeleting(url)
-    setDeleteMessage(null)
+    setDeleteError(null)
 
     const result = await deleteFromNostrBuild(url)
 
     if (result.success) {
-      // Remove from history
       if (pubkey) {
         await deleteUploadFromHistory(pubkey, url)
       }
       setHistory(history.filter((item) => item.url !== url))
-      setDeleteMessage('Deleted (cache may take a few minutes to clear)')
     } else {
-      setDeleteMessage(`Error: ${result.error || 'Failed to delete'}`)
+      setDeleteError(url)
+      setTimeout(() => setDeleteError(null), 3000)
     }
 
     setDeleting(null)
@@ -113,9 +112,10 @@ export function UploadHistoryPage() {
 
       <div className={`upload-history-header ${textClass}`}>
         <h2>Upload History</h2>
-        <p>Files uploaded to nostr.build. Press DELETE to remove from server.</p>
+        <p>
+          Files uploaded to nostr.build. Press DELETE to remove from server (cache may take a few minutes to clear).
+        </p>
       </div>
-      {deleteMessage && <p className={`upload-history-message ${textClass}`}>{deleteMessage}</p>}
 
       {loading ? (
         <div className="upload-history-empty">
@@ -164,7 +164,7 @@ export function UploadHistoryPage() {
                   disabled={deleting === item.url}
                   title="Delete from nostr.build"
                 >
-                  {deleting === item.url ? '...' : 'DELETE'}
+                  {deleting === item.url ? '...' : deleteError === item.url ? 'Error' : 'DELETE'}
                 </TextButton>
               </div>
             </div>

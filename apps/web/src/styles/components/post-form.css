@@ -510,7 +510,9 @@
 /* Post preview */
 .post-preview {
   position: relative;
-  overflow: visible;
+  overflow-x: visible;
+  overflow-y: auto;
+  max-height: 50vh;
   background: var(--surface-secondary);
   border-radius: 8px;
   padding: 0.75rem;

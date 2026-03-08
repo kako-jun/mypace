@@ -264,7 +264,9 @@ export function PostForm({
       }
 
       if (replyingTo) {
-        const event = await createReplyEvent(finalContent, replyingTo, undefined, extraTags)
+        // NIP-10: Find the thread root from replyingTo's e-tags
+        const rootTag = replyingTo.tags.find((t) => t[0] === 'e' && t[3] === 'root')
+        const event = await createReplyEvent(finalContent, replyingTo, rootTag?.[1], extraTags)
         await publishEvent(event)
         onContentChange('')
         setStickers([])

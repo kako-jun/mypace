@@ -10,11 +10,14 @@
   direction: rtl;
 }
 
-.timeline .post-card {
+.timeline .post-card-wrapper {
   break-inside: avoid;
   margin-bottom: 1rem;
   direction: ltr;
-  overflow: hidden;
+}
+
+.timeline .post-card {
+  direction: ltr;
 }
 
 /* Timeline Action Wrapper - layout for timeline buttons */

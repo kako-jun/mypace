@@ -60,6 +60,31 @@
   cursor: pointer;
 }
 
+.rotation-step-btn {
+  background: var(--surface-tertiary, var(--border-light));
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.65rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.rotation-step-btn:hover {
+  background: var(--accent);
+  color: var(--text-on-accent, #fff);
+}
+
+.rotation-step-btn:active {
+  transform: scale(0.9);
+}
+
 .rotation-slider-value {
   font-size: 0.75rem;
   font-weight: 500;

@@ -94,7 +94,7 @@ async function findExistingQuote(reporterPubkey: string, normalizedUrl: string):
         // Query for reporter's posts with the 'r' tag matching the URL
         const filter = {
           authors: [reporterPubkey],
-          kinds: [1],
+          kinds: [42000, 1],
           '#r': [normalizedUrl],
           '#t': [QUOTE_TAG],
           limit: 1,
@@ -280,7 +280,7 @@ reporter.post('/', async (c) => {
     const content = `${intro}\n${cta}\n\n${ogp.title}\n${url}`
 
     const eventTemplate = {
-      kind: 1,
+      kind: 42000,
       pubkey: pk,
       created_at: now,
       tags: [

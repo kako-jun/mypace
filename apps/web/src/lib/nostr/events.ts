@@ -255,7 +255,7 @@ export async function createRepostEvent(targetEvent: Event): Promise<Event> {
 export async function createReplyEvent(
   content: string,
   replyTo: Event,
-  rootEvent?: Event,
+  rootEventId?: string,
   additionalTags?: string[][]
 ): Promise<Event> {
   const tags: string[][] = [
@@ -268,16 +268,19 @@ export async function createReplyEvent(
     tags.push([AURORA_TAG, themeColors.topLeft, themeColors.topRight, themeColors.bottomLeft, themeColors.bottomRight])
   }
 
-  if (rootEvent && rootEvent.id !== replyTo.id) {
-    tags.push(['e', rootEvent.id, '', 'root'])
+  if (rootEventId && rootEventId !== replyTo.id) {
+    // NIP-10: replying within a thread — root + reply markers
+    tags.push(['e', rootEventId, '', 'root'])
     tags.push(['e', replyTo.id, '', 'reply'])
-    tags.push(['p', rootEvent.pubkey])
-    if (replyTo.pubkey !== rootEvent.pubkey) {
-      tags.push(['p', replyTo.pubkey])
-    }
   } else {
+    // Replying directly to a top-level post — this becomes root
     tags.push(['e', replyTo.id, '', 'root'])
-    tags.push(['p', replyTo.pubkey])
+  }
+  // Carry forward all p-tags from replyTo + add replyTo author
+  const existingPubkeys = new Set(replyTo.tags.filter((t) => t[0] === 'p').map((t) => t[1]))
+  existingPubkeys.add(replyTo.pubkey)
+  for (const pk of existingPubkeys) {
+    tags.push(['p', pk])
   }
 
   // Add additional tags (e.g., sticker tags)
