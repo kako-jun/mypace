@@ -672,23 +672,33 @@ export async function fetchEventsEnrich(
   // 動的インポートで循環参照回避
   const { fetchViewsAndSuperMentions } = await import('../api/api')
 
-  // 並列で取得
-  const [metadata, profiles, { views, superMentions }] = await Promise.all([
+  // 並列で取得（allSettledで個別の失敗が全体を巻き添えにしないようにする）
+  const [metadataResult, profilesResult, viewsResult] = await Promise.allSettled([
     fetchEventMetadata(eventIds, viewerPubkey),
     fetchProfiles(authorPubkeys),
     fetchViewsAndSuperMentions(eventIds, superMentionPaths),
   ])
 
+  const metadata = metadataResult.status === 'fulfilled' ? metadataResult.value : {}
+  const profiles = profilesResult.status === 'fulfilled' ? profilesResult.value : {}
+  const { views, superMentions } =
+    viewsResult.status === 'fulfilled'
+      ? viewsResult.value
+      : {
+          views: {} as Record<string, { impression: number; detail: number }>,
+          superMentions: {} as Record<string, string>,
+        }
+
   // profilesをRecord<string, Profile | null>に変換
   // fetchProfilesの結果にキーが存在しない場合（取得失敗）はundefinedのまま保持し、リトライ可能にする
-  const profilesResult: Record<string, Profile | null> = {}
+  const profilesFinal: Record<string, Profile | null> = {}
   for (const pk of authorPubkeys) {
     if (pk in profiles) {
-      profilesResult[pk] = profiles[pk]
+      profilesFinal[pk] = profiles[pk]
     }
   }
 
-  return { metadata, profiles: profilesResult, superMentions, views }
+  return { metadata, profiles: profilesFinal, superMentions, views }
 }
 
 // マガジン取得（ユーザーのマガジン一覧）

@@ -139,8 +139,17 @@ export async function loadEnrichForEvents(
     setReposts((prev) => ({ ...prev, ...repostMap }))
     setViews((prev) => ({ ...prev, ...viewMap }))
 
-    // エラー時はプロフィールをundefinedのまま保持（次回リトライ可能にする）
-    // 虹色ローディングアニメーションは継続するが、マイペースさん誤表示よりも適切
+    // エラー時はプロフィールをnullに設定（ローディングアニメーションを止める）
+    // undefinedのまま放置すると永遠にアニメーションが止まらなくなるため
+    setProfiles((prev) => {
+      const newProfiles = { ...prev }
+      for (const pk of authorPubkeys) {
+        if (newProfiles[pk] === undefined) {
+          newProfiles[pk] = null
+        }
+      }
+      return newProfiles
+    })
   }
 }
 

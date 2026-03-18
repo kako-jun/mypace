@@ -139,7 +139,7 @@ function WordCollectToast({ result, phase }: WordCollectToastProps) {
     <div ref={toastRef} className={`word-toast ${phaseClass}`} style={phase === 'flying' ? flyStyle : undefined}>
       {/* Word image */}
       <div className={`word-toast-image ${!isImageReady ? 'generating' : ''}`}>
-        {isImageReady && <img src={word.image_url} alt={word.text} />}
+        {isImageReady && <img src={word.image_url ?? undefined} alt={word.text} />}
         {!isImageReady && word.image_status !== 'failed' && (
           <div className="word-toast-loading">
             <Icon name="Loader" size={14} className="spinning" />

@@ -1,5 +1,14 @@
 import { useState } from 'react'
-import { importNsec, saveSecretKey, clearSecretKey, hasNip07, enableNip07, disableNip07 } from '../../lib/nostr/keys'
+import {
+  importNsec,
+  saveSecretKey,
+  clearSecretKey,
+  hasNip07,
+  enableNip07,
+  disableNip07,
+  getMyPubkey,
+  getPublicKeyFromSecret,
+} from '../../lib/nostr/keys'
 import { Button, Input, ErrorMessage, SettingsSection } from '../ui'
 import { copyToClipboard, removeLocalProfile } from '../../lib/utils'
 import { resetThemeColors } from '../../lib/storage'
@@ -45,13 +54,20 @@ export default function KeysSection({
     try {
       const sk = importNsec(importValue.trim())
 
+      // Check if this is the same key (re-import of existing identity)
+      const currentPubkey = getMyPubkey()
+      const newPubkey = getPublicKeyFromSecret(sk)
+      const isSameKey = currentPubkey === newPubkey
+
       // Disable NIP-07 mode when importing nsec
       disableNip07()
       await saveSecretKey(sk)
 
-      // Clear all settings for new identity
-      removeLocalProfile()
-      resetThemeColors()
+      // Only clear settings when switching to a different identity
+      if (!isSameKey) {
+        removeLocalProfile()
+        resetThemeColors()
+      }
 
       // Reload to start fresh with new identity
       window.location.reload()
