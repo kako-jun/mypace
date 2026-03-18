@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo, type ReactNode } from 'react'
 import { Icon } from '../ui'
 import { fetchWordDetails } from '../../lib/api'
 import type { WordrotWord } from '../../lib/api'
@@ -109,17 +109,6 @@ function WordCollectToast({ result, phase }: WordCollectToastProps) {
     return () => clearInterval(poll)
   }, [word.text, word.image_status])
 
-  // Default placeholder image for words without generated image
-  const defaultImage =
-    'data:image/svg+xml,' +
-    encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-      <rect width="48" height="48" fill="#1a1a2e"/>
-      <text x="24" y="32" font-size="20" text-anchor="middle" fill="#6366f1">?</text>
-    </svg>
-  `)
-
-  const imageUrl = word.image_url || defaultImage
   const isImageReady = word.image_status === 'done' && word.image_url
 
   // When entering flying phase, compute target position from INV button
@@ -150,7 +139,7 @@ function WordCollectToast({ result, phase }: WordCollectToastProps) {
     <div ref={toastRef} className={`word-toast ${phaseClass}`} style={phase === 'flying' ? flyStyle : undefined}>
       {/* Word image */}
       <div className={`word-toast-image ${!isImageReady ? 'generating' : ''}`}>
-        <img src={imageUrl} alt={word.text} />
+        {isImageReady && <img src={word.image_url} alt={word.text} />}
         {!isImageReady && word.image_status !== 'failed' && (
           <div className="word-toast-loading">
             <Icon name="Loader" size={14} className="spinning" />
@@ -192,9 +181,9 @@ export function WordCard({
     setWord(initialWord)
   }, [initialWord])
 
-  // Determine which image fields to use based on source
-  const imageUrl = source === 'synthesis' ? word.image_url_synthesis : word.image_url
-  const imageStatus = source === 'synthesis' ? word.image_status_synthesis : word.image_status
+  // Always use the single image fields
+  const imageUrl = word.image_url
+  const imageStatus = word.image_status
 
   // Poll for image status when pending/generating
   useEffect(() => {
@@ -204,8 +193,7 @@ export function WordCard({
       try {
         const details = await fetchWordDetails(word.text)
         if (details.word) {
-          const newStatus = source === 'synthesis' ? details.word.image_status_synthesis : details.word.image_status
-          if (newStatus !== imageStatus) {
+          if (details.word.image_status !== imageStatus) {
             setWord(details.word)
           }
         }
@@ -215,53 +203,61 @@ export function WordCard({
     }, 3000)
 
     return () => clearInterval(poll)
-  }, [word.text, imageStatus, source])
+  }, [word.text, imageStatus])
 
-  const defaultImage =
-    'data:image/svg+xml,' +
-    encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-      <rect width="64" height="64" fill="#1a1a2e"/>
-      <text x="32" y="40" font-size="24" text-anchor="middle" fill="#6366f1">?</text>
-    </svg>
-  `)
-
-  const displayImageUrl = imageUrl || defaultImage
   const isImageReady = imageStatus === 'done' && imageUrl
 
   const sizeClass = `word-card-${size}`
   // Create anchor ID from word text (sanitized for URL)
   const anchorId = `word-${word.text.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
 
+  // Long-press detection for retry (500ms)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isLongPress = useRef(false)
+
+  const handlePressStart = useMemo(() => {
+    if (!onRetryImage) return undefined
+    return () => {
+      isLongPress.current = false
+      longPressTimer.current = setTimeout(() => {
+        isLongPress.current = true
+        setWord({ ...word, image_status: 'generating' })
+        onRetryImage(word.id, source)
+      }, 500)
+    }
+  }, [onRetryImage, word, source])
+
+  const handlePressEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }, [])
+
   return (
     <button
       id={anchorId}
       className={`word-card ${sizeClass} ${selected ? 'selected' : ''} ${highlight ? 'highlight' : ''} ${onClick ? 'clickable' : ''}`}
-      onClick={onClick}
-      disabled={!onClick}
+      onClick={(e) => {
+        if (isLongPress.current) {
+          e.preventDefault()
+          isLongPress.current = false
+          return
+        }
+        onClick?.()
+      }}
+      disabled={!onClick && !onRetryImage}
+      onMouseDown={handlePressStart}
+      onMouseUp={handlePressEnd}
+      onMouseLeave={handlePressEnd}
+      onTouchStart={handlePressStart}
+      onTouchEnd={handlePressEnd}
     >
       <div className={`word-card-image ${!isImageReady ? 'generating' : ''}`}>
-        <img src={displayImageUrl} alt={word.text} />
+        {isImageReady && <img src={imageUrl} alt={word.text} />}
         {!isImageReady && imageStatus !== 'failed' && (
           <div className="word-card-loading">
             <Icon name="Loader" size={16} className="spinning" />
-          </div>
-        )}
-        {imageStatus === 'failed' && onRetryImage && (
-          <div
-            className="word-card-retry"
-            onClick={(e) => {
-              e.stopPropagation()
-              // Update appropriate status field based on source
-              if (source === 'synthesis') {
-                setWord({ ...word, image_status_synthesis: 'generating' })
-              } else {
-                setWord({ ...word, image_status: 'generating' })
-              }
-              onRetryImage(word.id, source)
-            }}
-          >
-            <Icon name="RefreshCw" size={16} />
           </div>
         )}
       </div>

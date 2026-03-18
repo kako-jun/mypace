@@ -28,23 +28,35 @@ import {
 
 const app = new Hono<{ Bindings: Bindings }>()
 
-// CORS - すべてのオリジンを許可
+// CORS - 許可するオリジンを制限
+const ALLOWED_ORIGINS = [
+  'https://mypace.llll-ll.com',
+  'https://www.mypace.llll-ll.com',
+  'http://localhost:5173', // dev server
+  'http://localhost:4173', // preview server
+]
+
 app.use(
   '*',
   cors({
-    origin: '*',
+    origin: (origin) => {
+      if (!origin) return 'https://mypace.llll-ll.com' // server-to-server or same-origin
+      return ALLOWED_ORIGINS.includes(origin) ? origin : null
+    },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowHeaders: ['Content-Type'],
+    allowHeaders: ['Content-Type', 'Authorization'],
   })
 )
 
 // エラーハンドラ - アプリ内エラーにもCORSヘッダーを付与
 app.onError((err, c) => {
   console.error('API Error:', err)
+  const origin = c.req.header('Origin') || ''
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : 'https://mypace.llll-ll.com'
   return c.json({ error: err.message || 'Internal Server Error' }, 500, {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   })
 })
 

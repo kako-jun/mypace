@@ -3,6 +3,7 @@ import type { Bindings } from '../types'
 import type { StellaColorCounts } from '../services/stella'
 import { STELLA_COLORS } from '../constants'
 import { getCurrentTimestamp, isValidPubkey } from '../utils'
+import { verifyNip98Header } from '../middleware/auth'
 
 const stellaBalance = new Hono<{ Bindings: Bindings }>()
 
@@ -73,6 +74,12 @@ stellaBalance.post('/send', async (c) => {
 
   if (!amounts || typeof amounts !== 'object') {
     return c.json({ error: 'Invalid amounts' }, 400)
+  }
+
+  // Verify NIP-98 auth: sender must prove they own the pubkey
+  const authedPubkey = verifyNip98Header(c.req.header('Authorization'), c.req.url, c.req.method)
+  if (!authedPubkey || authedPubkey !== senderPubkey) {
+    return c.json({ error: 'Authorization required' }, 401)
   }
 
   const db = c.env.DB

@@ -69,7 +69,9 @@ export function getOrCreateSecretKey(): Uint8Array {
   }
 
   const sk = generateSecretKey()
-  setSecretKey(bytesToHex(sk))
+  // setSecretKey is now async (encrypts before storing), but we fire-and-forget here
+  // since the key is already in the in-memory cache via getSecretKey flow
+  void setSecretKey(bytesToHex(sk))
   return sk
 }
 
@@ -99,8 +101,8 @@ export function importNsec(nsec: string): Uint8Array {
   return decoded.data
 }
 
-export function saveSecretKey(sk: Uint8Array): void {
-  setSecretKey(bytesToHex(sk))
+export async function saveSecretKey(sk: Uint8Array): Promise<void> {
+  await setSecretKey(bytesToHex(sk))
 }
 
 export function clearSecretKey(): void {

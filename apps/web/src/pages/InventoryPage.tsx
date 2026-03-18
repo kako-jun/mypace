@@ -674,27 +674,31 @@ export function InventoryPage() {
             </div>
           ) : (
             <>
-              {/* Harvest words - collected from posts */}
+              {/* All Wordrot - deduplicated by word id */}
               {(() => {
-                const harvestWords = wordrotInventory.filter((item) => item.source === 'harvest')
-                const synthesizedWords = wordrotInventory.filter((item) => item.source === 'synthesis')
+                const seen = new Set<number>()
+                const uniqueWords = wordrotInventory.filter((item) => {
+                  if (seen.has(item.word.id)) return false
+                  seen.add(item.word.id)
+                  return true
+                })
                 return (
                   <>
                     <div className="inventory-words-section">
-                      <h3>Words ({harvestWords.length})</h3>
+                      <h3>Wordrot ({uniqueWords.length})</h3>
 
-                      {harvestWords.length === 0 ? (
+                      {uniqueWords.length === 0 ? (
                         <div className="inventory-words-empty">
-                          <p>No Words collected yet.</p>
+                          <p>No Wordrot collected yet.</p>
                           <p className="inventory-words-hint">Click on highlighted words in posts to collect them!</p>
                         </div>
                       ) : (
                         <div className="inventory-words-grid">
-                          {harvestWords.map((item) => (
+                          {uniqueWords.map((item) => (
                             <WordCard
                               key={item.word.id}
                               word={item.word}
-                              source="harvest"
+                              source={item.source as 'harvest' | 'synthesis'}
                               onClick={() => handleWordSelect(item.word)}
                               selected={
                                 item.word.text === slotA || item.word.text === slotB || item.word.text === slotC
@@ -707,7 +711,7 @@ export function InventoryPage() {
                       )}
                     </div>
 
-                    {/* Synthesis bar - bottom sticky */}
+                    {/* Synthesis bar */}
                     <SynthesisPanel
                       inventory={wordrotInventory}
                       synthesis={synthesis}
@@ -715,21 +719,15 @@ export function InventoryPage() {
                       onSlotTap={handleSlotTap}
                       onClear={() => setActiveSlot('A')}
                       onSynthesisComplete={(result) => {
-                        // Check if user already had this word before synthesis
                         const hadBefore = wordrotInventory.some((item) => item.word.id === result.result.id)
-
-                        // Reload inventory
                         loadWordrotInventory()
-
-                        // Show celebration with corrected isNewWord flag
                         setSynthesisCelebration({
                           ...result,
-                          isNewWord: !hadBefore, // True only if user didn't have it before
+                          isNewWord: !hadBefore,
                         })
                         setShowSynthesisCelebration(true)
                       }}
                       onResultClick={(result) => {
-                        // When clicking result slot, always show as not new (since they have it now)
                         setSynthesisCelebration({
                           ...result,
                           isNewWord: false,
@@ -737,64 +735,6 @@ export function InventoryPage() {
                         setShowSynthesisCelebration(true)
                       }}
                     />
-
-                    {/* Synthesized words - created from synthesis */}
-                    {synthesizedWords.length > 0 && (
-                      <div className="inventory-words-section inventory-synthesized-section">
-                        <h3>
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <defs>
-                              <clipPath id="flask-liquid-clip">
-                                <rect x="0" y="16" width="24" height="8" />
-                              </clipPath>
-                            </defs>
-                            {/* Liquid fill - only below waterline */}
-                            <path
-                              d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"
-                              fill="#10b981"
-                              stroke="none"
-                              clipPath="url(#flask-liquid-clip)"
-                            />
-                            {/* Flask outline */}
-                            <path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2" />
-                            {/* Top rim */}
-                            <path d="M8.5 2h7" />
-                            {/* Waterline */}
-                            <path d="M7 16h10" />
-                          </svg>{' '}
-                          Wordrot ({synthesizedWords.length})
-                        </h3>
-                        <div className="inventory-words-grid">
-                          {synthesizedWords.map((item) => (
-                            <WordCard
-                              key={item.word.id}
-                              word={item.word}
-                              source="synthesis"
-                              onClick={() => {
-                                setSynthesisCelebration({
-                                  result: item.word,
-                                  isNewSynthesis: false,
-                                  isNewWord: false,
-                                  formula: '',
-                                })
-                                setShowSynthesisCelebration(true)
-                              }}
-                              selected={false}
-                              onRetryImage={retryWordImage}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </>
                 )
               })()}

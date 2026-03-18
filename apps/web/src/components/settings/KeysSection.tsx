@@ -40,14 +40,14 @@ export default function KeysSection({
     }
   }
 
-  const handleImport = () => {
+  const handleImport = async () => {
     setError('')
     try {
       const sk = importNsec(importValue.trim())
 
       // Disable NIP-07 mode when importing nsec
       disableNip07()
-      saveSecretKey(sk)
+      await saveSecretKey(sk)
 
       // Clear all settings for new identity
       removeLocalProfile()

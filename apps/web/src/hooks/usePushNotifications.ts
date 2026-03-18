@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { API_BASE } from '../lib/api'
+import { createNip98AuthEvent } from '../lib/nostr/events'
 
 export type PushPreference = 'all' | 'replies_only'
 
@@ -175,10 +176,15 @@ export function usePushNotifications(pubkey: string | null): UsePushNotification
           applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
         })
 
-        // Send to server
-        const res = await fetch(`${API_BASE}/api/push/subscribe`, {
+        // Send to server with NIP-98 auth
+        const subscribeUrl = `${API_BASE}/api/push/subscribe`
+        const authEvent = await createNip98AuthEvent(subscribeUrl, 'POST')
+        const res = await fetch(subscribeUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Nostr ${btoa(JSON.stringify(authEvent))}`,
+          },
           body: JSON.stringify({
             pubkey,
             subscription: subscription.toJSON(),
@@ -227,10 +233,15 @@ export function usePushNotifications(pubkey: string | null): UsePushNotification
         // Unsubscribe from browser
         await subscription.unsubscribe()
 
-        // Remove from server
-        await fetch(`${API_BASE}/api/push/unsubscribe`, {
+        // Remove from server with NIP-98 auth
+        const unsubUrl = `${API_BASE}/api/push/unsubscribe`
+        const unsubAuthEvent = await createNip98AuthEvent(unsubUrl, 'DELETE')
+        await fetch(unsubUrl, {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Nostr ${btoa(JSON.stringify(unsubAuthEvent))}`,
+          },
           body: JSON.stringify({
             pubkey,
             endpoint: subscription.endpoint,
@@ -271,9 +282,14 @@ export function usePushNotifications(pubkey: string | null): UsePushNotification
           throw new Error('No active subscription')
         }
 
-        const res = await fetch(`${API_BASE}/api/push/preference`, {
+        const prefUrl = `${API_BASE}/api/push/preference`
+        const prefAuthEvent = await createNip98AuthEvent(prefUrl, 'PUT')
+        const res = await fetch(prefUrl, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Nostr ${btoa(JSON.stringify(prefAuthEvent))}`,
+          },
           body: JSON.stringify({
             pubkey,
             endpoint: subscription.endpoint,

@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import type { Event } from 'nostr-tools'
+import { verifyEvent } from 'nostr-tools'
 import type { Bindings, NotificationType } from '../types'
 import type { D1Database } from '@cloudflare/workers-types'
 import { registerUserSerial } from './serial'
@@ -544,6 +545,11 @@ publish.post('/', async (c) => {
 
   if (!event || !event.id || !event.sig) {
     return c.json({ error: 'Invalid event: missing id or sig' }, 400)
+  }
+
+  // Verify Nostr event signature
+  if (!verifyEvent(event)) {
+    return c.json({ error: 'Invalid event signature' }, 401)
   }
 
   const db = c.env.DB

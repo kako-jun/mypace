@@ -226,9 +226,23 @@ export function setMuteList(muteList: MuteEntry[]): void {
 // Legacy key for backward compatibility (remove after 2026-12-31)
 const LEGACY_SK_KEY = 'mypace_sk'
 
+import { encryptSecret, decryptSecret, isEncrypted } from './crypto'
+
+// In-memory cache for decrypted secret key (avoids async overhead on every access)
+let _skCache: string | null = null
+
+/**
+ * Get the secret key (synchronous, uses cache).
+ * Call initSecretKeyCache() at startup to populate the cache.
+ */
 export function getSecretKey(): string {
+  if (_skCache !== null) return _skCache
+
+  // Synchronous fallback: read raw value.
+  // If encrypted, return '' and let initSecretKeyCache handle it.
   const data = readStorage()
-  if (data.auth.sk) {
+  if (data.auth.sk && !isEncrypted(data.auth.sk)) {
+    _skCache = data.auth.sk
     return data.auth.sk
   }
 
@@ -237,9 +251,12 @@ export function getSecretKey(): string {
   if (typeof localStorage !== 'undefined') {
     const legacySk = localStorage.getItem(LEGACY_SK_KEY)
     if (legacySk) {
-      // Migrate to new structure and remove legacy key
-      updateStorage('auth', (a) => ({ ...a, sk: legacySk }))
-      localStorage.removeItem(LEGACY_SK_KEY)
+      _skCache = legacySk
+      // Migrate: encrypt and store, remove legacy key (fire-and-forget)
+      encryptSecret(legacySk).then((encrypted) => {
+        updateStorage('auth', (a) => ({ ...a, sk: encrypted }))
+        localStorage.removeItem(LEGACY_SK_KEY)
+      })
       return legacySk
     }
   }
@@ -247,11 +264,40 @@ export function getSecretKey(): string {
   return ''
 }
 
-export function setSecretKey(sk: string): void {
-  updateStorage('auth', (a) => ({ ...a, sk }))
+/**
+ * Initialize the secret key cache by decrypting the stored value.
+ * Must be called once at app startup (before any getSecretKey calls).
+ */
+export async function initSecretKeyCache(): Promise<void> {
+  const data = readStorage()
+  if (!data.auth.sk) {
+    _skCache = ''
+    return
+  }
+
+  if (isEncrypted(data.auth.sk)) {
+    const decrypted = await decryptSecret(data.auth.sk)
+    _skCache = decrypted
+    // If decryption failed (returned ''), clear the stored key
+    if (!decrypted && data.auth.sk) {
+      updateStorage('auth', (a) => ({ ...a, sk: '' }))
+    }
+  } else {
+    // Plaintext key found -- migrate to encrypted
+    _skCache = data.auth.sk
+    const encrypted = await encryptSecret(data.auth.sk)
+    updateStorage('auth', (a) => ({ ...a, sk: encrypted }))
+  }
+}
+
+export async function setSecretKey(sk: string): Promise<void> {
+  _skCache = sk
+  const encrypted = await encryptSecret(sk)
+  updateStorage('auth', (a) => ({ ...a, sk: encrypted }))
 }
 
 export function clearSecretKey(): void {
+  _skCache = ''
   updateStorage('auth', (a) => ({ ...a, sk: '' }))
 }
 

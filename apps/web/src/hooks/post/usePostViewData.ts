@@ -67,8 +67,7 @@ async function loadWordrotData(
     // Skip if already set (harvest items should come first from API)
     if (images[wordText]) continue
 
-    // Use appropriate image based on source
-    const imageUrl = item.source === 'synthesis' ? item.word.image_url_synthesis : item.word.image_url
+    const imageUrl = item.word.image_url
     if (imageUrl) {
       images[wordText] = imageUrl
     }

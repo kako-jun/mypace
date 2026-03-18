@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
 import { getCurrentTimestamp, isValidPubkey, isValidEventId } from '../utils'
+import { verifyNip98Header } from '../middleware/auth'
 
 const pins = new Hono<{ Bindings: Bindings }>()
 
@@ -45,6 +46,12 @@ pins.post('/', async (c) => {
       return c.json({ error: 'Invalid eventId' }, 400)
     }
 
+    // Verify NIP-98 auth: caller must prove they own this pubkey
+    const authedPubkey = verifyNip98Header(c.req.header('Authorization'), c.req.url, c.req.method)
+    if (!authedPubkey || authedPubkey !== body.pubkey) {
+      return c.json({ error: 'Authorization required' }, 401)
+    }
+
     const now = getCurrentTimestamp()
 
     // UPSERT: replace if exists
@@ -73,6 +80,12 @@ pins.delete('/:pubkey', async (c) => {
 
   if (!isValidPubkey(pubkey)) {
     return c.json({ error: 'Invalid pubkey' }, 400)
+  }
+
+  // Verify NIP-98 auth: caller must prove they own this pubkey
+  const authedPubkey = verifyNip98Header(c.req.header('Authorization'), c.req.url, c.req.method)
+  if (!authedPubkey || authedPubkey !== pubkey) {
+    return c.json({ error: 'Authorization required' }, 401)
   }
 
   try {

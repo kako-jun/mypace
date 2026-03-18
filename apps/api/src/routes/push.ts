@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
 import { getCurrentTimestamp } from '../utils'
+import { verifyNip98Header } from '../middleware/auth'
 
 const push = new Hono<{ Bindings: Bindings }>()
 
@@ -51,6 +52,12 @@ push.post('/subscribe', async (c) => {
     return c.json({ error: 'Invalid subscription data' }, 400)
   }
 
+  // Verify NIP-98 auth
+  const authedPubkey = verifyNip98Header(c.req.header('Authorization'), c.req.url, c.req.method)
+  if (!authedPubkey || authedPubkey !== body.pubkey) {
+    return c.json({ error: 'Authorization required' }, 401)
+  }
+
   const now = getCurrentTimestamp()
   const preference = body.preference || 'all'
 
@@ -87,6 +94,12 @@ push.delete('/unsubscribe', async (c) => {
     return c.json({ error: 'pubkey and endpoint are required' }, 400)
   }
 
+  // Verify NIP-98 auth
+  const authedPubkey = verifyNip98Header(c.req.header('Authorization'), c.req.url, c.req.method)
+  if (!authedPubkey || authedPubkey !== body.pubkey) {
+    return c.json({ error: 'Authorization required' }, 401)
+  }
+
   await c.env.DB.prepare(`DELETE FROM push_subscriptions WHERE pubkey = ? AND endpoint = ?`)
     .bind(body.pubkey, body.endpoint)
     .run()
@@ -104,6 +117,12 @@ push.put('/preference', async (c) => {
 
   if (body.preference !== 'all' && body.preference !== 'replies_only') {
     return c.json({ error: 'preference must be "all" or "replies_only"' }, 400)
+  }
+
+  // Verify NIP-98 auth
+  const authedPubkey = verifyNip98Header(c.req.header('Authorization'), c.req.url, c.req.method)
+  if (!authedPubkey || authedPubkey !== body.pubkey) {
+    return c.json({ error: 'Authorization required' }, 401)
   }
 
   const now = getCurrentTimestamp()

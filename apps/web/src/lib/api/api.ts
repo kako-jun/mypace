@@ -1,11 +1,21 @@
 // API client for mypace backend
 import type { Event, Profile, ReactionData, ReplyData, RepostData, OgpData } from '../../types'
+import { createNip98AuthEvent } from '../nostr/events'
 
 export const API_BASE =
   import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://api.mypace.llll-ll.com' : 'http://localhost:8787')
 
 // Re-export types for convenience
 export type { Event, Profile, ReactionData, ReplyData, RepostData, OgpData }
+
+/**
+ * Create NIP-98 Authorization header for authenticated API calls.
+ * Returns the header value: "Nostr <base64-encoded-event>"
+ */
+async function createAuthHeader(url: string, method: string): Promise<string> {
+  const authEvent = await createNip98AuthEvent(url, method)
+  return `Nostr ${btoa(JSON.stringify(authEvent))}`
+}
 
 // Record event to D1 (stella, serial, etc.) - fire-and-forget
 export function recordEvent(event: Event): void {
@@ -158,9 +168,11 @@ export async function fetchPinnedPost(pubkey: string): Promise<PinnedPostData> {
 
 export async function setPinnedPost(pubkey: string, eventId: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/api/pins`, {
+    const url = `${API_BASE}/api/pins`
+    const auth = await createAuthHeader(url, 'POST')
+    const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
       body: JSON.stringify({ pubkey, eventId }),
     })
     return res.ok
@@ -171,8 +183,11 @@ export async function setPinnedPost(pubkey: string, eventId: string): Promise<bo
 
 export async function unpinPost(pubkey: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/api/pins/${pubkey}`, {
+    const url = `${API_BASE}/api/pins/${pubkey}`
+    const auth = await createAuthHeader(url, 'DELETE')
+    const res = await fetch(url, {
       method: 'DELETE',
+      headers: { Authorization: auth },
     })
     return res.ok
   } catch {
@@ -223,9 +238,11 @@ export async function saveUploadToHistory(
   type: 'image' | 'audio'
 ): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/api/uploads`, {
+    const apiUrl = `${API_BASE}/api/uploads`
+    const auth = await createAuthHeader(apiUrl, 'POST')
+    const res = await fetch(apiUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
       body: JSON.stringify({ pubkey, url, filename, type }),
     })
     return res.ok
@@ -236,9 +253,11 @@ export async function saveUploadToHistory(
 
 export async function deleteUploadFromHistory(pubkey: string, url: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/api/uploads`, {
+    const apiUrl = `${API_BASE}/api/uploads`
+    const auth = await createAuthHeader(apiUrl, 'DELETE')
+    const res = await fetch(apiUrl, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
       body: JSON.stringify({ pubkey, url }),
     })
     return res.ok
@@ -445,9 +464,11 @@ export async function sendStella(
   amounts: Partial<StellaBalance>
 ): Promise<{ success: boolean; newBalance?: StellaBalance; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE}/api/stella-balance/send`, {
+    const url = `${API_BASE}/api/stella-balance/send`
+    const auth = await createAuthHeader(url, 'POST')
+    const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
       body: JSON.stringify({ senderPubkey, amounts }),
     })
     return res.json()
@@ -691,11 +712,15 @@ export async function synthesizeWords(
   error?: string
 }> {
   try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 30000)
     const res = await fetch(`${API_BASE}/api/wordrot/synthesize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pubkey, wordA, wordB, wordC }),
+      signal: controller.signal,
     })
+    clearTimeout(timeout)
     const data = await res.json()
     if (data.error) {
       return { result: null, isNewSynthesis: false, isNewWord: false, formula: '', error: data.error }
@@ -705,8 +730,10 @@ export async function synthesizeWords(
       invalidateWordrotInventoryCache()
     }
     return data
-  } catch {
-    return { result: null, isNewSynthesis: false, isNewWord: false, formula: '', error: 'Network error' }
+  } catch (e) {
+    const message =
+      e instanceof DOMException && e.name === 'AbortError' ? 'Timeout - please try again' : 'Network error'
+    return { result: null, isNewSynthesis: false, isNewWord: false, formula: '', error: message }
   }
 }
 
@@ -752,9 +779,9 @@ export async function fetchWordDetails(text: string): Promise<{
 }
 
 // Retry image generation for a word
-export async function retryWordImage(wordId: number, source: 'harvest' | 'synthesis' = 'harvest'): Promise<boolean> {
+export async function retryWordImage(wordId: number, _source?: 'harvest' | 'synthesis'): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/api/wordrot/retry-image/${wordId}?source=${source}`, {
+    const res = await fetch(`${API_BASE}/api/wordrot/retry-image/${wordId}`, {
       method: 'POST',
     })
     return res.ok

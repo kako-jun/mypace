@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import type { Bindings } from '../types'
 import { getCurrentTimestamp } from '../utils'
 import { finalizeEvent, nip19 } from 'nostr-tools'
+import { verifyNip98Header } from '../middleware/auth'
 
 const wordrot = new Hono<{ Bindings: Bindings }>()
 
@@ -77,6 +78,11 @@ const SYNTHESIS_PROMPT = `あなたは単語のベクトル演算を行う専門
 Word2Vecのように、単語を意味空間のベクトルとして扱います。
 A－B＋C は「AからBの意味成分を引き、Cの意味成分を足す」演算です。
 
+【重要】これは文字列操作ではなく、意味の演算です。
+- 「ポイントステッカー」－「ポイント」は、文字列から「ポイント」を消すのではなく、「ポイント的な意味成分」を引くことです。
+- まず、AとBの意味的な関係を分析してください。
+- 次に、その関係の「B側」を「C」に入れ替えた結果を導出してください。
+
 【演算】
 「{wordA}」 － 「{wordB}」 ＋ 「{wordC}」 ＝ ？
 
@@ -87,6 +93,7 @@ A－B＋C は「AからBの意味成分を引き、Cの意味成分を足す」�
 - 「ドラゴン」－「ファイア」＋「アイス」＝「フロストドラゴン」（属性の軸を入れ替え）
 - 「スシ」－「ジャパン」＋「イタリア」＝「ピッツァ」（文化圏の軸を入れ替え）
 - 「ライオン」－「サバンナ」＋「オーシャン」＝「シャーク」（生息域の軸を入れ替え）
+- 「ポイントステッカー」－「ポイント」＋「プラス」＝「プラスステッカー」（修飾語の軸を入れ替え）
 
 【ルール】
 1. 結果は1つの名詞または複合語のみ（カタカナまたは英語）
@@ -94,55 +101,36 @@ A－B＋C は「AからBの意味成分を引き、Cの意味成分を足す」�
 3. 存在しない造語も可（ファイアルイージ、フロストドラゴンなど）
 4. 結果が導出できない場合のみ「???」を返す
 5. 余計な説明は不要、結果の単語のみを出力
+6. 単純な文字列の置換ではなく、意味空間での演算を行うこと
 
 【出力】
 結果の単語のみを出力してください（「」は不要）:
 `
 
-const IMAGE_PROMPT_TEMPLATE = `Extreme close-up 16-bit pixel art of {description}, filling the entire frame.
+const IMAGE_PROMPT_TEMPLATE = `16-bit SNES pixel art sprite of {description}, 32x32 pixel sprite scaled up with clearly visible large square pixels.
 Flat solid golden yellow (#F1C40F) background, nothing else behind the subject.
-One single subject, very large, zoomed in, touching all four edges of the image.
-Retro SNES game sprite style, bold outlines, vibrant saturated colors that contrast against yellow.
-No text, no letters, no words, no border, no frame, no grid, no pattern, no multiple copies.`
+One single subject, very large, filling the frame. Round, simple cartoon character with big eyes.
+Chunky blocky pixels, low pixel count, retro 1990s Super Nintendo aesthetic. Each individual pixel must be clearly distinguishable as a square block.
+Bold dark outlines, limited color palette, vibrant saturated colors that contrast against yellow.
+No anti-aliasing, no smooth gradients, no photorealistic details. No text, no letters, no border, no frame, no grid, no multiple copies.`
 
-const SYNTHESIS_IMAGE_PROMPT_TEMPLATE = `Extreme close-up 16-bit pixel art of {description}, filling the entire frame.
-Flat solid yellow-green (#8BC34A) background, nothing else behind the subject.
-One single subject, very large, zoomed in, touching all four edges of the image.
-The subject should look like a cute, round, small living creature — with big friendly eyes, soft body, like a Kirby or Slime. Not humanoid, not scary. Adorable and squishy.
-Retro SNES game sprite style, bold outlines, vibrant saturated colors that contrast against yellow-green.
-No text, no letters, no words, no border, no frame, no grid, no pattern, no multiple copies.`
+const DESCRIBE_WORD_PROMPT = `Given a word, output a concise English visual description (3-8 words) for a pixel art character prompt.
 
-const DESCRIBE_WORD_PROMPT = `Given a word, output a concise English visual description (3-8 words) for a pixel art image prompt.
+CRITICAL: Every word must become a CHARACTER — a round cartoon creature with big eyes, like Kirby, Slime (Dragon Quest), or a Tamagotchi.
+Do NOT draw the literal object. Instead, create a themed character INSPIRED BY the word.
 
 Rules:
 - Output ONLY the description phrase, no explanation, no quotes
-- Describe the concrete visual form of the word
+- The subject must always be a round cartoon character with eyes
 - Always include a specific color that is NOT yellow/orange/gold (to contrast with yellow background)
-- Animals → the animal: "a blue and white dolphin", "a red ladybug beetle"
-- Foods → the food: "a bright red bell pepper", "a green matcha latte cup"
-- Objects → the object: "a silver metallic robot", "a blue desktop computer"
-- Characters → iconic look: "a green one-eyed giant mecha robot", "a round pink puffball creature"
-- Abstract → symbol: "a glowing blue code terminal screen", "a purple electric lightning bolt"
-- Brands → mascot/logo: "a black and white tuxedo penguin", "a purple chat bubble bot"
+- Animals → round cartoon version: "a round blue dolphin character with big eyes", "a round red ladybug character"
+- Foods → themed round character: "a round red apple-shaped character with big eyes", "a round green pepper character"
+- Objects → character inspired by it: "a round silver robot character with big eyes", "a round blue screen-faced character"
+- People/Characters → round version: "a round red caped hero character", "a round pink puffball character"
+- Abstract → character representing it: "point" → "a round red star-shaped character with big eyes", "time" → "a round blue clock character with big eyes", "power" → "a round red flame character with big eyes"
+- Brands → round character version: "a round black and white penguin character", "a round purple bubble character"
 - AVOID yellow, orange, gold, amber colors in the subject
-
-Word: `
-
-const SYNTHESIS_DESCRIBE_WORD_PROMPT = `Given a word, output a concise English visual description (3-8 words) for a pixel art creature prompt.
-
-IMPORTANT: The subject must be a cute, round, small living creature — like a Kirby, Slime, or Tamagotchi pet.
-Do NOT draw the object itself. Instead, imagine an adorable little creature INSPIRED BY or THEMED AFTER the word.
-Never scary, never humanoid. Always round, squishy, friendly, with big eyes.
-
-Rules:
-- Output ONLY the description phrase, no explanation, no quotes
-- Always include a specific color that is NOT green/lime/yellow-green (to contrast with yellow-green background)
-- Foods → cute creature themed after it: "a round red apple buddy with big eyes", "a bubbly blue soda blob pet"
-- Objects → adorable creature inspired by it: "a silver round robot-shaped pet", "a blue glowing screen-face blob"
-- Animals → cute round version: "a puffy blue baby dolphin", "a tiny round red ladybug pet"
-- Characters → cute creature version: "a round red caped tiny hero blob", "a pink squishy puffball"
-- Abstract → adorable living form: "a glowing blue jellyfish pet", "a tiny purple spark blob"
-- AVOID green, lime, yellow-green, chartreuse colors in the subject
+- AVOID the words: cute, baby, pet, buddy, squishy, adorable, soft
 
 Word: `
 
@@ -290,8 +278,8 @@ function isValidWordrotWord(word: string): boolean {
   // Must be at least 2 characters
   if (word.length < 2) return false
 
-  // Pattern 1: Pure katakana (ァ-ヶ, prolonged sound mark ー, iteration marks ヽヾ)
-  const isKatakana = /^[\u30A1-\u30F6\u30FC\u30FD\u30FE]+$/.test(word)
+  // Pattern 1: Pure katakana - must start with a katakana letter (not ー/ヽ/ヾ)
+  const isKatakana = /^[\u30A1-\u30F6][\u30A1-\u30F6\u30FC\u30FD\u30FE]*$/.test(word)
   if (isKatakana) return true
 
   // Pattern 2: Pure English letters (at least 2 chars, only alphabetic, not a stop word)
@@ -328,20 +316,14 @@ function cleanContentForExtraction(content: string): string {
 }
 
 // Helper: Regex-based extraction as a safety net against LLM misses
-// Catches all katakana sequences and English words deterministically
+// Only catches katakana sequences deterministically. English noun detection is left to LLM.
 function extractByRegex(cleanedContent: string): string[] {
   const words: string[] = []
 
-  // Extract katakana sequences (2+ chars)
-  const katakanaMatches = cleanedContent.match(/[\u30A1-\u30F6\u30FC\u30FD\u30FE]{2,}/g)
+  // Extract katakana sequences: must start with a katakana letter (not ー/ヽ/ヾ), may contain ー in the middle/end
+  const katakanaMatches = cleanedContent.match(/[\u30A1-\u30F6][\u30A1-\u30F6\u30FC\u30FD\u30FE]+/g)
   if (katakanaMatches) {
     words.push(...katakanaMatches)
-  }
-
-  // Extract English words (2+ chars, standalone alphabetic tokens)
-  const englishMatches = cleanedContent.match(/\b[a-zA-Z]{2,}\b/g)
-  if (englishMatches) {
-    words.push(...englishMatches)
   }
 
   return words.filter((w) => w.length <= 20)
@@ -488,11 +470,10 @@ async function synthesizeWords(
 }
 
 // Helper: Translate word to English visual description for image generation
-async function describeWordForImage(ai: Bindings['AI'], word: string, isSynthesis = false): Promise<string> {
+async function describeWordForImage(ai: Bindings['AI'], word: string): Promise<string> {
   try {
-    const describePrompt = isSynthesis ? SYNTHESIS_DESCRIBE_WORD_PROMPT : DESCRIBE_WORD_PROMPT
     const response = await (ai as any).run('@cf/qwen/qwen3-30b-a3b-fp8', {
-      messages: [{ role: 'user', content: describePrompt + `"${word}"\n/no_think` }],
+      messages: [{ role: 'user', content: DESCRIBE_WORD_PROMPT + `"${word}"\n/no_think` }],
       max_tokens: 100,
     })
     const rawText = extractLLMText(response)
@@ -546,12 +527,11 @@ async function convertToItalian(
 }
 
 // Helper: Generate image using Workers AI FLUX.1
-async function generateImage(ai: Bindings['AI'], word: string, isSynthesis = false): Promise<ArrayBuffer | null> {
+async function generateImage(ai: Bindings['AI'], word: string): Promise<ArrayBuffer | null> {
   try {
-    console.log(`[generateImage] Starting image generation for word: ${word} (synthesis: ${isSynthesis})`)
-    const description = await describeWordForImage(ai, word, isSynthesis)
-    const template = isSynthesis ? SYNTHESIS_IMAGE_PROMPT_TEMPLATE : IMAGE_PROMPT_TEMPLATE
-    const prompt = template.replace('{description}', description)
+    console.log(`[generateImage] Starting image generation for word: ${word}`)
+    const description = await describeWordForImage(ai, word)
+    const prompt = IMAGE_PROMPT_TEMPLATE.replace('{description}', description)
     console.log(`[generateImage] Using prompt: ${prompt.substring(0, 100)}...`)
 
     const response = await (ai as any).run('@cf/black-forest-labs/flux-1-schnell', {
@@ -605,7 +585,7 @@ async function generateImage(ai: Bindings['AI'], word: string, isSynthesis = fal
 
     console.error(`[generateImage] Unexpected response type for word: ${word}`, typeof response, response)
     return null
-  } catch (e) {
+  } catch (e: any) {
     console.error(`[generateImage] Error generating image for word "${word}":`, e)
     return null
   }
@@ -985,26 +965,24 @@ async function generateWordImage(
   db: Bindings['DB'],
   nsec: string,
   wordId: number,
-  wordText: string,
-  isSynthesis = false
+  wordText: string
 ): Promise<void> {
   try {
     // Mark as generating
-    if (isSynthesis) {
-      await db.prepare(`UPDATE wordrot_words SET image_status_synthesis = 'generating' WHERE id = ?`).bind(wordId).run()
-    } else {
-      await db.prepare(`UPDATE wordrot_words SET image_status = 'generating' WHERE id = ?`).bind(wordId).run()
+    await db.prepare(`UPDATE wordrot_words SET image_status = 'generating' WHERE id = ?`).bind(wordId).run()
+
+    // Generate image (with retry on too-small results like blank backgrounds)
+    let imageData = await generateImage(ai, wordText)
+
+    // If image is suspiciously small (<2KB), it's likely just the background color with no subject
+    // Retry once with a more explicit prompt hint
+    if (imageData && imageData.byteLength < 2000) {
+      console.log(`[generateWordImage] Image too small (${imageData.byteLength}B) for "${wordText}", retrying...`)
+      imageData = await generateImage(ai, wordText)
     }
 
-    // Generate image
-    const imageData = await generateImage(ai, wordText, isSynthesis)
-
-    if (!imageData) {
-      if (isSynthesis) {
-        await db.prepare(`UPDATE wordrot_words SET image_status_synthesis = 'failed' WHERE id = ?`).bind(wordId).run()
-      } else {
-        await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
-      }
+    if (!imageData || imageData.byteLength < 2000) {
+      await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
       return
     }
 
@@ -1012,11 +990,7 @@ async function generateWordImage(
     const imageUrl = await uploadToNostrBuild(imageData, nsec)
 
     if (!imageUrl) {
-      if (isSynthesis) {
-        await db.prepare(`UPDATE wordrot_words SET image_status_synthesis = 'failed' WHERE id = ?`).bind(wordId).run()
-      } else {
-        await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
-      }
+      await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
       return
     }
 
@@ -1024,26 +998,13 @@ async function generateWordImage(
     const imageHash = extractHashFromNostrBuildUrl(imageUrl)
 
     // Update word with image URL and hash
-    if (isSynthesis) {
-      await db
-        .prepare(
-          `UPDATE wordrot_words SET image_url_synthesis = ?, image_hash_synthesis = ?, image_status_synthesis = 'done' WHERE id = ?`
-        )
-        .bind(imageUrl, imageHash, wordId)
-        .run()
-    } else {
-      await db
-        .prepare(`UPDATE wordrot_words SET image_url = ?, image_hash = ?, image_status = 'done' WHERE id = ?`)
-        .bind(imageUrl, imageHash, wordId)
-        .run()
-    }
+    await db
+      .prepare(`UPDATE wordrot_words SET image_url = ?, image_hash = ?, image_status = 'done' WHERE id = ?`)
+      .bind(imageUrl, imageHash, wordId)
+      .run()
   } catch (e) {
     console.error(`[generateWordImage] Error for word "${wordText}" (ID: ${wordId}):`, e)
-    if (isSynthesis) {
-      await db.prepare(`UPDATE wordrot_words SET image_status_synthesis = 'failed' WHERE id = ?`).bind(wordId).run()
-    } else {
-      await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
-    }
+    await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(wordId).run()
   }
 }
 
@@ -1133,7 +1094,7 @@ wordrot.post('/synthesize', async (c) => {
     const resultText = await synthesizeWords(ai, wordA, wordB, wordC)
 
     if (!resultText) {
-      return c.json({ error: 'Synthesis failed - no valid result' }, 200)
+      return c.json({ error: 'Synthesis failed - no valid result' }, 500)
     }
 
     isNewSynthesis = true
@@ -1159,13 +1120,10 @@ wordrot.post('/synthesize', async (c) => {
         // Queue image generation (async, keep worker alive with waitUntil)
         const nsec = c.env.UPLOADER_NSEC
         if (nsec) {
-          c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, resultWord.id, resultText, true))
+          c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, resultWord.id, resultText))
         } else {
           console.error('[synthesize] UPLOADER_NSEC not configured, marking image as failed')
-          await db
-            .prepare(`UPDATE wordrot_words SET image_status_synthesis = 'failed' WHERE id = ?`)
-            .bind(resultWord.id)
-            .run()
+          await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(resultWord.id).run()
         }
       }
     } else {
@@ -1175,17 +1133,14 @@ wordrot.post('/synthesize', async (c) => {
         .bind(resultWord.id)
         .run()
 
-      // Generate synthesis image if not yet generated
-      if (!resultWord.image_url_synthesis && resultWord.image_status_synthesis !== 'generating') {
+      // Generate image if not yet generated
+      if (!resultWord.image_url && resultWord.image_status !== 'generating') {
         const nsec = c.env.UPLOADER_NSEC
         if (nsec) {
-          c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, resultWord.id, resultWord.text, true))
+          c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, resultWord.id, resultWord.text))
         } else {
-          console.error('[synthesize] UPLOADER_NSEC not configured, marking synthesis image as failed')
-          await db
-            .prepare(`UPDATE wordrot_words SET image_status_synthesis = 'failed' WHERE id = ?`)
-            .bind(resultWord.id)
-            .run()
+          console.error('[synthesize] UPLOADER_NSEC not configured, marking image as failed')
+          await db.prepare(`UPDATE wordrot_words SET image_status = 'failed' WHERE id = ?`).bind(resultWord.id).run()
         }
       }
     }
@@ -1448,10 +1403,6 @@ wordrot.post('/retry-image/:wordId', async (c) => {
     return c.json({ error: 'Invalid word ID' }, 400)
   }
 
-  // Get source from query params (default: harvest)
-  const source = c.req.query('source') || 'harvest'
-  const isSynthesis = source === 'synthesis'
-
   const db = c.env.DB
   const ai = c.env.AI
 
@@ -1461,21 +1412,13 @@ wordrot.post('/retry-image/:wordId', async (c) => {
     return c.json({ error: 'Word not found' }, 404)
   }
 
-  // Check appropriate image_status based on source
-  const imageStatus = isSynthesis ? word.image_status_synthesis : word.image_status
-  const imageUrl = isSynthesis ? word.image_url_synthesis : word.image_url
-
-  if (imageStatus === 'done') {
-    return c.json({ error: 'Image already generated', image_url: imageUrl }, 400)
-  }
-
   // Queue regeneration
   const nsec = c.env.UPLOADER_NSEC
   if (!nsec) {
     return c.json({ error: 'UPLOADER_NSEC not configured' }, 500)
   }
 
-  c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text, isSynthesis))
+  c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text))
 
   return c.json({ success: true, message: 'Image generation queued' })
 })
@@ -1491,10 +1434,8 @@ wordrot.post('/clear-all-images', async (c) => {
 
   // Get all words with image URLs
   const words = await db
-    .prepare(
-      `SELECT id, text, image_url, image_url_synthesis FROM wordrot_words WHERE image_url IS NOT NULL OR image_url_synthesis IS NOT NULL`
-    )
-    .all<{ id: number; text: string; image_url: string | null; image_url_synthesis: string | null }>()
+    .prepare(`SELECT id, text, image_url FROM wordrot_words WHERE image_url IS NOT NULL`)
+    .all<{ id: number; text: string; image_url: string | null }>()
 
   const targets = words.results || []
 
@@ -1507,34 +1448,19 @@ wordrot.post('/clear-all-images', async (c) => {
   const errors: string[] = []
 
   for (const word of targets) {
-    // Delete harvest image
     if (word.image_url) {
       const ok = await deleteFromNostrBuild(word.image_url, nsec)
       if (ok) {
         deleted++
       } else {
         failed++
-        errors.push(`harvest:${word.text}(${word.id})`)
-      }
-    }
-    // Delete synthesis image
-    if (word.image_url_synthesis) {
-      const ok = await deleteFromNostrBuild(word.image_url_synthesis, nsec)
-      if (ok) {
-        deleted++
-      } else {
-        failed++
-        errors.push(`synthesis:${word.text}(${word.id})`)
+        errors.push(`${word.text}(${word.id})`)
       }
     }
   }
 
-  // Reset all image columns in DB
-  await db
-    .prepare(
-      `UPDATE wordrot_words SET image_url = NULL, image_hash = NULL, image_status = 'pending', image_url_synthesis = NULL, image_hash_synthesis = NULL, image_status_synthesis = 'pending'`
-    )
-    .run()
+  // Reset image columns in DB
+  await db.prepare(`UPDATE wordrot_words SET image_url = NULL, image_hash = NULL, image_status = 'pending'`).run()
 
   // Clear image queue
   await db.prepare(`DELETE FROM wordrot_image_queue`).run()
@@ -1548,6 +1474,48 @@ wordrot.post('/clear-all-images', async (c) => {
   })
 })
 
+// POST /api/wordrot/reset-all - Delete ALL wordrot data (images + all 5 tables)
+wordrot.post('/reset-all', async (c) => {
+  // NIP-98 auth required for destructive operation
+  const authedPubkey = verifyNip98Header(c.req.header('Authorization'), c.req.url, c.req.method)
+  if (!authedPubkey) {
+    return c.json({ error: 'Authorization required' }, 401)
+  }
+
+  const db = c.env.DB
+  const nsec = c.env.UPLOADER_NSEC
+
+  // Step 1: Delete images from nostr.build (if nsec available)
+  let imagesDeleted = 0
+  let imagesFailed = 0
+  if (nsec) {
+    const words = await db
+      .prepare(`SELECT id, text, image_url FROM wordrot_words WHERE image_url IS NOT NULL`)
+      .all<{ id: number; text: string; image_url: string | null }>()
+
+    for (const word of words.results || []) {
+      if (word.image_url) {
+        if (await deleteFromNostrBuild(word.image_url, nsec)) imagesDeleted++
+        else imagesFailed++
+      }
+    }
+  }
+
+  // Step 2: Delete all data from all 5 wordrot tables
+  await db.prepare(`DELETE FROM wordrot_image_queue`).run()
+  await db.prepare(`DELETE FROM wordrot_syntheses`).run()
+  await db.prepare(`DELETE FROM wordrot_user_words`).run()
+  await db.prepare(`DELETE FROM wordrot_event_words`).run()
+  await db.prepare(`DELETE FROM wordrot_words`).run()
+
+  return c.json({
+    success: true,
+    imagesDeleted,
+    imagesFailed,
+    message: `Full reset complete. ${imagesDeleted} images deleted from nostr.build. All wordrot tables cleared.`,
+  })
+})
+
 // POST /api/wordrot/retry-all-images - Retry image generation for all failed/pending words
 wordrot.post('/retry-all-images', async (c) => {
   const db = c.env.DB
@@ -1558,41 +1526,28 @@ wordrot.post('/retry-all-images', async (c) => {
     return c.json({ error: 'UPLOADER_NSEC not configured' }, 500)
   }
 
-  // Get words with failed/pending harvest images
-  const harvestWords = await db
-    .prepare(`SELECT id, text FROM wordrot_words WHERE image_status IN ('failed', 'pending') LIMIT 50`)
-    .all<{ id: number; text: string }>()
+  // ?force=true to regenerate ALL images including done ones
+  const force = c.req.query('force') === 'true'
 
-  // Get words with failed/pending synthesis images
-  const synthesisWords = await db
-    .prepare(`SELECT id, text FROM wordrot_words WHERE image_status_synthesis IN ('failed', 'pending') LIMIT 50`)
-    .all<{ id: number; text: string }>()
+  const query = force
+    ? `SELECT id, text FROM wordrot_words LIMIT 50`
+    : `SELECT id, text FROM wordrot_words WHERE image_status IN ('failed', 'pending') LIMIT 50`
 
-  const harvestTargets = harvestWords.results || []
-  const synthesisTargets = synthesisWords.results || []
+  const words = await db.prepare(query).all<{ id: number; text: string }>()
+  const targets = words.results || []
 
-  if (harvestTargets.length === 0 && synthesisTargets.length === 0) {
+  if (targets.length === 0) {
     return c.json({ success: true, queued: 0, message: 'No words need image generation' })
   }
 
-  // Queue harvest images
-  for (const word of harvestTargets) {
-    c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text, false))
+  for (const word of targets) {
+    c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text))
   }
-
-  // Queue synthesis images
-  for (const word of synthesisTargets) {
-    c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text, true))
-  }
-
-  const totalQueued = harvestTargets.length + synthesisTargets.length
 
   return c.json({
     success: true,
-    queued: totalQueued,
-    harvest: harvestTargets.length,
-    synthesis: synthesisTargets.length,
-    message: `Queued ${totalQueued} images for generation (${harvestTargets.length} harvest, ${synthesisTargets.length} synthesis)`,
+    queued: targets.length,
+    message: `Queued ${targets.length} images for generation`,
   })
 })
 

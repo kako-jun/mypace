@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import type { Bindings } from '../types'
 import { getCurrentTimestamp, isValidPubkey } from '../utils'
+import { verifyNip98Header } from '../middleware/auth'
 
 const uploads = new Hono<{ Bindings: Bindings }>()
 
@@ -63,6 +64,12 @@ uploads.post('/', async (c) => {
       return c.json({ error: 'Invalid type' }, 400)
     }
 
+    // Verify NIP-98 auth
+    const authedPubkey = verifyNip98Header(c.req.header('Authorization'), c.req.url, c.req.method)
+    if (!authedPubkey || authedPubkey !== body.pubkey) {
+      return c.json({ error: 'Authorization required' }, 401)
+    }
+
     const now = getCurrentTimestamp()
 
     // UPSERT: update timestamp if URL already exists
@@ -98,6 +105,12 @@ uploads.delete('/', async (c) => {
 
     if (!body.url) {
       return c.json({ error: 'URL is required' }, 400)
+    }
+
+    // Verify NIP-98 auth
+    const authedPubkey = verifyNip98Header(c.req.header('Authorization'), c.req.url, c.req.method)
+    if (!authedPubkey || authedPubkey !== body.pubkey) {
+      return c.json({ error: 'Authorization required' }, 401)
     }
 
     await db.prepare('DELETE FROM upload_history WHERE pubkey = ? AND url = ?').bind(body.pubkey, body.url).run()
