@@ -279,6 +279,6 @@ interface MypaceStorage {
 |----------|------|--------------|
 | theme | テーマモード、グラデーション色 | Yes |
 | filters | フィルタ設定、プリセット、ミュートリスト | Yes |
-| auth | 秘密鍵（hex） | No |
+| auth | 秘密鍵（AES-GCM暗号化、複数キー対応） | No |
 | cache | 自分のプロフィール | No |
 | editor | Vimモード、下書き | No |
