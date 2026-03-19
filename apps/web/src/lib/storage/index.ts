@@ -24,7 +24,9 @@ export interface MypaceStorage {
   }
   // Non-exportable
   auth: {
-    sk: string
+    sk: string // legacy single key (migrated to keys[])
+    keys: string[] // multiple hex secret keys (plaintext)
+    activeIndex: number // which key is active
     useNip07: boolean
   }
   cache: {
@@ -64,6 +66,8 @@ const DEFAULT_STORAGE: MypaceStorage = {
   },
   auth: {
     sk: '',
+    keys: [],
+    activeIndex: 0,
     useNip07: false,
   },
   cache: {
@@ -131,7 +135,21 @@ function readStorage(): MypaceStorage {
           presets: cleanPresets(pf.presets),
           muteList: pf.muteList || [],
         },
-        auth: { ...DEFAULT_STORAGE.auth, ...parsed.auth },
+        auth: (() => {
+          const a = { ...DEFAULT_STORAGE.auth, ...parsed.auth }
+          // Migrate: auth.sk (single) → auth.keys[] (multi)
+          // Note: auth.sk may be encrypted (enc: prefix) from session 63.
+          // initSecretKeyCache() handles decryption and migration.
+          if ((!a.keys || a.keys.length === 0) && a.sk && !a.sk.startsWith('enc:')) {
+            a.keys = [a.sk]
+            a.activeIndex = 0
+          }
+          // Clamp activeIndex
+          if (a.keys && a.keys.length > 0) {
+            a.activeIndex = Math.min(a.activeIndex || 0, a.keys.length - 1)
+          }
+          return a
+        })(),
         cache: { ...DEFAULT_STORAGE.cache, ...parsed.cache },
         editor: { ...DEFAULT_STORAGE.editor, ...parsed.editor },
         pwa: { ...DEFAULT_STORAGE.pwa, ...parsed.pwa },
@@ -226,37 +244,61 @@ export function setMuteList(muteList: MuteEntry[]): void {
 // Legacy key for backward compatibility (remove after 2026-12-31)
 const LEGACY_SK_KEY = 'mypace_sk'
 
-import { encryptSecret, decryptSecret, isEncrypted } from './crypto'
-
-// In-memory cache for decrypted secret key (avoids async overhead on every access)
-let _skCache: string | null = null
+// Decrypt legacy encrypted auth.sk (enc: prefix from session 63)
+import { decryptSecret } from './crypto'
 
 /**
- * Get the secret key (synchronous, uses cache).
- * Call initSecretKeyCache() at startup to populate the cache.
+ * Initialize secret key storage.
+ * Handles migration from encrypted auth.sk → plaintext keys[].
+ * Must be called once at app startup.
  */
-export function getSecretKey(): string {
-  if (_skCache !== null) return _skCache
-
-  // Synchronous fallback: read raw value.
-  // If encrypted, return '' and let initSecretKeyCache handle it.
+export async function initSecretKeyCache(): Promise<void> {
   const data = readStorage()
-  if (data.auth.sk && !isEncrypted(data.auth.sk)) {
-    _skCache = data.auth.sk
+
+  // If keys[] already populated, nothing to do
+  if (data.auth.keys && data.auth.keys.length > 0) return
+
+  // If auth.sk is encrypted, decrypt and migrate to keys[]
+  if (data.auth.sk && data.auth.sk.startsWith('enc:')) {
+    const decrypted = await decryptSecret(data.auth.sk)
+    if (decrypted) {
+      updateStorage('auth', (a) => ({
+        ...a,
+        sk: decrypted,
+        keys: [decrypted],
+        activeIndex: 0,
+      }))
+    } else {
+      // Decryption failed — clear corrupted key
+      updateStorage('auth', (a) => ({ ...a, sk: '', keys: [], activeIndex: 0 }))
+    }
+    // Remove the crypto salt — no longer needed
+    localStorage.removeItem('mypace_crypto_salt')
+  }
+}
+
+export function getSecretKey(): string {
+  const data = readStorage()
+  const { keys, activeIndex } = data.auth
+
+  // Multi-key: read from keys[activeIndex]
+  if (keys && keys.length > 0) {
+    const idx = Math.min(activeIndex || 0, keys.length - 1)
+    return keys[idx] || ''
+  }
+
+  // Legacy: auth.sk (plaintext only — encrypted is handled by initSecretKeyCache)
+  if (data.auth.sk && !data.auth.sk.startsWith('enc:')) {
     return data.auth.sk
   }
 
-  // Fallback: check legacy key for users who haven't migrated yet
+  // Fallback: check legacy localStorage key
   // TODO: Remove this fallback after 2026-12-31
   if (typeof localStorage !== 'undefined') {
     const legacySk = localStorage.getItem(LEGACY_SK_KEY)
     if (legacySk) {
-      _skCache = legacySk
-      // Migrate: encrypt and store, remove legacy key (fire-and-forget)
-      encryptSecret(legacySk).then((encrypted) => {
-        updateStorage('auth', (a) => ({ ...a, sk: encrypted }))
-        localStorage.removeItem(LEGACY_SK_KEY)
-      })
+      updateStorage('auth', (a) => ({ ...a, keys: [legacySk], activeIndex: 0, sk: legacySk }))
+      localStorage.removeItem(LEGACY_SK_KEY)
       return legacySk
     }
   }
@@ -264,41 +306,65 @@ export function getSecretKey(): string {
   return ''
 }
 
-/**
- * Initialize the secret key cache by decrypting the stored value.
- * Must be called once at app startup (before any getSecretKey calls).
- */
-export async function initSecretKeyCache(): Promise<void> {
-  const data = readStorage()
-  if (!data.auth.sk) {
-    _skCache = ''
-    return
-  }
-
-  if (isEncrypted(data.auth.sk)) {
-    const decrypted = await decryptSecret(data.auth.sk)
-    _skCache = decrypted
-    // If decryption failed (returned ''), clear the stored key
-    if (!decrypted && data.auth.sk) {
-      updateStorage('auth', (a) => ({ ...a, sk: '' }))
+export function setSecretKey(sk: string): void {
+  updateStorage('auth', (a) => {
+    const keys = [...(a.keys || [])]
+    const idx = Math.min(a.activeIndex || 0, Math.max(keys.length - 1, 0))
+    if (keys.length === 0) {
+      keys.push(sk)
+    } else {
+      keys[idx] = sk
     }
-  } else {
-    // Plaintext key found -- migrate to encrypted
-    _skCache = data.auth.sk
-    const encrypted = await encryptSecret(data.auth.sk)
-    updateStorage('auth', (a) => ({ ...a, sk: encrypted }))
-  }
-}
-
-export async function setSecretKey(sk: string): Promise<void> {
-  _skCache = sk
-  const encrypted = await encryptSecret(sk)
-  updateStorage('auth', (a) => ({ ...a, sk: encrypted }))
+    return { ...a, sk, keys, activeIndex: idx }
+  })
 }
 
 export function clearSecretKey(): void {
-  _skCache = ''
-  updateStorage('auth', (a) => ({ ...a, sk: '' }))
+  updateStorage('auth', (a) => {
+    const keys = [...(a.keys || [])]
+    const idx = a.activeIndex || 0
+    if (keys.length > 0 && idx < keys.length) {
+      keys.splice(idx, 1)
+    }
+    const newIndex = Math.min(idx, Math.max(keys.length - 1, 0))
+    return { ...a, sk: keys[newIndex] || '', keys, activeIndex: newIndex }
+  })
+}
+
+// Multi-key management
+
+export function getAllSecretKeys(): string[] {
+  return readStorage().auth.keys || []
+}
+
+export function getActiveKeyIndex(): number {
+  const data = readStorage()
+  return Math.min(data.auth.activeIndex || 0, Math.max((data.auth.keys || []).length - 1, 0))
+}
+
+export function addSecretKey(sk: string): number {
+  let newIndex = 0
+  updateStorage('auth', (a) => {
+    const keys = [...(a.keys || [])]
+    // Check if already exists
+    const existing = keys.indexOf(sk)
+    if (existing >= 0) {
+      newIndex = existing
+      return { ...a, sk, keys, activeIndex: existing }
+    }
+    keys.push(sk)
+    newIndex = keys.length - 1
+    return { ...a, sk, keys, activeIndex: newIndex }
+  })
+  return newIndex
+}
+
+export function switchSecretKey(index: number): void {
+  updateStorage('auth', (a) => {
+    const keys = a.keys || []
+    const idx = Math.min(index, keys.length - 1)
+    return { ...a, sk: keys[idx] || '', activeIndex: idx }
+  })
 }
 
 export function getUseNip07(): boolean {
@@ -434,6 +500,8 @@ export function migrateFromLegacy(): void {
     },
     auth: {
       sk: oldSk,
+      keys: oldSk ? [oldSk] : [],
+      activeIndex: 0,
       useNip07: false,
     },
     cache: {

@@ -6,6 +6,10 @@ import {
   getUseNip07,
   setUseNip07,
   clearCachedProfile,
+  getAllSecretKeys,
+  getActiveKeyIndex,
+  addSecretKey as addStoredKey,
+  switchSecretKey as switchStoredKey,
 } from '../storage'
 
 declare global {
@@ -113,6 +117,41 @@ export function getMyPubkey(): string | null {
   const sk = getStoredSecretKey()
   if (!sk) return null
   return getPublicKey(sk)
+}
+
+// Multi-key management
+
+export interface KeyEntry {
+  sk: Uint8Array
+  npub: string
+  nsec: string
+}
+
+export function getAllKeys(): KeyEntry[] {
+  return getAllSecretKeys()
+    .filter((hex) => hex.length > 0)
+    .map((hex) => {
+      const sk = hexToBytes(hex)
+      const pubkey = getPublicKey(sk)
+      return {
+        sk,
+        npub: nip19.npubEncode(pubkey),
+        nsec: nip19.nsecEncode(sk),
+      }
+    })
+}
+
+export function getActiveIndex(): number {
+  return getActiveKeyIndex()
+}
+
+export function addKey(sk: Uint8Array): number {
+  return addStoredKey(bytesToHex(sk))
+}
+
+export function switchKey(index: number): void {
+  clearCachedProfile()
+  switchStoredKey(index)
 }
 
 function bytesToHex(bytes: Uint8Array): string {

@@ -723,6 +723,120 @@
   color: var(--text-secondary);
 }
 
+/* nsec Combo Dropdown */
+.nsec-combo {
+  position: relative;
+  width: 100%;
+}
+
+.nsec-combo-field {
+  display: flex;
+  align-items: center;
+  background: var(--surface-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.nsec-combo-field:hover {
+  background: var(--surface-tertiary);
+}
+
+.nsec-combo-field code {
+  flex: 1;
+  margin: 0;
+  border-radius: 8px 0 0 8px;
+}
+
+.nsec-combo-chevron {
+  padding: 0 0.6rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.nsec-combo-chevron.open {
+  transform: rotate(180deg);
+}
+
+.nsec-combo-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default, var(--border-light));
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.nsec-combo-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.nsec-combo-option:hover {
+  background: var(--surface-secondary);
+}
+
+.nsec-combo-option.active {
+  color: var(--accent);
+}
+
+.nsec-combo-npub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nsec-combo-check {
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+  color: var(--accent);
+}
+
+.nsec-import-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.nsec-import-input {
+  flex: 1;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  outline: none;
+  transition: background 0.2s ease;
+}
+
+.nsec-import-input:focus {
+  background: var(--surface-tertiary);
+}
+
+.nsec-import-input::placeholder {
+  color: var(--text-placeholder);
+}
+
 /* Authentication Method Section */
 .auth-method-options {
   display: flex;

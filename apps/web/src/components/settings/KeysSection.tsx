@@ -1,17 +1,17 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   importNsec,
-  saveSecretKey,
   clearSecretKey,
   hasNip07,
   enableNip07,
   disableNip07,
-  getMyPubkey,
-  getPublicKeyFromSecret,
+  getAllKeys,
+  getActiveIndex,
+  addKey,
+  switchKey,
 } from '../../lib/nostr/keys'
-import { Button, Input, ErrorMessage, SettingsSection } from '../ui'
+import { Button, ErrorMessage, SettingsSection } from '../ui'
 import { copyToClipboard, removeLocalProfile } from '../../lib/utils'
-import { resetThemeColors } from '../../lib/storage'
 import { useTemporaryFlag } from '../../hooks'
 
 interface KeysSectionProps {
@@ -30,12 +30,30 @@ export default function KeysSection({
   onNavigateInventory,
 }: KeysSectionProps) {
   const [showNsec, setShowNsec] = useState(false)
-  const [importValue, setImportValue] = useState('')
+  const [inputValue, setInputValue] = useState('')
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const [copied, triggerCopied] = useTemporaryFlag()
   const [npubCopied, triggerNpubCopied] = useTemporaryFlag()
   const [error, setError] = useState('')
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const nip07Available = hasNip07()
+  const keys = getAllKeys()
+  const activeIndex = getActiveIndex()
+  const hasMultipleKeys = keys.length > 1
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClick)
+      return () => document.removeEventListener('mousedown', handleClick)
+    }
+  }, [dropdownOpen])
 
   const handleCopy = async () => {
     if (await copyToClipboard(nsec)) {
@@ -49,30 +67,45 @@ export default function KeysSection({
     }
   }
 
-  const handleImport = async () => {
+  const handleImport = () => {
     setError('')
     try {
-      const sk = importNsec(importValue.trim())
-
-      // Check if this is the same key (re-import of existing identity)
-      const currentPubkey = getMyPubkey()
-      const newPubkey = getPublicKeyFromSecret(sk)
-      const isSameKey = currentPubkey === newPubkey
-
-      // Disable NIP-07 mode when importing nsec
+      const sk = importNsec(inputValue.trim())
       disableNip07()
-      await saveSecretKey(sk)
-
-      // Only clear settings when switching to a different identity
-      if (!isSameKey) {
-        removeLocalProfile()
-        resetThemeColors()
-      }
-
-      // Reload to start fresh with new identity
+      // addKey handles dedup: if same key exists, just switches to it
+      addKey(sk)
+      removeLocalProfile()
+      setInputValue('')
       window.location.reload()
     } catch {
       setError('Invalid nsec format')
+    }
+  }
+
+  const handleSwitch = (index: number) => {
+    if (index === activeIndex) {
+      setDropdownOpen(false)
+      return
+    }
+    switchKey(index)
+    removeLocalProfile()
+    setDropdownOpen(false)
+    window.location.reload()
+  }
+
+  const handleRemoveKey = () => {
+    if (keys.length <= 1) {
+      if (confirm('Are you sure? This will delete your key from this browser.')) {
+        clearSecretKey()
+        removeLocalProfile()
+        window.location.reload()
+      }
+    } else {
+      if (confirm('Remove this key from the list? Your other keys will remain.')) {
+        clearSecretKey()
+        removeLocalProfile()
+        window.location.reload()
+      }
     }
   }
 
@@ -88,18 +121,85 @@ export default function KeysSection({
     }
   }
 
-  const handleClear = () => {
-    if (confirm('Are you sure? This will delete your key from this browser.')) {
-      clearSecretKey()
-      removeLocalProfile()
-      window.location.reload()
-    }
+  const shortenNpub = (n: string) => {
+    if (n.length <= 20) return n
+    return `${n.slice(0, 12)}...${n.slice(-8)}`
   }
 
   return (
     <>
-      {/* Your Keys - always show npub, show nsec only when not using NIP-07 */}
       <SettingsSection title="Your Keys">
+        {/* nsec: combo dropdown + input */}
+        {!usingNip07 && (
+          <div className="key-display">
+            <label>nsec (secret - keep safe!):</label>
+            {nsec && (
+              <div className="secret-row">
+                <div className="nsec-combo" ref={dropdownRef}>
+                  <div
+                    className="nsec-combo-field"
+                    onClick={() => hasMultipleKeys && setDropdownOpen(!dropdownOpen)}
+                  >
+                    <code className="secret">
+                      {showNsec ? nsec : '••••••••••••••••••••••••••••••••'}
+                    </code>
+                    {hasMultipleKeys && (
+                      <span className={`nsec-combo-chevron ${dropdownOpen ? 'open' : ''}`}>
+                        &#9662;
+                      </span>
+                    )}
+                  </div>
+                  {dropdownOpen && (
+                    <div className="nsec-combo-dropdown">
+                      {keys.map((key, i) => (
+                        <button
+                          key={key.npub}
+                          className={`nsec-combo-option ${i === activeIndex ? 'active' : ''}`}
+                          onClick={() => handleSwitch(i)}
+                        >
+                          <span className="nsec-combo-npub">{shortenNpub(key.npub)}</span>
+                          {i === activeIndex && (
+                            <span className="nsec-combo-check">&#10003;</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="secret-row-buttons">
+                  <Button size="md" onClick={() => setShowNsec(!showNsec)}>
+                    {showNsec ? 'Hide' : 'Show'}
+                  </Button>
+                  <Button size="md" onClick={handleCopy}>
+                    {copied ? 'Copied!' : 'Copy'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Import: typing nsec1... into this field = import */}
+            <div className="nsec-import-row">
+              <input
+                type="password"
+                className="nsec-import-input"
+                placeholder="nsec1... to add"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && inputValue.trim()) handleImport()
+                }}
+              />
+              {inputValue.trim() && (
+                <Button size="md" onClick={handleImport}>
+                  Add
+                </Button>
+              )}
+            </div>
+            <ErrorMessage>{error}</ErrorMessage>
+          </div>
+        )}
+
+        {/* npub: below nsec */}
         <div className="key-display">
           <label>npub (public):</label>
           <div className="npub-row">
@@ -113,27 +213,14 @@ export default function KeysSection({
             )}
           </div>
         </div>
-        {!usingNip07 && nsec && (
-          <div className="key-display">
-            <label>nsec (secret - keep safe!):</label>
-            <div className="secret-row">
-              <code className="secret">{showNsec ? nsec : '••••••••••••••••••••••••••••••••'}</code>
-              <div className="secret-row-buttons">
-                <Button size="md" onClick={() => setShowNsec(!showNsec)}>
-                  {showNsec ? 'Hide' : 'Show'}
-                </Button>
-                <Button size="md" onClick={handleCopy}>
-                  {copied ? 'Copied!' : 'Copy'}
-                </Button>
-              </div>
-            </div>
-          </div>
+
+        {usingNip07 && (
+          <p className="hint">Using NIP-07 extension (secret key managed by extension)</p>
         )}
-        {usingNip07 && <p className="hint">Using NIP-07 extension (secret key managed by extension)</p>}
       </SettingsSection>
 
-      {/* Authentication Method - only show when NIP-07 extension is available */}
-      {nip07Available ? (
+      {/* NIP-07 toggle - only when extension is available */}
+      {nip07Available && (
         <SettingsSection title="Authentication Method">
           <div className="auth-method-options">
             <label className="auth-method-option">
@@ -148,21 +235,14 @@ export default function KeysSection({
               />
               <span>Secret key (nsec)</span>
             </label>
-            {!usingNip07 && (
-              <div className="auth-method-content">
-                <p className="hint">Paste your nsec to use an existing identity</p>
-                <div className="input-row">
-                  <Input type="password" placeholder="nsec1..." value={importValue} onChange={setImportValue} />
-                  <Button size="md" onClick={handleImport} disabled={!importValue.trim()}>
-                    Import
-                  </Button>
-                </div>
-                <ErrorMessage>{error}</ErrorMessage>
-              </div>
-            )}
 
             <label className="auth-method-option">
-              <input type="radio" name="authMethod" checked={usingNip07} onChange={handleEnableNip07} />
+              <input
+                type="radio"
+                name="authMethod"
+                checked={usingNip07}
+                onChange={handleEnableNip07}
+              />
               <span>NIP-07 extension</span>
             </label>
             {usingNip07 && (
@@ -171,18 +251,6 @@ export default function KeysSection({
               </div>
             )}
           </div>
-        </SettingsSection>
-      ) : (
-        /* No NIP-07 extension - show simple import UI */
-        <SettingsSection title="Import Key">
-          <p className="hint">Paste your nsec to use an existing identity</p>
-          <div className="input-row">
-            <Input type="password" placeholder="nsec1..." value={importValue} onChange={setImportValue} />
-            <Button size="md" onClick={handleImport} disabled={!importValue.trim()}>
-              Import
-            </Button>
-          </div>
-          <ErrorMessage>{error}</ErrorMessage>
         </SettingsSection>
       )}
 
@@ -201,8 +269,8 @@ export default function KeysSection({
       {/* Danger Zone - only show when not using NIP-07 */}
       {!usingNip07 && (
         <SettingsSection title="Danger Zone" variant="danger">
-          <Button size="md" onClick={handleClear} variant="danger">
-            Clear key from browser
+          <Button size="md" onClick={handleRemoveKey} variant="danger">
+            {keys.length > 1 ? 'Remove this key' : 'Clear key from browser'}
           </Button>
         </SettingsSection>
       )}
