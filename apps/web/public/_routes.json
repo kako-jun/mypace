@@ -2,7 +2,8 @@
   "version": 1,
   "include": [
     "/post/*",
-    "/user/*"
+    "/user/*",
+    "/sitemap.xml"
   ],
   "exclude": []
 }

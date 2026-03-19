@@ -303,3 +303,16 @@ CREATE TABLE IF NOT EXISTS wordrot_image_queue (
 
 CREATE INDEX IF NOT EXISTS idx_wordrot_image_queue_status ON wordrot_image_queue(status);
 
+-- =====================================================
+-- Sitemap events table (for dynamic sitemap.xml)
+-- =====================================================
+
+-- Records mypace-tagged posts for Google indexing
+CREATE TABLE IF NOT EXISTS sitemap_events (
+  event_id TEXT PRIMARY KEY,
+  pubkey TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_sitemap_events_created ON sitemap_events(created_at DESC);
+

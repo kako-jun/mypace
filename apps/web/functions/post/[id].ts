@@ -62,6 +62,31 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const image = contentImage || profile?.picture || 'https://mypace.llll-ll.com/static/ogp.webp'
     const url = `https://mypace.llll-ll.com/post/${eventId}`
 
+    // JSON-LD structured data
+    const publishedDate = new Date(event.created_at * 1000).toISOString()
+    const jsonLd = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: `${displayName}の投稿`,
+      description: plainText ? truncate(plainText, 200) : undefined,
+      image: contentImage || undefined,
+      datePublished: publishedDate,
+      author: {
+        '@type': 'Person',
+        name: profile?.display_name || profile?.name || 'Anonymous',
+        url: `https://mypace.llll-ll.com/user/${event.pubkey}`,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'MY PACE',
+        url: 'https://mypace.llll-ll.com',
+      },
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id': url,
+      },
+    })
+
     // Replace OGP meta tags in HTML
     html = html
       // Title
@@ -92,6 +117,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         `<meta name="twitter:description" content="${description}" />`
       )
       .replace(/<meta name="twitter:image" content=".*?" \/>/, `<meta name="twitter:image" content="${image}" />`)
+      // JSON-LD structured data
+      .replace('</head>', `<script type="application/ld+json">${jsonLd}</script>\n</head>`)
 
     return new Response(html, {
       headers: {

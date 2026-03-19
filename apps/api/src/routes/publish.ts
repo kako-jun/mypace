@@ -17,6 +17,17 @@ import {
 import { MAX_NOTIFICATIONS, STELLA_COLORS, STELLA_THRESHOLDS } from '../constants'
 import { getCurrentTimestamp } from '../utils'
 
+const INDEXNOW_KEY = '6713c432e1cd418d80c125669c0e7de0'
+
+// Notify IndexNow (Bing/Yandex) about a new URL
+async function notifyIndexNow(url: string): Promise<void> {
+  try {
+    await fetch(`https://api.indexnow.org/indexnow?url=${encodeURIComponent(url)}&key=${INDEXNOW_KEY}`)
+  } catch {
+    // Fire-and-forget, don't block on failure
+  }
+}
+
 const publish = new Hono<{ Bindings: Bindings }>()
 
 // Refund stella to user's balance (UPSERT to handle missing row)
@@ -567,6 +578,12 @@ publish.post('/', async (c) => {
         } catch (e) {
           console.error('Serial register error:', e)
         }
+        // Record for sitemap + notify IndexNow (fire-and-forget)
+        db.prepare(`INSERT OR IGNORE INTO sitemap_events (event_id, pubkey, created_at) VALUES (?, ?, ?)`)
+          .bind(event.id, event.pubkey, event.created_at)
+          .run()
+          .catch((e) => console.error('Sitemap record error:', e))
+        notifyIndexNow(`https://mypace.llll-ll.com/post/${event.id}`).catch(console.error)
       }
       // Check and unlock content-type supernovas (fire-and-forget)
       checkContentSupernovas(db, event.pubkey, tags, event.content || '').catch(console.error)
@@ -701,6 +718,12 @@ publish.post('/', async (c) => {
         } catch (e) {
           console.error('Stella delete error:', e)
         }
+        // Remove from sitemap (fire-and-forget, only delete own posts)
+        const placeholders = eventIds.map(() => '?').join(',')
+        db.prepare(`DELETE FROM sitemap_events WHERE event_id IN (${placeholders}) AND pubkey = ?`)
+          .bind(...eventIds, event.pubkey)
+          .run()
+          .catch((e) => console.error('Sitemap delete error:', e))
       }
     }
 

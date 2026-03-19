@@ -23,6 +23,7 @@ import {
   supernovas,
   magazine,
   wordrot,
+  sitemap,
   reporter,
 } from './routes'
 
@@ -80,6 +81,7 @@ app.route('/api/stella-balance', stellaBalance)
 app.route('/api/supernovas', supernovas)
 app.route('/api/magazine', magazine)
 app.route('/api/wordrot', wordrot)
+app.route('/api/sitemap', sitemap)
 app.route('/api/npc/reporter', reporter)
 
 // Well-known
