@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import {
   importNsec,
   clearSecretKey,
@@ -38,7 +38,8 @@ export default function KeysSection({
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const nip07Available = hasNip07()
-  const keys = getAllKeys()
+  // Memoize: getAllKeys() runs getPublicKey + nip19 encoding per key
+  const keys = useMemo(() => getAllKeys(), [nsec]) // nsec changes on key switch/import
   const activeIndex = getActiveIndex()
   const hasMultipleKeys = keys.length > 1
 
@@ -112,7 +113,7 @@ export default function KeysSection({
   const handleEnableNip07 = () => {
     if (
       confirm(
-        'Enable NIP-07?\n\nThis will delete your secret key from this browser. Make sure you have backed it up first!'
+        'Enable NIP-07?\n\nThis will delete the active secret key from this browser. Other saved keys will remain. Make sure you have backed it up first!'
       )
     ) {
       enableNip07()

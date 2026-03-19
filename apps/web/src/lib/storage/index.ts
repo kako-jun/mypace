@@ -351,7 +351,8 @@ export function getSecretKey(): string {
 }
 
 export async function setSecretKey(sk: string): Promise<void> {
-  const encrypted = await encryptSecret(sk)
+  // Update in-memory cache synchronously (before async encryption)
+  // so that getSecretKey() returns the new value immediately.
   if (_keysCache) {
     const idx = Math.min(_activeIndexCache, Math.max(_keysCache.length - 1, 0))
     if (_keysCache.length === 0) {
@@ -360,6 +361,8 @@ export async function setSecretKey(sk: string): Promise<void> {
       _keysCache[idx] = sk
     }
   }
+  // Encrypt and persist asynchronously
+  const encrypted = await encryptSecret(sk)
   updateStorage('auth', (a) => {
     const keys = [...(a.keys || [])]
     const idx = Math.min(a.activeIndex || 0, Math.max(keys.length - 1, 0))
@@ -373,6 +376,14 @@ export async function setSecretKey(sk: string): Promise<void> {
 }
 
 export function clearSecretKey(): void {
+  // Update cache first, then persist (Bug 1 fix: consistent order)
+  if (_keysCache) {
+    const idx = _activeIndexCache
+    if (idx < _keysCache.length) {
+      _keysCache.splice(idx, 1)
+    }
+    _activeIndexCache = Math.min(idx, Math.max(_keysCache.length - 1, 0))
+  }
   updateStorage('auth', (a) => {
     const keys = [...(a.keys || [])]
     const idx = a.activeIndex || 0
@@ -382,13 +393,6 @@ export function clearSecretKey(): void {
     const newIndex = Math.min(idx, Math.max(keys.length - 1, 0))
     return { ...a, sk: keys[newIndex] || '', keys, activeIndex: newIndex }
   })
-  if (_keysCache) {
-    const idx = _activeIndexCache
-    if (idx < _keysCache.length) {
-      _keysCache.splice(idx, 1)
-    }
-    _activeIndexCache = Math.min(idx, Math.max(_keysCache.length - 1, 0))
-  }
 }
 
 // Multi-key management
@@ -402,21 +406,28 @@ export function getActiveKeyIndex(): number {
 }
 
 export async function addSecretKey(sk: string): Promise<number> {
-  // Check if already exists in cache
-  if (_keysCache) {
-    const existing = _keysCache.indexOf(sk)
-    if (existing >= 0) {
-      _activeIndexCache = existing
-      updateStorage('auth', (a) => {
-        const keys = a.keys || []
-        return { ...a, sk: keys[existing] || '', activeIndex: existing }
-      })
-      return existing
-    }
-    _keysCache.push(sk)
-    _activeIndexCache = _keysCache.length - 1
+  // Initialize cache if not yet populated
+  if (_keysCache === null) {
+    _keysCache = []
+    _activeIndexCache = 0
   }
 
+  // Check if already exists in cache (dedup)
+  const existing = _keysCache.indexOf(sk)
+  if (existing >= 0) {
+    _activeIndexCache = existing
+    updateStorage('auth', (a) => {
+      const keys = a.keys || []
+      return { ...a, sk: keys[existing] || '', activeIndex: existing }
+    })
+    return existing
+  }
+
+  // Add to cache synchronously
+  _keysCache.push(sk)
+  _activeIndexCache = _keysCache.length - 1
+
+  // Encrypt and persist
   const encrypted = await encryptSecret(sk)
   updateStorage('auth', (a) => {
     const keys = [...(a.keys || [])]
@@ -428,12 +439,13 @@ export async function addSecretKey(sk: string): Promise<number> {
 }
 
 export function switchSecretKey(index: number): void {
+  const clamp = (i: number, len: number) => Math.max(0, Math.min(i, len - 1))
   if (_keysCache) {
-    _activeIndexCache = Math.min(index, _keysCache.length - 1)
+    _activeIndexCache = clamp(index, _keysCache.length)
   }
   updateStorage('auth', (a) => {
     const keys = a.keys || []
-    const idx = Math.min(index, keys.length - 1)
+    const idx = clamp(index, keys.length)
     return { ...a, sk: keys[idx] || '', activeIndex: idx }
   })
 }

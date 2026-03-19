@@ -135,7 +135,7 @@ async function decryptLegacyFormat(stored: string): Promise<string> {
   const salt = Uint8Array.from(atob(saltStr), (c) => c.charCodeAt(0))
   // Legacy used origin-only seed without UA length
   const encoder = new TextEncoder()
-  const legacySeed = encoder.encode('mypace-sk-encryption' + location.origin)
+  const legacySeed = encoder.encode('mypace-sk-encryption' + (globalThis.location?.origin || 'mypace-default'))
   const keyMaterial = await crypto.subtle.importKey('raw', legacySeed, 'PBKDF2', false, ['deriveKey'])
   const key = await crypto.subtle.deriveKey(
     { name: 'PBKDF2', salt: salt.buffer as ArrayBuffer, iterations: 100000, hash: 'SHA-256' },

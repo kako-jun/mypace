@@ -73,8 +73,8 @@ export function getOrCreateSecretKey(): Uint8Array {
   }
 
   const sk = generateSecretKey()
-  // setSecretKey is now async (encrypts before storing), but we fire-and-forget here
-  // since the key is already in the in-memory cache via getSecretKey flow
+  // setSecretKey updates the in-memory cache synchronously (before await),
+  // then encrypts + persists asynchronously. Fire-and-forget is safe.
   void setSecretKey(bytesToHex(sk))
   return sk
 }
