@@ -145,7 +145,7 @@ export function getActiveIndex(): number {
   return getActiveKeyIndex()
 }
 
-export function addKey(sk: Uint8Array): number {
+export async function addKey(sk: Uint8Array): Promise<number> {
   return addStoredKey(bytesToHex(sk))
 }
 

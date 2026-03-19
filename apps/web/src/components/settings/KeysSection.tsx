@@ -67,13 +67,13 @@ export default function KeysSection({
     }
   }
 
-  const handleImport = () => {
+  const handleImport = async () => {
     setError('')
     try {
       const sk = importNsec(inputValue.trim())
       disableNip07()
       // addKey handles dedup: if same key exists, just switches to it
-      addKey(sk)
+      await addKey(sk)
       removeLocalProfile()
       setInputValue('')
       window.location.reload()
@@ -136,17 +136,10 @@ export default function KeysSection({
             {nsec && (
               <div className="secret-row">
                 <div className="nsec-combo" ref={dropdownRef}>
-                  <div
-                    className="nsec-combo-field"
-                    onClick={() => hasMultipleKeys && setDropdownOpen(!dropdownOpen)}
-                  >
-                    <code className="secret">
-                      {showNsec ? nsec : '••••••••••••••••••••••••••••••••'}
-                    </code>
+                  <div className="nsec-combo-field" onClick={() => hasMultipleKeys && setDropdownOpen(!dropdownOpen)}>
+                    <code className="secret">{showNsec ? nsec : '••••••••••••••••••••••••••••••••'}</code>
                     {hasMultipleKeys && (
-                      <span className={`nsec-combo-chevron ${dropdownOpen ? 'open' : ''}`}>
-                        &#9662;
-                      </span>
+                      <span className={`nsec-combo-chevron ${dropdownOpen ? 'open' : ''}`}>&#9662;</span>
                     )}
                   </div>
                   {dropdownOpen && (
@@ -158,9 +151,7 @@ export default function KeysSection({
                           onClick={() => handleSwitch(i)}
                         >
                           <span className="nsec-combo-npub">{shortenNpub(key.npub)}</span>
-                          {i === activeIndex && (
-                            <span className="nsec-combo-check">&#10003;</span>
-                          )}
+                          {i === activeIndex && <span className="nsec-combo-check">&#10003;</span>}
                         </button>
                       ))}
                     </div>
@@ -214,9 +205,7 @@ export default function KeysSection({
           </div>
         </div>
 
-        {usingNip07 && (
-          <p className="hint">Using NIP-07 extension (secret key managed by extension)</p>
-        )}
+        {usingNip07 && <p className="hint">Using NIP-07 extension (secret key managed by extension)</p>}
       </SettingsSection>
 
       {/* NIP-07 toggle - only when extension is available */}
@@ -237,12 +226,7 @@ export default function KeysSection({
             </label>
 
             <label className="auth-method-option">
-              <input
-                type="radio"
-                name="authMethod"
-                checked={usingNip07}
-                onChange={handleEnableNip07}
-              />
+              <input type="radio" name="authMethod" checked={usingNip07} onChange={handleEnableNip07} />
               <span>NIP-07 extension</span>
             </label>
             {usingNip07 && (
