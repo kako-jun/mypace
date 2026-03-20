@@ -10,9 +10,11 @@ import {
   addKey,
   switchKey,
 } from '../../lib/nostr/keys'
+import { fetchProfiles } from '../../lib/nostr/relay'
 import { Button, ErrorMessage, SettingsSection } from '../ui'
 import { copyToClipboard, removeLocalProfile } from '../../lib/utils'
 import { useTemporaryFlag } from '../../hooks'
+import type { Profile } from '../../types'
 
 interface KeysSectionProps {
   nsec: string
@@ -37,11 +39,30 @@ export default function KeysSection({
   const [error, setError] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+  const [keyProfiles, setKeyProfiles] = useState<Record<string, Profile | null>>({})
+  const fetchedPubkeysRef = useRef<Set<string>>(new Set())
+
   const nip07Available = hasNip07()
   // Memoize: getAllKeys() runs getPublicKey + nip19 encoding per key
   const keys = useMemo(() => getAllKeys(), [nsec]) // nsec changes on key switch/import
   const activeIndex = getActiveIndex()
   const hasMultipleKeys = keys.length > 1
+
+  // Fetch profiles for all keys when dropdown opens
+  useEffect(() => {
+    if (!dropdownOpen || keys.length < 2) return
+    const missing = keys.map((k) => k.pubkey).filter((pk) => !fetchedPubkeysRef.current.has(pk))
+    if (missing.length === 0) return
+    missing.forEach((pk) => fetchedPubkeysRef.current.add(pk))
+    fetchProfiles(missing)
+      .then((profiles) => {
+        setKeyProfiles((prev) => ({ ...prev, ...profiles }))
+      })
+      .catch(() => {
+        // Allow retry on next dropdown open
+        missing.forEach((pk) => fetchedPubkeysRef.current.delete(pk))
+      })
+  }, [dropdownOpen, keys])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -145,16 +166,24 @@ export default function KeysSection({
                   </div>
                   {dropdownOpen && (
                     <div className="nsec-combo-dropdown">
-                      {keys.map((key, i) => (
-                        <button
-                          key={key.npub}
-                          className={`nsec-combo-option ${i === activeIndex ? 'active' : ''}`}
-                          onClick={() => handleSwitch(i)}
-                        >
-                          <span className="nsec-combo-npub">{shortenNpub(key.npub)}</span>
-                          {i === activeIndex && <span className="nsec-combo-check">&#10003;</span>}
-                        </button>
-                      ))}
+                      {keys.map((key, i) => {
+                        const profile = keyProfiles[key.pubkey]
+                        const rawName = profile?.display_name || profile?.name || ''
+                        const displayName = rawName.length > 30 ? rawName.slice(0, 30) + '…' : rawName
+                        return (
+                          <button
+                            key={key.npub}
+                            className={`nsec-combo-option ${i === activeIndex ? 'active' : ''}`}
+                            onClick={() => handleSwitch(i)}
+                          >
+                            <span className="nsec-combo-npub">
+                              {shortenNpub(key.npub)}
+                              {displayName && <span className="nsec-combo-name">{displayName}</span>}
+                            </span>
+                            {i === activeIndex && <span className="nsec-combo-check">&#10003;</span>}
+                          </button>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
@@ -173,6 +202,7 @@ export default function KeysSection({
             <div className="nsec-import-row">
               <input
                 type="password"
+                autoComplete="off"
                 className="nsec-import-input"
                 placeholder="nsec1... to add"
                 value={inputValue}

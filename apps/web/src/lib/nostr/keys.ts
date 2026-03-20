@@ -123,6 +123,7 @@ export function getMyPubkey(): string | null {
 
 export interface KeyEntry {
   sk: Uint8Array
+  pubkey: string
   npub: string
   nsec: string
 }
@@ -135,6 +136,7 @@ export function getAllKeys(): KeyEntry[] {
       const pubkey = getPublicKey(sk)
       return {
         sk,
+        pubkey,
         npub: nip19.npubEncode(pubkey),
         nsec: nip19.nsecEncode(sk),
       }
