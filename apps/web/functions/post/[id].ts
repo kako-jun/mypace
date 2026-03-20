@@ -56,24 +56,25 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     let html = await assetResponse.text()
 
     // Generate OGP metadata
-    const displayName = escapeHtml(profile?.display_name || profile?.name || 'Anonymous')
+    const rawName = profile?.display_name || profile?.name || 'Anonymous'
+    const displayName = escapeHtml(rawName)
     const plainText = extractPlainText(event.content)
     const description = escapeHtml(plainText ? truncate(plainText, 200) : 'MY PACE - マイペースでいいミディアムレアSNS')
     const image = contentImage || profile?.picture || 'https://mypace.llll-ll.com/static/ogp.webp'
     const url = `https://mypace.llll-ll.com/post/${eventId}`
 
-    // JSON-LD structured data
+    // JSON-LD structured data (use raw names — JSON.stringify handles escaping)
     const publishedDate = new Date(event.created_at * 1000).toISOString()
     const jsonLd = JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'Article',
-      headline: `${displayName}の投稿`,
+      headline: `${rawName}の投稿`,
       description: plainText ? truncate(plainText, 200) : undefined,
       image: contentImage || undefined,
       datePublished: publishedDate,
       author: {
         '@type': 'Person',
-        name: profile?.display_name || profile?.name || 'Anonymous',
+        name: rawName,
         url: `https://mypace.llll-ll.com/user/${event.pubkey}`,
       },
       publisher: {
