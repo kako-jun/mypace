@@ -204,7 +204,7 @@
 /* Hint */
 .supernova-hint {
   font-size: 0.7rem;
-  color: var(--text-tertiary, #999);
+  color: var(--text-muted);
   margin: 0.5rem 0 0;
 }
 

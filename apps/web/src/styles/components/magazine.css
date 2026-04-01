@@ -440,7 +440,7 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   background: var(--surface-secondary);
-  border: 2px dashed var(--border-primary, #666);
+  border: 2px dashed var(--border);
   border-radius: 8px;
   cursor: pointer;
   position: relative;

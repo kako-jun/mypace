@@ -37,7 +37,7 @@ body.long-mode-active .drawing-picker-modal {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .drawing-picker-header h3 {
@@ -88,7 +88,7 @@ body.long-mode-active .drawing-picker-modal {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-light);
 }
 
 
@@ -205,7 +205,7 @@ body.long-mode-active .drawing-picker-modal {
   width: 32px;
   height: 32px;
   border-radius: 4px;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-light);
   background: var(--surface-secondary);
   color: var(--text-secondary);
   cursor: pointer;
@@ -271,7 +271,7 @@ body.long-mode-active .drawing-picker-modal {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-light);
 }
 
 .drawing-picker-history-btn {
@@ -290,7 +290,7 @@ body.long-mode-active .drawing-picker-modal {
 }
 
 .drawing-picker-history-btn:hover {
-  background: var(--hover-bg);
+  background: var(--surface-hover);
   color: var(--text-primary);
 }
 
@@ -313,7 +313,7 @@ body.long-mode-active .drawing-picker-modal {
   height: 32px;
   padding: 4px;
   background: var(--surface-secondary);
-  border: 1px solid var(--border-primary, #333);
+  border: 1px solid var(--border);
   border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;

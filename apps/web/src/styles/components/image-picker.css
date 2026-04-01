@@ -14,7 +14,7 @@
   height: 32px;
   padding: 4px;
   background: var(--surface-secondary);
-  border: 1px solid var(--border-primary, #333);
+  border: 1px solid var(--border);
   border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -116,7 +116,7 @@ body.long-mode-active .image-picker-modal {
   background: var(--surface-secondary);
   border-width: 2px;
   border-style: dashed;
-  border-color: var(--border-primary, #666);
+  border-color: var(--border);
   border-radius: 8px;
   cursor: pointer;
   color: var(--text-muted);
@@ -130,7 +130,7 @@ body.long-mode-active .image-picker-modal {
 
 .image-picker-upload-area.dragging {
   background: var(--surface-hover);
-  border-color: var(--color-primary, #007bff);
+  border-color: var(--accent);
   border-style: solid;
 }
 
@@ -152,7 +152,7 @@ body.long-mode-active .image-picker-modal {
   gap: 0.25rem;
   padding: 0.5rem 0.75rem;
   background: var(--surface-secondary);
-  border: 2px solid var(--border-primary, #666);
+  border: 2px solid var(--border);
   border-radius: 8px;
   cursor: pointer;
   color: var(--text-muted);
@@ -216,7 +216,7 @@ body.long-mode-active .image-picker-modal {
   height: 32px;
   padding: 0;
   background: transparent;
-  border: 1px solid var(--border-primary, #666);
+  border: 1px solid var(--border);
   border-radius: 4px;
   cursor: pointer;
   color: var(--text-muted);
@@ -286,7 +286,7 @@ body.long-mode-active .image-picker-modal {
 }
 
 .image-picker-grid::-webkit-scrollbar-thumb {
-  background: var(--border-primary);
+  background: var(--border);
   border-radius: 4px;
 }
 
@@ -315,7 +315,7 @@ body.long-mode-active .image-picker-modal {
 }
 
 .image-picker-item.selected {
-  border-color: var(--color-primary, #007bff);
+  border-color: var(--accent);
   background: rgba(0, 123, 255, 0.1);
 }
 
@@ -394,7 +394,7 @@ body.long-mode-active .image-picker-modal {
 }
 
 .image-picker-history-btn:hover {
-  background: var(--hover-bg);
+  background: var(--surface-hover);
   color: var(--text-primary);
 }
 

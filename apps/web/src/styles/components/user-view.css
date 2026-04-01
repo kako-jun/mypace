@@ -391,13 +391,13 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  border: 2px dashed var(--border-primary, #666);
+  border: 2px dashed var(--border);
   transition: border-color 0.15s ease, border-style 0.15s ease;
 }
 
 .banner-upload-area:hover,
 .banner-upload-area.dragging {
-  border-color: var(--color-primary, #007bff);
+  border-color: var(--accent);
   border-style: solid;
 }
 
@@ -443,7 +443,7 @@
   cursor: pointer;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px dashed var(--border-primary, #666);
+  border: 2px dashed var(--border);
   padding: 4px;
   width: 98px;
   height: 98px;
@@ -456,7 +456,7 @@
 
 .avatar-upload-area:hover,
 .avatar-upload-area.dragging {
-  border-color: var(--color-primary, #007bff);
+  border-color: var(--accent);
   border-style: solid;
 }
 

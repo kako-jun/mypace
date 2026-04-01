@@ -42,7 +42,7 @@
 }
 
 .timeline-search-icon {
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
@@ -204,7 +204,7 @@
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   transition: color 0.2s;
 }
 

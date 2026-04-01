@@ -158,7 +158,7 @@
 .npc-form-input {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 2px solid var(--border-subtle);
+  border: 2px solid var(--border-light);
   border-radius: 4px;
   background: var(--surface-secondary);
   color: var(--text-primary);
@@ -167,7 +167,7 @@
 }
 
 .npc-form-input:focus {
-  border-color: var(--action-star);
+  border-color: var(--highlight);
 }
 
 .npc-form-input:disabled {
