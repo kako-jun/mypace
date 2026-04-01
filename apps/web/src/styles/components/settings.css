@@ -688,41 +688,6 @@
   text-decoration: underline;
 }
 
-/* Wallet Section */
-.wallet-status {
-  margin-bottom: 0.5rem;
-}
-
-.wallet-connected-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--text-primary);
-}
-
-.wallet-not-connected-status {
-  font-size: 0.9rem;
-  color: #e74c3c;
-}
-
-.stella-price-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border-light);
-}
-
-.stella-price-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
 /* nsec Combo Dropdown */
 .nsec-combo {
   position: relative;

@@ -30,6 +30,7 @@
 
 日々の利用を便利にする機能。
 
+- [通知](./features/notifications.md) - ステラ・リプライ・リポストの通知
 - [フィルター](./features/filters.md) - 表示を絞り込む
 - [ミュート](./features/mute.md) - 特定ユーザーを非表示
 - [共有](./features/share.md) - URL・Markdownで共有
