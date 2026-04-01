@@ -33,38 +33,60 @@ export function useWordrotTimeline() {
   // Get celebration context (always available since WordrotProvider is inside WordCelebrationProvider)
   const { celebrate } = useWordCelebration()
 
+  // Refresh inventory from API (reusable for mount and visibility change)
+  const refreshInventory = useCallback(async (pk: string) => {
+    try {
+      const inventory = await fetchWordrotInventory(pk)
+      const collected = new Set<string>(inventory.words.map((w) => w.word.text.toLowerCase()))
+      setCollectedWords(collected)
+
+      const images: WordImageCache = {}
+      for (const item of inventory.words) {
+        const wordText = item.word.text
+        if (images[wordText]) continue
+        const imageUrl = item.word.image_url
+        if (imageUrl) {
+          images[wordText] = imageUrl
+        }
+      }
+      setWordImages(images)
+    } catch {
+      // silently fail
+    }
+  }, [])
+
   // Load current user's pubkey and collected words on mount
   useEffect(() => {
     const loadUserData = async () => {
       try {
         const pk = await getCurrentPubkey()
         setPubkey(pk)
-
-        // Load user's inventory to know which words are already collected
-        const inventory = await fetchWordrotInventory(pk)
-        const collected = new Set<string>(inventory.words.map((w) => w.word.text.toLowerCase()))
-        setCollectedWords(collected)
-
-        // Build image cache from inventory
-        const images: WordImageCache = {}
-        for (const item of inventory.words) {
-          const wordText = item.word.text
-          // Skip if already set (prefer first occurrence)
-          if (images[wordText]) continue
-
-          const imageUrl = item.word.image_url
-          if (imageUrl) {
-            images[wordText] = imageUrl
-          }
-        }
-        setWordImages(images)
+        await refreshInventory(pk)
       } catch {
         // User not logged in or error - silently fail
       }
     }
 
     loadUserData()
-  }, [])
+  }, [refreshInventory])
+
+  // Refresh inventory when tab regains focus or navigating back from PostView
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && pubkey) {
+        refreshInventory(pubkey)
+      }
+    }
+    const handleWordrotRefresh = () => {
+      if (pubkey) refreshInventory(pubkey)
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('wordrot-inventory-changed', handleWordrotRefresh)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('wordrot-inventory-changed', handleWordrotRefresh)
+    }
+  }, [pubkey, refreshInventory])
 
   /**
    * Get cached words for an event ID
