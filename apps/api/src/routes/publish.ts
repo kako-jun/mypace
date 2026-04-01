@@ -108,6 +108,7 @@ async function triggerPushNotification(
   db: D1Database,
   recipientPubkey: string,
   type: NotificationType,
+  targetEventId: string,
   vapidPublicKey?: string,
   vapidPrivateKey?: string,
   vapidSubject?: string
@@ -123,7 +124,8 @@ async function triggerPushNotification(
       recipientPubkey,
       type,
       { publicKey: vapidPublicKey, privateKey: vapidPrivateKey },
-      vapidSubject
+      vapidSubject,
+      targetEventId
     )
   } catch (e) {
     console.error('Push notification error:', e)
@@ -179,11 +181,11 @@ async function recordNotification(
     }
   }
 
-  // For reply/repost, check if notification already exists (prevent duplicates)
+  // For reply/repost, check if notification already exists from this actor (prevent duplicates)
   if (type !== 'stella' && sourceEventId) {
     const existingReplyRepost = await db
-      .prepare(`SELECT id FROM notifications WHERE source_event_id = ?`)
-      .bind(sourceEventId)
+      .prepare(`SELECT id FROM notifications WHERE source_event_id = ? AND actor_pubkey = ?`)
+      .bind(sourceEventId, actorPubkey)
       .first()
     if (existingReplyRepost) return
     shouldPush = true
@@ -219,7 +221,7 @@ async function recordNotification(
 
   // Trigger push notification (fire and forget)
   if (shouldPush) {
-    triggerPushNotification(db, recipientPubkey, type, vapidPublicKey, vapidPrivateKey, vapidSubject)
+    triggerPushNotification(db, recipientPubkey, type, targetEventId, vapidPublicKey, vapidPrivateKey, vapidSubject)
   }
 }
 
@@ -593,7 +595,12 @@ publish.post('/', async (c) => {
     if (event.kind === 7) {
       const stellaTags = tags.filter((t: string[]) => t[0] === 'stella' && t[1])
       if (stellaTags.length > 0) {
-        const eTag = tags.find((t: string[]) => t[0] === 'e')
+        // Prefer root-marked e-tag, fall back to last e-tag (NIP-10 convention)
+        const eTags = tags.filter((t: string[]) => t[0] === 'e')
+        const eTag =
+          eTags.find((t: string[]) => t[3] === 'root') ||
+          eTags.find((t: string[]) => t[3] === 'reply') ||
+          eTags[eTags.length - 1]
         const pTag = tags.find((t: string[]) => t[0] === 'p')
         if (eTag && eTag[1] && pTag && pTag[1]) {
           let notificationSent = false
@@ -675,7 +682,8 @@ publish.post('/', async (c) => {
 
     // Kind 6 (リポスト) なら通知を記録 + first_repost スーパーノヴァチェック
     if (event.kind === 6) {
-      const eTag = tags.find((t: string[]) => t[0] === 'e')
+      const eTags = tags.filter((t: string[]) => t[0] === 'e')
+      const eTag = eTags[eTags.length - 1] || null
       const pTag = tags.find((t: string[]) => t[0] === 'p')
       if (eTag && eTag[1] && pTag && pTag[1]) {
         try {

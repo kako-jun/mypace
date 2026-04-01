@@ -276,7 +276,8 @@ export async function sendPushToUser(
   recipientPubkey: string,
   notificationType: NotificationType,
   vapidKeys: VapidKeys,
-  vapidSubject: string
+  vapidSubject: string,
+  targetEventId?: string
 ): Promise<void> {
   // Get all subscriptions for this user
   const subscriptions = await db
@@ -293,7 +294,7 @@ export async function sendPushToUser(
   }
 
   // Build payload based on notification type
-  const payload = buildPayload(notificationType)
+  const payload = buildPayload(notificationType, targetEventId)
 
   // Filter by preference
   const eligibleSubscriptions = subscriptions.results.filter((sub) => {
@@ -328,28 +329,29 @@ export async function sendPushToUser(
 /**
  * Build push payload based on notification type
  */
-function buildPayload(type: NotificationType): PushPayload {
+function buildPayload(type: NotificationType, targetEventId?: string): PushPayload {
+  const url = targetEventId ? `/post/${targetEventId}` : '/'
   switch (type) {
     case 'stella':
       return {
         title: 'MY PACE',
         body: 'New stella on your posts',
         tag: 'mypace-stella',
-        data: { url: '/' },
+        data: { url },
       }
     case 'reply':
       return {
         title: 'MY PACE',
         body: 'New reply to your post',
         tag: 'mypace-reply',
-        data: { url: '/' },
+        data: { url },
       }
     case 'repost':
       return {
         title: 'MY PACE',
         body: 'New repost of your post',
         tag: 'mypace-repost',
-        data: { url: '/' },
+        data: { url },
       }
   }
 }
