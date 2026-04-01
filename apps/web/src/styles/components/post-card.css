@@ -8,7 +8,6 @@
   position: relative;
   padding: 1.5rem;
   animation: card-appear 0.3s ease backwards;
-  view-transition-name: post-card;
   background: var(--surface-primary);
   border: 2px solid #000;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
