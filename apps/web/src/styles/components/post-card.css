@@ -230,7 +230,7 @@
 .post-content td {
   padding: 0.4rem 1rem;
   text-align: left;
-  border-bottom: 1px solid var(--border-light));
+  border-bottom: 1px solid var(--border-light);
 }
 
 .post-content th {
