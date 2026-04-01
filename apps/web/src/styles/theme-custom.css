@@ -137,6 +137,7 @@ body.custom-theme .logo-pace {
 .themed-card .embed-link *,
 .themed-card .post-location,
 .themed-card .post-location *,
+.themed-card .wordrot-highlight,
 .themed-card audio,
 .themed-card video {
   text-shadow: none !important;

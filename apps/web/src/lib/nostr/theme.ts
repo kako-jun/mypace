@@ -1,18 +1,6 @@
 import type { ThemeColors, Event } from '../../types'
-import { getThemeColors, getThemeMode } from '../storage'
+import { getThemeColors } from '../storage'
 import { AURORA_TAG } from './constants'
-
-// Theme background colors
-const THEME_BG_COLORS = {
-  light: '#f8f8f8',
-  dark: '#282828',
-}
-
-// Get fallback colors based on current theme
-export function getThemeFallbackColors(): ThemeColors {
-  const bg = THEME_BG_COLORS[getThemeMode()]
-  return { topLeft: bg, topRight: bg, bottomLeft: bg, bottomRight: bg }
-}
 
 // Get stored theme colors from storage
 export function getStoredThemeColors(): ThemeColors | null {
@@ -58,32 +46,34 @@ export function isDarkColor(hex: string): boolean {
 }
 
 // Get theme card props (style and classes)
-// When colors is null, uses current theme's background color as fallback
+// When colors is null, returns empty props (no themed-card class, no inline style)
 export function getThemeCardProps(colors: ThemeColors | null): {
   style: Record<string, string>
   className: string
 } {
-  // Use fallback colors if not provided
-  const effectiveColors = colors || getThemeFallbackColors()
+  // No custom colors → no themed-card treatment
+  if (!colors) {
+    return { className: '', style: {} }
+  }
 
   const darkCount =
-    (isDarkColor(effectiveColors.topLeft) ? 1 : 0) +
-    (isDarkColor(effectiveColors.topRight) ? 1 : 0) +
-    (isDarkColor(effectiveColors.bottomLeft) ? 1 : 0) +
-    (isDarkColor(effectiveColors.bottomRight) ? 1 : 0)
+    (isDarkColor(colors.topLeft) ? 1 : 0) +
+    (isDarkColor(colors.topRight) ? 1 : 0) +
+    (isDarkColor(colors.bottomLeft) ? 1 : 0) +
+    (isDarkColor(colors.bottomRight) ? 1 : 0)
 
   const avgDark = darkCount >= 2
   const textClass = avgDark ? 'light-text' : 'dark-text'
-  const topLeftClass = isDarkColor(effectiveColors.topLeft) ? 'corner-tl-dark' : 'corner-tl-light'
+  const topLeftClass = isDarkColor(colors.topLeft) ? 'corner-tl-dark' : 'corner-tl-light'
 
   return {
     style: {
       background: `
-        radial-gradient(ellipse at 0 0, ${effectiveColors.topLeft}cc 0%, transparent 50%),
-        radial-gradient(ellipse at 100% 0, ${effectiveColors.topRight}cc 0%, transparent 50%),
-        radial-gradient(ellipse at 0 100%, ${effectiveColors.bottomLeft}cc 0%, transparent 50%),
-        radial-gradient(ellipse at 100% 100%, ${effectiveColors.bottomRight}cc 0%, transparent 50%),
-        linear-gradient(135deg, ${effectiveColors.topLeft} 0%, ${effectiveColors.bottomRight} 100%)
+        radial-gradient(ellipse at 0 0, ${colors.topLeft}cc 0%, transparent 50%),
+        radial-gradient(ellipse at 100% 0, ${colors.topRight}cc 0%, transparent 50%),
+        radial-gradient(ellipse at 0 100%, ${colors.bottomLeft}cc 0%, transparent 50%),
+        radial-gradient(ellipse at 100% 100%, ${colors.bottomRight}cc 0%, transparent 50%),
+        linear-gradient(135deg, ${colors.topLeft} 0%, ${colors.bottomRight} 100%)
       `.trim(),
     },
     className: `themed-card ${textClass} ${topLeftClass}`,
