@@ -31,7 +31,7 @@ export function isNip07Enabled(): boolean {
 }
 
 // Check if NIP-07 was enabled but extension is now missing
-export function isNip07Missing(): boolean {
+function isNip07Missing(): boolean {
   return !hasNip07() && getUseNip07()
 }
 
@@ -105,10 +105,6 @@ export function importNsec(nsec: string): Uint8Array {
   return decoded.data
 }
 
-export async function saveSecretKey(sk: Uint8Array): Promise<void> {
-  await setSecretKey(bytesToHex(sk))
-}
-
 export function clearSecretKey(): void {
   clearStoredSecretKey()
 }
@@ -121,7 +117,7 @@ export function getMyPubkey(): string | null {
 
 // Multi-key management
 
-export interface KeyEntry {
+interface KeyEntry {
   sk: Uint8Array
   pubkey: string
   npub: string

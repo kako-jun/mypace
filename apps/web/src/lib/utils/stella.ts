@@ -52,10 +52,3 @@ export function createEmptyStellaCounts(): StellaCountsByColor {
 export function hasAnyStella(counts: StellaCountsByColor): boolean {
   return getTotalStellaCount(counts) > 0
 }
-
-/**
- * Check if only yellow stella exists (no colored stella)
- */
-export function hasOnlyYellowStella(counts: StellaCountsByColor): boolean {
-  return counts.yellow > 0 && counts.green === 0 && counts.red === 0 && counts.blue === 0 && counts.purple === 0
-}

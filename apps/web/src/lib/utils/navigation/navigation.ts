@@ -1,6 +1,5 @@
 // Navigation utilities
 import { nip19 } from 'nostr-tools'
-import type { FilterMode } from '../../../types'
 import { getNavigateFunction } from './router-navigation'
 import { getFilterSettings, setFilterSettings, DEFAULT_SEARCH_FILTERS } from '../../storage'
 
@@ -34,23 +33,6 @@ export function navigateToEdit(eventId: string): void {
 
 export function navigateToReply(eventId: string): void {
   navigateTo(`/?reply=${eventId}`)
-}
-
-// Build tag filter URL
-export function buildTagUrl(tags: string[], mode: FilterMode): string {
-  if (tags.length === 0) return '/'
-  const separator = mode === 'and' ? '+' : ','
-  return `/?tags=${tags.map((t) => encodeURIComponent(t)).join(separator)}`
-}
-
-export function navigateToTagFilter(tags: string[], mode: FilterMode): void {
-  navigateTo(buildTagUrl(tags, mode))
-}
-
-// Add tag to current filter and navigate
-export function navigateToAddTag(currentTags: string[], newTag: string, mode: FilterMode): void {
-  if (currentTags.includes(newTag)) return
-  navigateToTagFilter([...currentTags, newTag], mode)
 }
 
 // Re-export storage functions for backwards compatibility

@@ -6,16 +6,15 @@ import { extractTikTokId } from './tiktok'
 import { extractSpotifyInfo } from './spotify'
 import { isVideoUrl, isAudioUrl, isImageUrl, isAllowedIframeDomain, URL_REGEX } from './utils'
 
-export type { EmbedType, EmbedInfo } from './types'
+export type { EmbedInfo } from './types'
 export { getYouTubeThumbnail, getYouTubeEmbedUrl, getYouTubeShortsEmbedUrl } from './youtube'
-export { getInstagramEmbedUrl } from './instagram'
 export { getSpotifyEmbedUrl } from './spotify'
-export { isVideoUrl, isAudioUrl, isAllowedIframeDomain, ALLOWED_IFRAME_DOMAINS, URL_REGEX } from './utils'
+export { isVideoUrl, isAudioUrl, isAllowedIframeDomain, URL_REGEX } from './utils'
 
 // Super mention URL regex (@@domain.com/path format)
 const SUPER_MENTION_URL_REGEX = /@@([\w][\w.-]*\.[a-z]{2,}(?:\/[^\s<"]*)?)/gi
 
-export function detectEmbed(url: string): EmbedInfo | null {
+function detectEmbed(url: string): EmbedInfo | null {
   if (isImageUrl(url)) return null
   // Skip video/audio - they are already handled inline by processAudioUrls
   if (isVideoUrl(url)) return null

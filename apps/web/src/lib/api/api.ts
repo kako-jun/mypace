@@ -29,7 +29,7 @@ export function recordEvent(event: Event): void {
 }
 
 // Wikidata search
-export interface WikidataResult {
+interface WikidataResult {
   id: string
   label: string
   description: string
@@ -151,7 +151,7 @@ export async function deleteStickerFromHistory(url: string): Promise<boolean> {
 }
 
 // Pinned posts
-export interface PinnedPostData {
+interface PinnedPostData {
   eventId: string | null
   createdAt?: number
 }
@@ -275,7 +275,7 @@ export interface ViewCountData {
 // ==================== BATCH APIs ====================
 
 // Batch fetch views and super-mentions from D1 (metadata/profiles are fetched directly from Nostr relays)
-export interface ViewsAndSuperMentionsResponse {
+interface ViewsAndSuperMentionsResponse {
   views: Record<string, ViewCountData>
   superMentions: Record<string, string>
 }
@@ -441,7 +441,7 @@ export interface StellaBalance {
   purple: number
 }
 
-export interface StellaBalanceResponse {
+interface StellaBalanceResponse {
   pubkey: string
   balance: StellaBalance
   updatedAt: number | null
@@ -580,7 +580,7 @@ export interface UserWordrotWord {
   source: 'harvest' | 'synthesis'
 }
 
-export interface WordrotSynthesis {
+interface WordrotSynthesis {
   word_a: string
   word_b: string
   word_c: string
@@ -602,15 +602,12 @@ let inventoryCache: {
 const INVENTORY_CACHE_TTL = 60_000
 
 /** インベントリキャッシュを無効化（collectWord/synthesize成功時に呼ばれる） */
-export function invalidateWordrotInventoryCache(): void {
+function invalidateWordrotInventoryCache(): void {
   inventoryCache = null
 }
 
 /** インベントリキャッシュを直接更新（collectWordレスポンスにinventoryが含まれる場合） */
-export function updateWordrotInventoryCache(
-  pubkey: string,
-  data: { words: UserWordrotWord[]; uniqueCount: number }
-): void {
+function updateWordrotInventoryCache(pubkey: string, data: { words: UserWordrotWord[]; uniqueCount: number }): void {
   inventoryCache = { pubkey, data, timestamp: Date.now() }
 }
 
@@ -639,7 +636,7 @@ export async function extractNouns(eventId: string, content: string): Promise<{ 
 }
 
 // Extract nouns from multiple posts (batch)
-export interface BatchExtractionResult {
+interface BatchExtractionResult {
   results: Record<string, { words: string[]; cached: boolean }>
   stats: { total: number; cached: number; extracted: number }
 }
@@ -822,50 +819,14 @@ export async function convertToItalian(
   }
 }
 
-// Get leaderboard
-export async function fetchWordrotLeaderboard(): Promise<{
-  topDiscoverers: Array<{ pubkey: string; count: number }>
-  popularWords: Array<{ text: string; image_url: string | null; discovery_count: number; synthesis_count: number }>
-  recentWords: Array<{ text: string; image_url: string | null; discovered_by: string | null; discovered_at: number }>
-}> {
-  try {
-    const res = await fetch(`${API_BASE}/api/wordrot/leaderboard`)
-    if (!res.ok) return { topDiscoverers: [], popularWords: [], recentWords: [] }
-    return res.json()
-  } catch {
-    return { topDiscoverers: [], popularWords: [], recentWords: [] }
-  }
-}
-
 // ==================== NPC REPORTER ====================
 
-export interface ReporterQuote {
+interface ReporterQuote {
   event: Event
   metadata: {
     title: string | null
     description: string | null
     image: string | null
-  }
-}
-
-// Check if quote already exists for URL
-export async function getReporterQuote(url: string): Promise<{ found: boolean; quote?: ReporterQuote }> {
-  try {
-    const res = await fetch(`${API_BASE}/api/npc/reporter?url=${encodeURIComponent(url)}`)
-    if (!res.ok) return { found: false }
-    const data = await res.json()
-    if (data.found) {
-      return {
-        found: true,
-        quote: {
-          event: data.event,
-          metadata: data.metadata,
-        },
-      }
-    }
-    return { found: false }
-  } catch {
-    return { found: false }
   }
 }
 

@@ -36,16 +36,8 @@ export function getCachedPost(eventId: string): Event | null {
   return null
 }
 
-export function clearCachedPost(eventId: string): void {
-  try {
-    sessionStorage.removeItem(`${CACHE_KEYS.POST}${eventId}`)
-  } catch {
-    // Ignore
-  }
-}
-
 // Profile cache
-export function cacheProfile(pubkey: string, profile: Profile): void {
+function cacheProfile(pubkey: string, profile: Profile): void {
   try {
     sessionStorage.setItem(`${CACHE_KEYS.PROFILE}${pubkey}`, JSON.stringify(profile))
   } catch {
@@ -74,7 +66,7 @@ export function clearCachedProfile(pubkey: string): void {
 }
 
 // Post metadata cache (reactions, replies, reposts, views from timeline)
-export function cachePostMetadata(eventId: string, metadata: CachedPostMetadata): void {
+function cachePostMetadata(eventId: string, metadata: CachedPostMetadata): void {
   try {
     sessionStorage.setItem(`${CACHE_KEYS.POST_METADATA}${eventId}`, JSON.stringify(metadata))
   } catch {
@@ -92,14 +84,6 @@ export function getCachedPostMetadata(eventId: string): CachedPostMetadata | nul
     // Parse error or unavailable
   }
   return null
-}
-
-export function clearCachedPostMetadata(eventId: string): void {
-  try {
-    sessionStorage.removeItem(`${CACHE_KEYS.POST_METADATA}${eventId}`)
-  } catch {
-    // Ignore
-  }
 }
 
 // Cache post with all its metadata at once (convenience function for timeline → detail transition)

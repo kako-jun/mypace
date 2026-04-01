@@ -41,27 +41,6 @@ export async function generateStats(eventId: string): Promise<BarcodeStats> {
 }
 
 /**
- * Generate binary barcode string from stats
- * Format: | ATK(7bit) | DEF(7bit) | SPD(7bit) | PARITY(4bit) | CHECK(3bit) |
- * Total: 28 bits
- */
-export function generateBarcode(stats: BarcodeStats): string {
-  const { atk, def, spd, parity } = stats
-
-  // 7 bits each + 4 bit parity = 25 bits
-  const binary =
-    atk.toString(2).padStart(7, '0') +
-    def.toString(2).padStart(7, '0') +
-    spd.toString(2).padStart(7, '0') +
-    parity.toString(2).padStart(4, '0')
-
-  // 3-bit checksum (XOR of all bits)
-  const checksum = binary.split('').reduce((a, b) => a ^ parseInt(b), 0)
-
-  return binary + checksum.toString(2).padStart(3, '0')
-}
-
-/**
  * Get rarity based on total stats (N/R/SR/UR)
  * N: 0-149 (~50%), R: 150-199 (~33%), SR: 200-249 (~15%), UR: 250+ (~2%)
  */

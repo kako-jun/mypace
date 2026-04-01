@@ -1,7 +1,7 @@
 import type { LoadableProfile } from '../../../types'
 import { detectServiceLabel } from './serviceDetection'
 
-export interface ResolvedWebsite {
+interface ResolvedWebsite {
   url: string
   label: string
 }
