@@ -103,13 +103,3 @@ export function isMuted(pubkey: string): boolean {
 export function getMutedPubkeys(): string[] {
   return loadMuteList().map((entry) => entry.pubkey)
 }
-
-// Clear entire mute list
-export function clearMuteList(): void {
-  saveMuteList([])
-}
-
-// Import mute list (for settings import)
-export function importMuteList(entries: MuteEntry[]): void {
-  saveMuteList(entries)
-}
