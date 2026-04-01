@@ -36,7 +36,6 @@
   /* ===== Derived: Border ===== */
   --border-light: color-mix(in srgb, var(--bg) 88%, var(--fg) 12%);
   --border-medium: color-mix(in srgb, var(--bg) 80%, var(--fg) 20%);
-  --border-dark: var(--border);
   --border-card: #333;
 
   /* ===== Derived: Button ===== */
@@ -51,11 +50,9 @@
   --btn-cancel-text: color-mix(in srgb, var(--fg) 60%, var(--bg) 40%);
 
   /* ===== Derived: Action ===== */
-  --action-like: var(--highlight);
   --action-reply: #3498db;
   --action-repost: #2ecc71;
   --action-delete: #e53935;
-  --action-danger-hover: color-mix(in srgb, var(--bg) 95%, #c44 5%);
 
   /* ===== Derived: Code ===== */
   --code-bg: color-mix(in srgb, var(--bg) 88%, var(--fg) 12%);
@@ -66,8 +63,6 @@
   --font-mono: 'BIZ UDGothic', 'SF Mono', 'Menlo', 'Consolas', ui-monospace, monospace;
 
   /* ===== Q Badge ===== */
-  --q-badge-bg: rgba(0, 0, 0, 0.1);
-  --q-badge-color: #888;
   --q-badge-hover-bg: rgba(0, 100, 200, 0.2);
   --q-badge-hover-color: #0066cc;
 }
@@ -109,7 +104,6 @@
   /* ===== Derived: Border ===== */
   --border-light: color-mix(in srgb, var(--bg) 88%, var(--fg) 12%);
   --border-medium: color-mix(in srgb, var(--bg) 80%, var(--fg) 20%);
-  --border-dark: var(--border);
   --border-card: var(--border);
 
   /* ===== Derived: Button ===== */
@@ -124,19 +118,15 @@
   --btn-cancel-text: color-mix(in srgb, var(--fg) 60%, var(--bg) 40%);
 
   /* ===== Derived: Action ===== */
-  --action-like: var(--highlight);
   --action-reply: #3498db;
   --action-repost: #2ecc71;
   --action-delete: #e53935;
-  --action-danger-hover: rgba(200, 68, 68, 0.15);
 
   /* ===== Derived: Code ===== */
   --code-bg: color-mix(in srgb, var(--bg) 88%, var(--fg) 12%);
   --code-text: #e0e0e0;
 
   /* ===== Q Badge ===== */
-  --q-badge-bg: rgba(255, 255, 255, 0.1);
-  --q-badge-color: #666;
   --q-badge-hover-bg: rgba(100, 180, 255, 0.2);
   --q-badge-hover-color: #6ab4ff;
 
