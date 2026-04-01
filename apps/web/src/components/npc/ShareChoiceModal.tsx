@@ -53,12 +53,12 @@ export function ShareChoiceModal({ isOpen, onClose, sharedUrl, sharedText }: Sha
           <CloseButton onClick={onClose} size={16} />
         </div>
         <div className="share-choice-options">
-          <button className="share-choice-option" onClick={handleSelfPost} disabled={loading}>
+          <button className="menu-option" onClick={handleSelfPost} disabled={loading}>
             <Icon name="PenLine" size={16} />
             <span>自分で投稿</span>
             <Icon name="ChevronRight" size={16} />
           </button>
-          <button className="share-choice-option" onClick={handleReporterQuote} disabled={loading}>
+          <button className="menu-option" onClick={handleReporterQuote} disabled={loading}>
             <Icon name="Newspaper" size={16} />
             <span>{loading ? '作成中...' : '記者に依頼'}</span>
             <Icon name="ChevronRight" size={16} />

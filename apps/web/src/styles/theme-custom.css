@@ -97,15 +97,6 @@ body.custom-theme .logo-pace {
   color: var(--action-repost);
 }
 
-.post-card.themed-card .reply-form {
-  border-top-color: rgba(255, 255, 255, 0.2);
-}
-
-.post-card.themed-card .reply-input {
-  background: rgba(255, 255, 255, 0.15);
-  color: inherit;
-}
-
 .post-card.themed-card .thread-toggle {
   color: inherit;
   opacity: 0.7;
@@ -116,10 +107,6 @@ body.custom-theme .logo-pace {
 .post-card.themed-card .reply-to-label {
   color: inherit;
   opacity: 0.7;
-}
-
-.post-card.themed-card .like-count {
-  color: var(--highlight);
 }
 
 /* Dark text on light background - white outline shadow */
@@ -155,7 +142,6 @@ body.custom-theme .logo-pace {
 
 
 .light-text .timestamp,
-.light-text .reply-header .timestamp,
 .parent-post-card.light-text .timestamp {
   color: rgba(255, 255, 255, 0.7);
 }
@@ -209,13 +195,8 @@ body.custom-theme .logo-pace {
 
 /* Dark text adjustments */
 .dark-text .timestamp,
-.dark-text .reply-header .timestamp,
 .parent-post-card.dark-text .timestamp {
   color: rgba(0, 0, 0, 0.6);
-}
-
-.dark-text .preview-label {
-  color: #666;
 }
 
 .dark-text .content-link,
@@ -225,11 +206,6 @@ body.custom-theme .logo-pace {
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
-
-/* Light text adjustments */
-.light-text .preview-label {
-  color: rgba(255, 255, 255, 0.7);
-}
 
 /* Corner-based color adjustments */
 /* Top-left dark: timestamp needs light color */

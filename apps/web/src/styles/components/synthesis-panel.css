@@ -64,10 +64,6 @@
 }
 
 .synthesis-slot.filled .word-card-text,
-.synthesis-slot.filled .word-card-count {
-  display: none;
-}
-
 .synthesis-slot.result {
   cursor: default;
   background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
@@ -86,10 +82,6 @@
 
 .synthesis-slot.result .word-card {
   pointer-events: none;
-}
-
-.synthesis-slot.result .word-card-retry {
-  pointer-events: auto;
 }
 
 .synthesis-slot.result .synthesis-slot-placeholder {
@@ -149,11 +141,6 @@
 .synthesis-badge.new-word {
   background: linear-gradient(135deg, #f59e0b, #fbbf24);
   color: #000;
-}
-
-.synthesis-badge.new-synthesis {
-  background: #10b981;
-  color: #fff;
 }
 
 .synthesis-formula-text {

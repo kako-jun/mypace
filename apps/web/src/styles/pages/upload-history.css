@@ -14,15 +14,7 @@
 }
 
 .upload-history-header.light-text,
-.upload-history-message.light-text {
-  color: #ffffff;
-}
-
 .upload-history-header.dark-text,
-.upload-history-message.dark-text {
-  color: #333;
-}
-
 .upload-history-header h2 {
   font-size: 1.25rem;
   margin: 0 0 0.5rem;
@@ -32,16 +24,6 @@
   font-size: 0.85rem;
   color: inherit;
   margin: 0;
-}
-
-.upload-history-message {
-  font-family: monospace;
-  font-size: 0.8rem;
-  word-break: break-all;
-  margin: 0 0 1rem;
-  background: none;
-  border: none;
-  padding: 0;
 }
 
 .upload-history-empty {

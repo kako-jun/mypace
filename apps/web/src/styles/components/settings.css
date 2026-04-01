@@ -126,25 +126,6 @@
   cursor: not-allowed;
 }
 
-/* Filter summary row */
-.filter-summary-row {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.filter-summary-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
-.filter-summary-item svg {
-  color: var(--text-muted);
-}
-
 /* Key display */
 .key-display {
   margin-bottom: 0.75rem;
@@ -232,7 +213,6 @@
   gap: 0.5rem;
   justify-content: center;
 }
-
 
 /* Theme Color Customization (FF7-style) */
 .theme-preview {
@@ -464,28 +444,6 @@
   align-self: flex-end;
 }
 
-.theme-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.theme-toggle-label {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  cursor: pointer;
-  flex: 1;
-}
-
-.theme-toggle-label input[type="checkbox"] {
-  width: auto;
-  margin: 0;
-  cursor: pointer;
-}
-
 /* toggle styles are in base.css */
 
 /* Share App QR */
@@ -498,19 +456,6 @@
 .dark .share-app-qr img,
 [data-theme="dark"] .share-app-qr img {
   filter: invert(1);
-}
-
-.qr-placeholder {
-  width: 120px;
-  height: 120px;
-  border-radius: 8px;
-  background: var(--surface-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-size: 1.5rem;
-  font-weight: bold;
 }
 
 /* About App Section */
@@ -569,24 +514,6 @@
 }
 
 /* Settings Footer */
-.settings-footer {
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-light);
-  text-align: center;
-}
-
-.settings-footer a {
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.85rem;
-}
-
-.settings-footer a:hover {
-  color: var(--text-secondary);
-  text-decoration: underline;
-}
-
 /* Notice List */
 .notice-list {
   margin: 0;
@@ -677,15 +604,6 @@
   font-size: 0.75rem;
   color: #f44336;
   margin: 0.5rem 0;
-}
-
-.settings-link {
-  color: var(--accent);
-  text-decoration: none;
-}
-
-.settings-link:hover {
-  text-decoration: underline;
 }
 
 /* nsec Combo Dropdown */

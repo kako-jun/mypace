@@ -32,36 +32,7 @@ body {
    =========================================== */
 
 /* Image Drop Zone wrapper */
-.image-drop-zone {
-  display: flex;
-}
-
 /* Drop Area - shared by image-drop-area, avatar-drop-area */
-.drop-area {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: 2px dashed var(--text-placeholder);
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--text-secondary);
-}
-
-.drop-area:hover {
-  border-color: var(--text-link);
-  color: var(--text-link);
-}
-
-.drop-area.dragging {
-  border-color: var(--text-link);
-  background: rgba(100, 150, 255, 0.15);
-  color: var(--text-link);
-}
-
 /* Avatar - shared styles */
 .avatar {
   border-radius: 50%;
@@ -103,32 +74,7 @@ body {
 }
 
 /* Legacy alias */
-.avatar-preview {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
 /* Profile avatar section - shared */
-.profile-avatar-section {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.profile-avatar-preview {
-  flex-shrink: 0;
-}
-
-.avatar-upload-buttons {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 /* Input row - shared */
 .input-row {
   display: flex;

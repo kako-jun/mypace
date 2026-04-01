@@ -26,7 +26,6 @@
   border-bottom: 1px solid var(--border-light);
 }
 
-
 .drawing-picker-colors {
   display: flex;
   gap: 0.25rem;
@@ -113,11 +112,6 @@
 }
 
 /* Actions */
-.drawing-picker-actions {
-  display: flex;
-  gap: 0.35rem;
-}
-
 /* Fill buttons group */
 .drawing-fill-buttons {
   display: flex;

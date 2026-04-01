@@ -298,6 +298,40 @@ body.long-mode-active .modal-panel {
   color: var(--text-primary);
 }
 
+/* --- Shared Menu Option --- */
+.menu-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.menu-option:hover:not(:disabled) {
+  background: var(--surface-secondary);
+}
+
+.menu-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.menu-option svg {
+  stroke: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.menu-option span {
+  flex: 1;
+}
+
 /* --- Shared Animations --- */
 @keyframes spin {
   from {

@@ -118,13 +118,6 @@
 }
 
 /* Formula */
-.word-synthesis-formula {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  margin-bottom: 1rem;
-  font-family: monospace;
-}
-
 /* Badges */
 .word-synthesis-badges {
   display: flex;
@@ -276,11 +269,4 @@
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* @keyframes spin is in modal.css */

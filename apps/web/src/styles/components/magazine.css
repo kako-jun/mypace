@@ -205,18 +205,6 @@
   margin-bottom: 6px;
 }
 
-.magazine-editor-preview {
-  margin-top: 8px;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.magazine-editor-preview img {
-  width: 100%;
-  max-height: 120px;
-  object-fit: cover;
-}
-
 .magazine-editor-actions {
   display: flex;
   gap: 12px;
