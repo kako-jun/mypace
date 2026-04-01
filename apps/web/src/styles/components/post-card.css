@@ -230,7 +230,7 @@
 .post-content td {
   padding: 0.4rem 1rem;
   text-align: left;
-  border-bottom: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.15));
+  border-bottom: 1px solid var(--border-light);
 }
 
 .post-content th {
@@ -679,7 +679,7 @@
   margin-top: 0.5rem;
   margin-left: 0.25rem;
   background: var(--surface-secondary);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-light);
   border-radius: 4px;
   font-size: 0.8rem;
   color: var(--text-secondary);

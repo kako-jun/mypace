@@ -28,7 +28,7 @@
   height: 52px;
   padding: 2px;
   background: var(--surface-tertiary, #f0f0f0);
-  border: 2px dashed var(--border-primary, #ddd);
+  border: 2px dashed var(--border);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -48,7 +48,7 @@
 
 .synthesis-slot.filled {
   border-style: solid;
-  border-color: var(--border-primary, #ddd);
+  border-color: var(--border);
   padding: 0;
 }
 
@@ -117,7 +117,7 @@
 .synthesis-slot-placeholder {
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--text-tertiary, #999);
+  color: var(--text-muted);
 }
 
 .synthesis-operator {

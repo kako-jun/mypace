@@ -14,7 +14,7 @@
   height: 32px;
   padding: 4px;
   background: var(--surface-secondary);
-  border: 1px solid var(--border-primary, #333);
+  border: 1px solid var(--border);
   border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -134,7 +134,7 @@ body.long-mode-active .sticker-picker-modal {
   height: 32px;
   padding: 0;
   background: var(--surface-secondary);
-  border: 1px solid var(--border-primary);
+  border: 1px solid var(--border);
   border-radius: 4px;
   cursor: pointer;
   color: var(--text-primary);
@@ -183,7 +183,7 @@ body.long-mode-active .sticker-picker-modal {
 }
 
 .sticker-picker-grid::-webkit-scrollbar-thumb {
-  background: var(--border-primary);
+  background: var(--border);
   border-radius: 4px;
 }
 
@@ -252,8 +252,8 @@ body.long-mode-active .sticker-picker-modal {
 
 .sticker-picker-hint {
   padding: 0.5rem;
-  background: var(--surface-warning);
-  border: 1px solid var(--border-warning);
+  background: rgba(255, 152, 0, 0.1);
+  border: 1px solid rgba(255, 152, 0, 0.3);
   border-radius: 0.25rem;
   font-size: 0.75rem;
   text-align: center;

@@ -124,7 +124,7 @@ body.long-mode-active .video-editor-modal {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-primary);
+  border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--surface-primary);
   cursor: pointer;
@@ -161,7 +161,7 @@ body.long-mode-active .video-editor-modal {
   position: absolute;
   top: 0;
   height: 100%;
-  background: var(--color-primary, #007bff);
+  background: var(--accent);
   opacity: 0.3;
   border-radius: 4px;
   pointer-events: none;
@@ -180,7 +180,7 @@ body.long-mode-active .video-editor-modal {
   justify-content: center;
   z-index: 2;
   background: var(--surface-primary);
-  border: 1px solid var(--border-primary);
+  border: 1px solid var(--border);
 }
 
 .video-editor-marker-label {
@@ -223,7 +223,7 @@ body.long-mode-active .video-editor-modal {
   top: 0;
   left: 0;
   height: 100%;
-  background: var(--color-primary, #007bff);
+  background: var(--accent);
   transition: width 0.2s ease;
 }
 
@@ -244,7 +244,7 @@ body.long-mode-active .video-editor-modal {
   justify-content: flex-end;
   gap: 0.5rem;
   padding: 1rem;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-light);
   margin: 0 -1rem -1rem -1rem;
 }
 

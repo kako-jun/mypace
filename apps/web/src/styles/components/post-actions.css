@@ -372,7 +372,7 @@
   min-width: 1.25rem;
   height: 1.25rem;
   padding: 0 0.35rem;
-  background: var(--accent-primary);
+  background: var(--accent);
   color: var(--surface-primary);
   font-size: 0.7rem;
   font-weight: bold;

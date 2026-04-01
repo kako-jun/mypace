@@ -164,7 +164,7 @@ body.long-mode-active .image-editor-modal {
   justify-content: flex-end;
   gap: 0.5rem;
   padding: 1rem;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-light);
   margin: 0 -1rem -1rem -1rem;
 }
 

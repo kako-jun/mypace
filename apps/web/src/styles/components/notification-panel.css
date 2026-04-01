@@ -74,7 +74,7 @@
 
 .notification-mark-all-read:hover {
   color: var(--text-primary);
-  background-color: var(--bg-hover);
+  background-color: var(--surface-hover);
 }
 
 .notification-panel-content {

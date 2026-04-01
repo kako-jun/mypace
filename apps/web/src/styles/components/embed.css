@@ -170,7 +170,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-secondary);
+  background: var(--surface-secondary);
   min-height: 150px;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -178,7 +178,7 @@
 }
 
 .embed-placeholder:hover {
-  background: var(--bg-tertiary);
+  background: var(--surface-tertiary);
 }
 
 .embed-placeholder-content {
@@ -222,7 +222,7 @@
 
 .embed-twitter.embed-placeholder {
   min-height: 120px;
-  background: var(--bg-secondary);
+  background: var(--surface-secondary);
   border: 1px solid var(--border);
 }
 
@@ -343,7 +343,7 @@
 
 .embed-instagram.embed-placeholder {
   min-height: 150px;
-  background: var(--bg-secondary);
+  background: var(--surface-secondary);
   border: 1px solid var(--border);
 }
 
@@ -474,7 +474,7 @@
 
 .embed-tiktok.embed-placeholder {
   min-height: 150px;
-  background: var(--bg-secondary);
+  background: var(--surface-secondary);
   border: 1px solid var(--border);
 }
 
@@ -574,7 +574,7 @@
 }
 
 .themed-card .embed-link-domain {
-  color: var(--text-tertiary);
+  color: var(--text-muted);
 }
 
 .embed-link-image {
@@ -627,7 +627,7 @@
 
 .embed-link-domain {
   font-size: 0.7rem;
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -645,7 +645,7 @@
 }
 
 .embed-link.embed-loading .embed-link-icon {
-  color: var(--text-tertiary);
+  color: var(--text-muted);
 }
 
 .embed-link.embed-loading .embed-link-url {
@@ -703,9 +703,9 @@
 
 /* Dark theme adjustments */
 html[data-theme="dark"] .embed-placeholder {
-  background: var(--bg-tertiary);
+  background: var(--surface-tertiary);
 }
 
 html[data-theme="dark"] .embed-placeholder:hover {
-  background: var(--bg-hover);
+  background: var(--surface-hover);
 }

@@ -158,7 +158,7 @@
 .inventory-price-table td {
   padding: 0.4rem 1rem;
   text-align: left;
-  border-bottom: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.15));
+  border-bottom: 1px solid var(--border-light);
 }
 
 .inventory-price-table th {

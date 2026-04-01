@@ -340,7 +340,7 @@
   padding: 0.25rem;
   padding-right: 0.5rem;
   background: var(--surface-secondary);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-light);
   border-radius: 4px;
   font-size: 0.85rem;
   color: var(--text-secondary);
@@ -650,7 +650,7 @@
   align-items: center;
   justify-content: center;
   background: var(--surface-secondary);
-  border: 2px dashed var(--border-primary, #666);
+  border: 2px dashed var(--border);
   color: var(--text-primary);
   width: 32px;
   height: 32px;
@@ -662,7 +662,7 @@
 
 .file-import-area:hover,
 .file-import-area.dragging {
-  border-color: var(--color-primary, #007bff);
+  border-color: var(--accent);
   border-style: solid;
 }
 
@@ -672,7 +672,7 @@
   align-items: center;
   justify-content: center;
   background: #fd0;
-  border: 1px solid var(--border-primary, #333);
+  border: 1px solid var(--border);
   color: #000;
   font-size: 0.85rem;
   font-weight: 700;
@@ -706,7 +706,7 @@
   height: 32px;
   padding: 4px;
   background: var(--surface-secondary);
-  border: 1px solid var(--border-primary, #333);
+  border: 1px solid var(--border);
   border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -760,7 +760,7 @@ body.long-mode-active .location-picker-modal {
   align-items: center;
   justify-content: space-between;
   padding: 1rem;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .location-picker-header h3 {
@@ -802,7 +802,7 @@ body.long-mode-active .location-picker-modal {
   min-width: 0;
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
-  border: 2px solid var(--border-subtle);
+  border: 2px solid var(--border-light);
   border-radius: 4px;
   background: var(--surface-secondary);
   color: var(--text-primary);
@@ -810,7 +810,7 @@ body.long-mode-active .location-picker-modal {
 
 .location-picker-input:focus {
   outline: none;
-  border-color: var(--action-star);
+  border-color: var(--highlight);
 }
 
 .location-picker-error {
@@ -828,7 +828,7 @@ body.long-mode-active .location-picker-modal {
 }
 
 .location-picker-results li {
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .location-picker-results li:last-child {
@@ -875,7 +875,7 @@ body.long-mode-active .location-picker-modal {
 
 .location-picker-map {
   height: 250px;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-light);
   border-radius: 4px;
 }
 
@@ -938,7 +938,7 @@ body.long-mode-active .location-picker-modal {
   width: 100%;
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
-  border: 2px solid var(--border-subtle);
+  border: 2px solid var(--border-light);
   border-radius: 4px;
   background: var(--surface-secondary);
   color: var(--text-primary);
@@ -946,7 +946,7 @@ body.long-mode-active .location-picker-modal {
 
 .location-picker-name-input:focus {
   outline: none;
-  border-color: var(--action-star);
+  border-color: var(--highlight);
 }
 
 .location-picker-precision {
@@ -966,7 +966,7 @@ body.long-mode-active .location-picker-modal {
   padding: 0.35rem 0.5rem;
   font-size: 0.85rem;
   background: var(--surface-secondary);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-light);
   border-radius: 4px;
   color: var(--text-primary);
 }
@@ -976,7 +976,7 @@ body.long-mode-active .location-picker-modal {
   justify-content: flex-end;
   gap: 0.5rem;
   padding: 1rem;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-light);
 }
 
 /* Location indicator in form */
@@ -986,7 +986,7 @@ body.long-mode-active .location-picker-modal {
   gap: 0.35rem;
   padding: 0.25rem 0.5rem;
   background: var(--surface-secondary);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-light);
   border-radius: 4px;
   font-size: 0.8rem;
   color: var(--text-secondary);
@@ -1028,7 +1028,7 @@ body.long-mode-active .location-picker-modal {
   padding: 4px;
   margin-left: auto;
   background: var(--surface-secondary);
-  border: 1px solid var(--border-primary, #333);
+  border: 1px solid var(--border);
   border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1078,7 +1078,7 @@ body.long-mode-active .teaser-picker-backdrop {
   align-items: center;
   justify-content: space-between;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-light);
   margin-bottom: 0.75rem;
 }
 
@@ -1138,7 +1138,7 @@ body.long-mode-active .teaser-picker-backdrop {
   margin-top: 0.75rem;
   padding: 0.5rem;
   background: none;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-light);
   color: var(--text-muted);
   font-size: 0.85rem;
   cursor: pointer;
