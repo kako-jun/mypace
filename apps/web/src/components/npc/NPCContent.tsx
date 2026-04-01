@@ -49,13 +49,10 @@ export function NPCContent({ initialUrl = '' }: NPCContentProps) {
     setError('')
 
     try {
-      console.log('[NPC Reporter] Sending request for URL:', url)
       const result = await createReporterQuote(url)
-      console.log('[NPC Reporter] API response:', result)
 
       if (result.success && result.quote) {
         // Navigate to the created quote post
-        console.log('[NPC Reporter] Navigating to:', `/post/${result.quote.event.id}`)
         navigate(`/post/${result.quote.event.id}`)
       } else {
         setError(result.error || 'Failed to create quote post')

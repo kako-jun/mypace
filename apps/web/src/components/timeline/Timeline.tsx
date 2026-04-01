@@ -193,10 +193,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
   wordrotRef.current = wordrot
 
   useEffect(() => {
-    if (!wordrotRef.current || items.length === 0) {
-      console.log('[Timeline] No wordrot or items:', { hasWordrot: !!wordrotRef.current, itemCount: items.length })
-      return
-    }
+    if (!wordrotRef.current || items.length === 0) return
 
     // Filter posts that haven't been extracted yet
     const postsToExtract = items
@@ -206,7 +203,6 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
         content: item.event.content,
       }))
 
-    console.log('[Timeline] Posts to extract:', postsToExtract.length)
     if (postsToExtract.length > 0) {
       wordrotRef.current.extractWords(postsToExtract)
     }
@@ -275,7 +271,6 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
               wordrotCollected={wordrotCollected}
               wordrotImages={wordrotImages}
               onWordCollect={(word, eventId) => {
-                console.log('[Timeline] Word collect clicked:', word, 'for event:', eventId.slice(0, 8))
                 wordrotCollect?.(word, eventId)
               }}
             />

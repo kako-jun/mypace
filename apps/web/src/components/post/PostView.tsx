@@ -278,13 +278,11 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
   const handleWordCollect = useCallback(
     async (word: string) => {
       if (!myPubkey || !eventId) return
-      console.log('[PostView] Collecting word:', word)
       // Immediately update local state for instant UI feedback
       setLocalCollectedWords((prev) => new Set([...prev, word.toLowerCase()]))
       try {
         const result = await collectWord(myPubkey, word, eventId)
         if (result.word) {
-          console.log('[PostView] Word collected successfully:', result)
           // Trigger celebration
           if (celebrate) {
             celebrate({

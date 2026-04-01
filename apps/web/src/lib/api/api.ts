@@ -877,15 +877,12 @@ export async function createReporterQuote(url: string): Promise<{
   isExisting?: boolean
 }> {
   try {
-    console.log('[createReporterQuote] Sending request to:', `${API_BASE}/api/npc/reporter`)
     const res = await fetch(`${API_BASE}/api/npc/reporter`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url }),
     })
-    console.log('[createReporterQuote] Response status:', res.status)
     const data = await res.json()
-    console.log('[createReporterQuote] Response data:', data)
 
     // New quote created
     if (data.created) {
