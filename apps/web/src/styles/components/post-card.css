@@ -181,7 +181,7 @@
   min-width: 0;
 }
 
-/* .author-name styles are defined in base.css with .text-outlined-sm */
+/* .author-name / .author-name-sm styles are defined in typography.css */
 
 .timestamp {
   color: var(--text-timestamp);
