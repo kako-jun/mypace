@@ -10,6 +10,7 @@ MY PACEの技術ドキュメントです。
 
 - [アーキテクチャ](./architecture.md) - システム構成図、データフロー
 - [Nostr統合](./nostr.md) - 認証、イベント、NIP対応
+- [ブラウザ通信マップ](./network-communications.md) - ブラウザから発生する全ネットワーク通信の一覧
 
 ## デプロイ・運用
 
@@ -19,6 +20,10 @@ MY PACEの技術ドキュメントです。
 ## UI/UX
 
 - [UIデザイン](./ui-design.md) - デザインガイドライン
+
+## リファクタリング
+
+- [useReactions統合調査](./refactoring/use-reactions-consolidation.md) - ステラロジックの統合計画
 
 ## 拡張仕様
 
