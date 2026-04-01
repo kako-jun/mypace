@@ -24,19 +24,19 @@ const updateSW = registerSW({
     if (swRegistration) {
       // Check for updates on registration
       swRegistration.update().catch((error) => {
-        console.log('SW update check skipped:', error?.message || 'offline')
+        console.info('SW update check skipped:', error?.message || 'offline')
       })
     }
   },
   onNeedRefresh() {
     // Skip if we recently updated (within cooldown period)
     if (shouldSkipUpdate()) {
-      console.log('SW update skipped (cooldown)')
+      console.info('SW update skipped (cooldown)')
       return
     }
 
     // New version detected - show overlay and reload
-    console.log('New version available, reloading...')
+    console.info('New version available, reloading...')
 
     const overlay = document.createElement('div')
     overlay.style.cssText = `

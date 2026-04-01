@@ -106,19 +106,13 @@ export function useWordrotTimeline() {
         const BATCH_SIZE = 50
         for (let i = 0; i < uncachedPosts.length; i += BATCH_SIZE) {
           const chunk = uncachedPosts.slice(i, i + BATCH_SIZE)
-          console.log(
-            `[Wordrot] Extracting batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(uncachedPosts.length / BATCH_SIZE)} (${chunk.length} posts)`
-          )
-
           const result = await extractNounsBatch(chunk)
-          console.log('[Wordrot] Extracted words:', result)
 
           // Update cache
           setWordsCache((prev) => {
             const updated = { ...prev }
             for (const [eventId, data] of Object.entries(result.results)) {
               updated[eventId] = data.words
-              console.log(`[Wordrot] Cached ${data.words.length} words for event ${eventId.slice(0, 8)}`)
             }
             return updated
           })
@@ -139,16 +133,12 @@ export function useWordrotTimeline() {
    */
   const collect = useCallback(
     async (word: string, eventId?: string): Promise<boolean> => {
-      console.log('[useWordrotTimeline] Collect called:', { word, eventId: eventId?.slice(0, 8), hasPubkey: !!pubkey })
       if (!pubkey) {
-        console.log('[useWordrotTimeline] No pubkey, returning false')
         return false
       }
 
       try {
-        console.log('[useWordrotTimeline] Calling collectWord API...')
         const result = await collectWord(pubkey, word, eventId)
-        console.log('[useWordrotTimeline] collectWord result:', result)
 
         if (result.word) {
           // Update collected words set (lowercase for case-insensitive comparison)
