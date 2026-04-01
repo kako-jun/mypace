@@ -88,7 +88,7 @@ export function parseRepostEvent(event: Event): Event | null {
   return null
 }
 
-export interface FetchTimelineOptions {
+interface FetchTimelineOptions {
   limit?: number
   since?: number
   until?: number
@@ -105,7 +105,7 @@ export interface FetchTimelineOptions {
   kinds?: number[]
 }
 
-export interface FetchTimelineResult {
+interface FetchTimelineResult {
   events: Event[]
   searchedUntil: number | null
 }
@@ -236,7 +236,7 @@ export async function fetchTimeline(options: FetchTimelineOptions = {}): Promise
   }
 }
 
-export interface FetchUserEventsOptions {
+interface FetchUserEventsOptions {
   limit?: number
   since?: number
   until?: number
@@ -253,7 +253,7 @@ export interface FetchUserEventsOptions {
   kinds?: number[]
 }
 
-export interface FetchUserEventsResult {
+interface FetchUserEventsResult {
   events: Event[]
   searchedUntil: number | null
 }
@@ -652,7 +652,7 @@ export async function fetchEventMetadata(
 // - profiles from Nostr
 // - superMentions from API (D1)
 // - views from API (D1) ※追加機能
-export interface EnrichResult {
+interface EnrichResult {
   metadata: Record<string, EventMetadata>
   profiles: Record<string, Profile | null>
   superMentions: Record<string, string>

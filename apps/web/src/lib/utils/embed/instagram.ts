@@ -10,7 +10,3 @@ export function extractInstagramInfo(url: string): { id: string; type: 'post' | 
 
   return null
 }
-
-export function getInstagramEmbedUrl(id: string): string {
-  return `https://www.instagram.com/p/${id}/embed`
-}

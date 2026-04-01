@@ -44,16 +44,6 @@ export const LANGUAGES = [
   { code: 'de', label: 'Deutsch' },
 ] as const
 
-// Reaction content
-export const REACTION = {
-  DEFAULT_CONTENT: '+',
-  VALID_CONTENTS: ['+', ''] as const,
-} as const
-
-export function isValidReaction(content: string): boolean {
-  return content === '+' || content === ''
-}
-
 // Filter gacha presets
 export const FILTER_PRESETS = [
   { name: 'Fuji', filter: 'brightness(1.1) contrast(1.3) saturate(1.2) hue-rotate(-5deg)', color: '#00a86b' },

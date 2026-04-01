@@ -2,7 +2,7 @@
 export const URL_REGEX = /https?:\/\/[^\s<"]+/gi
 
 // Allowed domains for iframe embeds
-export const ALLOWED_IFRAME_DOMAINS = [
+const ALLOWED_IFRAME_DOMAINS = [
   'github.io',
   'itch.io',
   'itch.zone',

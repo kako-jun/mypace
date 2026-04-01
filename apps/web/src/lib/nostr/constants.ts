@@ -12,7 +12,6 @@ export const KIND_SINOV_NPC = 42000 // Sinov NPC posts (hidden from other client
 
 // Magazine constants
 export const MAGAZINE_TAG = 'mypace-magazine'
-export const MAX_MAGAZINE_POSTS = 100
 
 // タイムライン/検索用リレー（#t + NIP-50 search対応）
 // relay.nostr.bandは全機能対応だが502エラーのため除外（復旧後に追加検討）

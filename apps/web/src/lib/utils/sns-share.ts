@@ -70,7 +70,7 @@ function extractLocationsFromTags(tags: string[][]): { geohash: string; name?: s
   return locations
 }
 
-export interface SnsShareOptions {
+interface SnsShareOptions {
   content: string
   tags: string[][]
   url: string
@@ -80,7 +80,7 @@ export interface SnsShareOptions {
   includeUrl?: boolean
 }
 
-export interface TransformedContent {
+interface TransformedContent {
   text: string
   /** 文字数 */
   length: number
@@ -89,7 +89,7 @@ export interface TransformedContent {
 /**
  * SNS共有用にコンテンツを変換
  */
-export function transformContentForSns(options: SnsShareOptions): TransformedContent {
+function transformContentForSns(options: SnsShareOptions): TransformedContent {
   const { content, tags, url, partInfo, includeUrl = true } = options
 
   // 1. スーパーメンションをハッシュタグに変換
@@ -141,29 +141,29 @@ export function transformContentForSns(options: SnsShareOptions): TransformedCon
 /**
  * X (Twitter) の文字数制限
  */
-export const X_CHAR_LIMIT = 280
+const X_CHAR_LIMIT = 280
 
 /**
  * Bluesky の文字数制限
  */
-export const BLUESKY_CHAR_LIMIT = 300
+const BLUESKY_CHAR_LIMIT = 300
 
 /**
  * Threads の文字数制限
  */
-export const THREADS_CHAR_LIMIT = 500
+const THREADS_CHAR_LIMIT = 500
 
 /**
  * X (Twitter) の URL 文字数（t.co 短縮後）
  * https:// の URL は全て 23文字として計算される
  */
-export const X_URL_LENGTH = 23
+const X_URL_LENGTH = 23
 
 /**
  * Bluesky の URL 文字数
  * URL は全て 22文字として計算される
  */
-export const BLUESKY_URL_LENGTH = 22
+const BLUESKY_URL_LENGTH = 22
 
 /**
  * SNSの文字数制限を取得
@@ -187,7 +187,7 @@ const URL_REGEX = /https?:\/\/[^\s]+/g
 /**
  * X 用の文字数を計算（URL は 23文字固定）
  */
-export function calculateXCharLength(text: string): number {
+function calculateXCharLength(text: string): number {
   // URL を全て 23文字として計算
   const urls = text.match(URL_REGEX) || []
   let length = text.length
@@ -203,7 +203,7 @@ export function calculateXCharLength(text: string): number {
 /**
  * Bluesky 用の文字数を計算（URL は 22文字固定）
  */
-export function calculateBlueskyCharLength(text: string): number {
+function calculateBlueskyCharLength(text: string): number {
   // URL を全て 22文字として計算
   const urls = text.match(URL_REGEX) || []
   let length = text.length
@@ -343,7 +343,7 @@ function findBestCutPointForSns(text: string, maxLength: number, sns: 'x' | 'blu
 /**
  * 分割されたパーツを最終的なテキストに変換
  */
-export function formatSplitParts(parts: string[], tags: string[][], url: string): TransformedContent[] {
+function formatSplitParts(parts: string[], tags: string[][], url: string): TransformedContent[] {
   const total = parts.length
 
   return parts.map((part, index) => {

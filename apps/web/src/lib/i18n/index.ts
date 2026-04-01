@@ -17,5 +17,3 @@ export function t(key: TranslationKey): string {
   const lang = getLanguage()
   return translations[lang][key] || translations.en[key]
 }
-
-export { getLanguage }

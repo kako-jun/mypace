@@ -44,7 +44,7 @@ export function PostContent({
   // Set up wordrot click handler
   useEffect(() => {
     if (onWordClick) {
-      setWordrotClickHandler(onWordClick, wordrotCollected)
+      setWordrotClickHandler(onWordClick)
     }
     return () => {
       clearWordrotClickHandler()

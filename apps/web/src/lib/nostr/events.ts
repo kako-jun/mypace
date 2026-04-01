@@ -125,7 +125,7 @@ export async function createNip98AuthEvent(url: string, method: string): Promise
 // Max stella per user per post
 export const MAX_STELLA_PER_USER = 10
 // Custom tag for stella count
-export const STELLA_TAG = 'stella'
+const STELLA_TAG = 'stella'
 
 // Stella colors with their sats value (for colored stella)
 export type StellaColor = 'yellow' | 'green' | 'red' | 'blue' | 'purple'

@@ -4,7 +4,7 @@
  */
 import { encodeAnimation } from 'wasm-webp'
 
-export interface VideoToWebPOptions {
+interface VideoToWebPOptions {
   /** Start time in seconds */
   startTime: number
   /** End time in seconds */
@@ -196,25 +196,6 @@ export function getVideoDuration(file: File): Promise<number> {
     video.onloadedmetadata = () => {
       URL.revokeObjectURL(url)
       resolve(video.duration)
-    }
-    video.onerror = () => {
-      URL.revokeObjectURL(url)
-      reject(new Error('Failed to load video'))
-    }
-    video.src = url
-  })
-}
-
-/**
- * Get video dimensions
- */
-export function getVideoDimensions(file: File): Promise<{ width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const video = document.createElement('video')
-    const url = URL.createObjectURL(file)
-    video.onloadedmetadata = () => {
-      URL.revokeObjectURL(url)
-      resolve({ width: video.videoWidth, height: video.videoHeight })
     }
     video.onerror = () => {
       URL.revokeObjectURL(url)

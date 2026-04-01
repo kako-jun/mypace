@@ -5,10 +5,6 @@ export function setHashtagClickHandler(handler: (tag: string) => void) {
   onHashtagClick = handler
 }
 
-export function clearHashtagClickHandler() {
-  onHashtagClick = null
-}
-
 export function getHashtagClickHandler() {
   return onHashtagClick
 }
@@ -35,10 +31,6 @@ export function setSuperMentionClickHandler(handler: (path: string) => void) {
   onSuperMentionClick = handler
 }
 
-export function clearSuperMentionClickHandler() {
-  onSuperMentionClick = null
-}
-
 export function getSuperMentionClickHandler() {
   return onSuperMentionClick
 }
@@ -50,32 +42,21 @@ export function setInternalLinkClickHandler(handler: (path: string) => void) {
   onInternalLinkClick = handler
 }
 
-export function clearInternalLinkClickHandler() {
-  onInternalLinkClick = null
-}
-
 export function getInternalLinkClickHandler() {
   return onInternalLinkClick
 }
 
 // Callback for wordrot word clicks
 let onWordrotClick: ((word: string) => void) | null = null
-let wordrotCollected: Set<string> | null = null
 
-export function setWordrotClickHandler(handler: (word: string) => void, collected?: Set<string>) {
+export function setWordrotClickHandler(handler: (word: string) => void) {
   onWordrotClick = handler
-  wordrotCollected = collected || null
 }
 
 export function clearWordrotClickHandler() {
   onWordrotClick = null
-  wordrotCollected = null
 }
 
 export function getWordrotClickHandler() {
   return onWordrotClick
-}
-
-export function getWordrotCollected() {
-  return wordrotCollected
 }

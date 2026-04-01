@@ -12,7 +12,7 @@ export interface MuteEntry {
 }
 
 // Full storage structure
-export interface MypaceStorage {
+interface MypaceStorage {
   // Exportable
   theme: {
     mode: 'light' | 'dark'
@@ -206,10 +206,6 @@ export function getThemeColors(): ThemeColors {
 
 export function setThemeColors(colors: ThemeColors): void {
   updateStorage('theme', (t) => ({ ...t, colors }))
-}
-
-export function resetThemeColors(): void {
-  updateStorage('theme', (t) => ({ ...t, colors: DEFAULT_COLORS }))
 }
 
 // ============ Filters ============
@@ -549,7 +545,7 @@ export function importSettings(settings: ExportableSettings): void {
 // ============ Migration ============
 
 // Migrate from old multi-key structure to new single-key structure
-export function migrateFromLegacy(): void {
+function migrateFromLegacy(): void {
   if (typeof localStorage === 'undefined') return
 
   // Check if already migrated

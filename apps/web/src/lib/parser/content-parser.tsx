@@ -249,8 +249,3 @@ export function renderContent(
     />
   )
 }
-
-// Simple text render (for previews, etc.)
-export function renderPlainText(content: string): string {
-  return content.replace(/<[^>]*>/g, '').slice(0, 200)
-}

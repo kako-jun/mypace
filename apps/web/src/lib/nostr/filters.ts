@@ -65,36 +65,6 @@ export function filterByNgTags<T extends { content: string; tags: string[][] }>(
   })
 }
 
-// OKタグフィルタ: 指定タグを含む投稿のみ表示（AND: 全て含む必要あり）
-export function filterByOkTags<T extends { content: string; tags: string[][] }>(events: T[], okTags: string[]): T[] {
-  if (okTags.length === 0) return events
-  const okTagsLower = okTags.map((t) => t.toLowerCase())
-  // 正規表現を事前コンパイル
-  const patterns = okTagsLower.map(
-    (okTag) =>
-      new RegExp(
-        `#${escapeRegex(okTag)}(?=[\\s\\u3000]|$|[^a-zA-Z0-9_\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF])`,
-        'i'
-      )
-  )
-  return events.filter((e) => {
-    // タグ配列をチェック
-    const eventTags = e.tags
-      .filter((t) => t[0] === 't')
-      .map((t) => t[1]?.toLowerCase())
-      .filter(Boolean)
-    // 本文中の#tagもチェック
-    const contentLower = e.content.toLowerCase()
-    // 全てのOKタグが含まれているか確認（AND条件）
-    return okTagsLower.every((okTag, i) => {
-      // タグ配列に含まれるか
-      if (eventTags.includes(okTag)) return true
-      // 本文中に#tag形式で含まれるか
-      return patterns[i].test(contentLower)
-    })
-  })
-}
-
 // 正規表現を事前コンパイル（モジュールレベルで1回のみ）
 const adPatterns = AD_TAGS.map(
   (tag) =>
@@ -169,7 +139,7 @@ export function filterBySmartFilters<T extends { content: string; tags: string[]
 }
 
 // 言語判定（簡易版）
-export function detectLanguage(text: string): string {
+function detectLanguage(text: string): string {
   // 日本語（ひらがな・カタカナがあれば日本語）
   if (/[\u3040-\u309F\u30A0-\u30FF]/.test(text)) return 'ja'
   // 韓国語（ハングル）
@@ -187,7 +157,7 @@ export function detectLanguage(text: string): string {
 }
 
 // ユーザーの主要言語を判定（英語以外で最も多い言語）
-export function detectUserPrimaryLanguage(posts: { content: string }[]): string | null {
+function detectUserPrimaryLanguage(posts: { content: string }[]): string | null {
   const langCounts: Record<string, number> = {}
 
   for (const post of posts) {

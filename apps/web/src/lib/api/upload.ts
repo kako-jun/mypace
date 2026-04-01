@@ -92,7 +92,7 @@ function extractHashFromUrl(url: string): string | null {
   }
 }
 
-export interface DeleteResult {
+interface DeleteResult {
   success: boolean
   error?: string
   message?: string
