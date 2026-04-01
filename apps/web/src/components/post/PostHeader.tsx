@@ -31,7 +31,7 @@ export default function PostHeader({
   eventKind,
   views,
 }: PostHeaderProps) {
-  const nameClass = `author-name${isProfileLoading ? ' loading-rainbow' : ''}`
+  const nameClass = `author-name${avatarSize === 'small' ? ' author-name-sm' : ''}${isProfileLoading ? ' loading-rainbow' : ''}`
 
   // Random animation and delay for avatar
   const avatarAnimation = useMemo(() => AVATAR_ANIMATIONS[Math.floor(Math.random() * AVATAR_ANIMATIONS.length)], [])

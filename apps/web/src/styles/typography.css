@@ -69,6 +69,30 @@
   -webkit-text-stroke: 3px #222;
 }
 
+/* Author name - small variant for secondary contexts (replies, parent cards, original post in repost) */
+.author-name-sm {
+  font-size: 0.8rem;
+  -webkit-text-stroke: 1px #555;
+}
+
+[data-theme="dark"] .author-name-sm {
+  -webkit-text-stroke: 1px #222;
+}
+
+/* Rainbow loading for small author name */
+.author-name-sm.loading-rainbow::before {
+  -webkit-text-stroke: 1px #333;
+}
+
+[data-theme="dark"] .author-name-sm.loading-rainbow::before {
+  -webkit-text-stroke: 1px #111;
+}
+
+.author-name-sm.loading-rainbow::before,
+.author-name-sm.loading-rainbow::after {
+  font-size: 0.8rem;
+}
+
 /* Rainbow loading animation for author name */
 .author-name.loading-rainbow {
   position: relative;
