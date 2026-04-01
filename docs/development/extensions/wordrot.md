@@ -120,6 +120,9 @@
    }
    ↓
 5. 収集演出（モーダル表示）
+6. PostViewでの収集時は `wordrot-inventory-changed` カスタムイベントを発火
+   → Timeline側の useWordrotTimeline がインベントリを再取得し、ハイライトを即時更新
+   （visibilitychange でのタブ復帰時にもインベントリを再取得）
 ```
 
 ### 単語合成時（Phase 2）
@@ -1080,7 +1083,7 @@ apps/api/src/routes/wordrot.ts           # APIエンドポイント
 apps/web/src/hooks/wordrot/
   ├── index.ts
   ├── useWordrot.ts                      # 単語収集・インベントリ
-  └── useWordrotTimeline.ts              # タイムライン統合（抽出/キャッシュ/画像）
+  └── useWordrotTimeline.ts              # タイムライン統合（抽出/キャッシュ/画像/インベントリ同期）
 
 apps/web/src/components/wordrot/
   ├── index.ts
