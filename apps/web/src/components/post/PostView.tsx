@@ -291,6 +291,8 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
               isFirstEver: result.isFirstEver,
             })
           }
+          // Notify timeline context to refresh inventory
+          window.dispatchEvent(new Event('wordrot-inventory-changed'))
         }
       } catch (err) {
         console.error('[PostView] Failed to collect word:', err)
