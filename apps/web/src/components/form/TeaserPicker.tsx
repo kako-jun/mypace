@@ -22,8 +22,14 @@ export default function TeaserPicker({ selectedColor, onSelect, onClose }: Tease
 
   return (
     <Portal>
-      <div className="teaser-picker-backdrop" onClick={onClose}>
-        <div className="teaser-picker" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-backdrop modal-backdrop--opaque modal-backdrop--z1100 modal-backdrop--padded"
+        onClick={onClose}
+      >
+        <div
+          className="modal-panel modal-panel--sm modal-panel--padded teaser-picker"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="teaser-picker-header">
             <h3 className="teaser-picker-title">Teaser</h3>
             <CloseButton onClick={onClose} size={20} />

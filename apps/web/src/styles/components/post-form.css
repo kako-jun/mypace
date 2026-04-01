@@ -666,30 +666,12 @@
   border-style: solid;
 }
 
-/* Super mention button (@@) - same style as sticker-picker-toggle but with yellow bg */
+/* Super mention button (@@) - extends toolbar-button with yellow bg */
 .super-mention-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: #fd0;
-  border: 1px solid var(--border);
   color: #000;
   font-size: 0.85rem;
   font-weight: 700;
-  width: 32px;
-  height: 32px;
-  padding: 4px;
-  border-radius: 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.super-mention-button:hover {
-  transform: scale(1.05);
-}
-
-[data-theme='dark'] .super-mention-button {
-  border-color: #666;
 }
 
 /* Location Picker container */
@@ -697,91 +679,9 @@
   position: relative;
 }
 
-/* Location button */
-.location-picker-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 4px;
-  background: var(--surface-secondary);
-  border: 1px solid var(--border);
-  border-radius: 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.location-picker-button:hover {
-  background: var(--surface-hover);
-  transform: scale(1.05);
-}
-
-[data-theme='dark'] .location-picker-button {
-  border-color: #666;
-}
-
-/* Location Picker Modal */
-.location-picker-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 1100;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 1rem;
-  padding-bottom: 0;
-}
-
-body.long-mode-active .location-picker-backdrop {
-  align-items: center;
-  padding-bottom: 1rem;
-}
-
-.location-picker-modal {
-  background: var(--surface-primary);
-  border: 2px solid #333;
-  border-radius: 0;
-  width: 100%;
-  max-width: 500px;
+/* Override: max-height is 90vh */
+.location-picker-panel {
   max-height: 90vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-body.long-mode-active .location-picker-modal {
-  max-height: calc(100vh - 2rem);
-}
-
-.location-picker-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.location-picker-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.location-picker-close {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.location-picker-close:hover {
-  color: var(--text-primary);
 }
 
 .location-picker-search {
@@ -971,12 +871,9 @@ body.long-mode-active .location-picker-modal {
   color: var(--text-primary);
 }
 
+/* Location footer uses shared modal-footer with padding override */
 .location-picker-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
   padding: 1rem;
-  border-top: 1px solid var(--border-light);
 }
 
 /* Location indicator in form */
@@ -1019,58 +916,13 @@ body.long-mode-active .location-picker-modal {
    Teaser Picker (for setting stella requirement)
    =========================================== */
 
+/* teaser-button: extends .toolbar-button, adds margin-left: auto and active state */
 .teaser-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 4px;
   margin-left: auto;
-  background: var(--surface-secondary);
-  border: 1px solid var(--border);
-  border-radius: 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.teaser-button:hover {
-  background: var(--surface-hover);
-  transform: scale(1.05);
-}
-
-[data-theme='dark'] .teaser-button {
-  border-color: #666;
 }
 
 .teaser-button.active {
   border-color: var(--accent);
-}
-
-.teaser-picker-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 1100;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 1rem;
-  padding-bottom: 0;
-}
-
-body.long-mode-active .teaser-picker-backdrop {
-  align-items: center;
-  padding-bottom: 1rem;
-}
-
-.teaser-picker {
-  background: var(--surface-primary);
-  border: 2px solid #333;
-  border-radius: 0;
-  padding: 1rem;
-  width: 100%;
-  max-width: 320px;
 }
 
 .teaser-picker-header {

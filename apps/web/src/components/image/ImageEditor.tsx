@@ -259,9 +259,9 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
 
   return (
     <Portal>
-      <div className="image-editor-backdrop" onClick={onCancel}>
-        <div className="image-editor-modal" onClick={(e) => e.stopPropagation()}>
-          <div className="image-editor-header">
+      <div className="modal-backdrop modal-backdrop--padded modal-backdrop--no-select" onClick={onCancel}>
+        <div className="modal-panel modal-panel--lg modal-panel--padded" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header modal-header--spaced">
             <h3>Edit Image</h3>
             <GachaFilterButton
               activeFilter={activeFilter}
@@ -347,7 +347,7 @@ export function ImageEditor({ file, onComplete, onCancel }: ImageEditorProps) {
             </div>
           )}
 
-          <div className="image-editor-footer">
+          <div className="modal-footer image-editor-footer">
             <Button size="md" variant="secondary" onClick={onCancel} disabled={processing}>
               Cancel
             </Button>

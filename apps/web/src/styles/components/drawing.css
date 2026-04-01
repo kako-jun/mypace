@@ -1,49 +1,8 @@
 /* Drawing Picker Modal */
-.drawing-picker-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 200;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 1rem;
-  padding-bottom: 0;
-}
 
-body.long-mode-active .drawing-picker-backdrop {
-  align-items: center;
-  padding-bottom: 1rem;
-}
-
-.drawing-picker-modal {
-  background: var(--surface-primary);
-  border: 2px solid #333;
-  border-radius: 0;
-  width: 100%;
-  max-width: 400px;
+/* Override: max-height is 90vh instead of default 70vh */
+.drawing-picker-panel {
   max-height: 90vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-body.long-mode-active .drawing-picker-modal {
-  max-height: calc(100vh - 2rem);
-}
-
-.drawing-picker-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.drawing-picker-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
 }
 
 .drawing-picker-timer {
@@ -56,30 +15,6 @@ body.long-mode-active .drawing-picker-modal {
 .drawing-picker-timer.warning {
   color: var(--text-danger);
   animation: timer-pulse 0.5s ease-in-out infinite alternate;
-}
-
-@keyframes timer-pulse {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0.5;
-  }
-}
-
-.drawing-picker-close {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.drawing-picker-close:hover {
-  color: var(--text-primary);
 }
 
 /* Toolbar */
@@ -267,31 +202,7 @@ body.long-mode-active .drawing-picker-modal {
 
 /* Footer */
 .drawing-picker-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 1rem;
-  border-top: 1px solid var(--border-light);
-}
-
-.drawing-picker-history-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
-}
-
-.drawing-picker-history-btn:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
 }
 
 .drawing-picker-footer-right {
@@ -302,28 +213,4 @@ body.long-mode-active .drawing-picker-modal {
 /* Drawing Picker container */
 .drawing-picker {
   position: relative;
-}
-
-/* Drawing button in post form - matches location-picker-button style */
-.drawing-picker-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 4px;
-  background: var(--surface-secondary);
-  border: 1px solid var(--border);
-  border-radius: 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.drawing-picker-button:hover {
-  background: var(--surface-hover);
-  transform: scale(1.05);
-}
-
-[data-theme='dark'] .drawing-picker-button {
-  border-color: #666;
 }

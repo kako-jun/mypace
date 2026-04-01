@@ -357,15 +357,18 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
 
   return (
     <div className="voice-picker">
-      <button type="button" className="voice-picker-button" onClick={handleOpen} title="Voice memo">
+      <button type="button" className="toolbar-button" onClick={handleOpen} title="Voice memo">
         <Icon name="Mic" size={16} />
       </button>
 
       {isOpen && (
         <Portal>
-          <div className="voice-picker-backdrop" onClick={handleBackdropClick}>
-            <div className="voice-picker-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="voice-picker-header">
+          <div
+            className="modal-backdrop modal-backdrop--opaque modal-backdrop--z200 modal-backdrop--padded"
+            onClick={handleBackdropClick}
+          >
+            <div className="modal-panel modal-panel--md voice-picker-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header modal-header--padded">
                 <h3>Voice Memo</h3>
                 <span className={`voice-picker-timer ${duration >= MAX_DURATION - 3 && isRecording ? 'warning' : ''}`}>
                   {formatTime(duration)} / {formatTime(MAX_DURATION)}
@@ -417,10 +420,10 @@ export function VoicePicker({ onComplete }: VoicePickerProps) {
 
               {error && <div className="voice-picker-error">{error}</div>}
 
-              <div className="voice-picker-footer">
+              <div className="modal-footer modal-footer--spread voice-picker-footer">
                 <button
                   type="button"
-                  className="voice-picker-history-btn"
+                  className="history-button"
                   onClick={() => {
                     handleClose()
                     navigate('/upload-history')
