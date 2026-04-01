@@ -43,10 +43,6 @@ button.wordrot-highlight:active {
   }
 }
 
-.wordrot-highlight.new-discovery {
-  animation: wordrot-glow 1.5s ease-in-out infinite;
-}
-
 /* Light theme adjustments */
 .light-text .wordrot-highlight {
   border-color: #3a9;
@@ -57,30 +53,7 @@ button.wordrot-highlight:active {
 }
 
 /* Collect section (word tags below post content) */
-.wordrot-collect-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(128, 128, 128, 0.2);
-}
-
-.wordrot-collect-section .wordrot-highlight {
-  font-size: 0.85rem;
-  padding: 2px 6px;
-  border-radius: 3px;
-}
-
 /* Character images section (legacy - inside post content) */
-.wordrot-images-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  padding-top: 0.5rem;
-}
-
 /* Character images container (outside post card) */
 .wordrot-images-container {
   display: flex;

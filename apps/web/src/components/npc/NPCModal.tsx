@@ -96,12 +96,12 @@ export function NPCModal({ isOpen, onClose, initialUrl = '' }: NPCModalProps) {
         <div className="npc-modal-content">
           {view === 'select' ? (
             <div className="npc-list">
-              <button className="npc-item" onClick={handleReporterSelect}>
+              <button className="menu-option" onClick={handleReporterSelect}>
                 <Icon name="Newspaper" size={16} />
                 <span>記者</span>
                 <Icon name="ChevronRight" size={16} />
               </button>
-              <button className="npc-item" disabled>
+              <button className="menu-option" disabled>
                 <Icon name="RefreshCw" size={16} />
                 <span>スプレッダー</span>
               </button>

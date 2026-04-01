@@ -34,19 +34,6 @@
   margin-top: 0.5rem;
 }
 
-.edit-input {
-  width: 100%;
-  border: none;
-  background: var(--surface-secondary);
-  color: var(--text-primary);
-  border-radius: 8px;
-  padding: 0.75rem;
-  font-size: 0.95rem;
-  font-family: inherit;
-  resize: none;
-  outline: none;
-}
-
 .edit-actions {
   display: flex;
   justify-content: space-between;
@@ -54,13 +41,7 @@
   margin-top: 0.5rem;
 }
 
-.edit-actions-right {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.cancel-button,
-.save-button {
+.cancel-button {
   --btn-corner: 6px;
   border: none;
   padding: 0.4rem 0.8rem;
@@ -78,19 +59,10 @@
     0 calc(100% - var(--btn-corner)),
     0 var(--btn-corner)
   );
-}
-
-.cancel-button {
   background: var(--btn-cancel-bg);
   color: var(--btn-cancel-text);
 }
 
-.save-button {
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-}
-
-.cancel-button:hover,
-.save-button:hover {
+.cancel-button:hover {
   transform: scale(1.05);
 }

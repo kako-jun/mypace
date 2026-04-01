@@ -65,17 +65,9 @@
   color: var(--text-placeholder);
 }
 
-.sticker-picker-divider {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  margin-bottom: 1rem;
-}
-
 .sticker-picker-item-wrapper {
   position: relative;
 }
-
 
 .sticker-picker-item {
   display: flex;
@@ -102,12 +94,3 @@
   display: none;
 }
 
-.sticker-picker-hint {
-  padding: 0.5rem;
-  background: rgba(255, 152, 0, 0.1);
-  border: 1px solid rgba(255, 152, 0, 0.3);
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  text-align: center;
-  color: var(--text-muted);
-}

@@ -52,42 +52,6 @@
   color: var(--text-muted);
 }
 
-.inventory-balance-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  flex: 1;
-}
-
-.inventory-balance-value.inventory-not-connected {
-  color: #e74c3c;
-  font-size: 0.85rem;
-  font-weight: 400;
-}
-
-.inventory-balance-value.inventory-balance-unknown {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 400;
-}
-
-.inventory-refresh-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--surface-secondary);
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.inventory-refresh-button:hover {
-  background: var(--surface-hover);
-}
-
 /* Stella List */
 .inventory-stella-list {
   display: flex;
@@ -118,18 +82,6 @@
   font-weight: 600;
 }
 
-.inventory-stella-empty {
-  padding: 1rem 0;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.inventory-not-connected-message {
-  padding: 1rem 0;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
 .inventory-error {
   margin-top: 0.75rem;
   color: #e74c3c;
@@ -137,53 +89,6 @@
 }
 
 /* Info Section */
-.inventory-info-section {
-  background: var(--surface-primary);
-  border: 2px solid #000;
-  padding: 1rem;
-}
-
-.inventory-info-section h3 {
-  font-size: 1rem;
-  margin: 0 0 0.75rem;
-}
-
-.inventory-price-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 0.75rem;
-}
-
-.inventory-price-table th,
-.inventory-price-table td {
-  padding: 0.4rem 1rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.inventory-price-table th {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.inventory-price-table td {
-  font-size: 0.85rem;
-}
-
-.inventory-color-cell {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.inventory-info-note {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin: 0;
-  line-height: 1.5;
-}
-
 /* Supernovas Section */
 .inventory-supernovas-section {
   background: var(--surface-primary);
@@ -198,10 +103,6 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.inventory-supernovas-section.locked-section {
-  opacity: 0.8;
 }
 
 .inventory-supernova-list {
@@ -344,27 +245,6 @@
 }
 
 /* Info List */
-.inventory-info-text {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin: 0 0 0.75rem;
-  line-height: 1.5;
-}
-
-.inventory-info-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.inventory-info-list li {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  padding: 0.25rem 0;
-}
-
 /* Loading */
 .inventory-loading {
   display: flex;
@@ -455,15 +335,6 @@
 }
 
 /* Synthesized words section */
-.inventory-synthesized-section {
-  border-color: #3d3d5c;
-  background: linear-gradient(180deg, var(--surface-primary) 0%, rgba(168, 85, 247, 0.05) 100%);
-}
-
-.inventory-synthesized-section h3 {
-  color: #a855f7;
-}
-
 /* Mobile adjustments */
 @media (max-width: 480px) {
   .inventory-words-grid {

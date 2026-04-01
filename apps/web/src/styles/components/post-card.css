@@ -243,13 +243,11 @@
 }
 
 /* Action buttons with semi-transparent white background for visibility */
-.post-footer .icon-button,
-.post-footer .like-count {
+.post-footer .icon-button {
   background: rgba(255, 255, 255, 0.5);
   border-radius: 1rem;
   padding: 0.25rem 0.5rem;
 }
-
 /* margin-left: auto is now on .edit-delete-wrapper */
 
 /* Repost label */

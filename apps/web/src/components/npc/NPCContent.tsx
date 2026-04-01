@@ -69,12 +69,12 @@ export function NPCContent({ initialUrl = '' }: NPCContentProps) {
     <div className="npc-content">
       {view === 'select' ? (
         <div className="npc-list">
-          <button className="npc-item" onClick={handleReporterSelect}>
+          <button className="menu-option" onClick={handleReporterSelect}>
             <Icon name="Newspaper" size={16} />
             <span>Reporter</span>
             <Icon name="ChevronRight" size={16} />
           </button>
-          <button className="npc-item" disabled>
+          <button className="menu-option" disabled>
             <Icon name="RefreshCw" size={16} />
             <span>Spreader</span>
           </button>

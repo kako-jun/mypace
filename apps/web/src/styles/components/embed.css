@@ -77,26 +77,7 @@
 }
 
 /* Video Embed */
-.embed-video {
-  max-width: 100%;
-}
-
-.embed-video video {
-  width: 100%;
-  max-height: 400px;
-  background: #000;
-}
-
 /* Audio Embed */
-.embed-audio {
-  padding: 0.5rem;
-  background: var(--surface-secondary);
-}
-
-.embed-audio audio {
-  width: 100%;
-}
-
 /* Iframe Embed (Games) */
 .embed-iframe {
   position: relative;
@@ -444,19 +425,6 @@
 
 .embed-error-link:hover {
   color: #ff0000;
-}
-
-.embed-shorts-badge {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 0, 0, 0.9);
-  color: white;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
 }
 
 /* TikTok Embed */

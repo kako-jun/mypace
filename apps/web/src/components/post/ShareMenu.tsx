@@ -147,18 +147,18 @@ export default function ShareMenu({
       </div>
       <div className="share-menu-options">
         {isMyPost && (
-          <button className="share-menu-option" onClick={handleShowSubMenu('sns')}>
+          <button className="menu-option" onClick={handleShowSubMenu('sns')}>
             <Icon name="Send" size={16} />
             <span>Share to SNS</span>
             <Icon name="ChevronRight" size={16} className="share-menu-arrow" />
           </button>
         )}
-        <button className="share-menu-option" onClick={handleShowSubMenu('url')}>
+        <button className="menu-option" onClick={handleShowSubMenu('url')}>
           <Icon name="Link" size={16} />
           <span>Share URL</span>
           <Icon name="ChevronRight" size={16} className="share-menu-arrow" />
         </button>
-        <button className="share-menu-option" onClick={handleShowSubMenu('content')}>
+        <button className="menu-option" onClick={handleShowSubMenu('content')}>
           <Icon name="FileText" size={16} />
           <span>Share Content</span>
           <Icon name="ChevronRight" size={16} className="share-menu-arrow" />
@@ -166,7 +166,7 @@ export default function ShareMenu({
         {isMyPost && eventId && (
           <>
             <div className="share-menu-divider" />
-            <button className="share-menu-option" onClick={handleShowSubMenu('magazine')}>
+            <button className="menu-option" onClick={handleShowSubMenu('magazine')}>
               <Icon name="BookOpen" size={16} />
               <span>Add to Magazine</span>
               <Icon name="ChevronRight" size={16} className="share-menu-arrow" />
@@ -187,7 +187,7 @@ export default function ShareMenu({
         <CloseButton onClick={() => onClose()} size={16} />
       </div>
       <div className="share-menu-options">
-        <button className="share-menu-option" onClick={handleSnsClick('x')}>
+        <button className="menu-option" onClick={handleSnsClick('x')}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="share-menu-x-icon">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
           </svg>
@@ -195,13 +195,13 @@ export default function ShareMenu({
           {splitParts.x.length > 1 && <span className="share-menu-badge">{splitParts.x.length}</span>}
           {splitParts.x.length > 1 && <Icon name="ChevronRight" size={16} className="share-menu-arrow" />}
         </button>
-        <button className="share-menu-option" onClick={handleSnsClick('bluesky')}>
+        <button className="menu-option" onClick={handleSnsClick('bluesky')}>
           <Icon name="Cloud" size={16} />
           <span>Bluesky</span>
           {splitParts.bluesky.length > 1 && <span className="share-menu-badge">{splitParts.bluesky.length}</span>}
           {splitParts.bluesky.length > 1 && <Icon name="ChevronRight" size={16} className="share-menu-arrow" />}
         </button>
-        <button className="share-menu-option" onClick={handleSnsClick('threads')}>
+        <button className="menu-option" onClick={handleSnsClick('threads')}>
           <Icon name="AtSign" size={16} />
           <span>Threads</span>
           {splitParts.threads.length > 1 && <span className="share-menu-badge">{splitParts.threads.length}</span>}
@@ -227,13 +227,13 @@ export default function ShareMenu({
         </div>
         <div className="share-menu-options">
           {/* 全文オプション */}
-          <button className="share-menu-option" onClick={handleSelect(sns, -1)}>
+          <button className="menu-option" onClick={handleSelect(sns, -1)}>
             <Icon name="FileText" size={16} />
             <span>Full</span>
           </button>
           {/* 分割パーツ */}
           {parts.map((_, index) => (
-            <button key={index} className="share-menu-option" onClick={handleSelect(sns, index)}>
+            <button key={index} className="menu-option" onClick={handleSelect(sns, index)}>
               <Icon name="FileText" size={16} />
               <span>
                 {index + 1}/{total}
@@ -255,15 +255,15 @@ export default function ShareMenu({
         <CloseButton onClick={() => onClose()} size={16} />
       </div>
       <div className="share-menu-options">
-        <button className="share-menu-option" onClick={handleSelect('url-copy')}>
+        <button className="menu-option" onClick={handleSelect('url-copy')}>
           <Icon name="Clipboard" size={16} />
           <span>Copy URL</span>
         </button>
-        <button className="share-menu-option" onClick={handleSelect('url-nostr')}>
+        <button className="menu-option" onClick={handleSelect('url-nostr')}>
           <Icon name="Hash" size={16} />
           <span>Copy Nostr ID</span>
         </button>
-        <button className="share-menu-option" onClick={handleSelect('url-share')}>
+        <button className="menu-option" onClick={handleSelect('url-share')}>
           <Icon name="Share2" size={16} />
           <span>Share to Apps</span>
         </button>
@@ -281,15 +281,15 @@ export default function ShareMenu({
         <CloseButton onClick={() => onClose()} size={16} />
       </div>
       <div className="share-menu-options">
-        <button className="share-menu-option" onClick={handleSelect('md-copy')}>
+        <button className="menu-option" onClick={handleSelect('md-copy')}>
           <Icon name="Clipboard" size={16} />
           <span>Copy Markdown</span>
         </button>
-        <button className="share-menu-option" onClick={handleSelect('md-open')}>
+        <button className="menu-option" onClick={handleSelect('md-open')}>
           <Icon name="ExternalLink" size={16} />
           <span>Open Markdown URL</span>
         </button>
-        <button className="share-menu-option" onClick={handleSelect('md-download')}>
+        <button className="menu-option" onClick={handleSelect('md-download')}>
           <Icon name="Download" size={16} />
           <span>Download Markdown</span>
         </button>
@@ -339,7 +339,7 @@ export default function ShareMenu({
             )}
             {magazines.length > 0 && <div className="share-menu-divider" />}
             <button
-              className="share-menu-option"
+              className="menu-option"
               onClick={async (e) => {
                 e.stopPropagation()
                 try {

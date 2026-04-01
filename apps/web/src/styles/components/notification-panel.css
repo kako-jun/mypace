@@ -150,10 +150,6 @@
   flex-shrink: 0;
 }
 
-.notification-icon-stella {
-  color: #f1c40f;
-}
-
 /* Stella notification specific styles */
 .notification-actor-count {
   color: var(--text-secondary);

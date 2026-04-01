@@ -19,7 +19,6 @@
   fill: #3498db;
 }
 
-
 /* Filter Panel Wrapper (Popup) - fixed to top-right corner */
 .filter-panel-wrapper {
   position: fixed;
@@ -405,27 +404,6 @@
   color: var(--text-placeholder);
 }
 
-.mute-list-add-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
-  background: var(--surface-secondary);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  outline: none;
-}
-
-.mute-list-add-btn:hover {
-  border-color: var(--btn-primary-bg);
-  color: var(--btn-primary-bg);
-  background: color-mix(in srgb, var(--btn-primary-bg) 10%, var(--surface-secondary));
-}
-
 .mute-list-error {
   color: var(--action-delete);
   font-size: 0.75rem;
@@ -509,10 +487,6 @@
 }
 
 /* OK icon for tags */
-.filter-ok-icon {
-  stroke: var(--btn-primary-bg) !important;
-}
-
 .filter-panel-popup {
   animation: filter-panel-slide 0.15s ease;
   width: 400px;
@@ -596,124 +570,11 @@
 }
 
 /* NG word row styling */
-.filter-ng-row {
-  margin-top: 0.5rem;
-}
-
 .filter-ng-icon {
   stroke: var(--action-delete) !important;
 }
 
-.filter-search-submit {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: var(--btn-primary-bg);
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-  flex-shrink: 0;
-  outline: none;
-}
-
-.filter-search-submit svg {
-  stroke: var(--btn-primary-text);
-}
-
-.filter-search-submit:hover {
-  transform: scale(1.05);
-}
-
-/* Filter Options Row */
-.filter-options-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border-light);
-  min-height: 32px;
-}
-
-.filter-option {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  cursor: pointer;
-  flex: 1;
-  min-height: 28px;
-}
-
-.option-label {
-  user-select: none;
-}
-
-.language-option svg {
-  stroke: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.language-select {
-  border: none;
-  background: var(--surface-primary);
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  cursor: pointer;
-  outline: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-}
-
-.language-select:hover {
-  color: var(--text-primary);
-  background: var(--surface-secondary);
-}
-
-.language-select option {
-  background: var(--surface-primary);
-  color: var(--text-primary);
-}
-
 /* Filter Tags Row */
-.filter-tags-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border-light);
-}
-
-.filter-tag-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.filter-mode-btn {
-  background: var(--surface-tertiary);
-  border: none;
-  border-radius: 4px;
-  padding: 0.15rem 0.35rem;
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background 0.15s ease;
-  outline: none;
-}
-
-.filter-mode-btn:hover {
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-}
-
 .filter-panel .filter-tag {
   display: inline-flex;
   align-items: center;
@@ -784,19 +645,6 @@
   margin-top: 0.5rem;
 }
 
-.filter-chip {
-  background: var(--surface-tertiary);
-  color: var(--text-secondary);
-  padding: 0.15rem 0.5rem;
-  border-radius: 10px;
-  font-size: 0.7rem;
-}
-
-.filter-chip-ng {
-  background: color-mix(in srgb, var(--action-delete) 20%, transparent);
-  color: var(--action-delete);
-}
-
 /* Preset Section */
 .filter-preset-section {
   display: flex;
@@ -826,42 +674,6 @@
 .filter-preset-select:focus {
   border-color: var(--btn-primary-bg);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--btn-primary-bg) 20%, transparent);
-}
-
-.filter-preset-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
-  background: var(--surface-secondary);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  outline: none;
-}
-
-.filter-preset-btn:hover:not(:disabled) {
-  border-color: var(--btn-primary-bg);
-  color: var(--btn-primary-bg);
-}
-
-.filter-preset-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.filter-preset-delete:hover:not(:disabled) {
-  border-color: var(--action-delete);
-  color: var(--action-delete);
-}
-
-.filter-preset-delete.confirm {
-  background: var(--action-delete);
-  border-color: var(--action-delete);
-  color: #fff;
 }
 
 /* Preset Save Modal */
