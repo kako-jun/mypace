@@ -48,7 +48,7 @@ export default function OriginalPostCard({
 
   return (
     <article
-      className={`original-post-card ${themeProps.className}`}
+      className={`original-post-card folded-corner folded-corner-sm ${themeProps.className}`}
       style={themeProps.style}
       onClick={handleClick}
       onKeyDown={(e) => e.key === 'Enter' && handleClick()}

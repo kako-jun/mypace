@@ -10,34 +10,8 @@
   animation: card-appear 0.3s ease backwards;
   background: var(--surface-primary);
   border: 2px solid #000;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
   color: var(--text-primary);
   overflow: visible; /* Allow stickers to extend beyond card */
-}
-
-/* Folded corner effect */
-.post-card::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 20px;
-  height: 20px;
-  background: linear-gradient(135deg, var(--surface-fold) 50%, transparent 50%);
-  border-left: 2px solid #000;
-  border-top: 2px solid #000;
-}
-
-/* Diagonal line on fold */
-.post-card::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 20px;
-  height: 20px;
-  background: linear-gradient(135deg, transparent calc(50% + 1px), #000 calc(50% + 1px), #000 calc(50% + 4px), transparent calc(50% + 4px));
-  pointer-events: none;
 }
 
 /* Staggered animation */
@@ -333,35 +307,9 @@
   margin-top: 0.5rem;
   background: var(--surface-primary);
   border: 2px solid #000;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
   cursor: pointer;
   transition: opacity 0.15s ease;
   overflow: visible;
-}
-
-/* Folded corner effect */
-.original-post-card::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 16px;
-  height: 16px;
-  background: linear-gradient(135deg, var(--surface-fold) 50%, transparent 50%);
-  border-left: 2px solid #000;
-  border-top: 2px solid #000;
-}
-
-/* Diagonal line on fold */
-.original-post-card::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 16px;
-  height: 16px;
-  background: linear-gradient(135deg, transparent calc(50% + 1px), #000 calc(50% + 1px), #000 calc(50% + 3px), transparent calc(50% + 3px));
-  pointer-events: none;
 }
 
 .original-post-card:hover {

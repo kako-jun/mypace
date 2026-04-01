@@ -589,7 +589,7 @@ export function MagazineView() {
 
             if (deletedId === post.id) {
               return (
-                <article key={post.id} className="post-card">
+                <article key={post.id} className="post-card folded-corner">
                   <SuccessMessage>Deleted!</SuccessMessage>
                 </article>
               )

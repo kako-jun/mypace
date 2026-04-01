@@ -36,7 +36,11 @@ export default function ThreadReplies({
           {replies.map((reply) => {
             const themeProps = getThemeCardProps(getEventThemeColors(reply))
             return (
-              <div key={reply.id} className={`reply-card ${themeProps.className}`} style={themeProps.style}>
+              <div
+                key={reply.id}
+                className={`reply-card folded-corner folded-corner-sm ${themeProps.className}`}
+                style={themeProps.style}
+              >
                 <PostHeader
                   pubkey={reply.pubkey}
                   createdAt={reply.created_at}

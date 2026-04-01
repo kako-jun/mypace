@@ -234,7 +234,7 @@ export const Timeline = memo(function Timeline({ onEditStart, onReplyStart }: Ti
 
         if (deletedId === event.id) {
           return (
-            <article key={event.id} className="post-card">
+            <article key={event.id} className="post-card folded-corner">
               <SuccessMessage>Deleted!</SuccessMessage>
             </article>
           )
