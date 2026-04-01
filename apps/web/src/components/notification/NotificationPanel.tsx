@@ -68,15 +68,19 @@ export function NotificationPanel({ onClose, onUnreadChange }: NotificationPanel
   const handleNotificationClick = async (notification: AggregatedNotification) => {
     // Mark as read
     if (notification.readAt === null) {
-      await markNotificationsRead(notification.ids)
-      // Update local state (compare arrays by joining to string)
       const idsKey = notification.ids.join('-')
-      setNotifications((prev) =>
-        prev.map((n) => (n.ids.join('-') === idsKey ? { ...n, readAt: Date.now() / 1000 } : n))
-      )
-      // Check if any unread remain
-      const hasUnread = notifications.some((n) => n.ids.join('-') !== idsKey && n.readAt === null)
-      onUnreadChange?.(hasUnread)
+      try {
+        await markNotificationsRead(notification.ids)
+        // Update local state only on success
+        setNotifications((prev) =>
+          prev.map((n) => (n.ids.join('-') === idsKey ? { ...n, readAt: Date.now() / 1000 } : n))
+        )
+        // Check if any unread remain
+        const hasUnread = notifications.some((n) => n.ids.join('-') !== idsKey && n.readAt === null)
+        onUnreadChange?.(hasUnread)
+      } catch {
+        // Silently fail — keep as unread
+      }
     }
 
     // Navigate to the post
