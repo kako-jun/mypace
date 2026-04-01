@@ -256,6 +256,48 @@ body.long-mode-active .modal-panel {
   flex-shrink: 0;
 }
 
+/* --- Popup Overlay (click-outside dismissal) --- */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+}
+
+/* --- Popup Panel (fixed-position mini-popups above buttons) --- */
+.popup-panel {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  margin-top: -12px;
+  background: var(--surface-primary);
+  border: 2px solid var(--border-card);
+  padding: 0.75rem;
+  z-index: 1002;
+}
+
+/* Variant: left-aligned (for reactors-popup, stella-picker) */
+.popup-panel--left {
+  transform: translate(0, -100%);
+}
+
+/* --- Popup Header --- */
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--border-card);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.popup-title {
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
 /* --- Shared Animations --- */
 @keyframes spin {
   from {

@@ -248,20 +248,7 @@
   padding: 0.75rem;
 }
 
-.share-choice-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px solid var(--border-card);
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.share-choice-title {
-  font-size: 0.875rem;
-  font-weight: bold;
-  color: var(--text-primary);
-}
+/* share-choice header/title now use shared .popup-header / .popup-title */
 
 .share-choice-options {
   display: flex;

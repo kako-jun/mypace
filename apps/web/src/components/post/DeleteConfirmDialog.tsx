@@ -10,14 +10,14 @@ interface DeleteConfirmDialogProps {
 export default function DeleteConfirmDialog({ position, onConfirm, onCancel }: DeleteConfirmDialogProps) {
   return createPortal(
     <>
-      <div className="delete-confirm-overlay" onClick={onCancel} />
+      <div className="popup-overlay" onClick={onCancel} />
       <div
-        className="delete-confirm-popup"
+        className="popup-panel delete-confirm-popup"
         style={{ top: position.top, left: position.left }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="delete-confirm-header">
-          <span className="delete-confirm-title">Delete?</span>
+        <div className="popup-header">
+          <span className="popup-title">Delete?</span>
           <CloseButton onClick={onCancel} size={16} />
         </div>
         <div className="delete-confirm-actions">

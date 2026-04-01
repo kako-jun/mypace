@@ -39,14 +39,14 @@ export default function ReactorsPopup({
 
   return createPortal(
     <>
-      <div className="reactors-popup-overlay" onClick={onClose} />
+      <div className="popup-overlay" onClick={onClose} />
       <div
-        className="reactors-popup"
+        className="popup-panel popup-panel--left reactors-popup"
         style={{ top: position.top, left: position.left }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="reactors-popup-header">
-          <span className="reactors-popup-title">{title}</span>
+        <div className="popup-header">
+          <span className="popup-title">{title}</span>
           <CloseButton onClick={() => onClose()} size={16} />
         </div>
         <div className="reactors-list">
