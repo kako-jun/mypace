@@ -244,15 +244,15 @@ export function ImagePicker({ onEmbed, onAddSticker, onError, initialFile, onIni
 
   return (
     <div className="image-picker">
-      <button type="button" className="image-picker-toggle" onClick={() => setIsOpen(!isOpen)} title="Add image">
-        <img src="/icons/kiss.webp" alt="Image" className="image-picker-toggle-icon" />
+      <button type="button" className="toolbar-button" onClick={() => setIsOpen(!isOpen)} title="Add image">
+        <img src="/icons/kiss.webp" alt="Image" className="toolbar-icon" />
       </button>
 
       {isOpen && (
         <Portal>
-          <div className="image-picker-backdrop" onClick={handleClose}>
-            <div className="image-picker-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="image-picker-header">
+          <div className="modal-backdrop" onClick={handleClose}>
+            <div className="modal-panel modal-panel--md modal-panel--padded" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
                 <h3>Select Image</h3>
                 <CloseButton onClick={handleClose} size={20} />
               </div>
@@ -330,10 +330,10 @@ export function ImagePicker({ onEmbed, onAddSticker, onError, initialFile, onIni
               )}
 
               {/* History grid */}
-              <div className="image-picker-grid">
-                {loading && history.length === 0 && <div className="image-picker-loading">Loading...</div>}
+              <div className="picker-grid">
+                {loading && history.length === 0 && <div className="picker-empty-state">Loading...</div>}
                 {!loading && history.length === 0 && (
-                  <div className="image-picker-empty">No images yet. Upload one above!</div>
+                  <div className="picker-empty-state">No images yet. Upload one above!</div>
                 )}
                 {history.map((item) => (
                   <div key={item.url} className="image-picker-item-wrapper">
@@ -346,7 +346,7 @@ export function ImagePicker({ onEmbed, onAddSticker, onError, initialFile, onIni
                     </button>
                     <button
                       type="button"
-                      className="image-picker-delete"
+                      className="circle-delete-btn"
                       onClick={(e) => handleDelete(e, item.url)}
                       title="Delete"
                     >
@@ -360,7 +360,7 @@ export function ImagePicker({ onEmbed, onAddSticker, onError, initialFile, onIni
               <div className="image-picker-actions">
                 <button
                   type="button"
-                  className="image-picker-history-btn"
+                  className="history-button"
                   onClick={() => {
                     handleClose()
                     navigate('/upload-history')

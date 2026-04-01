@@ -364,9 +364,9 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
 
   return (
     <Portal>
-      <div className="video-editor-backdrop" onClick={onCancel}>
-        <div className="video-editor-modal" onClick={(e) => e.stopPropagation()}>
-          <div className="video-editor-header">
+      <div className="modal-backdrop modal-backdrop--padded modal-backdrop--no-select" onClick={onCancel}>
+        <div className="modal-panel modal-panel--lg modal-panel--padded" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header modal-header--spaced">
             <h3>Edit Video</h3>
             <GachaFilterButton
               activeFilter={activeFilter}
@@ -464,7 +464,7 @@ export function VideoEditor({ file, onComplete, onCancel, onError }: VideoEditor
             </div>
           )}
 
-          <div className="video-editor-footer">
+          <div className="modal-footer video-editor-footer">
             <Button size="md" variant="secondary" onClick={onCancel} disabled={processing}>
               Cancel
             </Button>

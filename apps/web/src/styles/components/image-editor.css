@@ -2,66 +2,9 @@
    Image Editor
    =========================================== */
 
-.image-editor-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  user-select: none;
-  padding: 1rem;
-  padding-bottom: 0;
-  box-sizing: border-box;
-}
-
-body.long-mode-active .image-editor-backdrop {
-  align-items: center;
-  padding-bottom: 1rem;
-}
-
-.image-editor-modal {
-  position: relative;
-  background: var(--surface-primary);
-  border: 2px solid #333;
-  border-bottom: none;
-  padding: 1rem;
-  max-width: 500px;
-  width: 100%;
+/* Override: max-height is 80vh instead of default 70vh */
+.image-editor .modal-panel {
   max-height: 80vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-body.long-mode-active .image-editor-modal {
-  border-bottom: 2px solid #333;
-  max-height: calc(100vh - 2rem);
-}
-
-.image-editor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.image-editor-header .close-button {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-}
-
-.image-editor-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
 }
 
 /* Filter toggle position in header */
@@ -158,13 +101,9 @@ body.long-mode-active .image-editor-modal {
   color: var(--text-primary);
 }
 
-/* Footer */
+/* Footer - bleeds into panel padding */
 .image-editor-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
   padding: 1rem;
-  border-top: 1px solid var(--border-light);
   margin: 0 -1rem -1rem -1rem;
 }
 

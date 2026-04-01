@@ -1,49 +1,9 @@
 /* Voice Picker Modal */
-.voice-picker-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 200;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 1rem;
-  padding-bottom: 0;
-}
 
-body.long-mode-active .voice-picker-backdrop {
-  align-items: center;
-  padding-bottom: 1rem;
-}
-
-.voice-picker-modal {
-  background: var(--surface-primary);
-  border: 2px solid #333;
-  border-radius: 0;
-  width: 100%;
+/* Override: max-width is 360px and max-height is 90vh */
+.voice-picker-panel {
   max-width: 360px;
   max-height: 90vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-body.long-mode-active .voice-picker-modal {
-  max-height: calc(100vh - 2rem);
-}
-
-.voice-picker-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.voice-picker-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
 }
 
 .voice-picker-timer {
@@ -58,30 +18,6 @@ body.long-mode-active .voice-picker-modal {
 .voice-picker-timer.warning {
   color: var(--text-danger);
   animation: timer-pulse 0.5s ease-in-out infinite alternate;
-}
-
-@keyframes timer-pulse {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0.5;
-  }
-}
-
-.voice-picker-close {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.voice-picker-close:hover {
-  color: var(--text-primary);
 }
 
 /* Content */
@@ -228,31 +164,7 @@ body.long-mode-active .voice-picker-modal {
 
 /* Footer */
 .voice-picker-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 1rem;
-  border-top: 1px solid var(--border-light);
-}
-
-.voice-picker-history-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
-}
-
-.voice-picker-history-btn:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
 }
 
 .voice-picker-footer-right {
@@ -263,28 +175,4 @@ body.long-mode-active .voice-picker-modal {
 /* Voice Picker container */
 .voice-picker {
   position: relative;
-}
-
-/* Voice button in post form - matches location-picker-button style */
-.voice-picker-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 4px;
-  background: var(--surface-secondary);
-  border: 1px solid var(--border);
-  border-radius: 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.voice-picker-button:hover {
-  background: var(--surface-hover);
-  transform: scale(1.05);
-}
-
-[data-theme='dark'] .voice-picker-button {
-  border-color: #666;
 }

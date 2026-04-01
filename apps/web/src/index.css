@@ -12,6 +12,7 @@
 @import "./styles/theme-custom.css";
 
 /* Component styles */
+@import "./styles/components/modal.css";
 @import "./styles/components/post-card.css";
 @import "./styles/components/post-actions.css";
 @import "./styles/components/post-form.css";

@@ -519,15 +519,18 @@ export function DrawingPicker({ onEmbed, onAddSticker }: DrawingPickerProps) {
 
   return (
     <div className="drawing-picker">
-      <button type="button" className="drawing-picker-button" onClick={handleOpen} title="Draw">
+      <button type="button" className="toolbar-button" onClick={handleOpen} title="Draw">
         <Icon name="Pencil" size={16} />
       </button>
 
       {isOpen && (
         <Portal>
-          <div className="drawing-picker-backdrop" onClick={handleBackdropClick}>
-            <div className="drawing-picker-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="drawing-picker-header">
+          <div
+            className="modal-backdrop modal-backdrop--opaque modal-backdrop--z200 modal-backdrop--padded"
+            onClick={handleBackdropClick}
+          >
+            <div className="modal-panel modal-panel--md drawing-picker-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header modal-header--padded">
                 <h3>Draw</h3>
                 <div className={`drawing-picker-timer ${timeLeft <= 10 ? 'warning' : ''}`}>{formatTime(timeLeft)}</div>
                 <CloseButton onClick={handleClose} size={20} />
@@ -602,10 +605,10 @@ export function DrawingPicker({ onEmbed, onAddSticker }: DrawingPickerProps) {
 
               {error && <div className="drawing-picker-error">{error}</div>}
 
-              <div className="drawing-picker-footer">
+              <div className="modal-footer modal-footer--spread drawing-picker-footer">
                 <button
                   type="button"
-                  className="drawing-picker-history-btn"
+                  className="history-button"
                   onClick={() => {
                     handleClose()
                     navigate('/upload-history')

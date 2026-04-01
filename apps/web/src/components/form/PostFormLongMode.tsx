@@ -193,7 +193,7 @@ export function PostFormLongMode({
             )}
             <button
               type="button"
-              className="super-mention-button"
+              className="toolbar-button super-mention-button"
               onClick={() => setShowSuperMentionPopup(true)}
               title="Super Mention (@@)"
             >
@@ -223,7 +223,7 @@ export function PostFormLongMode({
               <button
                 ref={teaserButtonRef}
                 type="button"
-                className={`teaser-button ${teaserColor ? 'active' : ''}`}
+                className={`toolbar-button teaser-button ${teaserColor ? 'active' : ''}`}
                 onClick={() => setShowTeaserPicker(true)}
                 title="Teaser"
               >

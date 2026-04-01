@@ -178,7 +178,7 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
     <div className="location-picker">
       <button
         type="button"
-        className="location-picker-button"
+        className="toolbar-button"
         onClick={handleOpen}
         title={currentLocations.length > 0 ? `${formatNumber(currentLocations.length)} location(s)` : 'Add location'}
       >
@@ -187,9 +187,12 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
 
       {isOpen && (
         <Portal>
-          <div className="location-picker-backdrop" onClick={handleBackdropClick}>
-            <div className="location-picker-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="location-picker-header">
+          <div
+            className="modal-backdrop modal-backdrop--opaque modal-backdrop--z1100 modal-backdrop--padded"
+            onClick={handleBackdropClick}
+          >
+            <div className="modal-panel modal-panel--lg location-picker-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header modal-header--padded">
                 <h3>Add Location</h3>
                 <CloseButton onClick={handleClose} size={20} />
               </div>
@@ -253,7 +256,7 @@ export function LocationPicker({ onSelect, currentLocations = [] }: LocationPick
                 />
               </div>
 
-              <div className="location-picker-footer">
+              <div className="modal-footer location-picker-footer">
                 <Button size="md" variant="secondary" onClick={handleClose}>
                   Cancel
                 </Button>

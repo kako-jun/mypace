@@ -96,15 +96,15 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
 
   return (
     <div className="sticker-picker">
-      <button type="button" className="sticker-picker-toggle" onClick={() => setIsOpen(!isOpen)} title="Add sticker">
-        <img src="/icons/kiss.webp" alt="Sticker" className="sticker-picker-toggle-icon" />
+      <button type="button" className="toolbar-button" onClick={() => setIsOpen(!isOpen)} title="Add sticker">
+        <img src="/icons/kiss.webp" alt="Sticker" className="toolbar-icon" />
       </button>
 
       {isOpen && (
         <Portal>
-          <div className="sticker-picker-backdrop" onClick={() => setIsOpen(false)}>
-            <div className="sticker-picker-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="sticker-picker-header">
+          <div className="modal-backdrop" onClick={() => setIsOpen(false)}>
+            <div className="modal-panel modal-panel--md modal-panel--padded" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header modal-header--spaced">
                 <h3>Select Sticker</h3>
                 <CloseButton onClick={() => setIsOpen(false)} size={20} />
               </div>
@@ -141,10 +141,10 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
                 />
               </div>
 
-              <div className="sticker-picker-grid">
-                {loading && history.length === 0 && <div className="sticker-picker-loading">Loading...</div>}
+              <div className="picker-grid">
+                {loading && history.length === 0 && <div className="picker-empty-state">Loading...</div>}
                 {!loading && history.length === 0 && (
-                  <div className="sticker-picker-empty">No stickers yet. Add one above!</div>
+                  <div className="picker-empty-state">No stickers yet. Add one above!</div>
                 )}
                 {history.map((sticker) => (
                   <div key={sticker.url} className="sticker-picker-item-wrapper">
@@ -157,7 +157,7 @@ export function StickerPicker({ onAddSticker }: StickerPickerProps) {
                     </button>
                     <button
                       type="button"
-                      className="sticker-picker-delete"
+                      className="circle-delete-btn"
                       onClick={(e) => handleDelete(e, sticker.url)}
                       title="Delete"
                     >
