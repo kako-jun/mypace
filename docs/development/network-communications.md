@@ -227,7 +227,6 @@ URLアクセス
 | `/api/supernovas/stats/{pubkey}` | `fetchUserStellaStats` | InventoryPage |
 | `/api/wordrot/inventory/{pubkey}` | `fetchWordrotInventory` | useWordrot, useWordrotTimeline, usePostViewData |
 | `/api/wordrot/word/{text}` | `fetchWordDetails` | WordDetailPage |
-| `/api/wordrot/leaderboard` | `fetchWordrotLeaderboard` | LeaderboardPage |
 | `/api/uploads/{pubkey}` | `fetchUploadHistory` | UploadHistoryPage |
 | `/api/pins/{pubkey}` | `fetchPinnedPost` | UserView |
 | `/api/serial/{pubkey}` | `fetchUserSerial` | UserView |
@@ -236,7 +235,7 @@ URLアクセス
 | `/api/sticker/history` | `getStickerHistory` | StickerPicker |
 | `/api/super-mention/suggest` | `getSuperMentionSuggestions` | SuperMentionPopup |
 | `/api/tweet/{tweetId}` | (直接fetch) | TwitterEmbed |
-| `/api/npc/reporter` | `getReporterQuote` | ReporterIntentPage |
+| `/api/npc/reporter` | `createReporterQuote` | ReporterIntentPage |
 
 ### 書き込み系 (POST/PUT/DELETE)
 
