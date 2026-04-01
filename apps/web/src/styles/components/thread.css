@@ -2,81 +2,6 @@
    Thread and Reply Components
    =========================================== */
 
-/* Reply form */
-.reply-form {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border-light);
-}
-
-.reply-input {
-  width: 100%;
-  border: none;
-  background: var(--surface-secondary);
-  color: var(--text-primary);
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.9rem;
-  font-family: var(--font-mono);
-  resize: none;
-  outline: none;
-}
-
-.reply-input:focus {
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
-
-.reply-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.reply-cancel,
-.reply-submit {
-  --btn-corner: 6px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  padding: 0.4rem 0.75rem;
-  border: none;
-  transition: transform 0.15s ease;
-  outline: none;
-  clip-path: polygon(
-    var(--btn-corner) 0,
-    calc(100% - var(--btn-corner)) 0,
-    100% var(--btn-corner),
-    100% calc(100% - var(--btn-corner)),
-    calc(100% - var(--btn-corner)) 100%,
-    var(--btn-corner) 100%,
-    0 calc(100% - var(--btn-corner)),
-    0 var(--btn-corner)
-  );
-}
-
-.reply-cancel {
-  background: var(--btn-cancel-bg);
-  color: var(--btn-cancel-text);
-}
-
-.reply-cancel:hover {
-  transform: scale(1.05);
-}
-
-.reply-submit {
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-}
-
-.reply-submit:hover:not(:disabled) {
-  transform: scale(1.05);
-}
-
-.reply-submit:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* Thread section */
 .thread-section {
   position: relative;
@@ -112,57 +37,13 @@
   background: var(--surface-secondary);
   padding: 0.75rem 1rem;
   border: 2px solid #000;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
   margin-bottom: 0.5rem;
   cursor: pointer;
   transition: opacity 0.15s ease;
 }
 
-/* Folded corner effect */
-.reply-card::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 16px;
-  height: 16px;
-  background: linear-gradient(135deg, var(--surface-fold) 50%, transparent 50%);
-  border-left: 2px solid #000;
-  border-top: 2px solid #000;
-}
-
-/* Diagonal line on fold */
-.reply-card::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 16px;
-  height: 16px;
-  background: linear-gradient(135deg, transparent calc(50% + 1px), #000 calc(50% + 1px), #000 calc(50% + 3px), transparent calc(50% + 3px));
-  pointer-events: none;
-}
-
 .reply-card:hover {
   opacity: 0.85;
-}
-
-.reply-header {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.25rem;
-}
-
-.reply-author-info {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.reply-header .timestamp {
-  font-size: 0.7rem;
-  color: var(--text-muted);
 }
 
 /* Reply card content */

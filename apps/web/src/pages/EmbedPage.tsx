@@ -170,7 +170,7 @@ export function EmbedPage() {
   return (
     <div className="embed-page">
       <article
-        className={`post-card embed-card ${themeProps.className}`}
+        className={`post-card folded-corner embed-card ${themeProps.className}`}
         style={themeProps.style}
         onClick={handleCardClick}
       >

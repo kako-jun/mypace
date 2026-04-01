@@ -332,6 +332,47 @@ body {
 }
 
 /* ===========================================
+   Folded Corner Card (mypace signature card style)
+   =========================================== */
+
+.folded-corner {
+  --fold-size: 20px;
+  --fold-line: 4px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--fold-size)), calc(100% - var(--fold-size)) 100%, 0 100%);
+}
+
+/* Fold triangle gradient */
+.folded-corner::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: var(--fold-size);
+  height: var(--fold-size);
+  background: linear-gradient(135deg, var(--surface-fold) 50%, transparent 50%);
+  border-left: 2px solid #000;
+  border-top: 2px solid #000;
+}
+
+/* Diagonal line on fold */
+.folded-corner::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: var(--fold-size);
+  height: var(--fold-size);
+  background: linear-gradient(135deg, transparent calc(50% + 1px), #000 calc(50% + 1px), #000 calc(50% + var(--fold-line)), transparent calc(50% + var(--fold-line)));
+  pointer-events: none;
+}
+
+/* Small fold variant */
+.folded-corner-sm {
+  --fold-size: 16px;
+  --fold-line: 3px;
+}
+
+/* ===========================================
    Close Button (common X button with rotate animation)
    =========================================== */
 

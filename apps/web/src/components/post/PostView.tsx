@@ -505,7 +505,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
         <div className="parent-post-section">
           <h3 className="parent-post-heading">Reply to</h3>
           <div
-            className={`parent-post-card ${parentThemeProps.className}`}
+            className={`parent-post-card folded-corner ${parentThemeProps.className}`}
             style={parentThemeProps.style}
             onClick={() => navigateToPost(parentEvent.id)}
             onKeyDown={(e) => e.key === 'Enter' && navigateToPost(parentEvent.id)}
@@ -529,7 +529,7 @@ export function PostView({ eventId: rawEventId, isModal, onClose }: PostViewProp
         </div>
       )}
 
-      <article className={`post-card post-card-large ${themeProps.className}`} style={themeProps.style}>
+      <article className={`post-card folded-corner post-card-large ${themeProps.className}`} style={themeProps.style}>
         {/* Back layer stickers (behind content) - only for non-repost */}
         {!isRepost && <PostStickers stickers={stickers} layer="back" />}
 

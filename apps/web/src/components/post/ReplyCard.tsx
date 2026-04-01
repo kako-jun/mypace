@@ -29,7 +29,11 @@ export default function ReplyCard({
   const stickers = parseStickers(reply.tags)
 
   return (
-    <article className={`reply-card ${themeProps.className}`} style={themeProps.style} onClick={onClick}>
+    <article
+      className={`reply-card folded-corner folded-corner-sm ${themeProps.className}`}
+      style={themeProps.style}
+      onClick={onClick}
+    >
       {/* Back layer stickers (behind content) */}
       <PostStickers stickers={stickers} truncated={true} layer="back" />
 

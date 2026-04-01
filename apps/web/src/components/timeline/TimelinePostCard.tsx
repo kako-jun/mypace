@@ -158,7 +158,7 @@ export default memo(function TimelinePostCard({
       {topControls}
 
       <article
-        className={`post-card clickable ${isMyPost ? 'my-post' : ''} ${themeProps.className}`}
+        className={`post-card folded-corner clickable ${isMyPost ? 'my-post' : ''} ${themeProps.className}`}
         style={themeProps.style}
         onClick={handleCardClick}
       >
