@@ -75,43 +75,12 @@
   display: inline-flex;
 }
 
-/* Overlay to close popup on click outside */
-.reactors-popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1001;
-}
-
-/* Reactors popup - appears above-right of button (to avoid going off-screen on left) */
+/* Reactors popup - component-specific overrides (uses .popup-panel .popup-panel--left) */
 .reactors-popup {
-  position: fixed;
-  transform: translate(0, -100%);
-  margin-top: -12px;
-  background: var(--surface-primary);
-  border: 2px solid var(--border-card);
   padding: 1rem;
-  z-index: 1002;
   min-width: 220px;
   max-height: 300px;
   overflow-y: auto;
-}
-
-.reactors-popup-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px solid var(--border-card);
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.reactors-popup-title {
-  font-size: 0.875rem;
-  font-weight: bold;
-  color: var(--text-primary);
 }
 
 .reactors-list {
@@ -274,41 +243,9 @@
   display: inline-flex;
 }
 
-/* Overlay to close menu on click outside */
-.share-menu-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1001;
-}
-
-/* Share menu - appears above button */
+/* Share menu - component-specific overrides (uses .popup-panel) */
 .share-menu {
-  position: fixed;
-  transform: translate(-50%, -100%);
-  margin-top: -12px;
-  background: var(--surface-primary);
-  border: 2px solid var(--border-card);
-  padding: 0.75rem;
-  z-index: 1002;
   min-width: 200px;
-}
-
-.share-menu-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px solid var(--border-card);
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.share-menu-title {
-  font-size: 0.875rem;
-  font-weight: bold;
-  color: var(--text-primary);
 }
 
 .share-menu-options {
@@ -395,41 +332,9 @@
   display: inline-flex;
 }
 
-/* Overlay to close popup on click outside */
-.repost-confirm-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1001;
-}
-
-/* Repost confirm popup - appears above button (same style as share-menu) */
+/* Repost confirm popup - component-specific overrides (uses .popup-panel) */
 .repost-confirm-popup {
-  position: fixed;
-  transform: translate(-50%, -100%);
-  margin-top: -12px;
-  background: var(--surface-primary);
-  border: 2px solid var(--border-card);
-  padding: 0.75rem;
-  z-index: 1002;
   min-width: 140px;
-}
-
-.repost-confirm-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px solid var(--border-card);
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.repost-confirm-title {
-  font-size: 0.875rem;
-  font-weight: bold;
-  color: var(--text-primary);
 }
 
 .repost-confirm-actions {
@@ -442,41 +347,9 @@
    Stella Color Picker
    =========================================== */
 
-/* Overlay to close picker on click outside */
-.stella-picker-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1001;
-}
-
-/* Stella color picker - appears above button */
+/* Stella color picker - component-specific overrides (uses .popup-panel .popup-panel--left) */
 .stella-picker {
-  position: fixed;
-  transform: translate(0, -100%);
-  margin-top: -12px;
-  background: var(--surface-primary);
-  border: 2px solid var(--border-card);
-  padding: 0.75rem;
-  z-index: 1002;
   min-width: 220px;
-}
-
-.stella-picker-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px solid var(--border-card);
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.stella-picker-title {
-  font-size: 0.875rem;
-  font-weight: bold;
-  color: var(--text-primary);
 }
 
 .stella-picker-options {

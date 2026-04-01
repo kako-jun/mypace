@@ -10,14 +10,14 @@ interface RepostConfirmPopupProps {
 export default function RepostConfirmPopup({ position, onConfirm, onClose }: RepostConfirmPopupProps) {
   return createPortal(
     <>
-      <div className="repost-confirm-overlay" onClick={onClose} />
+      <div className="popup-overlay" onClick={onClose} />
       <div
-        className="repost-confirm-popup"
+        className="popup-panel repost-confirm-popup"
         style={{ top: position.top, left: position.left }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="repost-confirm-header">
-          <span className="repost-confirm-title">Repost?</span>
+        <div className="popup-header">
+          <span className="popup-title">Repost?</span>
           <CloseButton onClick={onClose} size={16} />
         </div>
         <div className="repost-confirm-actions">

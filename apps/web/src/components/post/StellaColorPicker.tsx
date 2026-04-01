@@ -137,14 +137,14 @@ export default function StellaColorPicker({
 
   return createPortal(
     <>
-      <div className="stella-picker-overlay" onClick={onClose} />
+      <div className="popup-overlay" onClick={onClose} />
       <div
-        className="stella-picker"
+        className="popup-panel popup-panel--left stella-picker"
         style={{ top: position.top, left: position.left }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="stella-picker-header">
-          <span className="stella-picker-title">Add Stella</span>
+        <div className="popup-header">
+          <span className="popup-title">Add Stella</span>
           <CloseButton onClick={() => onClose()} size={16} />
         </div>
 

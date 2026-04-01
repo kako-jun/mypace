@@ -141,8 +141,8 @@ export default function ShareMenu({
 
   const renderMainMenu = () => (
     <>
-      <div className="share-menu-header">
-        <span className="share-menu-title">Share</span>
+      <div className="popup-header">
+        <span className="popup-title">Share</span>
         <CloseButton onClick={() => onClose()} size={16} />
       </div>
       <div className="share-menu-options">
@@ -179,11 +179,11 @@ export default function ShareMenu({
 
   const renderSnsMenu = () => (
     <>
-      <div className="share-menu-header">
+      <div className="popup-header">
         <button className="share-menu-back" onClick={handleBack}>
           <Icon name="ChevronLeft" size={16} />
         </button>
-        <span className="share-menu-title">SNS</span>
+        <span className="popup-title">SNS</span>
         <CloseButton onClick={() => onClose()} size={16} />
       </div>
       <div className="share-menu-options">
@@ -218,11 +218,11 @@ export default function ShareMenu({
 
     return (
       <>
-        <div className="share-menu-header">
+        <div className="popup-header">
           <button className="share-menu-back" onClick={handleBack}>
             <Icon name="ChevronLeft" size={16} />
           </button>
-          <span className="share-menu-title">{snsName}</span>
+          <span className="popup-title">{snsName}</span>
           <CloseButton onClick={() => onClose()} size={16} />
         </div>
         <div className="share-menu-options">
@@ -247,11 +247,11 @@ export default function ShareMenu({
 
   const renderUrlMenu = () => (
     <>
-      <div className="share-menu-header">
+      <div className="popup-header">
         <button className="share-menu-back" onClick={handleBack}>
           <Icon name="ChevronLeft" size={16} />
         </button>
-        <span className="share-menu-title">URL</span>
+        <span className="popup-title">URL</span>
         <CloseButton onClick={() => onClose()} size={16} />
       </div>
       <div className="share-menu-options">
@@ -273,11 +273,11 @@ export default function ShareMenu({
 
   const renderContentMenu = () => (
     <>
-      <div className="share-menu-header">
+      <div className="popup-header">
         <button className="share-menu-back" onClick={handleBack}>
           <Icon name="ChevronLeft" size={16} />
         </button>
-        <span className="share-menu-title">Content</span>
+        <span className="popup-title">Content</span>
         <CloseButton onClick={() => onClose()} size={16} />
       </div>
       <div className="share-menu-options">
@@ -299,11 +299,11 @@ export default function ShareMenu({
 
   const renderMagazineMenu = () => (
     <>
-      <div className="share-menu-header">
+      <div className="popup-header">
         <button className="share-menu-back" onClick={handleBack}>
           <Icon name="ChevronLeft" size={16} />
         </button>
-        <span className="share-menu-title">Magazine</span>
+        <span className="popup-title">Magazine</span>
         <CloseButton onClick={() => onClose()} size={16} />
       </div>
       <div className="share-menu-options">
@@ -363,9 +363,9 @@ export default function ShareMenu({
 
   return createPortal(
     <>
-      <div className="share-menu-overlay" onClick={onClose} />
+      <div className="popup-overlay" onClick={onClose} />
       <div
-        className="share-menu"
+        className="popup-panel share-menu"
         style={{ top: position.top, left: position.left }}
         onClick={(e) => e.stopPropagation()}
       >

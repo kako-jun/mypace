@@ -48,8 +48,8 @@ export function ShareChoiceModal({ isOpen, onClose, sharedUrl, sharedText }: Sha
   return (
     <div className="share-choice-backdrop" onClick={handleOverlayClick}>
       <div className="share-choice-popup">
-        <div className="share-choice-header">
-          <span className="share-choice-title">シェア先を選択</span>
+        <div className="popup-header">
+          <span className="popup-title">シェア先を選択</span>
           <CloseButton onClick={onClose} size={16} />
         </div>
         <div className="share-choice-options">
