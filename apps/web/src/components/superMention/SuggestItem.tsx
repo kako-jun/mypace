@@ -1,4 +1,4 @@
-import { Check, Link, Pin, Search, PenLine, X } from 'lucide-react'
+import { Icon } from '../ui/Icon'
 import type { SuggestItem } from './types'
 
 interface SuggestItemProps {
@@ -56,7 +56,7 @@ export function SuggestItemView({ item, isSelected, onSelect, onHover, onDelete 
           title={`Wikidata: ${item.id}`}
         >
           <span className="super-mention-suggest-icon">
-            <Search size={16} />
+            <Icon name="Search" size={16} />
           </span>
           <span className="super-mention-suggest-content">
             <span className="super-mention-suggest-path">{item.path}</span>
@@ -76,7 +76,13 @@ export function SuggestItemView({ item, isSelected, onSelect, onHover, onDelete 
             title={item.wikidataId ? `Wikidata: ${item.wikidataId}` : undefined}
           >
             <span className="super-mention-suggest-icon">
-              {item.wikidataId ? <Check size={16} /> : isUrlLike(item.path) ? <Link size={16} /> : <Pin size={16} />}
+              {item.wikidataId ? (
+                <Icon name="Check" size={16} />
+              ) : isUrlLike(item.path) ? (
+                <Icon name="Link" size={16} />
+              ) : (
+                <Icon name="Pin" size={16} />
+              )}
             </span>
             <span className="super-mention-suggest-content">
               <span className="super-mention-suggest-path">{item.path}</span>
@@ -86,7 +92,7 @@ export function SuggestItemView({ item, isSelected, onSelect, onHover, onDelete 
           </button>
           {onDelete && (
             <button type="button" className="super-mention-suggest-delete" onClick={handleDelete} title="Delete">
-              <X size={12} />
+              <Icon name="X" size={12} />
             </button>
           )}
         </div>
@@ -96,7 +102,7 @@ export function SuggestItemView({ item, isSelected, onSelect, onHover, onDelete 
       return (
         <button key="custom" className={baseClass} onClick={() => onSelect(item)} onMouseEnter={onHover}>
           <span className="super-mention-suggest-icon">
-            <PenLine size={16} />
+            <Icon name="PenLine" size={16} />
           </span>
           <span className="super-mention-suggest-content">
             <span className="super-mention-suggest-path">{item.path}</span>

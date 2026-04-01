@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { X } from 'lucide-react'
+import { Icon } from '../ui/Icon'
 import type { Sticker, StickerQuadrant, StickerLayer } from '../../types'
 
 interface PostStickersProps {
@@ -432,7 +432,7 @@ export function PostStickers({
                     }}
                     title="Delete sticker"
                   >
-                    <X size={12} />
+                    <Icon name="X" size={12} />
                   </button>
                 )}
               </>
