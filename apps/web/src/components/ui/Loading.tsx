@@ -1,6 +1,6 @@
 import { getThemeCardProps } from '../../lib/nostr/theme'
 import { getThemeColors } from '../../lib/storage'
-import './Loading.css'
+import './loading.css'
 
 export default function Loading() {
   const themeProps = getThemeCardProps(getThemeColors())

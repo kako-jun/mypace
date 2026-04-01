@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Icon } from './Icon'
 import '../../styles/components/rotation-slider.css'
 
 interface RotationSliderProps {
@@ -15,7 +15,7 @@ export function RotationSlider({ value, onChange, min = -90, max = 90 }: Rotatio
     <div className="rotation-slider-row">
       <span className="rotation-slider-label">{min}°</span>
       <button type="button" className="rotation-step-btn" onClick={() => step(-1)} aria-label="-1°">
-        <ChevronLeft size={14} />
+        <Icon name="ChevronLeft" size={14} />
       </button>
       <input
         type="range"
@@ -26,7 +26,7 @@ export function RotationSlider({ value, onChange, min = -90, max = 90 }: Rotatio
         className="rotation-slider"
       />
       <button type="button" className="rotation-step-btn" onClick={() => step(1)} aria-label="+1°">
-        <ChevronRight size={14} />
+        <Icon name="ChevronRight" size={14} />
       </button>
       <span className="rotation-slider-label">+{max}°</span>
       <span className="rotation-slider-value">{value}°</span>
