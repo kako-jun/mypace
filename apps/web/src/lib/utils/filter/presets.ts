@@ -69,27 +69,3 @@ export function deletePreset(id: string): boolean {
 
   return true
 }
-
-// Update a preset
-export function updatePreset(id: string, updates: Partial<Omit<FilterPreset, 'id' | 'createdAt'>>): boolean {
-  const presets = loadPresets()
-  const index = presets.findIndex((p) => p.id === id)
-
-  if (index === -1) {
-    return false
-  }
-
-  presets[index] = {
-    ...presets[index],
-    ...updates,
-  }
-  savePresets(presets)
-
-  return true
-}
-
-// Get a preset by ID
-export function getPreset(id: string): FilterPreset | null {
-  const presets = loadPresets()
-  return presets.find((p) => p.id === id) || null
-}
