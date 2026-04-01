@@ -123,3 +123,27 @@
     background-position: 0% 50%;
   }
 }
+
+/* Author name - small variant for secondary contexts (replies, parent cards, original post in repost) */
+/* Must be after .author-name.loading-rainbow rules to win at equal specificity */
+.author-name-sm {
+  font-size: 0.8rem;
+  -webkit-text-stroke: 1px #555;
+}
+
+[data-theme="dark"] .author-name-sm {
+  -webkit-text-stroke: 1px #222;
+}
+
+.author-name-sm.loading-rainbow::before {
+  -webkit-text-stroke: 1px #333;
+}
+
+[data-theme="dark"] .author-name-sm.loading-rainbow::before {
+  -webkit-text-stroke: 1px #111;
+}
+
+.author-name-sm.loading-rainbow::before,
+.author-name-sm.loading-rainbow::after {
+  font-size: 0.8rem;
+}
