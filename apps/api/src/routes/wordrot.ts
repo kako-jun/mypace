@@ -968,6 +968,16 @@ async function generateWordImage(
   wordText: string
 ): Promise<void> {
   try {
+    // Skip if already being processed (best-effort guard against concurrent generation)
+    const current = await db
+      .prepare(`SELECT image_status FROM wordrot_words WHERE id = ?`)
+      .bind(wordId)
+      .first<{ image_status: string }>()
+    if (current?.image_status === 'generating') {
+      console.log(`[generateWordImage] Word "${wordText}" (ID: ${wordId}) already generating, skipping`)
+      return
+    }
+
     // Mark as generating
     await db.prepare(`UPDATE wordrot_words SET image_status = 'generating' WHERE id = ?`).bind(wordId).run()
 
@@ -1516,7 +1526,7 @@ wordrot.post('/reset-all', async (c) => {
   })
 })
 
-// POST /api/wordrot/retry-all-images - Retry image generation for all failed/pending words
+// POST /api/wordrot/retry-all-images - Retry image generation for all failed/pending/stale-generating words
 wordrot.post('/retry-all-images', async (c) => {
   const db = c.env.DB
   const ai = c.env.AI
@@ -1531,7 +1541,7 @@ wordrot.post('/retry-all-images', async (c) => {
 
   const query = force
     ? `SELECT id, text FROM wordrot_words LIMIT 50`
-    : `SELECT id, text FROM wordrot_words WHERE image_status IN ('failed', 'pending') LIMIT 50`
+    : `SELECT id, text FROM wordrot_words WHERE image_status IN ('failed', 'pending', 'generating') LIMIT 50`
 
   const words = await db.prepare(query).all<{ id: number; text: string }>()
   const targets = words.results || []
@@ -1539,6 +1549,14 @@ wordrot.post('/retry-all-images', async (c) => {
   if (targets.length === 0) {
     return c.json({ success: true, queued: 0, message: 'No words need image generation' })
   }
+
+  // Reset stale 'generating' to 'pending' so the guard in generateWordImage allows re-processing
+  await db
+    .prepare(
+      `UPDATE wordrot_words SET image_status = 'pending' WHERE image_status = 'generating' AND id IN (${targets.map(() => '?').join(',')})`
+    )
+    .bind(...targets.map((w) => w.id))
+    .run()
 
   for (const word of targets) {
     c.executionCtx.waitUntil(generateWordImage(ai, db, nsec, word.id, word.text))
