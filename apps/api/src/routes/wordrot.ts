@@ -1531,7 +1531,7 @@ wordrot.post('/retry-all-images', async (c) => {
 
   const query = force
     ? `SELECT id, text FROM wordrot_words LIMIT 50`
-    : `SELECT id, text FROM wordrot_words WHERE image_status IN ('failed', 'pending') LIMIT 50`
+    : `SELECT id, text FROM wordrot_words WHERE image_status IN ('failed', 'pending', 'generating') LIMIT 50`
 
   const words = await db.prepare(query).all<{ id: number; text: string }>()
   const targets = words.results || []
