@@ -10,6 +10,7 @@ import {
   getActiveKeyIndex,
   addSecretKey as addStoredKey,
   switchSecretKey as switchStoredKey,
+  removeSecretKeyByIndex,
 } from '../storage'
 
 declare global {
@@ -105,10 +106,6 @@ export function importNsec(nsec: string): Uint8Array {
   return decoded.data
 }
 
-export function clearSecretKey(): void {
-  clearStoredSecretKey()
-}
-
 export function getMyPubkey(): string | null {
   const sk = getStoredSecretKey()
   if (!sk) return null
@@ -150,6 +147,11 @@ export async function addKey(sk: Uint8Array): Promise<number> {
 export function switchKey(index: number): void {
   clearCachedProfile()
   switchStoredKey(index)
+}
+
+export function removeKeyByIndex(index: number): void {
+  clearCachedProfile()
+  removeSecretKeyByIndex(index)
 }
 
 function bytesToHex(bytes: Uint8Array): string {

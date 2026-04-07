@@ -234,7 +234,7 @@
   padding: 8px;
 }
 
-.color-picker-corner input[type="color"] {
+.color-picker-corner input[type='color'] {
   width: 32px;
   height: 32px;
   padding: 0;
@@ -243,24 +243,26 @@
   cursor: pointer;
   background: transparent;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.color-picker-corner input[type="color"]:hover {
+.color-picker-corner input[type='color']:hover {
   transform: scale(1.15);
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
 }
 
-.color-picker-corner input[type="color"]::-webkit-color-swatch-wrapper {
+.color-picker-corner input[type='color']::-webkit-color-swatch-wrapper {
   padding: 0;
 }
 
-.color-picker-corner input[type="color"]::-webkit-color-swatch {
+.color-picker-corner input[type='color']::-webkit-color-swatch {
   border: none;
   border-radius: 50%;
 }
 
-.color-picker-corner input[type="color"]::-moz-color-swatch {
+.color-picker-corner input[type='color']::-moz-color-swatch {
   border: none;
   border-radius: 50%;
 }
@@ -454,7 +456,7 @@
 }
 
 .dark .share-app-qr img,
-[data-theme="dark"] .share-app-qr img {
+[data-theme='dark'] .share-app-qr img {
   filter: invert(1);
 }
 
@@ -577,7 +579,7 @@
   color: var(--text-primary);
 }
 
-.push-preference-option input[type="radio"] {
+.push-preference-option input[type='radio'] {
   margin-top: 0.15rem;
   cursor: pointer;
 }
@@ -617,7 +619,6 @@
   align-items: center;
   background: var(--surface-secondary);
   border-radius: 8px;
-  cursor: pointer;
   transition: background 0.2s ease;
 }
 
@@ -629,6 +630,23 @@
   flex: 1;
   margin: 0;
   border-radius: 8px 0 0 8px;
+  cursor: text;
+}
+
+.nsec-combo-input {
+  flex: 1;
+  padding: 0.6rem;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  font-family: monospace;
+  outline: none;
+  min-width: 0;
+}
+
+.nsec-combo-input::placeholder {
+  color: var(--text-placeholder);
 }
 
 .nsec-combo-chevron {
@@ -637,6 +655,12 @@
   color: var(--text-muted);
   transition: transform 0.2s ease;
   flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.nsec-combo-chevron:hover {
+  color: var(--text-primary);
 }
 
 .nsec-combo-chevron.open {
@@ -693,37 +717,39 @@
   font-style: italic;
 }
 
-.nsec-combo-check {
+.nsec-combo-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   flex-shrink: 0;
   margin-left: 0.5rem;
+}
+
+.nsec-combo-check {
   color: var(--accent);
 }
 
-.nsec-import-row {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  margin-top: 0.5rem;
-}
-
-.nsec-import-input {
-  flex: 1;
-  padding: 0.5rem 0.6rem;
+.nsec-combo-remove {
+  background: none;
   border: none;
-  background: var(--surface-secondary);
-  color: var(--text-primary);
-  border-radius: 8px;
-  font-size: 0.8rem;
-  outline: none;
-  transition: background 0.2s ease;
+  padding: 0.15rem 0.3rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0.5;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease;
+  line-height: 1;
 }
 
-.nsec-import-input:focus {
-  background: var(--surface-tertiary);
+.nsec-combo-remove:hover {
+  opacity: 1;
+  color: #f44336;
 }
 
-.nsec-import-input::placeholder {
-  color: var(--text-placeholder);
+.nsec-combo-display {
+  cursor: text;
 }
 
 /* Authentication Method Section */
@@ -743,7 +769,7 @@
   font-weight: 500;
 }
 
-.auth-method-option input[type="radio"] {
+.auth-method-option input[type='radio'] {
   margin: 0;
   cursor: pointer;
 }
