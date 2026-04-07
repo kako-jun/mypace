@@ -35,15 +35,7 @@ Content-Type: application/json
 ```json
 {
   "success": true,
-  "id": "<イベントID>",
-  "relays": {
-    "total": 5,
-    "success": 4,
-    "details": [
-      { "relay": "wss://relay.damus.io", "success": true, "error": null },
-      { "relay": "wss://nos.lol", "success": true, "error": null }
-    ]
-  }
+  "id": "<イベントID>"
 }
 ```
 
@@ -55,11 +47,37 @@ Content-Type: application/json
 }
 ```
 
+署名検証失敗時:
+
+```json
+{
+  "error": "Invalid event signature"
+}
+```
+
+レート制限時（HTTP 429）:
+
+```json
+{
+  "error": "Too many requests. Please wait before posting again.",
+  "error_code": "rate_limited"
+}
+```
+
+重複投稿時（HTTP 429）:
+
+```json
+{
+  "error": "Duplicate post detected. Please wait before posting similar content.",
+  "error_code": "duplicate_content"
+}
+```
+
 ## 重要事項
 
-- **署名必須**: サーバーは署名検証を行わない（リレーが行う）が、署名なしのイベントはリレーに拒否される
-- **サーバーは透過的**: イベントを一切加工せず、そのままリレーに転送
-- **認証不要**: 署名済みイベントの正当性はNostrプロトコルが担保
+- **署名検証あり**: サーバーは`verifyEvent()`でNostrイベントの署名を検証する。無効な署名は401で拒否される
+- **D1記録のみ**: このエンドポイントはイベントをD1データベースに記録するのみ。リレーへの送信はブラウザから直接行う
+- **副作用**: 投稿の記録に加えて、通し番号の付与、通知の記録、Supernovaのチェック、ステラの記録などの副作用処理が行われる
 
 ## 使用例
 
@@ -144,17 +162,8 @@ const event = finalizeEvent({
 }, sk)
 ```
 
-## 接続先リレー
-
-APIは以下のリレーに投稿を配信:
-
-- wss://relay.damus.io
-- wss://nos.lol
-- wss://relay.nostr.band
-- wss://nostr.wine
-- wss://relay.snort.social
-
 ## 制限事項
 
-- レート制限: kind:1 + #mypace タグ付き投稿に対して、同一 pubkey から10秒以内の連投をブロック（429）。同一内容の重複投稿は60秒以内をブロック
+- **レート制限**: kind:1 + #mypace タグ付き投稿に対して、同一 pubkey から10秒以内の連投をブロック（429）
+- **重複検出**: 同一pubkey + 同一内容（先頭100文字のSHA-256ハッシュで判定）の投稿を60秒以内にブロック（429）
 - イベントサイズ: リレーの制限に依存（通常64KB以下）

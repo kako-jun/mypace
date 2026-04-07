@@ -73,7 +73,12 @@ npx wrangler secret put VAPID_PRIVATE_KEY
 
 ```toml
 [vars]
+DISABLE_CACHE = "0"          # OGPキャッシュ有効
+RELAY_COUNT = "2"            # publish用リレー接続数
 VAPID_SUBJECT = "https://mypace.llll-ll.com"  # Web Push送信者識別子
+
+[ai]
+binding = "AI"               # Workers AI (Wordrot用)
 
 # VAPID_PUBLIC_KEY と VAPID_PRIVATE_KEY は wrangler secret で設定
 ```
@@ -109,15 +114,10 @@ Production environment variables are set in Cloudflare Pages dashboard:
 │  https://mypace-api.workers.dev         │
 │                                         │
 │  ┌─────────────┐  ┌──────────────────┐  │
-│  │ D1 Database │  │ SOCKS5 Proxy     │  │
-│  │ (cache)     │  │ (optional)       │  │
-│  └─────────────┘  └────────┬─────────┘  │
-└────────────────────────────┼────────────┘
-                             │
-                             ▼
-                    ┌─────────────────┐
-                    │  Nostr Relays   │
-                    └─────────────────┘
+│  │ D1 Database │  │ Workers AI       │  │
+│  │ (独自データ)│  │ (Wordrot)        │  │
+│  └─────────────┘  └──────────────────┘  │
+└─────────────────────────────────────────┘
 ```
 
 ## Troubleshooting
@@ -140,11 +140,6 @@ Production environment variables are set in Cloudflare Pages dashboard:
 
 - Verify `VITE_API_URL` is set correctly
 - Check Cloudflare Workers logs: `npx wrangler tail`
-
-### SOCKS5 proxy not working
-
-- Verify proxy is running and accessible from Workers
-- Check `SOCKS5_PROXY` format: `socks5://host:port`
 
 ### 503 Service Unavailable on rapid requests
 

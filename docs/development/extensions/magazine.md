@@ -147,9 +147,9 @@ NIP-51のPublic Setsをベースに、マガジン用タグを追加。
 
 ```sql
 CREATE TABLE magazine_views (
-  naddr TEXT PRIMARY KEY,      -- NIP-19 naddr形式の識別子
-  pubkey TEXT NOT NULL,        -- 作成者pubkey
-  d_tag TEXT NOT NULL,         -- スラッグ
+  magazine_key TEXT PRIMARY KEY,  -- "{pubkey}:{slug}" 形式の識別子
+  pubkey TEXT NOT NULL,           -- 作成者pubkey
+  slug TEXT NOT NULL,             -- スラッグ
   view_count INTEGER DEFAULT 0,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
@@ -190,9 +190,20 @@ View記録。
 **リクエスト:**
 ```json
 {
-  "naddr": "naddr1...",
   "pubkey": "hex_pubkey",
-  "dTag": "magazine-slug"
+  "slug": "magazine-slug",
+  "viewerPubkey": "viewer_hex_pubkey"
+}
+```
+
+### GET /api/magazine/:npub/:slug/views
+
+マガジンの閲覧数を取得。
+
+**レスポンス:**
+```json
+{
+  "viewCount": 42
 }
 ```
 

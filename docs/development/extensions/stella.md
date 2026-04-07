@@ -204,7 +204,9 @@ Aがリアクションを削除した場合:
 ### クライアント側
 
 ```typescript
-// 型定義
+// 型定義（クライアント側: apps/web/src/lib/nostr/events.ts）
+export type StellaColor = 'yellow' | 'green' | 'red' | 'blue' | 'purple'
+
 export interface StellaCountsByColor {
   yellow: number
   green: number
@@ -224,7 +226,8 @@ export const EMPTY_STELLA_COUNTS: StellaCountsByColor = {
 // 定数
 export const MAX_STELLA_PER_USER = 10
 export const STELLA_TAG = 'stella'
-export type StellaColor = 'yellow' | 'green' | 'red' | 'blue' | 'purple'
+
+// サーバー側（apps/api/src/services/stella.ts）では StellaColorCounts という名前で同一構造
 ```
 
 ## 他のNostrクライアントでの表示
@@ -329,11 +332,15 @@ POST /api/stella-balance/send
 
 ```json
 {
-  "pubkey": "abc123...",
-  "yellow": 2,
-  "green": 1
+  "senderPubkey": "abc123...",
+  "amounts": {
+    "yellow": 2,
+    "green": 1
+  }
 }
 ```
+
+NIP-98認証ヘッダー（`Authorization`）が必要。`senderPubkey`の所有者であることを証明する。
 
 レスポンス:
 
@@ -350,19 +357,30 @@ POST /api/stella-balance/send
 }
 ```
 
+イエローのみの送信時（残高変動なし）:
+
+```json
+{
+  "success": true,
+  "newBalance": null
+}
+```
+
 エラー（所持数不足）:
 
 ```json
 {
-  "error": "Insufficient balance for yellow"
+  "error": "Insufficient green stella balance"
 }
 ```
 
-#### ステラ統計（旧エンドポイント）
+#### ユーザー統計（一括取得）
 
 ```
 GET /api/user/:pubkey/stats
 ```
+
+投稿数・ステラ・閲覧数を一括取得する。投稿数はPrimal cacheから取得。
 
 レスポンス:
 
@@ -384,6 +402,10 @@ GET /api/user/:pubkey/stats
     "red": 50,
     "blue": 15,
     "purple": 2
+  },
+  "viewsCount": {
+    "details": 45,
+    "impressions": 123
   }
 }
 ```
