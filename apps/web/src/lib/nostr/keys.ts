@@ -106,10 +106,6 @@ export function importNsec(nsec: string): Uint8Array {
   return decoded.data
 }
 
-export function clearSecretKey(): void {
-  clearStoredSecretKey()
-}
-
 export function getMyPubkey(): string | null {
   const sk = getStoredSecretKey()
   if (!sk) return null
