@@ -457,6 +457,7 @@ export function PostForm({
         onTeaserColorChange={setTeaserColor}
         sharedImageFile={sharedImageFile}
         onSharedImageProcessed={onSharedImageProcessed}
+        disabled={cooldown}
       />
     )
   }

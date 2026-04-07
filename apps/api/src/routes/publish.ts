@@ -41,11 +41,11 @@ async function hashContentPrefix(content: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-// Check rate limit: same pubkey within RATE_LIMIT_WINDOW_SECONDS
+// Check rate limit: same pubkey within RATE_LIMIT_WINDOW_SECONDS (uses server-timestamp table)
 async function checkRateLimit(db: D1Database, pubkey: string, now: number): Promise<boolean> {
   const cutoff = now - RATE_LIMIT_WINDOW_SECONDS
   const result = await db
-    .prepare(`SELECT 1 FROM sitemap_events WHERE pubkey = ? AND created_at > ? LIMIT 1`)
+    .prepare(`SELECT 1 FROM recent_posts WHERE pubkey = ? AND created_at > ? LIMIT 1`)
     .bind(pubkey, cutoff)
     .first()
   return !!result
@@ -61,12 +61,15 @@ async function checkDuplicate(db: D1Database, pubkey: string, contentHash: strin
   return !!result
 }
 
-// Record recent post for duplicate detection
+// Record recent post for duplicate detection, and clean up stale rows
 async function recordRecentPost(db: D1Database, pubkey: string, contentHash: string, now: number): Promise<void> {
-  await db
-    .prepare(`INSERT INTO recent_posts (pubkey, content_hash, created_at) VALUES (?, ?, ?)`)
-    .bind(pubkey, contentHash, now)
-    .run()
+  const oneHourAgo = now - 3600
+  await db.batch([
+    db
+      .prepare(`INSERT INTO recent_posts (pubkey, content_hash, created_at) VALUES (?, ?, ?)`)
+      .bind(pubkey, contentHash, now),
+    db.prepare(`DELETE FROM recent_posts WHERE created_at < ?`).bind(oneHourAgo),
+  ])
 }
 
 const publish = new Hono<{ Bindings: Bindings }>()
@@ -618,18 +621,27 @@ publish.post('/', async (c) => {
         const now = getCurrentTimestamp()
         const isRateLimited = await checkRateLimit(db, event.pubkey, now)
         if (isRateLimited) {
-          return c.json({ error: 'Too many requests. Please wait before posting again.' }, 429)
+          return c.json(
+            { error: 'Too many requests. Please wait before posting again.', error_code: 'rate_limited' },
+            429
+          )
         }
 
         // Duplicate content check: block identical content within 60 seconds
         const contentHash = await hashContentPrefix(event.content || '')
         const isDuplicate = await checkDuplicate(db, event.pubkey, contentHash, now)
         if (isDuplicate) {
-          return c.json({ error: 'Duplicate post detected. Please wait before posting similar content.' }, 429)
+          return c.json(
+            {
+              error: 'Duplicate post detected. Please wait before posting similar content.',
+              error_code: 'duplicate_content',
+            },
+            429
+          )
         }
 
-        // Record for duplicate detection
-        recordRecentPost(db, event.pubkey, contentHash, now).catch((e) => console.error('Recent post record error:', e))
+        // Record for duplicate detection (await to prevent TOCTOU race)
+        await recordRecentPost(db, event.pubkey, contentHash, now)
 
         try {
           await registerUserSerial(db, event.pubkey, event.id, event.created_at)

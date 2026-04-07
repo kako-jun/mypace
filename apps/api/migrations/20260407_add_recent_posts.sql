@@ -1,5 +1,5 @@
--- Recent posts table for duplicate content detection
--- Records are not periodically deleted; stale rows are excluded via WHERE created_at > cutoff
+-- Recent posts table for rate limiting and duplicate content detection
+-- Stale rows (>1 hour) are cleaned up on each INSERT via recordRecentPost()
 CREATE TABLE IF NOT EXISTS recent_posts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   pubkey TEXT NOT NULL,

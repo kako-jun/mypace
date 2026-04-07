@@ -51,6 +51,7 @@ interface PostFormLongModeProps {
   onTeaserColorChange: (color: StellaColor | null) => void
   sharedImageFile?: File | null
   onSharedImageProcessed?: () => void
+  disabled?: boolean
 }
 
 export function PostFormLongMode({
@@ -89,6 +90,7 @@ export function PostFormLongMode({
   onTeaserColorChange,
   sharedImageFile,
   onSharedImageProcessed,
+  disabled,
 }: PostFormLongModeProps) {
   const longModeFormRef = useRef<HTMLFormElement>(null)
   const editorRef = useRef<LongModeEditorRef>(null)
@@ -260,6 +262,7 @@ export function PostFormLongMode({
             editingEvent={editingEvent}
             replyingTo={replyingTo}
             onCancel={onCancel}
+            disabled={disabled}
           />
 
           <ErrorMessage>{error}</ErrorMessage>
