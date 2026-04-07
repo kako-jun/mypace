@@ -9,6 +9,7 @@ import {
   getActiveIndex,
   addKey,
   switchKey,
+  removeKeyByIndex,
 } from '../../lib/nostr/keys'
 import { fetchProfiles } from '../../lib/nostr/relay'
 import { Button, ErrorMessage, SettingsSection } from '../ui'
@@ -42,15 +43,25 @@ export default function KeysSection({
   const [keyProfiles, setKeyProfiles] = useState<Record<string, Profile | null>>({})
   const fetchedPubkeysRef = useRef<Set<string>>(new Set())
 
+  const [comboFocused, setComboFocused] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
   const nip07Available = hasNip07()
   // Memoize: getAllKeys() runs getPublicKey + nip19 encoding per key
   const keys = useMemo(() => getAllKeys(), [nsec]) // nsec changes on key switch/import
   const activeIndex = getActiveIndex()
-  const hasMultipleKeys = keys.length > 1
+  const hasKeys = keys.length > 0
+
+  // Auto-focus input when switching to input mode
+  useEffect(() => {
+    if (comboFocused && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [comboFocused])
 
   // Fetch profiles for all keys when dropdown opens
   useEffect(() => {
-    if (!dropdownOpen || keys.length < 2) return
+    if (!dropdownOpen || keys.length < 1) return
     const missing = keys.map((k) => k.pubkey).filter((pk) => !fetchedPubkeysRef.current.has(pk))
     if (missing.length === 0) return
     missing.forEach((pk) => fetchedPubkeysRef.current.add(pk))
@@ -131,6 +142,38 @@ export default function KeysSection({
     }
   }
 
+  const handleRemoveKeyByIndex = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (index === activeIndex) {
+      if (keys.length <= 1) {
+        if (!confirm('Are you sure? This will delete your key from this browser.')) return
+      } else {
+        if (!confirm('Remove this active key? You will be switched to another key.')) return
+      }
+    }
+    removeKeyByIndex(index)
+    removeLocalProfile()
+    window.location.reload()
+  }
+
+  const handleComboFieldClick = () => {
+    if (hasKeys) {
+      setDropdownOpen(!dropdownOpen)
+    }
+  }
+
+  const handleInputFocus = () => {
+    setComboFocused(true)
+  }
+
+  const handleInputBlur = () => {
+    setComboFocused(false)
+    // If input has nsec value, try to import on blur
+    if (inputValue.trim().startsWith('nsec1')) {
+      handleImport()
+    }
+  }
+
   const handleEnableNip07 = () => {
     if (
       confirm(
@@ -151,42 +194,75 @@ export default function KeysSection({
   return (
     <>
       <SettingsSection title="Your Keys">
-        {/* nsec: combo dropdown + input */}
+        {/* nsec: unified combo (display + input + dropdown) */}
         {!usingNip07 && (
           <div className="key-display">
             <label>nsec (secret - keep safe!):</label>
-            {nsec && (
-              <div className="secret-row">
-                <div className="nsec-combo" ref={dropdownRef}>
-                  <div className="nsec-combo-field" onClick={() => hasMultipleKeys && setDropdownOpen(!dropdownOpen)}>
-                    <code className="secret">{showNsec ? nsec : '••••••••••••••••••••••••••••••••'}</code>
-                    {hasMultipleKeys && (
-                      <span className={`nsec-combo-chevron ${dropdownOpen ? 'open' : ''}`}>&#9662;</span>
-                    )}
-                  </div>
-                  {dropdownOpen && (
-                    <div className="nsec-combo-dropdown">
-                      {keys.map((key, i) => {
-                        const profile = keyProfiles[key.pubkey]
-                        const rawName = profile?.display_name || profile?.name || ''
-                        const displayName = rawName.length > 30 ? rawName.slice(0, 30) + '…' : rawName
-                        return (
-                          <button
-                            key={key.npub}
-                            className={`nsec-combo-option ${i === activeIndex ? 'active' : ''}`}
-                            onClick={() => handleSwitch(i)}
-                          >
-                            <span className="nsec-combo-npub">
-                              {shortenNpub(key.npub)}
-                              {displayName && <span className="nsec-combo-name">{displayName}</span>}
-                            </span>
-                            {i === activeIndex && <span className="nsec-combo-check">&#10003;</span>}
-                          </button>
-                        )
-                      })}
-                    </div>
+            <div className="secret-row">
+              <div className="nsec-combo" ref={dropdownRef}>
+                <div className="nsec-combo-field">
+                  {comboFocused || !hasKeys ? (
+                    <input
+                      ref={inputRef}
+                      type="password"
+                      autoComplete="off"
+                      className="nsec-combo-input"
+                      placeholder={hasKeys ? 'nsec1... to add' : 'nsec1... to import'}
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onFocus={handleInputFocus}
+                      onBlur={handleInputBlur}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && inputValue.trim()) handleImport()
+                      }}
+                    />
+                  ) : (
+                    <code className="secret nsec-combo-display" onClick={() => setComboFocused(true)}>
+                      {showNsec ? nsec : '••••••••••••••••••••••••••••••••'}
+                    </code>
+                  )}
+                  {hasKeys && (
+                    <span
+                      className={`nsec-combo-chevron ${dropdownOpen ? 'open' : ''}`}
+                      onClick={handleComboFieldClick}
+                    >
+                      &#9662;
+                    </span>
                   )}
                 </div>
+                {dropdownOpen && hasKeys && (
+                  <div className="nsec-combo-dropdown">
+                    {keys.map((key, i) => {
+                      const profile = keyProfiles[key.pubkey]
+                      const rawName = profile?.display_name || profile?.name || ''
+                      const displayName = rawName.length > 30 ? rawName.slice(0, 30) + '…' : rawName
+                      return (
+                        <div
+                          key={key.npub}
+                          className={`nsec-combo-option ${i === activeIndex ? 'active' : ''}`}
+                          onClick={() => handleSwitch(i)}
+                        >
+                          <span className="nsec-combo-npub">
+                            {shortenNpub(key.npub)}
+                            {displayName && <span className="nsec-combo-name">{displayName}</span>}
+                          </span>
+                          <span className="nsec-combo-actions">
+                            {i === activeIndex && <span className="nsec-combo-check">&#10003;</span>}
+                            <button
+                              className="nsec-combo-remove"
+                              onClick={(e) => handleRemoveKeyByIndex(i, e)}
+                              title="Remove this key"
+                            >
+                              &#10005;
+                            </button>
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+              {hasKeys && (
                 <div className="secret-row-buttons">
                   <Button size="md" onClick={() => setShowNsec(!showNsec)}>
                     {showNsec ? 'Hide' : 'Show'}
@@ -195,23 +271,8 @@ export default function KeysSection({
                     {copied ? 'Copied!' : 'Copy'}
                   </Button>
                 </div>
-              </div>
-            )}
-
-            {/* Import: typing nsec1... into this field = import */}
-            <div className="nsec-import-row">
-              <input
-                type="password"
-                autoComplete="off"
-                className="nsec-import-input"
-                placeholder="nsec1... to add"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && inputValue.trim()) handleImport()
-                }}
-              />
-              {inputValue.trim() && (
+              )}
+              {!hasKeys && inputValue.trim() && (
                 <Button size="md" onClick={handleImport}>
                   Add
                 </Button>

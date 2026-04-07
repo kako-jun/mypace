@@ -10,6 +10,7 @@ import {
   getActiveKeyIndex,
   addSecretKey as addStoredKey,
   switchSecretKey as switchStoredKey,
+  removeSecretKeyByIndex,
 } from '../storage'
 
 declare global {
@@ -150,6 +151,11 @@ export async function addKey(sk: Uint8Array): Promise<number> {
 export function switchKey(index: number): void {
   clearCachedProfile()
   switchStoredKey(index)
+}
+
+export function removeKeyByIndex(index: number): void {
+  clearCachedProfile()
+  removeSecretKeyByIndex(index)
 }
 
 function bytesToHex(bytes: Uint8Array): string {

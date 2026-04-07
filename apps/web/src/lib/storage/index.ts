@@ -391,6 +391,31 @@ export function clearSecretKey(): void {
   })
 }
 
+export function removeSecretKeyByIndex(index: number): void {
+  // Update cache first, then persist
+  if (_keysCache && index >= 0 && index < _keysCache.length) {
+    _keysCache.splice(index, 1)
+    if (_activeIndexCache >= _keysCache.length) {
+      _activeIndexCache = Math.max(_keysCache.length - 1, 0)
+    } else if (_activeIndexCache > index) {
+      _activeIndexCache--
+    }
+  }
+  updateStorage('auth', (a) => {
+    const keys = [...(a.keys || [])]
+    if (index >= 0 && index < keys.length) {
+      keys.splice(index, 1)
+    }
+    let newIndex = a.activeIndex || 0
+    if (newIndex >= keys.length) {
+      newIndex = Math.max(keys.length - 1, 0)
+    } else if (newIndex > index) {
+      newIndex--
+    }
+    return { ...a, sk: keys[newIndex] || '', keys, activeIndex: newIndex }
+  })
+}
+
 // Multi-key management
 
 export function getAllSecretKeys(): string[] {
