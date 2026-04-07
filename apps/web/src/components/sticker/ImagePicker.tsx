@@ -251,7 +251,10 @@ export function ImagePicker({ onEmbed, onAddSticker, onError, initialFile, onIni
       {isOpen && (
         <Portal>
           <div className="modal-backdrop" onClick={handleClose}>
-            <div className="modal-panel modal-panel--md modal-panel--padded" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="modal-panel modal-panel--md modal-panel--padded image-picker-panel"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="modal-header">
                 <h3>Select Image</h3>
                 <CloseButton onClick={handleClose} size={20} />
