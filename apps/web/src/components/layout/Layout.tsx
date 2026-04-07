@@ -140,7 +140,7 @@ export function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--surface-primary)]">
+    <div className="app-root min-h-screen bg-[var(--surface-primary)]">
       <header className="header">
         <a href="/" className="logo" onClick={handleLogoClick}>
           <img src="/static/logo-text.webp" alt="MY PACE" className="logo-img" />

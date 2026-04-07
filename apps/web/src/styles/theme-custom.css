@@ -9,7 +9,8 @@ body.custom-theme {
   min-height: 100vh;
 }
 
-body.custom-theme .container {
+body.custom-theme .container,
+body.custom-theme .app-root {
   background: transparent;
 }
 
