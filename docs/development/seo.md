@@ -41,6 +41,7 @@ apps/web/functions/
     [npub].ts          # ユーザーページOGP
   post/
     [id].ts            # 投稿ページOGP
+  sitemap.xml.ts       # 動的サイトマップ生成
   tsconfig.json
   package.json
 ```

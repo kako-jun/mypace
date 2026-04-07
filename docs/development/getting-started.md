@@ -26,7 +26,7 @@ mypace/
 │   │   │   ├── components/  # UIコンポーネント
 │   │   │   ├── hooks/       # カスタムフック
 │   │   │   ├── lib/         # ユーティリティ
-│   │   │   │   ├── api.ts   # APIクライアント
+│   │   │   │   ├── api/     # APIクライアント
 │   │   │   │   └── nostr/   # Nostr関連
 │   │   │   ├── pages/       # ルートコンポーネント
 │   │   │   └── types/       # 型定義
@@ -35,7 +35,9 @@ mypace/
 │   │
 │   └── api/                 # Hono API
 │       ├── src/
-│       │   └── index.ts     # APIエンドポイント
+│       │   ├── index.ts     # ルーティング
+│       │   ├── routes/      # 各エンドポイント
+│       │   └── services/    # サービス層
 │       ├── schema.sql       # D1スキーマ
 │       ├── wrangler.toml    # Cloudflare設定
 │       └── package.json
@@ -68,15 +70,25 @@ app.get('/api/new-endpoint', async (c) => {
 
 ## APIクライアント
 
-フロントエンドからAPIを呼び出す場合は `lib/api.ts` を使用:
+フロントエンドからAPIを呼び出す場合は `lib/api/api.ts` を使用:
 
 ```typescript
-import { fetchTimeline, publishEvent } from '../lib/api'
+import { recordEvent, fetchUserStats } from '../lib/api'
 
-// タイムライン取得
-const { events, source } = await fetchTimeline(50)
+// イベント記録（D1に記録、fire-and-forget）
+recordEvent(signedEvent)
 
-// イベント投稿（署名済み）
+// ユーザー統計取得
+const stats = await fetchUserStats(pubkey)
+```
+
+タイムライン取得・投稿は Nostr ライブラリを使用:
+
+```typescript
+import { fetchTimeline } from '../lib/nostr/relay'
+import { publishEvent } from '../lib/nostr/relay'
+
+const { events } = await fetchTimeline({ limit: 200 })
 await publishEvent(signedEvent)
 ```
 
@@ -113,7 +125,9 @@ VITE_API_URL=http://localhost:8787
 
 ```toml
 [vars]
-SOCKS5_PROXY = "socks5://localhost:1080"  # Optional
+DISABLE_CACHE = "0"          # OGPキャッシュ有効
+RELAY_COUNT = "2"            # publish用リレー接続数
+VAPID_SUBJECT = "https://mypace.llll-ll.com"  # Web Push送信者識別子
 ```
 
 ## TypeScript

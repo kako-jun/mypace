@@ -38,11 +38,11 @@ Browser (React SPA)
   ├─ [API]  GET /api/notifications/unread-count    ... 未読通知チェック
   │
   ▼ タイムライン取得
-  [リレー] querySync kinds:[1,6,30023,42000] limit:50
+  [リレー] querySync kinds:[1,6,30023,42000] limit:200
   │
   ▼ エンリッチメント一括取得 (fetchEventsEnrich → Promise.all)
   ┌─────────────────────────────────────────────────┐
-  │ [リレー] fetchEventMetadata(50件分)  ... リアクション/リプライ/リポスト   │
+  │ [リレー] fetchEventMetadata(200件分) ... リアクション/リプライ/リポスト   │
   │ [リレー] fetchProfiles(著者pubkeys)  ... 著者プロフィール               │
   │ [API]   POST /api/events/enrich      ... views + スーパーメンション     │
   └─────────────────────────────────────────────────┘
@@ -59,7 +59,7 @@ Browser (React SPA)
 ```
 スクロール到達
   │
-  [リレー] querySync until:searchedUntil limit:50
+  [リレー] querySync until:searchedUntil limit:200
   │
   ▼ エンリッチメント一括取得 (上記と同構造)
   ┌─────────────────────────────────────────────────┐
@@ -77,7 +77,7 @@ Browser (React SPA)
 ```
 60秒タイマー
   │
-  [リレー] querySync since:latestEventTime limit:50
+  [リレー] querySync since:latestEventTime limit:200
   │
   ▼ 新着があれば pendingNewEvents に蓄積
   ▼ ユーザーが「新着表示」ボタンを押したら:
@@ -236,6 +236,8 @@ URLアクセス
 | `/api/super-mention/suggest` | `getSuperMentionSuggestions` | SuperMentionPopup |
 | `/api/tweet/{tweetId}` | (直接fetch) | TwitterEmbed |
 | `/api/npc/reporter` | `createReporterQuote` | ReporterIntentPage |
+| `/api/wikidata/search` | `searchWikidata` | SuperMentionPopup |
+| `/api/wordrot/recipes/{text}` | `fetchWordrotRecipes` | WordDetailPage |
 
 ### 書き込み系 (POST/PUT/DELETE)
 
@@ -253,7 +255,8 @@ URLアクセス
 | `POST /api/supernovas/check` | `checkSupernovas` | HomePage, InventoryPage |
 | `POST /api/notifications/read` | `markNotificationsRead` | ユーザー操作 |
 | `POST /api/npc/reporter` | `createReporterQuote` | ユーザー操作 |
-| `POST /api/wikidata/search` | `searchWikidata` | SuperMentionPopup |
+| `POST /api/wordrot/retry-image/{wordId}` | `retryWordImage` | ユーザー操作 |
+| `POST /api/wordrot/italian` | `convertToItalian` | 合成式イタリア語変換 |
 | `POST /api/super-mention/paths` | `saveSuperMentionPath` | スーパーメンション投稿時 |
 | `POST /api/push/subscribe` | (直接fetch) | ユーザー操作 |
 | `PUT /api/push/preference` | (直接fetch) | ユーザー操作 |
@@ -273,14 +276,15 @@ URLアクセス
 
 | 関数名 | Filter | リレー | 用途 |
 |---|---|---|---|
-| `fetchTimeline` | kinds:[1,6,30023,42000] + tags/search | GENERAL or SEARCH | タイムライン取得 |
-| `fetchUserEvents` | authors:[pk], kinds:[1,6,30023,42000] | GENERAL or SEARCH | ユーザー投稿取得 |
-| `fetchProfiles` | kinds:[0], authors:[pks] | GENERAL | プロフィール取得 |
+| `fetchTimeline` | kinds:[1,6,30023,42000] (mypace ON) / [1,6,30023] (all) + tags/search | GENERAL or SEARCH | タイムライン取得 |
+| `fetchUserEvents` | authors:[pk], kinds:[1,6,30023,42000] (mypace ON) / [1,6,30023] (all) | GENERAL or SEARCH | ユーザー投稿取得 |
+| `fetchProfiles` | kinds:[0], authors:[pks] | GENERAL | プロフィール一括取得 |
+| `fetchUserProfile` | kinds:[0], authors:[pk] | GENERAL | 単一プロフィール取得 |
 | `fetchEventById` | ids:[id] | GENERAL | 単一イベント取得 |
 | `fetchEventsByIds` | ids:[ids] | GENERAL | 複数イベント取得 |
 | `fetchEventMetadata` | kinds:[7,1,6], #e:[ids] | GENERAL | リアクション/リプライ/リポスト |
-| `fetchUserMagazines` | kinds:[30023], authors:[pk], #t:['magazine'] | GENERAL | マガジン一覧 |
-| `fetchMagazineBySlug` | kinds:[30023], authors:[pk], #d:[slug] | GENERAL | マガジン取得 |
+| `fetchUserMagazines` | kinds:[30001], authors:[pk], #t:['mypace-magazine'] | GENERAL | マガジン一覧 |
+| `fetchMagazineBySlug` | kinds:[30001], authors:[pk], #d:[slug] | GENERAL | マガジン取得 |
 | `publishEvent` | — | RELAYS (publish) | イベント公開 |
 
 ---
@@ -366,7 +370,7 @@ collectWord(word) → 成功 → レスポンスにinventory含む → 直接sta
 
 | パターン | 例 |
 |---|---|
-| 配列で一括取得 | `fetchProfiles([pk1, pk2, ...])` で50件分を1回 |
+| 配列で一括取得 | `fetchProfiles([pk1, pk2, ...])` で200件分を1回 |
 | Promise.all並列 | metadata + profiles + views を同時取得 |
 | fire-and-forget | OGP, impressions はawaitせず非同期 |
 | キャッシュスキップ | `currentProfiles` で既知pubkeyをリレークエリから除外 |
