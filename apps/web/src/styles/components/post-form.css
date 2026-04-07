@@ -654,6 +654,7 @@
 /* Override: max-height is 90vh */
 .location-picker-panel {
   max-height: 90vh;
+  gap: 0.75rem;
 }
 
 .location-picker-search {
