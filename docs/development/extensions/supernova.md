@@ -38,41 +38,40 @@
 
 参加番号（シリアルナンバー）に応じて解除。番号が小さいほど高いティア。
 
-| ID | 名称 | 条件 | 判定タイミング | 報酬 |
-|----|------|------|---------------|------|
-| `penguin_1000` | Penguin 1000 | 参加番号1000番以内 | 初回投稿時 | Green ×1 |
-| `penguin_500` | Penguin 500 | 参加番号500番以内 | 初回投稿時 | Green ×10, Red ×1 |
-| `penguin_250` | Penguin 250 | 参加番号250番以内 | 初回投稿時 | Green ×100, Red ×10, Blue ×1 |
-| `penguin_100` | Penguin 100 | 参加番号100番以内 | 初回投稿時 | Green ×1000, Red ×100, Blue ×10, Purple ×1 |
+| ID | 名称 | 条件 | 判定タイミング | Supernova色 | 報酬 |
+|----|------|------|---------------|------------|------|
+| `penguin_1000` | Penguin 1000 | 参加番号1000番以内 | 初回投稿時 | 緑 | Green ×1 |
+| `penguin_500` | Penguin 500 | 参加番号500番以内 | 初回投稿時 | 緑 | Green ×1 |
+| `penguin_250` | Penguin 250 | 参加番号250番以内 | 初回投稿時 | 赤 | Green ×10, Red ×1 |
+| `penguin_100` | Penguin 100 | 参加番号100番以内 | 初回投稿時 | 青 | Green ×100, Red ×10, Blue ×1 |
 
 ### 2. コンテンツ系（Single）
 
-投稿内容に関するSupernova。
+投稿内容に関するSupernova。すべてGreen ×1の報酬。
 
 | ID | 名称 | 条件 | 判定タイミング | 報酬 |
 |----|------|------|---------------|------|
-| `first_teaser` | First Teaser | ティーザータグ付き投稿 | 投稿時 | - |
-| `first_super_mention` | First Super Mention | スーパーメンション使用 | 投稿時 | - |
-| `first_image` | First Image | 画像付き投稿 | 投稿時 | - |
-| `first_voice` | First Voice | ボイスメモ投稿 | 投稿時 | - |
-| `first_map` | First Map | 地図付き投稿 | 投稿時 | - |
+| `first_teaser` | First Teaser | ティーザータグ付き投稿 | 投稿時 | Green ×1 |
+| `first_super_mention` | First Super Mention | スーパーメンション使用 | 投稿時 | Green ×1 |
+| `first_image` | First Image | 画像付き投稿 | 投稿時 | Green ×1 |
+| `first_voice` | First Voice | ボイスメモ投稿 | 投稿時 | Green ×1 |
+| `first_map` | First Map | 地図付き投稿 | 投稿時 | Green ×1 |
 | `first_reply` | First Reply | 初めてリプライ | 投稿時 | Green ×1 |
 | `first_repost` | First Repost | 初めてリポスト | リポスト時 | Green ×1 |
-| `first_url` | First URL | URL含む投稿 | 投稿時 | - |
+| `first_url` | First URL | URL含む投稿 | 投稿時 | Green ×1 |
 | `first_table` | First Table | Markdown表を使用 | 投稿時 | Green ×1 |
-| `first_list` | First List | Markdownリストを使用 | 投稿時 | - |
+| `first_list` | First List | Markdownリストを使用 | 投稿時 | Green ×1 |
 
 ### 3. 長文系（Single） - 隠しSupernova
 
 長文投稿で解除される隠しSupernova。進捗が0のうちは表示されない。
 
-| ID | 名称 | 条件 | 判定タイミング | 報酬 |
-|----|------|------|---------------|------|
-| `first_long_post` | First Long Post | 281文字以上 | 投稿時 | Green ×1 |
-| `first_1000_chars` | First 1000 Chars | 1000文字以上 | 投稿時 | Green ×2 |
-| `first_2000_chars` | First 2000 Chars | 2000文字以上 | 投稿時 | Green ×3, Red ×1 |
-| `first_3000_chars` | First 3000 Chars | 3000文字以上 | 投稿時 | Green ×3, Red ×2, Blue ×1 |
-| `first_4000_chars` | First 4000 Chars | 4000文字以上 | 投稿時 | Green ×3, Red ×2, Blue ×2, Purple ×1 |
+| ID | 名称 | 条件 | 判定タイミング | Supernova色 | 報酬 |
+|----|------|------|---------------|------------|------|
+| `first_long_post` | First Long Post | 281文字以上 | 投稿時 | 緑 | Green ×1 |
+| `first_1000_chars` | First 1000 Chars | 1000文字以上 | 投稿時 | 緑 | Green ×1 |
+| `first_2000_chars` | First 2000 Chars | 2000文字以上 | 投稿時 | 赤 | Green ×10, Red ×1 |
+| `first_4000_chars` | First 4000 Chars | 4000文字以上 | 投稿時 | 青 | Green ×100, Red ×10, Blue ×1 |
 
 ### 4. 受け取ったステラ系（Cumulative）
 
@@ -125,7 +124,7 @@ Nostr全体での投稿回数に応じて解除。Primalから取得するため
 | ID | 名称 | 条件 | Supernova色 | 報酬 |
 |----|------|------|------------|------|
 | `posts_10` | Posts 10 | 10回投稿 | 緑 | Green ×1 |
-| `posts_100` | Posts 100 | 100回投稿 | 赤 | Green ×10, Red ×1 |
+| `posts_100` | Posts 100 | 100回投稿 | 緑 | Green ×1 |
 | `posts_1000` | Posts 1000 | 1000回投稿 | 青 | Green ×100, Red ×10, Blue ×1 |
 
 **注意**: 投稿回数はNostr全体でカウントされるため、既に数万回投稿しているユーザーはMY PACEで初めて投稿した瞬間に複数のSupernovaを同時達成する可能性がある。

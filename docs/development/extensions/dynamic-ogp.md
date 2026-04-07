@@ -31,6 +31,7 @@
 functions/
   post/[id].ts         # 投稿ページOGP
   user/[npub].ts       # ユーザーページOGP
+  sitemap.xml.ts       # サイトマップ生成
   package.json         # nostr-tools依存関係
   tsconfig.json
 ```
@@ -44,7 +45,8 @@ functions/
   "version": 1,
   "include": [
     "/post/*",
-    "/user/*"
+    "/user/*",
+    "/sitemap.xml"
   ],
   "exclude": []
 }

@@ -11,7 +11,7 @@
 
 > **設計変更（2026-03-08）**: 以前は収集=ワード（黄色背景）、合成=ワードロット（黄緑背景）と2種類の画像を持っていたが、合成結果が既存ワードと同じになるケースがあり区別の意味がないため、1単語1画像（黄色背景のみ）に統一。synthesis専用の画像生成プロンプト・DB列（image_url_synthesis等）は廃止。DB列は残存するが未使用。
 
-> **⚠️ ドキュメント更新予定**: 本ドキュメントの多くの記述は上記設計変更前の仕様（2系統画像、黄緑背景等）を含んでいます。コードが正（1単語1画像・黄色背景のみ）です。ドキュメント全体の整合性更新は #60 で対応予定。
+> **注意**: 以下の記述の一部は設計変更前の仕様（2系統画像、黄緑背景等）を含んでいる場合があります。コードが正（1単語1画像・黄色背景のみ）です。DB列 `image_url_synthesis` / `image_hash_synthesis` / `image_status_synthesis` は残存しますが未使用です。
 
 ## フェーズ
 
@@ -51,13 +51,8 @@
 ### 画像生成（Phase 1 + Phase 2）
 
 - 単語がharvest（収集）またはsynthesis（合成）で初めて登録されたとき、AI画像を非同期生成
-- **同じ単語でも入手経路によって別画像を生成**:
-  - harvest経路: `image_url` に保存（黄色背景の物体アイコン）
-  - synthesis経路: `image_url_synthesis` に保存（黄緑背景の可愛い生物）
-- **ワード（Word）**: 16bitピクセルアート、黄色背景（#F1C40F）、物体のアイコン
-- **ワードロット（Wordrot）**: 16bitピクセルアート、黄緑背景（#8BC34A）、可愛い丸い生物
-  - 背景色でワード/ワードロットを視覚的に区別
-  - 合成して手に入れたワードロットはプレミア感のある緑背景
+- **1単語1画像**: 入手経路に関わらず、`image_url` に保存（黄色背景）
+- **全ワードロット**: 16bitピクセルアート、黄色背景（#F1C40F）、可愛い丸い生物キャラクター
 - 変な絵でも「味がある」として受け入れる美学
 - 画像はnostr.buildにアップロードして永続化
 
@@ -220,11 +215,10 @@ CREATE INDEX IF NOT EXISTS idx_wordrot_words_discovered_by ON wordrot_words(disc
 CREATE INDEX IF NOT EXISTS idx_wordrot_words_discovery_count ON wordrot_words(discovery_count DESC);
 ```
 
-**画像フィールドの使い分け**:
+**画像フィールド**:
 
-- harvest（投稿から収集）で初入手 → `image_url`, `image_status` を使用（黄色背景）
-- synthesis（合成）で初入手 → `image_url_synthesis`, `image_status_synthesis` を使用（緑背景）
-- 同じ単語を両方の経路で入手可能 → 両方の画像が存在する場合もある
+- `image_url`, `image_status` のみ使用（黄色背景の1種類）
+- `image_url_synthesis`, `image_status_synthesis` はDB列として残存するが未使用（設計変更により廃止）
 
 ### wordrot_user_words（ユーザーインベントリ）
 

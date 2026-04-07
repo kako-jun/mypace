@@ -62,76 +62,12 @@ CREATE INDEX IF NOT EXISTS idx_event_views_type ON event_views(view_type);
 
 ## API仕様
 
-### 閲覧を記録
+### 閲覧一括記録
+
+タイムライン表示時・詳細ページ閲覧時に、複数の投稿を一度に記録する。
 
 ```
-POST /api/views/:eventId
-```
-
-リクエストボディ:
-
-```json
-{
-  "viewType": "impression",      // or "detail"
-  "viewerPubkey": "npub...",
-  "authorPubkey": "npub..."      // 投稿者のpubkey（必須）
-}
-```
-
-レスポンス:
-
-```json
-{
-  "success": true,
-  "isNew": true                  // 新規カウントされたか
-}
-```
-
-### 閲覧数を取得
-
-```
-GET /api/views/:eventId
-```
-
-レスポンス:
-
-```json
-{
-  "impression": 150,
-  "detail": 25
-}
-```
-
-### 複数投稿の閲覧数を一括取得
-
-```
-POST /api/views/batch
-```
-
-リクエストボディ:
-
-```json
-{
-  "eventIds": ["event1", "event2", "event3"]
-}
-```
-
-レスポンス:
-
-```json
-{
-  "event1": { "impression": 150, "detail": 25 },
-  "event2": { "impression": 80, "detail": 10 },
-  "event3": { "impression": 200, "detail": 45 }
-}
-```
-
-### 複数投稿の閲覧を一括記録
-
-タイムライン表示時など、複数の投稿を一度に記録する場合に使用。
-
-```
-POST /api/views/batch-record
+POST /api/views/impressions
 ```
 
 リクエストボディ:
@@ -143,10 +79,13 @@ POST /api/views/batch-record
     { "eventId": "event2", "authorPubkey": "pubkey2" },
     { "eventId": "event3", "authorPubkey": "pubkey3" }
   ],
-  "viewType": "impression",
-  "viewerPubkey": "npub..."
+  "type": "impression",
+  "viewerPubkey": "hex_pubkey"
 }
 ```
+
+- `type`: `"impression"` または `"detail"`
+- `events`: 最大100件まで
 
 レスポンス:
 
@@ -159,18 +98,16 @@ POST /api/views/batch-record
 
 ### ユーザー累計閲覧数を取得
 
-ユーザーページで表示する累計閲覧数を取得。
+ユーザー統計APIに含まれる（`GET /api/user/:pubkey/stats`）。
 
-```
-GET /api/user/:pubkey/views
-```
-
-レスポンス:
+レスポンスの `viewsCount` フィールド:
 
 ```json
 {
-  "details": 45,        // 累計詳細閲覧数
-  "impressions": 123    // 累計インプレッション数
+  "viewsCount": {
+    "details": 45,
+    "impressions": 123
+  }
 }
 ```
 
@@ -204,34 +141,32 @@ GET /api/user/:pubkey/views
 
 ### クライアント側
 
-#### インプレッションの記録
+バッチAPIを使用して複数投稿の閲覧を一括記録する:
 
 ```typescript
-// タイムラインに投稿が表示されたとき
-// IntersectionObserver等で可視性を検知して記録
-async function recordImpression(eventId: string, authorPubkey: string, viewerPubkey: string) {
-  await fetch(`/api/views/${eventId}`, {
+// タイムラインに投稿が表示されたとき（バッチ記録）
+async function recordImpressions(
+  events: Array<{ eventId: string; authorPubkey: string }>,
+  viewerPubkey: string
+) {
+  await fetch('/api/views/impressions', {
     method: 'POST',
     body: JSON.stringify({
-      viewType: 'impression',
+      events,
+      type: 'impression',
       viewerPubkey,
-      authorPubkey,
     }),
   })
 }
-```
 
-#### 詳細閲覧の記録
-
-```typescript
-// 詳細ページを開いたとき
+// 詳細ページを開いたとき（1件でもバッチAPIを使用）
 async function recordDetailView(eventId: string, authorPubkey: string, viewerPubkey: string) {
-  await fetch(`/api/views/${eventId}`, {
+  await fetch('/api/views/impressions', {
     method: 'POST',
     body: JSON.stringify({
-      viewType: 'detail',
+      events: [{ eventId, authorPubkey }],
+      type: 'detail',
       viewerPubkey,
-      authorPubkey,
     }),
   })
 }
@@ -240,44 +175,26 @@ async function recordDetailView(eventId: string, authorPubkey: string, viewerPub
 ### サーバー側
 
 ```typescript
-// 閲覧記録（UPSERT）
-app.post('/views/:eventId', async (c) => {
-  const { eventId } = c.req.param()
-  const { viewType, viewerPubkey, authorPubkey } = await c.req.json()
+// 一括閲覧記録（UPSERT、バッチ処理）
+views.post('/impressions', async (c) => {
+  const { events, type, viewerPubkey } = await c.req.json()
 
-  const result = await c.env.DB.prepare(`
-    INSERT INTO event_views (event_id, author_pubkey, viewer_pubkey, view_type, created_at)
-    VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT (event_id, viewer_pubkey, view_type) DO NOTHING
-  `)
-    .bind(eventId, authorPubkey, viewerPubkey, viewType, Math.floor(Date.now() / 1000))
-    .run()
+  const limitedEvents = events.slice(0, 100)
+  const now = getCurrentTimestamp()
 
-  return c.json({
-    success: true,
-    isNew: result.meta.changes > 0,
-  })
-})
+  const stmt = c.env.DB.prepare(
+    `INSERT INTO event_views (event_id, author_pubkey, viewer_pubkey, view_type, created_at)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT (event_id, viewer_pubkey, view_type) DO NOTHING`
+  )
 
-// 閲覧数取得
-app.get('/views/:eventId', async (c) => {
-  const { eventId } = c.req.param()
+  const batch = limitedEvents.map((e) =>
+    stmt.bind(e.eventId, e.authorPubkey, viewerPubkey, type, now)
+  )
 
-  const rows = await c.env.DB.prepare(`
-    SELECT view_type, COUNT(*) as count
-    FROM event_views
-    WHERE event_id = ?
-    GROUP BY view_type
-  `)
-    .bind(eventId)
-    .all()
+  await c.env.DB.batch(batch)
 
-  const counts = { impression: 0, detail: 0 }
-  for (const row of rows.results) {
-    counts[row.view_type as keyof typeof counts] = row.count as number
-  }
-
-  return c.json(counts)
+  return c.json({ success: true, recorded: limitedEvents.length })
 })
 ```
 
