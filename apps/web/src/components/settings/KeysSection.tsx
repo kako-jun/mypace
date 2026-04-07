@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import {
   importNsec,
-  clearSecretKey,
   hasNip07,
   enableNip07,
   disableNip07,
@@ -45,6 +44,7 @@ export default function KeysSection({
 
   const [comboFocused, setComboFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const importingRef = useRef(false)
 
   const nip07Available = hasNip07()
   // Memoize: getAllKeys() runs getPublicKey + nip19 encoding per key
@@ -101,6 +101,8 @@ export default function KeysSection({
   }
 
   const handleImport = async () => {
+    if (importingRef.current) return
+    importingRef.current = true
     setError('')
     try {
       const sk = importNsec(inputValue.trim())
@@ -112,6 +114,7 @@ export default function KeysSection({
       window.location.reload()
     } catch {
       setError('Invalid nsec format')
+      importingRef.current = false
     }
   }
 
@@ -126,22 +129,6 @@ export default function KeysSection({
     window.location.reload()
   }
 
-  const handleRemoveKey = () => {
-    if (keys.length <= 1) {
-      if (confirm('Are you sure? This will delete your key from this browser.')) {
-        clearSecretKey()
-        removeLocalProfile()
-        window.location.reload()
-      }
-    } else {
-      if (confirm('Remove this key from the list? Your other keys will remain.')) {
-        clearSecretKey()
-        removeLocalProfile()
-        window.location.reload()
-      }
-    }
-  }
-
   const handleRemoveKeyByIndex = (index: number, e: React.MouseEvent) => {
     e.stopPropagation()
     if (index === activeIndex) {
@@ -150,8 +137,21 @@ export default function KeysSection({
       } else {
         if (!confirm('Remove this active key? You will be switched to another key.')) return
       }
+    } else {
+      if (!confirm('Remove this key from the list?')) return
     }
     removeKeyByIndex(index)
+    removeLocalProfile()
+    window.location.reload()
+  }
+
+  const handleRemoveActiveKey = () => {
+    if (keys.length <= 1) {
+      if (!confirm('Are you sure? This will delete your key from this browser.')) return
+    } else {
+      if (!confirm('Remove this key from the list? Your other keys will remain.')) return
+    }
+    removeKeyByIndex(activeIndex)
     removeLocalProfile()
     window.location.reload()
   }
@@ -168,10 +168,6 @@ export default function KeysSection({
 
   const handleInputBlur = () => {
     setComboFocused(false)
-    // If input has nsec value, try to import on blur
-    if (inputValue.trim().startsWith('nsec1')) {
-      handleImport()
-    }
   }
 
   const handleEnableNip07 = () => {
@@ -272,7 +268,7 @@ export default function KeysSection({
                   </Button>
                 </div>
               )}
-              {!hasKeys && inputValue.trim() && (
+              {(comboFocused || !hasKeys) && inputValue.trim() && (
                 <Button size="md" onClick={handleImport}>
                   Add
                 </Button>
@@ -345,7 +341,7 @@ export default function KeysSection({
       {/* Danger Zone - only show when not using NIP-07 */}
       {!usingNip07 && (
         <SettingsSection title="Danger Zone" variant="danger">
-          <Button size="md" onClick={handleRemoveKey} variant="danger">
+          <Button size="md" onClick={handleRemoveActiveKey} variant="danger">
             {keys.length > 1 ? 'Remove this key' : 'Clear key from browser'}
           </Button>
         </SettingsSection>
