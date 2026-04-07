@@ -24,7 +24,7 @@ import {
   normalizeContent,
   getDisplayName,
 } from '../../lib/utils'
-import { CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
+import { CUSTOM_EVENTS, LIMITS, TIMEOUTS } from '../../lib/constants'
 import { AttachedImages, AttachedLocations, PostPreview } from '../post'
 import { Avatar, Icon, Tabs, TextButton, ErrorMessage } from '../ui'
 import { setVimMode as saveVimMode } from '../../lib/storage'
@@ -73,6 +73,7 @@ export function PostForm({
   onSharedImageProcessed,
 }: PostFormProps) {
   const [posting, setPosting] = useState(false)
+  const [cooldown, setCooldown] = useState(false)
   const [error, setError] = useState('')
   const [hasProfile, setHasProfile] = useState(false)
   const [checkingProfile, setCheckingProfile] = useState(true)
@@ -213,7 +214,7 @@ export function PostForm({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const normalizedContent = normalizeContent(content)
-    if (!normalizedContent || posting || !hasProfile) return
+    if (!normalizedContent || posting || cooldown || !hasProfile) return
     if (normalizedContent.length > LIMITS.MAX_POST_LENGTH) {
       setError(`Content exceeds ${LIMITS.MAX_POST_LENGTH} characters`)
       return
@@ -298,6 +299,10 @@ export function PostForm({
       if (longMode) {
         onLongModeChange(false)
       }
+
+      // Post cooldown to prevent rapid successive posts
+      setCooldown(true)
+      setTimeout(() => setCooldown(false), TIMEOUTS.POST_COOLDOWN)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to post')
     } finally {
@@ -628,6 +633,7 @@ export function PostForm({
             editingEvent={editingEvent}
             replyingTo={replyingTo}
             onCancel={handleCancel}
+            disabled={cooldown}
           />
 
           <ErrorMessage>{error}</ErrorMessage>
