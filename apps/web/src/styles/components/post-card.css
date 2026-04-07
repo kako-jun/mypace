@@ -708,7 +708,7 @@
   color: #000;
   opacity: 0.3;
   pointer-events: none;
-  transition: opacity 0.2s ease, background-color 0.2s ease;
+  transition: opacity 0.2s ease, background 0.2s ease;
   overflow: visible;
   z-index: -1;
 }
@@ -723,7 +723,8 @@
 
 .post-card:hover .post-barcode {
   opacity: 1;
-  background-color: #fff;
+  /* Left 20px transparent (18px inside card + 2px border overlap), 4px white outside */
+  background: linear-gradient(to right, transparent 20px, #fff 20px);
 }
 
 /* Dark theme: white barcode normally, black barcode on hover (for scanner readability) */
@@ -733,7 +734,7 @@
 
 [data-theme="dark"] .post-card:hover .post-barcode {
   color: #000;
-  background-color: #fff;
+  background: linear-gradient(to right, transparent 20px, #fff 20px);
 }
 
 /* Rarity label below the barcode */
