@@ -5,6 +5,7 @@ export const TIMEOUTS = {
   NEW_POST_RELOAD: 1000,
   POST_ACTION_RELOAD: 1500,
   DRAFT_SAVE_DELAY: 1000,
+  POST_COOLDOWN: 10000,
 } as const
 
 // Content limits

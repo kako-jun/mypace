@@ -19,6 +19,10 @@ import { getCurrentTimestamp } from '../utils'
 
 const INDEXNOW_KEY = '6713c432e1cd418d80c125669c0e7de0'
 
+// Rate limit constants
+const RATE_LIMIT_WINDOW_SECONDS = 10
+const DUPLICATE_WINDOW_SECONDS = 60
+
 // Notify IndexNow (Bing/Yandex) about a new URL
 async function notifyIndexNow(url: string): Promise<void> {
   try {
@@ -26,6 +30,46 @@ async function notifyIndexNow(url: string): Promise<void> {
   } catch {
     // Fire-and-forget, don't block on failure
   }
+}
+
+// SHA-256 hash of content prefix (first 100 chars) for duplicate detection
+async function hashContentPrefix(content: string): Promise<string> {
+  const prefix = content.slice(0, 100)
+  const encoded = new TextEncoder().encode(prefix)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+// Check rate limit: same pubkey within RATE_LIMIT_WINDOW_SECONDS (uses server-timestamp table)
+async function checkRateLimit(db: D1Database, pubkey: string, now: number): Promise<boolean> {
+  const cutoff = now - RATE_LIMIT_WINDOW_SECONDS
+  const result = await db
+    .prepare(`SELECT 1 FROM recent_posts WHERE pubkey = ? AND created_at > ? LIMIT 1`)
+    .bind(pubkey, cutoff)
+    .first()
+  return !!result
+}
+
+// Check duplicate: same pubkey + same content hash within DUPLICATE_WINDOW_SECONDS
+async function checkDuplicate(db: D1Database, pubkey: string, contentHash: string, now: number): Promise<boolean> {
+  const cutoff = now - DUPLICATE_WINDOW_SECONDS
+  const result = await db
+    .prepare(`SELECT 1 FROM recent_posts WHERE pubkey = ? AND content_hash = ? AND created_at > ? LIMIT 1`)
+    .bind(pubkey, contentHash, cutoff)
+    .first()
+  return !!result
+}
+
+// Record recent post for duplicate detection, and clean up stale rows
+async function recordRecentPost(db: D1Database, pubkey: string, contentHash: string, now: number): Promise<void> {
+  const oneHourAgo = now - 3600
+  await db.batch([
+    db
+      .prepare(`INSERT INTO recent_posts (pubkey, content_hash, created_at) VALUES (?, ?, ?)`)
+      .bind(pubkey, contentHash, now),
+    db.prepare(`DELETE FROM recent_posts WHERE created_at < ?`).bind(oneHourAgo),
+  ])
 }
 
 const publish = new Hono<{ Bindings: Bindings }>()
@@ -573,6 +617,32 @@ publish.post('/', async (c) => {
     if (event.kind === 1) {
       const hasMypaceTag = tags.some((tag: string[]) => tag[0] === 't' && tag[1]?.toLowerCase() === 'mypace')
       if (hasMypaceTag) {
+        // Rate limit check: block rapid successive posts from same pubkey
+        const now = getCurrentTimestamp()
+        const isRateLimited = await checkRateLimit(db, event.pubkey, now)
+        if (isRateLimited) {
+          return c.json(
+            { error: 'Too many requests. Please wait before posting again.', error_code: 'rate_limited' },
+            429
+          )
+        }
+
+        // Duplicate content check: block identical content within 60 seconds
+        const contentHash = await hashContentPrefix(event.content || '')
+        const isDuplicate = await checkDuplicate(db, event.pubkey, contentHash, now)
+        if (isDuplicate) {
+          return c.json(
+            {
+              error: 'Duplicate post detected. Please wait before posting similar content.',
+              error_code: 'duplicate_content',
+            },
+            429
+          )
+        }
+
+        // Record for duplicate detection (await to prevent TOCTOU race)
+        await recordRecentPost(db, event.pubkey, contentHash, now)
+
         try {
           await registerUserSerial(db, event.pubkey, event.id, event.created_at)
           // Check and unlock serial-related supernovas (fire-and-forget)
