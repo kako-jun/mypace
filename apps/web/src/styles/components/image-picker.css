@@ -7,7 +7,7 @@
 }
 
 /* Image picker modal has gap between sections */
-.image-picker .modal-panel {
+.image-picker-panel {
   gap: 0.75rem;
 }
 
