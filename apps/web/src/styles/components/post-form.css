@@ -654,7 +654,6 @@
 /* Override: max-height is 90vh */
 .location-picker-panel {
   max-height: 90vh;
-  gap: 0.75rem;
 }
 
 .location-picker-search {
@@ -825,6 +824,7 @@
 /* Location footer uses shared modal-footer with padding override */
 .location-picker-footer {
   padding: 1rem;
+  margin-top: 0.5rem;
 }
 
 /* Location indicator in form */
