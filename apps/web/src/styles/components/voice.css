@@ -12,7 +12,7 @@
   font-weight: 700;
   color: var(--text-secondary);
   margin-left: auto;
-  margin-right: 0.5rem;
+  margin-right: 2rem;
 }
 
 .voice-picker-timer.warning {
