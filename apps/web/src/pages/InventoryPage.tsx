@@ -684,6 +684,31 @@ export function InventoryPage() {
                 })
                 return (
                   <>
+                    {/* Synthesis bar (above the list so it's always reachable) */}
+                    <SynthesisPanel
+                      inventory={wordrotInventory}
+                      synthesis={synthesis}
+                      activeSlot={activeSlot}
+                      onSlotTap={handleSlotTap}
+                      onClear={() => setActiveSlot('A')}
+                      onSynthesisComplete={(result) => {
+                        const hadBefore = wordrotInventory.some((item) => item.word.id === result.result.id)
+                        loadWordrotInventory()
+                        setSynthesisCelebration({
+                          ...result,
+                          isNewWord: !hadBefore,
+                        })
+                        setShowSynthesisCelebration(true)
+                      }}
+                      onResultClick={(result) => {
+                        setSynthesisCelebration({
+                          ...result,
+                          isNewWord: false,
+                        })
+                        setShowSynthesisCelebration(true)
+                      }}
+                    />
+
                     <div className="inventory-words-section">
                       <h3>Wordrot ({uniqueWords.length})</h3>
 
@@ -710,31 +735,6 @@ export function InventoryPage() {
                         </div>
                       )}
                     </div>
-
-                    {/* Synthesis bar */}
-                    <SynthesisPanel
-                      inventory={wordrotInventory}
-                      synthesis={synthesis}
-                      activeSlot={activeSlot}
-                      onSlotTap={handleSlotTap}
-                      onClear={() => setActiveSlot('A')}
-                      onSynthesisComplete={(result) => {
-                        const hadBefore = wordrotInventory.some((item) => item.word.id === result.result.id)
-                        loadWordrotInventory()
-                        setSynthesisCelebration({
-                          ...result,
-                          isNewWord: !hadBefore,
-                        })
-                        setShowSynthesisCelebration(true)
-                      }}
-                      onResultClick={(result) => {
-                        setSynthesisCelebration({
-                          ...result,
-                          isNewWord: false,
-                        })
-                        setShowSynthesisCelebration(true)
-                      }}
-                    />
                   </>
                 )
               })()}
