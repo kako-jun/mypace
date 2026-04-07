@@ -1102,7 +1102,7 @@ apps/web/src/styles/components/
 
 ```
 apps/web/src/hooks/wordrot/useSynthesis.ts          # 合成状態管理hook
-apps/web/src/components/wordrot/SynthesisPanel.tsx  # 数式バーUI（下部固定）
+apps/web/src/components/wordrot/SynthesisPanel.tsx  # 数式バーUI（一覧の上に配置）
 apps/web/src/components/wordrot/WordSynthesisCelebration.tsx # 合成演出ポップアップ
 apps/web/src/styles/components/synthesis-panel.css # 数式バースタイル
 apps/web/src/styles/components/word-synthesis-celebration.css # 合成演出スタイル
