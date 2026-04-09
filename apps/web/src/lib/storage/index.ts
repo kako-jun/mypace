@@ -24,7 +24,7 @@ interface MypaceStorage {
   }
   // Non-exportable
   auth: {
-    sk: string // legacy single key (migrated to keys[])
+    sk: string // single key (kept for backward compat with keys[])
     keys: string[] // multiple hex secret keys (plaintext)
     activeIndex: number // which key is active
     useNip07: boolean
@@ -237,9 +237,6 @@ export function setMuteList(muteList: MuteEntry[]): void {
 
 // ============ Auth ============
 
-// Legacy key for backward compatibility (remove after 2026-12-31)
-const LEGACY_SK_KEY = 'mypace_sk'
-
 import { encryptSecret, decryptSecret, isEncrypted } from './crypto'
 
 // In-memory cache: decrypted keys (avoids async crypto on every read)
@@ -283,7 +280,7 @@ export async function initSecretKeyCache(): Promise<void> {
     return
   }
 
-  // Case 2: legacy auth.sk only (encrypted or plaintext)
+  // Case 2: auth.sk only (encrypted or plaintext)
   if (sk) {
     const decrypted = isEncrypted(sk) ? await decryptSecret(sk) : sk
     if (decrypted) {
@@ -302,24 +299,6 @@ export async function initSecretKeyCache(): Promise<void> {
       updateStorage('auth', (a) => ({ ...a, sk: '', keys: [], activeIndex: 0 }))
     }
     return
-  }
-
-  // Case 3: legacy localStorage key
-  if (typeof localStorage !== 'undefined') {
-    const legacySk = localStorage.getItem(LEGACY_SK_KEY)
-    if (legacySk) {
-      _keysCache = [legacySk]
-      _activeIndexCache = 0
-      const encrypted = await encryptSecret(legacySk)
-      updateStorage('auth', (a) => ({
-        ...a,
-        sk: encrypted,
-        keys: [encrypted],
-        activeIndex: 0,
-      }))
-      localStorage.removeItem(LEGACY_SK_KEY)
-      return
-    }
   }
 
   // No keys at all
@@ -566,83 +545,3 @@ export function importSettings(settings: ExportableSettings): void {
   }
   writeStorage(data)
 }
-
-// ============ Migration ============
-
-// Migrate from old multi-key structure to new single-key structure
-function migrateFromLegacy(): void {
-  if (typeof localStorage === 'undefined') return
-
-  // Check if already migrated
-  if (localStorage.getItem(STORAGE_KEY)) return
-
-  // Read old keys
-  const oldSk = localStorage.getItem('mypace_sk') || ''
-  const oldProfile = localStorage.getItem('mypace_profile')
-  const oldThemeColors = localStorage.getItem('mypace_theme_colors')
-  const oldAppTheme = localStorage.getItem('mypace_app_theme')
-  const oldVimMode = localStorage.getItem('mypace_vim_mode')
-  const oldDraft = localStorage.getItem('mypace_draft') || ''
-  const oldDraftReplyTo = localStorage.getItem('mypace_draft_reply_to') || ''
-  const oldSearchFilters = localStorage.getItem('mypace_search_filters')
-  const oldFilterPresets = localStorage.getItem('mypace_filter_presets')
-  const oldMuteList = localStorage.getItem('mypace_mute_list')
-
-  // Build new structure
-  const oldFilters = oldSearchFilters ? JSON.parse(oldSearchFilters) : {}
-  const data: MypaceStorage = {
-    theme: {
-      mode: (oldAppTheme as 'light' | 'dark') || 'light',
-      colors: oldThemeColors ? JSON.parse(oldThemeColors) : DEFAULT_COLORS,
-    },
-    filters: {
-      ...DEFAULT_SEARCH_FILTERS,
-      ...oldFilters,
-      lang: oldFilters.lang || getDefaultLanguage(),
-      presets: oldFilterPresets ? JSON.parse(oldFilterPresets) : [],
-      muteList: oldMuteList ? JSON.parse(oldMuteList) : [],
-    },
-    auth: {
-      sk: oldSk,
-      keys: oldSk ? [oldSk] : [],
-      activeIndex: 0,
-      useNip07: false,
-    },
-    cache: {
-      profile: oldProfile ? JSON.parse(oldProfile) : null,
-    },
-    editor: {
-      vimMode: oldVimMode === 'true',
-      draft: oldDraft,
-      draftReplyTo: oldDraftReplyTo,
-    },
-    pwa: {
-      installDismissedAt: null,
-    },
-  }
-
-  // Write new structure
-  writeStorage(data)
-
-  // Remove old keys
-  const oldKeys = [
-    'mypace_sk',
-    'mypace_profile',
-    'mypace_theme_colors',
-    'mypace_app_theme',
-    'mypace_vim_mode',
-    'mypace_draft',
-    'mypace_draft_reply_to',
-    'mypace_search_filters',
-    'mypace_filter_presets',
-    'mypace_mute_list',
-    // Legacy keys
-    'mypace_only',
-    'mypace_language_filter',
-    'mypace_ng_words',
-  ]
-  oldKeys.forEach((key) => localStorage.removeItem(key))
-}
-
-// Run migration on module load
-migrateFromLegacy()

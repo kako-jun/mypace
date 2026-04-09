@@ -79,12 +79,12 @@ export async function encryptSecret(plaintext: string): Promise<string> {
 
 /**
  * Decrypt an encrypted string (with "enc:" or "obf:" prefix).
- * Plaintext values (no prefix) are returned as-is (migration path).
+ * Plaintext values (no prefix) are returned as-is.
  */
 export async function decryptSecret(stored: string): Promise<string> {
   if (!stored) return ''
 
-  // Not encrypted — return as plaintext (legacy migration)
+  // Not encrypted — return as plaintext
   if (!stored.startsWith(ENCRYPTED_PREFIX) && !stored.startsWith('obf:')) {
     return stored
   }
@@ -113,49 +113,9 @@ export async function decryptSecret(stored: string): Promise<string> {
 
     return new TextDecoder().decode(decrypted)
   } catch {
-    // Also try legacy format (salt stored separately in localStorage)
-    try {
-      return await decryptLegacyFormat(stored)
-    } catch {
-      console.error('Failed to decrypt secret key')
-      return ''
-    }
+    console.error('Failed to decrypt secret key')
+    return ''
   }
-}
-
-/**
- * Try decrypting with legacy format (salt in separate localStorage key).
- * For backward compat with pre-unification crypto.ts.
- */
-async function decryptLegacyFormat(stored: string): Promise<string> {
-  const LEGACY_SALT_KEY = 'mypace_crypto_salt'
-  const saltStr = localStorage.getItem(LEGACY_SALT_KEY)
-  if (!saltStr) return ''
-
-  const salt = Uint8Array.from(atob(saltStr), (c) => c.charCodeAt(0))
-  // Legacy used origin-only seed without UA length
-  const encoder = new TextEncoder()
-  const legacySeed = encoder.encode('mypace-sk-encryption' + (globalThis.location?.origin || 'mypace-default'))
-  const keyMaterial = await crypto.subtle.importKey('raw', legacySeed, 'PBKDF2', false, ['deriveKey'])
-  const key = await crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: salt.buffer as ArrayBuffer, iterations: 100000, hash: 'SHA-256' },
-    keyMaterial,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt']
-  )
-
-  const raw = stored.slice(ENCRYPTED_PREFIX.length)
-  const combined = Uint8Array.from(atob(raw), (c) => c.charCodeAt(0))
-  const iv = combined.slice(0, 12)
-  const ciphertext = combined.slice(12)
-
-  const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext)
-
-  // Migration: remove legacy salt key (no longer needed)
-  localStorage.removeItem(LEGACY_SALT_KEY)
-
-  return new TextDecoder().decode(decrypted)
 }
 
 /**
