@@ -190,8 +190,8 @@ async function recordNotification(
   vapidPrivateKey?: string,
   vapidSubject?: string
 ): Promise<void> {
-  // Don't notify yourself
-  if (recipientPubkey === actorPubkey) return
+  // Don't notify yourself (stella only — reply/repost need to reach other recipients)
+  if (type === 'stella' && recipientPubkey === actorPubkey) return
 
   const now = getCurrentTimestamp()
   let shouldPush = false
@@ -720,10 +720,13 @@ publish.post('/', async (c) => {
       if (eTags.length > 0) {
         // This is a reply
         const pTags = tags.filter((t: string[]) => t[0] === 'p')
-        const targetEventId = eTags[0][1]
+        // NIP-10: prefer e-tag with 'reply' marker, then 'root', then last e-tag
+        const replyTag = eTags.find((t: string[]) => t[3] === 'reply')
+        const rootTag = eTags.find((t: string[]) => t[3] === 'root')
+        const targetEventId = (replyTag || rootTag || eTags[eTags.length - 1])[1]
 
-        // Notify all mentioned users in parallel (independent operations)
-        const validPTags = pTags.filter((pTag) => pTag[1])
+        // Notify all mentioned users except self in parallel (independent operations)
+        const validPTags = pTags.filter((pTag) => pTag[1] && pTag[1] !== event.pubkey)
         if (validPTags.length > 0) {
           await Promise.all(
             validPTags.map(async (pTag) => {
