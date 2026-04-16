@@ -190,7 +190,7 @@ async function recordNotification(
   vapidPrivateKey?: string,
   vapidSubject?: string
 ): Promise<void> {
-  // Don't notify yourself (stella only — reply/repost need to reach other recipients)
+  // Don't notify yourself (stella only — reply/repost handle self-filtering at call site)
   if (type === 'stella' && recipientPubkey === actorPubkey) return
 
   const now = getCurrentTimestamp()
@@ -758,7 +758,7 @@ publish.post('/', async (c) => {
       const eTags = tags.filter((t: string[]) => t[0] === 'e')
       const eTag = eTags[eTags.length - 1] || null
       const pTag = tags.find((t: string[]) => t[0] === 'p')
-      if (eTag && eTag[1] && pTag && pTag[1]) {
+      if (eTag && eTag[1] && pTag && pTag[1] && pTag[1] !== event.pubkey) {
         try {
           await recordNotification(
             db,
