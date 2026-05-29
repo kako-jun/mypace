@@ -291,6 +291,53 @@ function partFits(
 }
 
 /**
+ * コードポイント単位の cut 位置を、書記素（grapheme）境界の手前へ丸める。
+ * 強制分割で書記素クラスタ（ZWJ 絵文字・結合文字・サロゲートペア）が
+ * 2パートに割れるのを防ぐ。最低でも1書記素は前進させる（無限ループ防止）。
+ *
+ * @param chars - 対象スライス（コードポイント配列）
+ * @param cutCp - 切りたいコードポイント index（chars 上の境界）
+ * @returns 書記素境界に丸めた後のコードポイント index（>=1）
+ */
+function snapToGraphemeBoundary(chars: string[], cutCp: number): number {
+  if (cutCp >= chars.length) return cutCp
+  if (cutCp <= 0) return Math.min(1, chars.length)
+  if (typeof Intl === 'undefined' || typeof Intl.Segmenter !== 'function') {
+    // Segmenter 不在環境ではコードポイント単位のまま（フォールバック）。
+    return Math.max(1, cutCp)
+  }
+  // 性能対策: 全スライスを segment すると長文で O(parts×len) になる。
+  // cut 点の周辺だけを窓として切り出して segment し、相対境界を求める。
+  // 書記素クラスタ（ZWJ 絵文字・結合列）は通常数コードポイントなので、
+  // 窓幅 WINDOW は十分なマージンを取れば cut 点を含む書記素を必ず内包する。
+  const WINDOW = 64
+  const windowStart = Math.max(0, cutCp - WINDOW)
+  const windowEnd = Math.min(chars.length, cutCp + WINDOW)
+  const seg = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+
+  // 窓内での書記素開始位置（windowStart からの相対コードポイント index）を列挙。
+  const relCut = cutCp - windowStart
+  let rel = 0
+  const boundaries: number[] = []
+  for (const { segment } of seg.segment(chars.slice(windowStart, windowEnd).join(''))) {
+    boundaries.push(rel)
+    rel += Array.from(segment).length
+  }
+  boundaries.push(rel) // 窓末尾も境界
+
+  // relCut 以下で最大の書記素境界に丸める（cutCp を含む書記素の手前へ後退）。
+  let snappedRel = 0
+  for (const b of boundaries) {
+    if (b <= relCut) snappedRel = b
+    else break
+  }
+  const snapped = windowStart + snappedRel
+  // 最低1コードポイントは前進させる（snapped が現在位置と同じなら無限ループ）。
+  // ここでは「パート先頭からの 0」と区別するため、1未満になることはないが念のため担保。
+  return Math.max(1, snapped)
+}
+
+/**
  * 1パート分の content スライスを、組み立て後の実パートが制限に収まる最大長で切り出す。
  * 二分探索で「収まる最大のコードポイント数」を求め、その範囲で意味的な区切り位置を探す。
  */
@@ -306,6 +353,7 @@ function cutOnePart(
   // 実パートが収まる最大のコードポイント数を二分探索。
   // どのパートも最後になり得る（URL が付く）ものとして isLast:true で予算を確保し、
   // 最後のパートに URL を付けても収まることを保証する（過剰に詰めるが安全）。
+  // N2: 最終以外のパートにも URL 予算を確保するため過剰だが安全（パート数がやや増えるだけ）。
   let left = 0
   let right = chars.length
   while (left < right) {
@@ -322,12 +370,14 @@ function cutOnePart(
   const maxChars = Math.max(1, left)
   const searchEnd = maxChars
   const searchRange = chars.slice(0, searchEnd).join('')
+  // Q1: 区切り位置が searchEnd の前30%より手前なら短すぎるパートを避け、強制分割へフォールバック
+  //     する経験的閾値。
   const minLength = Math.floor(searchEnd * 0.3)
 
   // 区切り候補はコードポイント数で評価して chars index に揃える
   const toCharIndex = (strLen: number) => Array.from(searchRange.slice(0, strLen)).length
 
-  // 1. 空行で区切る
+  // 1. 空行で区切る（区切り文字は単一コードポイントなので元々書記素境界）
   const doubleNewline = searchRange.lastIndexOf('\n\n')
   if (doubleNewline >= 0 && toCharIndex(doubleNewline) > minLength) {
     return toCharIndex(doubleNewline + 2)
@@ -346,7 +396,10 @@ function cutOnePart(
   }
 
   // 4. 強制分割（最終手段）
-  return searchEnd
+  //    S1: コードポイント境界（searchEnd）で切ると書記素クラスタが割れる
+  //    （ZWJ 絵文字・結合文字）。最も近い手前の書記素境界へスナップして分断を防ぐ。
+  //    短くなるだけなので fitsWithinLimit は引き続き満たす。
+  return snapToGraphemeBoundary(chars, searchEnd)
 }
 
 /**
@@ -367,6 +420,7 @@ function splitWithTotal(
   while (remaining.length > 0) {
     const cutChars = cutOnePart(remaining, tags, url, sns, { isFirst, total: assumedTotal })
     const chars = Array.from(remaining)
+    // Q2: パート境界の前後空白を除去する（行頭/行末の意図的なスペースは失われる）。
     const head = chars.slice(0, cutChars).join('').trim()
     parts.push(head)
     remaining = chars.slice(cutChars).join('').trim()
@@ -394,6 +448,13 @@ function allPartsFit(parts: string[], tags: string[][], url: string, sns: 'x' | 
  * total を増やして再分割する。
  *
  * charLimit は後方互換のため受け取るが、収まり判定には fitsWithinLimit（実カウント）を使う。
+ *
+ * 既知の限界（S2）: ハッシュタグ（t タグ由来）や位置情報は第1パートにのみ固定で付与される。
+ * 本文を空にしてもこの固定オーバーヘッドだけで SNS 制限を超える場合、第1パートは制限内に
+ * 収まらない。その場合 guard 上限で打ち切り、可能な限り詰めたパートを返す（黙って超過パートを返す）。
+ *
+ * 計算コスト（N1）: assumedTotal を増やすたびに content 全体を再分割するため、極端な長文では
+ * O(parts × len) 程度のコストになる。通常の投稿長では問題にならない。
  */
 export function splitContentForSns(
   content: string,
