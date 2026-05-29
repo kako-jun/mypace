@@ -368,3 +368,80 @@ describe('splitContentForSns: 異常系・退行', () => {
     expect(nondup[0].text).toContain('\n\n#旅行')
   })
 })
+
+describe('splitContentForSns: 強制分割で書記素クラスタが割れない (S1)', () => {
+  const url = 'https://mypace.example/post/abc123'
+  const seg = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+  const ZWJ = '‍'
+
+  // 1パートのテキストが書記素として壊れていない（dangling ZWJ / lone surrogate 無し）ことを検証
+  const assertIntactGraphemes = (text: string) => {
+    // 先頭/末尾が ZWJ で始まる/終わる ＝ 書記素クラスタが分断された証拠
+    expect(text.startsWith(ZWJ)).toBe(false)
+    expect(text.endsWith(ZWJ)).toBe(false)
+    for (const ch of [...text]) {
+      const cp = ch.codePointAt(0)!
+      // lone surrogate（U+D800–U+DFFF）が単独で存在しないこと
+      expect(cp < 0xd800 || cp > 0xdfff).toBe(true)
+    }
+    // 各セグメントが内部に dangling ZWJ を残さない（完全な書記素であること）
+    for (const { segment } of seg.segment(text)) {
+      // ZWJ で始まる/終わるセグメントは壊れた書記素片
+      expect(segment.startsWith(ZWJ) && segment.length === 1).toBe(false)
+    }
+  }
+
+  it('H1: Bluesky ZWJ 家族絵文字×200 を強制分割 → 各パートで書記素が割れない', () => {
+    const family = '👨‍👩‍👧‍👦'
+    const parts = splitContentForSns(family.repeat(200), [], url, getCharLimit('bluesky'), 'bluesky')
+    const formatted = formatSplitParts(parts, [], url)
+    expect(parts.length).toBeGreaterThan(1)
+    for (const p of formatted) {
+      assertIntactGraphemes(p.text)
+      expect(graphemeCount(p.text)).toBeLessThanOrEqual(300)
+      expect(utf8ByteLength(p.text)).toBeLessThanOrEqual(3000)
+    }
+  })
+
+  it('H2: X ZWJ 家族絵文字×100 を強制分割 → 各パートで書記素が割れない', () => {
+    const family = '👨‍👩‍👧‍👦'
+    const parts = splitContentForSns(family.repeat(100), [], url, getCharLimit('x'), 'x')
+    const formatted = formatSplitParts(parts, [], url)
+    expect(parts.length).toBeGreaterThan(1)
+    for (const p of formatted) {
+      assertIntactGraphemes(p.text)
+      expect(weightedLengthX(p.text)).toBeLessThanOrEqual(280)
+    }
+  })
+
+  it('H3: 各 part を再分解しても全セグメントが元の家族絵文字の完全な片であること', () => {
+    const family = '👨‍👩‍👧‍👦'
+    const parts = splitContentForSns(family.repeat(200), [], url, getCharLimit('bluesky'), 'bluesky')
+    // formatSplitParts 前の生パート（本文のみ）も検証: 各パートは家族絵文字の整数個で構成される
+    for (const part of parts) {
+      const segments = [...seg.segment(part)].map((s) => s.segment)
+      for (const s of segments) {
+        // 本文セグメントは家族絵文字そのものであるべき（割れた片でない）
+        expect(s === family).toBe(true)
+      }
+    }
+  })
+})
+
+describe('splitContentForSns: タグ過多で第1パート超過の既知限界 (S2)', () => {
+  const url = 'https://mypace.example/post/abc123'
+
+  it('I1: 大量の長い t タグ → クラッシュせず有限個のパートを返す（全パート収まる保証は無い）', () => {
+    // 各タグ単体で X 制限近くになる長さのタグを大量に付ける。
+    // 第1パートのハッシュタグ群だけで制限超過し得るが、関数は収束して配列を返す。
+    const tags: string[][] = Array.from({ length: 30 }, (_, i) => ['t', 'タグ'.repeat(20) + i])
+    const content = 'あ'.repeat(400)
+    let parts: string[] = []
+    expect(() => {
+      parts = splitContentForSns(content, tags, url, getCharLimit('x'), 'x')
+    }).not.toThrow()
+    // 有限個・非空のパートを返す（無限ループや空配列にならない）
+    expect(parts.length).toBeGreaterThan(0)
+    expect(Number.isFinite(parts.length)).toBe(true)
+  })
+})
