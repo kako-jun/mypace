@@ -30,8 +30,9 @@ describe('count helpers (smoke)', () => {
     expect(utf8ByteLength('a')).toBe(1)
   })
 
-  it('threadsLength: URL は0字', () => {
-    expect(threadsLength('abc https://example.com')).toBe(4) // "abc " のみ
+  it('threadsLength: URL も実長で計上', () => {
+    // Threads は t.co 短縮がなく URL も本文と同じく実長（書記素数）で計上される。
+    expect(threadsLength('abc https://example.com')).toBe(graphemeCount('abc https://example.com')) // 全23字
   })
 
   it('fitsWithinLimit の境界', () => {
@@ -183,14 +184,14 @@ describe('utf8ByteLength', () => {
   })
 })
 
-describe('threadsLength: URL 除外', () => {
-  it('D1: URL のみ = 0（URL はカウント対象外）', () => {
-    expect(threadsLength('https://x.test/y')).toBe(0)
+describe('threadsLength: URL も実長で計上', () => {
+  it('D1: URL のみ = 実長（書記素数。X と違い短縮されない）', () => {
+    expect(threadsLength('https://x.test/y')).toBe(graphemeCount('https://x.test/y')) // 実測 16
   })
 
-  it('D2: 複数 URL を含む文は URL 除去後の書記素数', () => {
-    // "hello " (6) + "world " (6) + "" ... 実測 13
-    expect(threadsLength('hello https://a.test/x world https://b.test/y')).toBe(13)
+  it('D2: 複数 URL を含む文は本文丸ごとの書記素数', () => {
+    const s = 'hello https://a.test/x world https://b.test/y'
+    expect(threadsLength(s)).toBe(graphemeCount(s)) // 実測 45
   })
 
   it('D3: ZWJ 家族絵文字 = 1 書記素（weighted 11 との対比）', () => {
