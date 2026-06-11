@@ -457,7 +457,7 @@ function allPartsFit(parts: string[], tags: string[][], url: string, sns: 'x' | 
  * 優先順位: 空行 → 単一改行 → 句読点 → 強制分割
  *
  * 各パートは「パート番号・ハッシュタグ・位置情報・URL を付与した組み立て後の実パート」が
- * 当該 SNS の実制限（X=weighted280 / Bluesky=grapheme300&byte3000 / Threads=url0で500）に
+ * 当該 SNS の実制限（X=weighted280 / Bluesky=grapheme300&byte3000 / Threads=実長で500）に
  * 収まることを保証する。total 確定後にパート番号の桁数まで含めて再検証し、はみ出していれば
  * total を増やして再分割する。
  *
