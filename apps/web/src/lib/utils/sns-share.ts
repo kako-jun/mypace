@@ -162,7 +162,9 @@ const THREADS_CHAR_LIMIT = 500
 
 /**
  * X (Twitter) の URL 文字数（t.co 短縮後）
- * https:// の URL は全て 23文字として計算される
+ * https:// の URL は全て 23文字として計算される。
+ * これは X 公式仕様: t.co が全 URL を実長に関わらず一律 23 weighted へ短縮するため。
+ * 実 URL 長を動的に数えるのは誤り（Threads と異なり X だけがこの短縮を持つ）。
  */
 const X_URL_LENGTH = 23
 
@@ -235,16 +237,14 @@ export function weightedLengthX(text: string): number {
 }
 
 /**
- * Threads の文字数（URL はカウント対象外=0字、絵文字/CJK=1字）
- * = URL を除いた書記素数
+ * Threads の文字数（URL も本文と同じく実長で計上、CJK・単一絵文字=1字）
+ * = 本文丸ごとの書記素数。
  */
 export function threadsLength(text: string): number {
-  const urls = text.match(URL_REGEX) || []
-  let work = text
-  for (const url of urls) {
-    work = work.replace(url, '')
-  }
-  return graphemeCount(work)
+  // Threads は t.co のようなURL短縮を持たず、URL も本文と同じく実長（書記素数）で
+  // 500字上限に計上される（Meta公式: 上限500・URL短縮の記載なし）。CJK=1文字。
+  // 注: emoji は本来 UTF-8バイト数で計上されるが（現状は書記素1で過小）、別Issue #92 で対応。
+  return graphemeCount(text)
 }
 
 /**
@@ -360,6 +360,8 @@ function cutOnePart(
   // どのパートも最後になり得る（URL が付く）ものとして isLast:true で予算を確保し、
   // 最後のパートに URL を付けても収まることを保証する（過剰に詰めるが安全）。
   // N2: 最終以外のパートにも URL 予算を確保するため過剰だが安全（パート数がやや増えるだけ）。
+  //     これは意図的な安全余白: どのパートも「最後になり URL を積む」可能性に備えて予算を引いておくことで、
+  //     投稿画面でのオーバー（特に Threads は URL も実長計上のため効く）を防ぐ。あえて維持している。
   let left = 0
   let right = chars.length
   while (left < right) {
