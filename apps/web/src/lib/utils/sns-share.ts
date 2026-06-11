@@ -374,6 +374,12 @@ function cutOnePart(
 
   // 何も入らない場合でも前進させるため最低1コードポイントは進める
   const maxChars = Math.max(1, left)
+  // 残り全体が1パートに収まるなら区切り探索で無駄に分割しない（収まるのに \n\n/\n で
+  // 切ると短いパートが量産される）。maxChars === chars.length はこのパートが最後＝以降
+  // 残りが無いことを意味するので、全部取り切ってよい。
+  if (maxChars >= chars.length) {
+    return chars.length
+  }
   const searchEnd = maxChars
   const searchRange = chars.slice(0, searchEnd).join('')
   // Q1: 区切り位置が searchEnd の前30%より手前なら短すぎるパートを避け、強制分割へフォールバック
