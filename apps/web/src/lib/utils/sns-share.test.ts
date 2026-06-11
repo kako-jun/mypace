@@ -583,3 +583,94 @@ Cloudflareの思う壺に……
     expect(partsL2.length).toBe(partsL1.length + 1)
   })
 })
+
+// --- 以下 #90「Threads URL 実長計上」回帰（URL stripping 撤去で threadsLength=graphemeCount(text)）。---
+// --- 旧版は threadsLength で URL を 0 字扱いし、URL を含む最終パートを実長より短く誤認していた。 ---
+// --- そのため Threads 投稿画面で実 500 字超のパートを「収まる」と判断して送信時にあふれていた。 ---
+// --- 既存の D1/D2/smoke(threadsLength 単体)・E4(fitsWithinLimit 単体)・F8(g タグ分割) とは別軸の、 ---
+// --- splitter 経由（splitContentForSns → formatSplitParts）での URL 実長計上の回帰防止。 ---
+// 期待値の絶対パート数は splitter 内部閾値に依存して脆いため、不等号・差分・動的逆算で縛る。
+describe('splitContentForSns: Threads URL 実長計上の回帰（#90）', () => {
+  // 共有 URL（実投稿と同形の 64hex パス）。graphemeCount=96 と長く、Threads では URL も
+  // 500 字予算を実長で消費する。短 URL（t.co なしでも 16 字）との非対称を作るために使う。
+  const shareUrl = 'https://mypace.llll-ll.com/post/' + 'a'.repeat(64)
+
+  it('T1: 共有URL(実長)付き長文の全パートが組み立て後 threadsLength<=500（旧URL=0バグの再発防止）', () => {
+    // 前提保証: 共有 URL は「長 URL」（90 字以上）であること。これが効くのが本テストの肝。
+    expect(graphemeCount(shareUrl)).toBeGreaterThanOrEqual(90)
+
+    const content = 'あ'.repeat(1500)
+    const parts = splitContentForSns(content, [], shareUrl, getCharLimit('threads'), 'threads')
+    const formatted = formatSplitParts(parts, [], shareUrl)
+
+    // PRE（旧 threadsLength: URL を strip して 0 字計上）: 最終パートは URL 実長 96 を見落とし、
+    //   実 596 字でも「500」と誤認して fits=true となり、Threads 投稿画面でオーバーしていた。
+    // POST（現 threadsLength: URL も実長計上）: 最終パート実 416 字で正しく <=500 に収まる。
+    // パート数は固定しない（splitter 内部閾値依存で脆い）。全パートが収まることだけを縛る。
+    expect(formatted.every((p) => threadsLength(p.text) <= 500)).toBe(true)
+    // 最終パートに共有 URL が同居する（URL 付与は最終パート）。
+    expect(formatted.at(-1)!.text.includes(shareUrl)).toBe(true)
+  })
+
+  it('T2: Threads は長URLでパート数が増えるが X は t.co 一律23で不変（SNS仕様差）', () => {
+    const content = 'あ'.repeat(880)
+    const shortUrl = 'https://x.test/y'
+    // 前提: 共有 URL（96 字）は短 URL（16 字）より実長が長い。Threads ではこの差が予算を食う。
+    expect(graphemeCount(shareUrl)).toBeGreaterThan(graphemeCount(shortUrl))
+
+    const nThreads = (u: string) => splitContentForSns(content, [], u, getCharLimit('threads'), 'threads').length
+    const nX = (u: string) => splitContentForSns(content, [], u, getCharLimit('x'), 'x').length
+
+    // Threads: 長 URL は実長で 500 予算を多く食うのでパート数が増える（実測 3 > 2）。
+    //   差分で縛る（絶対値固定しない）。
+    expect(nThreads(shareUrl)).toBeGreaterThan(nThreads(shortUrl))
+    // X: t.co が全 URL を一律 23 weighted に短縮するため URL 実長に依らずパート数は不変（実測 8 === 8）。
+    expect(nX(shareUrl)).toBe(nX(shortUrl))
+  })
+
+  it('T3: 末尾URL込み最終パートが threadsLength ちょうど500なら割らず、+1字で1パート増（分割境界）', () => {
+    // 構成: 先頭は単独で 1 パートに収まる段落（あ×380、純 あ で第1パートを占める）。
+    //   末尾は単独で最終パートになる段落（い×B）。B は「最終パート threadsLength=500」となる長さを
+    //   probe で動的逆算する（finalOverhead = partInfo(N/N)\n + \n\n + url。直書きしない）。
+    const head = 'あ'.repeat(380)
+    const buildInput = (B: number) => head + '\n\n' + 'い'.repeat(B)
+
+    // overhead 実測: 余裕を持った末尾(80)で probe 分割し、最終パートが「い のみ」で構成される
+    //   （leftover の あ が混入しない）ことを確認したうえで、全文 threadsLength と本文書記素数の差を取る。
+    const probeTailLen = 80
+    const probeParts = splitContentForSns(buildInput(probeTailLen), [], shareUrl, getCharLimit('threads'), 'threads')
+    const probeFmt = formatSplitParts(probeParts, [], shareUrl)
+    const probeFinalRaw = probeParts[probeParts.length - 1]
+    // 最終パート本文が「い のみ」＝先頭塊が混ざっておらず overhead を純粋に測れる前提。
+    expect(/^い+$/.test(probeFinalRaw)).toBe(true)
+    const finalOverhead = threadsLength(probeFmt[probeFmt.length - 1].text) - graphemeCount('い'.repeat(probeTailLen))
+    // B = 最終パート threadsLength がちょうど 500 になる本文書記素数。
+    const B = 500 - finalOverhead
+
+    // atBudget（B）: 末尾が割れず最終パートが threadsLength === 500 ちょうど。
+    const atParts = splitContentForSns(buildInput(B), [], shareUrl, getCharLimit('threads'), 'threads')
+    const atFmt = formatSplitParts(atParts, [], shareUrl)
+    const atFinal = atFmt[atFmt.length - 1]
+    expect(atParts.length).toBe(2)
+    expect(threadsLength(atFinal.text)).toBe(500)
+    // 最終パートに本文 い と url が同居（末尾段落が別パートに割れていない）。
+    expect(atFinal.text.includes('い') && atFinal.text.includes(shareUrl)).toBe(true)
+
+    // overBudget（B+1）: 1 字超過で 500 を超え、末尾が割れてパートが 1 つ増える。
+    const overParts = splitContentForSns(buildInput(B + 1), [], shareUrl, getCharLimit('threads'), 'threads')
+    expect(overParts.length).toBe(atParts.length + 1)
+  })
+
+  it('T4: URLなし本文では long/short URL の非対称が消える（修正がURL計上のみに効く裏取り）', () => {
+    // T2 の非対称（Threads が長 URL でパート増）は URL の実長計上に由来する。
+    // URL を付けない（url=''）と予算消費は本文計上のみになり、長/短 URL の差は消える。
+    const content = 'あ'.repeat(880)
+    const shortUrl = 'https://x.test/y'
+    const nThreads = (u: string) => splitContentForSns(content, [], u, getCharLimit('threads'), 'threads').length
+
+    // url='' は本文だけで分割が決まり、共有 URL を渡したとき（長 URL でパート増）の影響を受けない。
+    //   T2 で長 URL=3 / 短 URL=2 だった非対称が、url='' では短 URL 側（=2）と一致して消える。
+    expect(nThreads('')).toBe(nThreads(shortUrl))
+    expect(nThreads('')).toBeLessThan(nThreads(shareUrl))
+  })
+})
