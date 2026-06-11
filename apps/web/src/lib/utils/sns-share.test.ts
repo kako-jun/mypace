@@ -445,3 +445,131 @@ describe('splitContentForSns: タグ過多で第1パート超過の既知限界 
     expect(Number.isFinite(parts.length)).toBe(true)
   })
 })
+
+// --- 以下 SNS 分割ガード回帰（cutOnePart の「残り全体が1パートに収まるなら区切り探索を ---
+// --- スキップして全取り」ガード）。期待値は実装の修正前/後を実評価して確定済み。 ---
+//
+// 構造的前提（後任が誤らないために必読）:
+//   splitContentForSns は冒頭で「全文+url が収まれば [content] を即 return」する早期 return がある。
+//   このガードはその先（全文は収まらないが、分割途中の末尾スライスが1パートに収まる）でのみ到達する。
+//   よってガードを踏むテストは「先頭に分割必須の塊 + その後に1パートに収まる末尾」という構造が必須で、
+//   短文単発はガードを通らない（早期 return される）。
+describe('splitContentForSns: 分割ガード（末尾の過剰分割を防ぐ）', () => {
+  // 実投稿本文（おおさかけんぽうの宣伝投稿）。末尾改行なし。J1/J2 で共有する。
+  // 先頭にいくつか段落があり、後半は1パートに収まる末尾を持つ＝ガードを踏む実例。
+  const REAL_POST = `おおさかけんぽうは、ターゲットが開発者でなく
+日本限定なので多言語化の必要がない、という
+私にとっては珍しいアプリだった
+
+でも、これくらいサーバー負荷があった
+https://image.nostr.build/ec577eecc0cce2afe596ce20e6a9fca3b7e2f6095c3669f22301e731298d5c15.jpg
+
+サーバーのコードを微修正した効果があって
+まだ無料プランでもレートに引っ掛かってない
+
+次にリリース予定の、orberという動画素材作成ツール
+AgasteerというPC, スマホ共通のMarkdownエディタは
+ターゲットが世界だし
+
+そのあたりで有料プランが必要になり
+Cloudflareの思う壺に……
+
+つまり、いまCloudflareが私に見せてる顔は
+カイジにビールをプレゼントしてるときのハンチョウの顔`
+  const realTags = [['t', 'mypace']]
+  const realUrl = 'https://mypace.llll-ll.com/post/ce2bba761e95c5b84f12212e42356708e30a105ffe6d5f53cd9ca452177af570'
+  // ガードの境界（>= の =）を突くテストで使う共通 url（partInfo/url オーバーヘッドを実測するため）
+  const url = 'https://mypace.example/post/abc123'
+
+  it('J1: X 実投稿本文が過剰分割されない（孤立行を出さない）', () => {
+    // 修正前: 5パート weighted[195,210,65,46,83]（part4=46 の孤立行）
+    // 修正後: 3パート weighted[195,210,185]
+    const parts = splitContentForSns(REAL_POST, realTags, realUrl, getCharLimit('x'), 'x')
+    const formatted = formatSplitParts(parts, realTags, realUrl)
+    // パート数: 修正前=5 を確実に下回り、修正後=3 に1マージン（ちょうど3には固定しない=脆さ回避）
+    expect(parts.length).toBeLessThanOrEqual(4)
+    // 孤立行防止: 各パートの組み立て後 weighted の min/max 比が極端でないこと。
+    // 修正前の part4=46/210≈0.22 を弾き、修正後 185/210≈0.88 は余裕で通る。
+    const weights = formatted.map((p) => weightedLengthX(p.text))
+    const ratio = Math.min(...weights) / Math.max(...weights)
+    expect(ratio).toBeGreaterThanOrEqual(0.3)
+    // 保険: 各パートが個別に X 制限に収まる
+    formatted.forEach((p) => expect(fitsWithinLimit(p.text, 'x')).toBe(true))
+  })
+
+  it('J2: Bluesky 実投稿本文でも孤立片が出ない', () => {
+    // 修正前: 4パート（最小 grapheme=31 の孤立片）/ 修正後: 3パート（本文 grapheme[175,154,52]）
+    const parts = splitContentForSns(REAL_POST, realTags, realUrl, getCharLimit('bluesky'), 'bluesky')
+    expect(parts.length).toBeLessThanOrEqual(4)
+    // 最小パートの本文書記素数が孤立片レベル（修正前 31）でないこと。
+    const minGrapheme = Math.min(...parts.map((p) => graphemeCount(p)))
+    expect(minGrapheme).toBeGreaterThan(50)
+  })
+
+  it('K1: 分割経路でのみガードが踏まれる（早期 return と区別）', () => {
+    // 先頭に分割必須の塊（a×250）＋末尾は1パートに収まる2段落（p×40, q×40）。
+    // 末尾スライスでガードが真になり、p/q が \n\n で割れずに1パートへまとまる。
+    // 注意: 短文単発はこのガードを通らない（splitContentForSns 冒頭の早期 return で [content] が返る）。
+    //       ガードを踏むには必ず「先頭=分割必須 + 末尾=1パートに収まる」構造が要る。
+    const input = 'a'.repeat(250) + '\n\n' + ('p'.repeat(40) + '\n\n' + 'q'.repeat(40))
+    const parts = splitContentForSns(input, [], url, getCharLimit('x'), 'x')
+    // 修正前: 3パート[249,43,40] / 修正後: 2パート[249,85]。
+    // この合成入力は実装詳細から十分隔離されており固定してよい。
+    expect(parts.length).toBe(2)
+  })
+
+  it('L1: ぴったり収まる末尾＋中間空行 → 割らず全取り（境界 >= の = を保証）', () => {
+    // 末尾の「2段落（間に \n\n）」を、組み立て後の最終パート weighted がちょうど X 予算(280)に
+    // 等しくなる長さで組む。ガードが `>` 誤実装だと境界で割れる点を突く。
+    //
+    // 逆算の根拠: X 予算 = 280。最終パートのオーバーヘッド（partInfo "(N/N)\n" + "\n\n" + url）を
+    //   テスト内で実測（overhead）し、本文 weighted = 280 - overhead を満たす末尾を作る。
+    //   末尾本文は weight1 文字を \n\n で2分割したもの（\n\n 自体も weighted 2 を消費する）。
+    //   マジックナンバー（244 等）は直書きせず weightedLengthX から動的に解く。
+    const head = 'a'.repeat(250) // 先頭の分割必須の塊
+    // 末尾本文の weight1 文字数 = bc。間に \n\n を1つ挟む。
+    const buildTail = (bc: number) => 'b'.repeat(Math.floor(bc / 2)) + '\n\n' + 'c'.repeat(bc - Math.floor(bc / 2))
+    const buildInput = (bc: number) => head + '\n\n' + buildTail(bc)
+
+    // オーバーヘッド実測: 余裕で収まる末尾(60)で分割させ、最終パートの全文 weighted と本文 weighted の差を取る。
+    const probeTail = buildTail(60)
+    const probeParts = splitContentForSns(buildInput(60), [], url, getCharLimit('x'), 'x')
+    const probeFmt = formatSplitParts(probeParts, [], url)
+    const overhead = weightedLengthX(probeFmt[probeFmt.length - 1].text) - weightedLengthX(probeTail)
+
+    // 末尾本文（\n\n 込み）weighted = 280 - overhead。bc = それ - 2（\n\n の weighted 2 を差し引く）。
+    const X_LIMIT = 280
+    const bcBoundary = X_LIMIT - overhead - 2
+
+    const partsL1 = splitContentForSns(buildInput(bcBoundary), [], url, getCharLimit('x'), 'x')
+    const fmtL1 = formatSplitParts(partsL1, [], url)
+    // 末尾2段落が1パートにまとまる（=PRE 想定よりパート数が少ない）。最終パートの weighted は
+    // ちょうど予算 280 に等しい（= 境界の = をガードが取り込んでいる証拠）。
+    expect(weightedLengthX(fmtL1[fmtL1.length - 1].text)).toBe(X_LIMIT)
+    // 末尾側がまとまっている＝末尾2段落が別パートに割れていない（最終パートに b と c が同居）。
+    expect(/b+\n*c+$|c+$/.test(partsL1[partsL1.length - 1])).toBe(true)
+
+    // L2 と対で参照するため境界パート数を公開（同 describe 内の L2 で +1 を確認）
+    expect(partsL1.length).toBe(2)
+  })
+
+  it('L2: 1文字超過なら従来どおり区切りで分割（境界の反対側・退行なし）', () => {
+    // L1 の末尾を1 weighted（=1コードポイント）増やすと予算 280 を超え、ガード偽 → 区切り探索で割れる。
+    // L1 と同じ逆算でオーバーヘッドを実測し、bcBoundary+1 が L1 より1パート多いことを確認する。
+    const head = 'a'.repeat(250)
+    const buildTail = (bc: number) => 'b'.repeat(Math.floor(bc / 2)) + '\n\n' + 'c'.repeat(bc - Math.floor(bc / 2))
+    const buildInput = (bc: number) => head + '\n\n' + buildTail(bc)
+
+    const probeTail = buildTail(60)
+    const probeParts = splitContentForSns(buildInput(60), [], url, getCharLimit('x'), 'x')
+    const probeFmt = formatSplitParts(probeParts, [], url)
+    const overhead = weightedLengthX(probeFmt[probeFmt.length - 1].text) - weightedLengthX(probeTail)
+    const X_LIMIT = 280
+    const bcBoundary = X_LIMIT - overhead - 2
+
+    const partsL1 = splitContentForSns(buildInput(bcBoundary), [], url, getCharLimit('x'), 'x')
+    const partsL2 = splitContentForSns(buildInput(bcBoundary + 1), [], url, getCharLimit('x'), 'x')
+    // 反対側: 1超過で末尾が区切りで割れ、パート数が L1 より1多い（退行していないことの担保）。
+    expect(partsL2.length).toBe(partsL1.length + 1)
+  })
+})
