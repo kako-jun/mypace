@@ -481,6 +481,40 @@ Cloudflareの思う壺に……
   // ガードの境界（>= の =）を突くテストで使う共通 url（partInfo/url オーバーヘッドを実測するため）
   const url = 'https://mypace.example/post/abc123'
 
+  // L1/L2 共有ヘルパー: ガード境界（最終パート weighted がちょうど X 予算 280）に乗る末尾入力と、
+  // そこに 1 weighted（=1 コードポイント）足して予算を超える入力を、対で返す。
+  //
+  // 構造: 先頭に分割必須の塊（a×250）＋末尾に「\n\n で2分割した weight1 本文」を置く。
+  //   末尾本文 weighted = 280 - overhead（partInfo + "\n\n" + url のオーバーヘッドを実測）。
+  //   \n\n 自体も weighted 2 を消費するため、weight1 文字数 bc = (280 - overhead) - 2。
+  // マジックナンバー（244 等）は直書きせず weightedLengthX から動的に解く。
+  //
+  // 戻り値:
+  //   atBudget   … 最終パート weighted === 280 ちょうど（境界 = をガードが取り込む側）
+  //   overBudget … atBudget の末尾に 1 コードポイント足した（境界の反対側＝予算超過で割れる側）
+  const buildBoundaryTailInputs = () => {
+    const head = 'a'.repeat(250) // 先頭の分割必須の塊
+    // 末尾本文の weight1 文字数 = bc。間に \n\n を1つ挟む。
+    const buildTail = (bc: number) => 'b'.repeat(Math.floor(bc / 2)) + '\n\n' + 'c'.repeat(bc - Math.floor(bc / 2))
+    const buildInput = (bc: number) => head + '\n\n' + buildTail(bc)
+
+    // オーバーヘッド実測: 余裕で収まる末尾(60)で分割させ、最終パートの全文 weighted と本文 weighted の差を取る。
+    const probeTail = buildTail(60)
+    const probeParts = splitContentForSns(buildInput(60), [], url, getCharLimit('x'), 'x')
+    const probeFmt = formatSplitParts(probeParts, [], url)
+    const overhead = weightedLengthX(probeFmt[probeFmt.length - 1].text) - weightedLengthX(probeTail)
+
+    // 末尾本文（\n\n 込み）weighted = 280 - overhead。bc = それ - 2（\n\n の weighted 2 を差し引く）。
+    const X_LIMIT = 280
+    const bcBoundary = X_LIMIT - overhead - 2
+
+    return {
+      X_LIMIT,
+      atBudget: buildInput(bcBoundary), // 最終パート weighted ちょうど 280
+      overBudget: buildInput(bcBoundary + 1), // 1 コードポイント超過
+    }
+  }
+
   it('J1: X 実投稿本文が過剰分割されない（孤立行を出さない）', () => {
     // 修正前: 5パート weighted[195,210,65,46,83]（part4=46 の孤立行）
     // 修正後: 3パート weighted[195,210,185]
@@ -521,27 +555,10 @@ Cloudflareの思う壺に……
   it('L1: ぴったり収まる末尾＋中間空行 → 割らず全取り（境界 >= の = を保証）', () => {
     // 末尾の「2段落（間に \n\n）」を、組み立て後の最終パート weighted がちょうど X 予算(280)に
     // 等しくなる長さで組む。ガードが `>` 誤実装だと境界で割れる点を突く。
-    //
-    // 逆算の根拠: X 予算 = 280。最終パートのオーバーヘッド（partInfo "(N/N)\n" + "\n\n" + url）を
-    //   テスト内で実測（overhead）し、本文 weighted = 280 - overhead を満たす末尾を作る。
-    //   末尾本文は weight1 文字を \n\n で2分割したもの（\n\n 自体も weighted 2 を消費する）。
-    //   マジックナンバー（244 等）は直書きせず weightedLengthX から動的に解く。
-    const head = 'a'.repeat(250) // 先頭の分割必須の塊
-    // 末尾本文の weight1 文字数 = bc。間に \n\n を1つ挟む。
-    const buildTail = (bc: number) => 'b'.repeat(Math.floor(bc / 2)) + '\n\n' + 'c'.repeat(bc - Math.floor(bc / 2))
-    const buildInput = (bc: number) => head + '\n\n' + buildTail(bc)
+    // 逆算・実測のセットアップは buildBoundaryTailInputs（L2 と共有）に集約。
+    const { X_LIMIT, atBudget } = buildBoundaryTailInputs()
 
-    // オーバーヘッド実測: 余裕で収まる末尾(60)で分割させ、最終パートの全文 weighted と本文 weighted の差を取る。
-    const probeTail = buildTail(60)
-    const probeParts = splitContentForSns(buildInput(60), [], url, getCharLimit('x'), 'x')
-    const probeFmt = formatSplitParts(probeParts, [], url)
-    const overhead = weightedLengthX(probeFmt[probeFmt.length - 1].text) - weightedLengthX(probeTail)
-
-    // 末尾本文（\n\n 込み）weighted = 280 - overhead。bc = それ - 2（\n\n の weighted 2 を差し引く）。
-    const X_LIMIT = 280
-    const bcBoundary = X_LIMIT - overhead - 2
-
-    const partsL1 = splitContentForSns(buildInput(bcBoundary), [], url, getCharLimit('x'), 'x')
+    const partsL1 = splitContentForSns(atBudget, [], url, getCharLimit('x'), 'x')
     const fmtL1 = formatSplitParts(partsL1, [], url)
     // 末尾2段落が1パートにまとまる（=PRE 想定よりパート数が少ない）。最終パートの weighted は
     // ちょうど予算 280 に等しい（= 境界の = をガードが取り込んでいる証拠）。
@@ -555,20 +572,12 @@ Cloudflareの思う壺に……
 
   it('L2: 1文字超過なら従来どおり区切りで分割（境界の反対側・退行なし）', () => {
     // L1 の末尾を1 weighted（=1コードポイント）増やすと予算 280 を超え、ガード偽 → 区切り探索で割れる。
-    // L1 と同じ逆算でオーバーヘッドを実測し、bcBoundary+1 が L1 より1パート多いことを確認する。
-    const head = 'a'.repeat(250)
-    const buildTail = (bc: number) => 'b'.repeat(Math.floor(bc / 2)) + '\n\n' + 'c'.repeat(bc - Math.floor(bc / 2))
-    const buildInput = (bc: number) => head + '\n\n' + buildTail(bc)
+    // atBudget（L1 が踏む境界）と overBudget（その +1 コードポイント）を同じヘルパーで対生成し、
+    // overBudget が L1 より1パート多いことを確認する。
+    const { atBudget, overBudget } = buildBoundaryTailInputs()
 
-    const probeTail = buildTail(60)
-    const probeParts = splitContentForSns(buildInput(60), [], url, getCharLimit('x'), 'x')
-    const probeFmt = formatSplitParts(probeParts, [], url)
-    const overhead = weightedLengthX(probeFmt[probeFmt.length - 1].text) - weightedLengthX(probeTail)
-    const X_LIMIT = 280
-    const bcBoundary = X_LIMIT - overhead - 2
-
-    const partsL1 = splitContentForSns(buildInput(bcBoundary), [], url, getCharLimit('x'), 'x')
-    const partsL2 = splitContentForSns(buildInput(bcBoundary + 1), [], url, getCharLimit('x'), 'x')
+    const partsL1 = splitContentForSns(atBudget, [], url, getCharLimit('x'), 'x')
+    const partsL2 = splitContentForSns(overBudget, [], url, getCharLimit('x'), 'x')
     // 反対側: 1超過で末尾が区切りで割れ、パート数が L1 より1多い（退行していないことの担保）。
     expect(partsL2.length).toBe(partsL1.length + 1)
   })
