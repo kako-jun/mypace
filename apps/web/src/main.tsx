@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 import { initSecretKeyCache } from './lib/storage'
+import { onSwUpdateSkipped, onSwUpdateSucceeded } from './lib/pwa/swCheck'
 import App from './App'
 import './index.css'
 
@@ -23,9 +24,19 @@ const updateSW = registerSW({
   onRegistered(swRegistration) {
     if (swRegistration) {
       // Check for updates on registration
-      swRegistration.update().catch((error) => {
-        console.info('SW update check skipped:', error?.message || 'offline')
-      })
+      swRegistration
+        .update()
+        .then(() => {
+          // 更新チェック完了 → waitForSwCheck 解決へ（猶予後）
+          onSwUpdateSucceeded()
+        })
+        .catch((error) => {
+          console.info('SW update check skipped:', error?.message || 'offline')
+          onSwUpdateSkipped()
+        })
+    } else {
+      // SW未対応環境 → 待つ意味がないので即解決
+      onSwUpdateSkipped()
     }
   },
   onNeedRefresh() {

@@ -15,6 +15,7 @@ import {
 import { sendStella, fetchStellaBalance } from '../../lib/api'
 import { getDisplayNameFromCache, getAvatarUrlFromCache, getErrorMessage, getMutedPubkeys } from '../../lib/utils'
 import { getFilterSettings } from '../../lib/storage'
+import { awaitSwCheckThen } from '../../lib/pwa/swCheck'
 import { TIMEOUTS, CUSTOM_EVENTS, LIMITS } from '../../lib/constants'
 import type {
   Event,
@@ -150,12 +151,15 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       setMyPubkey(pubkey)
 
       const filterOpts = getFilterOptions()
-      let result: { events: Event[]; searchedUntil: number | null }
-      if (authorPubkey) {
-        result = await fetchUserEvents(authorPubkey, { limit: LIMITS.TIMELINE_FETCH_LIMIT, tags, q, ...filterOpts })
-      } else {
-        result = await fetchTimeline({ limit: LIMITS.TIMELINE_FETCH_LIMIT, queries: q, okTags: tags, ...filterOpts })
-      }
+      // SW更新チェック完了を待ってから取得する（#94）。
+      // 更新があれば直後にreloadされるため、無駄なリレー問い合わせを避ける。
+      // waitForSwCheckは一度解決すると解決済みのままなので、起動から
+      // 十分時間が経った後の呼び出し（フィルター変更・reload等）は実質待たされない。
+      const result: { events: Event[]; searchedUntil: number | null } = await awaitSwCheckThen(() =>
+        authorPubkey
+          ? fetchUserEvents(authorPubkey, { limit: LIMITS.TIMELINE_FETCH_LIMIT, tags, q, ...filterOpts })
+          : fetchTimeline({ limit: LIMITS.TIMELINE_FETCH_LIMIT, queries: q, okTags: tags, ...filterOpts })
+      )
       const notes = result.events
 
       // リポスト（kind:6）をTimelineItemに変換し、originalEventsを抽出
