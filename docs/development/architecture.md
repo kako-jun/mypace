@@ -195,6 +195,8 @@ src/
 │   ├── utils/           # ユーティリティ
 │   ├── storage/         # localStorage管理
 │   ├── constants/       # 定数
+│   ├── pwa/             # PWA関連（SW更新チェック待ち等）
+│   │   └── swCheck.ts   # waitForSwCheck（起動時Nostr取得の遅延ゲート）
 │   └── parser/          # コンテンツパーサー
 │       ├── content-parser.tsx
 │       ├── emoji.ts
